@@ -39,7 +39,7 @@ contract Flopper {
 
     mapping (uint => Bid) public bids;
 
-    function era() internal view returns (uint48) { return uint48(now); }
+    function era() public view returns (uint48) { return uint48(now); }
 
     uint constant WAD = 10 ** 18;
     function mul(uint x, uint y) internal pure returns (uint z) {

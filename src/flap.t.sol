@@ -36,7 +36,7 @@ contract Gal {}
 
 contract WarpFlap is Flapper {
     uint48 _era; function warp(uint48 era_) public { _era = era_; }
-    function era() internal view returns (uint48) { return _era; }
+    function era() public view returns (uint48) { return _era; }
     constructor(address pie_, address gem_) public Flapper(pie_, gem_) {}
 }
 

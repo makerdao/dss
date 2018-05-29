@@ -49,7 +49,7 @@ contract Flipper {
 
     mapping (uint => Bid) public bids;
 
-    function era() internal view returns (uint48) { return uint48(now); }
+    function era() public view returns (uint48) { return uint48(now); }
 
     function add(uint x, uint y) internal pure returns (uint z) {
         require((z = x + y) >= x);

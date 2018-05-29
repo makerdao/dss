@@ -66,7 +66,7 @@ contract Gal {}
 
 contract WarpFlip is Flipper {
     uint48 _era; function warp(uint48 era_) public { _era = era_; }
-    function era() internal view returns (uint48) { return _era; }
+    function era() public view returns (uint48) { return _era; }
     constructor(address vat_, bytes32 ilk_) public
         Flipper(vat_, ilk_) {}
 }
