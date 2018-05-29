@@ -124,7 +124,6 @@ contract Vat {
         require(dai[src] >= int(wad));
         dai[src] -= int(wad);
         dai[dst] += int(wad);
-        require(dai[dst] >= int(wad));
     }
 
     // --- CDP Engine ---
@@ -183,7 +182,7 @@ contract Vat {
         return flips.push(Flip(ilk, lad, ink, tab)) - 1;
     }
     function flog(uint48 tic) public {
-        require(tic + wait < era());
+        require(tic + wait <= era());
         dai[this] -= int(sin[tic]);
         Tab = sub(Tab, sin[tic]);
         sin[tic] = 0;
