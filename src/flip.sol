@@ -40,7 +40,7 @@ contract Flipper {
         uint256 bid;
         uint256 lot;
         address guy;  // high bidder
-        uint48  tic;  // time of last bid
+        uint48  tic;  // expiry time
         uint48  end;
         address lad;
         address gal;
