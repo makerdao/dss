@@ -1,5 +1,7 @@
 // Copyright (C) 2018 AGPL
 
+// todo: case that nobody bids (maybe needs tick). who is initial guy?
+
 pragma solidity ^0.4.23;
 
 contract GemLike {
@@ -7,6 +9,9 @@ contract GemLike {
     function mint(address,uint) public;
 }
 
+contract VowLike {
+    function kiss(uint) public;
+}
 
 /*
    This thing creates gems on demand in return for pie.
@@ -35,6 +40,7 @@ contract Flopper {
         address guy;  // high bidder
         uint48  tic;  // expiry time
         uint48  end;
+        address vow;
     }
 
     mapping (uint => Bid) public bids;
@@ -52,11 +58,12 @@ contract Flopper {
         gem = GemLike(gem_);
     }
 
-    function kick(address gal, uint lot, uint bid)
+    function kick(address gal, uint lot, uint bid)  // todo auth
         public returns (uint)
     {
         uint id = ++kicks;
 
+        bids[id].vow = msg.sender;
         bids[id].bid = bid;
         bids[id].lot = lot;
         bids[id].guy = gal;

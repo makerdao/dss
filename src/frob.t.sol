@@ -4,6 +4,7 @@ import "ds-test/test.sol";
 import "ds-token/token.sol";
 
 import './frob.sol';
+import './heal.sol';
 import {Dai20} from './transferFrom.sol';
 import {Adapter} from './join.sol';
 
@@ -16,17 +17,36 @@ contract WarpVat is Vat {
     uint48 _era; function warp(uint48 era_) public { _era = era_; }
     function era() public view returns (uint48) { return _era; }
 
-    function woe() public view returns (uint w) {
-        w = dai[this] > 0 ? 0 : uint(-dai[this]);
-    }
-
     function suck(address guy, uint wad) public {
         dai[guy] += int(wad);
     }
+    function mint(address guy, uint wad) public {
+        dai[guy] += int(wad);
+    }
+    function whip(uint wad) public {
+        sin[era()] += wad;
+    }
 }
+
+contract WarpVow is Vow {
+    constructor(address vat_) Vow(vat_) public { }
+
+    function woe() public view returns (uint) {
+        return Woe;
+    }
+    function joy() public view returns (uint) {
+        return Joy();
+    }
+    function stun(uint wad) public {
+        Woe += wad;
+    }
+}
+
+/// toodoooo: kisssss FIXMEEEE
 
 contract FrobTest is DSTest {
     WarpVat vat;
+    WarpVow vow;
     Dai20   pie;
 
     DSToken gold;
@@ -60,8 +80,9 @@ contract FrobTest is DSTest {
         flop = new Flopper(vat, gov);
         gov.setOwner(flop);
 
-        vat.taff(flap);
-        vat.toff(flop);
+        vow = new WarpVow(vat);
+        vow.file("flap", address(flap));
+        vow.file("flop", address(flop));
 
         gold = new DSToken("GEM");
         gold.mint(1000 ether);
@@ -75,13 +96,13 @@ contract FrobTest is DSTest {
         vat.file(gold_ilk, "line", 1000 ether);
         vat.file("Line", 1000 ether);
         flip = new Flipper(vat, gold_ilk);
-        vat.tiff(gold_ilk, flip);
+        vat.fuss(gold_ilk, flip);
 
         gold.approve(vat);
         gov.approve(flap);
     }
 
-    function test_join() public {
+        function test_join() public {
         gold.mint(500 ether);
         assertEq(gold.balanceOf(this),     500 ether);
         assertEq(gold.balanceOf(adapter), 1000 ether);
@@ -165,7 +186,7 @@ contract FrobTest is DSTest {
 
         assertEq(vat.Ink(gold_ilk, this),  40 ether);
         assertEq(vat.Art(gold_ilk, this), 100 ether);
-        assertEq(vat.woe(), 0 ether);
+        assertEq(vow.woe(), 0 ether);
         assertEq(adapter.balanceOf(this), 960 ether);
         uint id = vat.bite(gold_ilk, this);
         assertEq(vat.Ink(gold_ilk, this), 0);
@@ -193,9 +214,6 @@ contract FrobTest is DSTest {
 
         assertEq(vat.sin(vat.era()), 100 ether);
         assertEq(pie.balanceOf(vat), 100 ether);
-        vat.flog(vat.era());
-        assertEq(vat.sin(vat.era()),   0 ether);
-        assertEq(pie.balanceOf(vat),   0 ether);
     }
 
     function test_floppy_bite() public {
@@ -205,14 +223,27 @@ contract FrobTest is DSTest {
         vat.bite(gold_ilk, this);
 
         assertEq(vat.sin(vat.era()), 100 ether);
-        vat.flog(vat.era());
-        assertEq(vat.woe(), 100 ether);
+        assertEq(vow.sin(vat.era()),   0 ether);
+        vow.grab(vat.era());
+        assertEq(vat.sin(vat.era()),   0 ether);
+        assertEq(vow.sin(vat.era()), 100 ether);
 
-        vat.file("lump", 10 ether);
-        uint f1 = vat.flop();
-        assertEq(vat.woe(), 100 ether);
+        assertEq(vow.Sin(), 100 ether);
+        vow.flog(vat.era());
+        assertEq(vow.Sin(),   0 ether);
+        assertEq(vow.woe(), 100 ether);
+        assertEq(vow.joy(),   0 ether);
+        assertEq(vow.Ash(),   0 ether);
+
+        vow.file("lump", uint(10 ether));
+        uint f1 = vow.flop();
+        assertEq(vow.woe(),  90 ether);
+        assertEq(vow.joy(),   0 ether);
+        assertEq(vow.Ash(),  10 ether);
         flop.dent(f1, 1000 ether, 10 ether);
-        assertEq(vat.woe(),  90 ether);
+        assertEq(vow.woe(),  90 ether);
+        assertEq(vow.joy(),  10 ether);
+        assertEq(vow.Ash(),  10 ether);
 
         assertEq(gov.balanceOf(this),  100 ether);
         flop.warp(4 hours);
@@ -222,12 +253,13 @@ contract FrobTest is DSTest {
 
     function test_flappy_bite() public {
         // get some surplus
-        vat.suck(vat, 100 ether);
-        assertEq(pie.balanceOf(vat),  100 ether);
+        vat.suck(vow, 100 ether);
+        assertEq(pie.balanceOf(vow),  100 ether);
         assertEq(gov.balanceOf(this), 100 ether);
 
-        vat.file("lump", 100 ether);
-        uint id = vat.flap();
+        vow.file("lump", uint(100 ether));
+        assertEq(vow.Awe(), 0 ether);
+        uint id = vow.flap();
 
         assertEq(pie.balanceOf(this),   0 ether);
         assertEq(gov.balanceOf(this), 100 ether);

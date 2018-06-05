@@ -49,6 +49,8 @@ contract FlopTest is DSTest {
     Guy  bob;
     Gal  gal;
 
+    function kiss(uint) public pure { }  // arbitrary callback
+
     function setUp() public {
         pie = new DSToken('pie');
         gem = new DSToken('gem');

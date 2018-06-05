@@ -11,17 +11,10 @@ contract Flippy{
         public returns (uint);
 }
 
-contract Fusspot {
-    function kick(address gal, uint lot, uint bid) public returns (uint);
-}
-
 contract Vat {
     address public root;
     bool    public live;
     uint256 public forms;
-
-    address public flapper;
-    address public flopper;
 
     uint256 public Line;
     uint256 public lump;
@@ -109,13 +102,10 @@ contract Vat {
         if (what == "lump") lump = risk;
         if (what == "Line") Line = risk;
     }
-    function tiff(bytes32 ilk, address flip) public {       // todo auth
+    function fuss(bytes32 ilk, address flip) public {             // todo auth
         ilks[ilk].flip = Flippy(flip);
     }
-    function taff(address flap) public { flapper = flap; }  // todo auth
-    function toff(address flop) public { flopper = flop; }  // todo auth
-
-    function flux(bytes32 ilk, address lad, int wad) public {  // todo auth
+    function flux(bytes32 ilk, address lad, int wad) public {     // todo auth
         urns[ilk][lad].gem = addi(urns[ilk][lad].gem, wad);
     }
 
@@ -124,6 +114,11 @@ contract Vat {
         require(dai[src] >= int(wad));
         dai[src] -= int(wad);
         dai[dst] += int(wad);
+    }
+    function burn(uint wad) public {
+        require(wad <= uint(dai[msg.sender]));
+        dai[msg.sender] -= int(wad);
+        Tab -= wad;
     }
 
     // --- CDP Engine ---
@@ -140,7 +135,6 @@ contract Vat {
         Tab   = addi(  Tab, rmuli(i.rate, dart));
 
         bool calm = rmul(i.Art, i.rate) <= i.line && Tab < Line;
-
         bool cool = dart <= 0;
         bool firm = dink >= 0;
         bool safe = rmul(u.ink, i.spot) >= rmul(u.art, i.rate);
@@ -162,7 +156,6 @@ contract Vat {
         uint256 tab;
     }
     Flip[] public flips;
-    mapping (uint48 => uint) public sin;
 
     function bite(bytes32 ilk, address lad) public returns (uint) {
         Urn storage u = urns[ilk][lad];
@@ -181,11 +174,12 @@ contract Vat {
         sin[era()] = add(sin[era()], tab);
         return flips.push(Flip(ilk, lad, ink, tab)) - 1;
     }
-    function flog(uint48 tic) public {
-        require(tic + wait <= era());
-        dai[this] -= int(sin[tic]);
-        Tab = sub(Tab, sin[tic]);
-        sin[tic] = 0;
+    mapping (uint48 => uint) public sin;
+
+    function grab(uint48 era_) public returns (uint tab) {
+        require(era() >= era_ + wait);
+        tab = sin[era_];
+        sin[era_] = 0;
     }
 
     function flip(uint n, uint wad) public returns (uint) {
@@ -207,13 +201,5 @@ contract Vat {
                                    , lot: ink
                                    , bid: 0
                                    });
-    }
-    function flap() public returns (uint) {
-        require(dai[this] >= int(lump));
-        return Fusspot(flapper).kick(this, lump, 0);
-    }
-    function flop() public returns (uint) {
-        require(dai[this] <= -int(lump));
-        return Fusspot(flopper).kick(this, uint(-1), lump);
     }
 }
