@@ -20,6 +20,11 @@ contract Vat {
     uint256 public lump;
     uint48  public wait;
 
+    modifier auth {
+        // todo: require(msg.sender == root);
+        _;
+    }
+
     struct Ilk {
         uint256  spot;  // ray
         uint256  rate;  // ray
@@ -83,17 +88,17 @@ contract Vat {
     }
 
     // --- Administration Engine ---
-    function form() public returns (bytes32 ilk) {   // todo auth
+    function form() public auth returns (bytes32 ilk) {
         ilk = bytes32(++forms);
         ilks[ilk].rate = RAY;
         ilks[ilk].chop = RAY;
     }
-    function file(bytes32 what, uint risk) public {  // todo auth
+    function file(bytes32 what, uint risk) public auth {
         if (what == "wait") wait = uint48(risk);
         if (what == "lump") lump = risk;
         if (what == "Line") Line = risk;
     }
-    function file(bytes32 ilk, bytes32 what, uint risk) public {  // todo auth
+    function file(bytes32 ilk, bytes32 what, uint risk) public auth {
         if (what == "spot") ilks[ilk].spot = risk;
         if (what == "rate") ilks[ilk].rate = risk;
         if (what == "line") ilks[ilk].line = risk;
@@ -102,15 +107,15 @@ contract Vat {
         if (what == "lump") lump = risk;
         if (what == "Line") Line = risk;
     }
-    function fuss(bytes32 ilk, address flip) public {             // todo auth
+    function fuss(bytes32 ilk, address flip) public auth {
         ilks[ilk].flip = Flippy(flip);
     }
-    function flux(bytes32 ilk, address lad, int wad) public {     // todo auth
+    function flux(bytes32 ilk, address lad, int wad) public auth {
         urns[ilk][lad].gem = addi(urns[ilk][lad].gem, wad);
     }
 
     // --- Fungibility Engine ---
-    function move(address src, address dst, uint256 wad) public {  // todo auth
+    function move(address src, address dst, uint256 wad) public auth {
         require(dai[src] >= int(wad));
         dai[src] -= int(wad);
         dai[dst] += int(wad);
@@ -143,7 +148,7 @@ contract Vat {
     }
 
     // --- Stability Engine ---
-    function drip(int wad) public {  // todo auth
+    function drip(int wad) public auth {
         dai[this] += wad;
         Tab = addi(Tab, wad);
     }

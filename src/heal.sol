@@ -15,6 +15,11 @@ contract Vow {
     address cow;  // flapper
     address row;  // flopper
 
+    modifier auth {
+        // todo: require(msg.sender == root);
+        _;
+    }
+
     function era() public view returns (uint48) { return uint48(now); }
 
     constructor(address vat_) public { vat = vat_; }
@@ -30,11 +35,11 @@ contract Vow {
     function Awe() public view returns (uint) { return Sin + Woe + Ash; }
     function Joy() public view returns (uint) { return uint(VatLike(vat).dai(this)); }
 
-    function file(bytes32 what, uint risk) public {  // todo auth
+    function file(bytes32 what, uint risk) public auth {
         if (what == "lump") lump = risk;
         if (what == "pad")  pad  = risk;
     }
-    function file(bytes32 what, address fuss) public {  // todo auth
+    function file(bytes32 what, address fuss) public auth {
         if (what == "flap") cow = fuss;
         if (what == "flop") row = fuss;
     }
