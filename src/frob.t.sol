@@ -24,7 +24,7 @@ contract WarpVat is Vat {
         dai[guy] += int(wad);
     }
     function whip(uint wad) public {
-        sin[era()] += wad;
+        sin[era()] += int(wad);
     }
 }
 
