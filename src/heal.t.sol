@@ -2,10 +2,10 @@ pragma solidity ^0.4.23;
 
 import "ds-test/test.sol";
 
-import "./heal.sol";
 import {WarpFlop as Flop} from './flop.t.sol';
 import {WarpFlap as Flap} from './flap.t.sol';
 import {WarpVat  as Vat}  from './frob.t.sol';
+import {WarpVow  as Vow}  from './frob.t.sol';
 
 contract Gem {
     mapping (address => uint256) public balanceOf;
@@ -48,10 +48,8 @@ contract VowTest is DSTest {
         return address(flop).call(sig, id, lot, bid);
     }
 
-
     function grab(uint wad) internal {
-        vat.whip(wad);
-        vow.grab(vat.era());
+        vow.whip(wad);
     }
     function flog(uint wad) internal {
         grab(wad);

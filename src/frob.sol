@@ -6,19 +6,11 @@ contract GemLike {
     function move(address,address,uint) public;
 }
 
-contract Flippy{
-    function kick(address lad, address gal, uint tab, uint lot, uint bid)
-        public returns (uint);
-}
-
 contract Vat {
     address public root;
     bool    public live;
     uint256 public forms;
-
     int256  public Line;
-    int256  public lump;
-    uint48  public wait;
 
     modifier auth {
         // todo: require(msg.sender == root);
@@ -29,11 +21,7 @@ contract Vat {
         int256  spot;  // ray
         int256  rate;  // ray
         int256  line;  // wad
-        int256  chop;  // ray
-
         int256  Art;   // wad
-
-        address  flip;
     }
     struct Urn {
         int256 gem;
@@ -86,24 +74,14 @@ contract Vat {
     function form() public auth returns (bytes32 ilk) {
         ilk = bytes32(++forms);
         ilks[ilk].rate = RAY;
-        ilks[ilk].chop = RAY;
     }
     function file(bytes32 what, uint risk) public auth {
-        if (what == "wait") wait = uint48(risk);
-        if (what == "lump") lump = int256(risk);
         if (what == "Line") Line = int256(risk);
     }
     function file(bytes32 ilk, bytes32 what, uint risk) public auth {
         if (what == "spot") ilks[ilk].spot = int256(risk);
         if (what == "rate") ilks[ilk].rate = int256(risk);
         if (what == "line") ilks[ilk].line = int256(risk);
-        if (what == "chop") ilks[ilk].chop = int256(risk);
-        if (what == "wait") wait = uint48(risk);
-        if (what == "lump") lump = int256(risk);
-        if (what == "Line") Line = int256(risk);
-    }
-    function fuss(bytes32 ilk, address flip) public auth {
-        ilks[ilk].flip = Flippy(flip);
     }
     function flux(bytes32 ilk, address lad, int wad) public auth {
         urns[ilk][lad].gem = add(urns[ilk][lad].gem, wad);
@@ -148,57 +126,15 @@ contract Vat {
     }
 
     // --- Liquidation Engine ---
-    struct Flip {
-        bytes32 ilk;
-        address lad;
-        int256  ink;
-        int256  tab;
-    }
-    Flip[] public flips;
-
-    function bite(bytes32 ilk, address lad) public returns (uint) {
+    function grab(bytes32 ilk, address lad, address vow, int dink, int dart) public auth {
         Urn storage u = urns[ilk][lad];
+        Urn storage v = urns[ilk][vow];
         Ilk storage i = ilks[ilk];
 
-        int ink = u.ink;
-        int art = u.art;
-        int tab = rmul(art, i.rate);
+        u.ink = add(u.ink, dink);
+        v.gem = sub(v.gem, dink);
 
-        u.ink = 0;
-        u.art = 0;
-        i.Art = sub(i.Art, art);
-
-        require(rmul(ink, i.spot) < tab);  // !safe
-
-        sin[era()] = add(sin[era()], tab);
-        return flips.push(Flip(ilk, lad, ink, tab)) - 1;
-    }
-    mapping (uint48 => int) public sin;
-
-    function grab(uint48 era_) public returns (uint tab) {
-        require(era() >= era_ + wait);
-        tab = uint(sin[era_]);
-        sin[era_] = 0;
-    }
-
-    function flip(uint n, int wad) public returns (uint) {
-        Flip storage f = flips[n];
-        Ilk  storage i = ilks[f.ilk];
-
-        require(wad <= f.tab);
-        require(wad == lump || (wad < lump && wad == f.tab));
-
-        int tab = f.tab;
-        int ink = f.ink * wad / tab;
-
-        f.tab = sub(f.tab, wad);
-        f.ink = sub(f.ink, ink);
-
-        return Flippy(i.flip).kick({ lad: f.lad
-                                   , gal: this
-                                   , tab: uint(rmul(wad, i.chop))
-                                   , lot: uint(ink)
-                                   , bid: uint(0)
-                                   });
+        u.art = add(u.art, dart);
+        i.Art = add(i.Art, dart);
     }
 }
