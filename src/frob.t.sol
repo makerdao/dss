@@ -4,6 +4,7 @@ import "ds-test/test.sol";
 import "ds-token/token.sol";
 
 import './frob.sol';
+import './bite.sol';
 import './heal.sol';
 import {Dai20} from './transferFrom.sol';
 import {Adapter} from './join.sol';
@@ -36,10 +37,6 @@ contract WarpVow is Vow {
     }
     function stun(uint wad) public {
         Woe += wad;
-    }
-    function whip(uint wad) public {
-        sin[era()] += wad;
-        Sin += wad;
     }
 }
 
@@ -157,6 +154,7 @@ contract FrobTest is DSTest {
 contract BiteTest is DSTest {
     WarpVat vat;
     WarpVow vow;
+    Cat     cat;
     Dai20   pie;
 
     DSToken gold;
@@ -194,6 +192,8 @@ contract BiteTest is DSTest {
         vow.file("flap", address(flap));
         vow.file("flop", address(flop));
 
+        cat = new Cat(vat, vow);
+
         gold = new DSToken("GEM");
         gold.mint(1000 ether);
 
@@ -206,8 +206,8 @@ contract BiteTest is DSTest {
         vat.file(gold_ilk, "line", 1000 ether);
         vat.file("Line", 1000 ether);
         flip = new Flipper(vat, gold_ilk);
-        vow.fuss(gold_ilk, flip);
-        vow.file(gold_ilk, "chop", int(ray(1 ether)));
+        cat.fuss(gold_ilk, flip);
+        cat.file(gold_ilk, "chop", int(ray(1 ether)));
 
         gold.approve(vat);
         gov.approve(flap);
@@ -225,14 +225,14 @@ contract BiteTest is DSTest {
         assertEq(vat.Art(gold_ilk, this), 100 ether);
         assertEq(vow.woe(), 0 ether);
         assertEq(adapter.balanceOf(this), 960 ether);
-        uint id = vow.bite(gold_ilk, this);
+        uint id = cat.bite(gold_ilk, this);
         assertEq(vat.Ink(gold_ilk, this), 0);
         assertEq(vat.Art(gold_ilk, this), 0);
         assertEq(vow.sin(vow.era()), 100 ether);
         assertEq(adapter.balanceOf(this), 960 ether);
 
-        vow.file("lump", uint(100 ether));
-        uint auction = vow.flip(id, 100 ether);  // flip all the tab
+        cat.file("lump", uint(100 ether));
+        uint auction = cat.flip(id, 100 ether);  // flip all the tab
 
         assertEq(pie.balanceOf(vow),   0 ether);
         flip.tend(auction, 40 ether,   1 ether);
@@ -259,7 +259,7 @@ contract BiteTest is DSTest {
         vat.file(gold_ilk, 'spot', ray(2 ether));  // now unsafe
 
         assertEq(vow.sin(vow.era()),   0 ether);
-        vow.bite(gold_ilk, this);
+        cat.bite(gold_ilk, this);
         assertEq(vow.sin(vow.era()), 100 ether);
 
         assertEq(vow.Sin(), 100 ether);

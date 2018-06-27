@@ -49,11 +49,11 @@ contract VowTest is DSTest {
     }
 
     function grab(uint wad) internal {
-        vow.whip(wad);
+        vow.fess(wad);
     }
     function flog(uint wad) internal {
         grab(wad);
-        vow.flog(vat.era());
+        vow.flog(vow.era());
     }
 
     function test_no_reflop() public {
