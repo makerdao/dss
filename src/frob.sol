@@ -116,9 +116,12 @@ contract Vat {
     }
 
     // --- Stability Engine ---
-    function drip(int wad) public auth {
-        dai[this] = add(dai[this], wad);
-        Tab = add(Tab, wad);
+    function fold(bytes32 ilk, address vow, int rate) public auth {
+        Ilk storage i = ilks[ilk];
+        i.rate   = add(i.rate, rate);
+        int wad  = rmul(i.Art, rate);
+        dai[vow] = add(dai[vow], wad);
+        Tab      = add(Tab, wad);
     }
 
     // --- Liquidation Engine ---
