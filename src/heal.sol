@@ -5,8 +5,8 @@ contract Fusspot {
 }
 
 contract DaiLike {
-    function dai(address) public view returns (int);
-    function burn(uint) public;
+    function dai (address) public view returns (int);
+    function heal(address,int) public;
 }
 
 contract Vow {
@@ -47,12 +47,12 @@ contract Vow {
     function heal(uint wad) public {
         require(wad <= Joy() && wad <= Woe);
         Woe -= wad;
-        DaiLike(vat).burn(wad);
+        DaiLike(vat).heal(this, int(wad));
     }
     function kiss(uint wad) public {
         require(wad <= Ash && wad <= Joy());
         Ash -= wad;
-        DaiLike(vat).burn(wad);
+        DaiLike(vat).heal(this, int(wad));
     }
 
     function fess(uint tab) public {

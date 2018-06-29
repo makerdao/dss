@@ -11,6 +11,7 @@ contract Vat {
     bool    public live;
     uint256 public forms;
     int256  public Line;
+    int256  public vice;
 
     modifier auth {
         // todo: require(msg.sender == root);
@@ -93,11 +94,6 @@ contract Vat {
         dai[src] -= int(wad);
         dai[dst] += int(wad);
     }
-    function burn(uint wad) public {
-        require(wad <= uint(dai[msg.sender]));
-        dai[msg.sender] = sub(dai[msg.sender], int(wad));
-        Tab = sub(Tab, int(wad));
-    }
 
     // --- CDP Engine ---
     function frob(bytes32 ilk, int dink, int dart) public {
@@ -136,5 +132,11 @@ contract Vat {
 
         u.art = add(u.art, dart);
         i.Art = add(i.Art, dart);
+
+        vice = sub(vice, rmul(i.rate, dart));
+    }
+    function heal(address vow, int wad) public auth {
+        dai[vow] = sub(dai[vow], wad);
+        vice = sub(vice, wad);
     }
 }
