@@ -9,7 +9,6 @@ contract GemLike {
 contract Vat {
     address public root;
     bool    public live;
-    uint256 public forms;
     int256  public Line;
     int256  public vice;
 
@@ -72,10 +71,6 @@ contract Vat {
     }
 
     // --- Administration Engine ---
-    function form() public auth returns (bytes32 ilk) {
-        ilk = bytes32(++forms);
-        ilks[ilk].rate = RAY;
-    }
     function file(bytes32 what, uint risk) public auth {
         if (what == "Line") Line = int256(risk);
     }
@@ -113,6 +108,7 @@ contract Vat {
         bool safe = rmul(u.ink, i.spot) >= rmul(u.art, i.rate);
 
         require(( calm || cool ) && ( cool && firm || safe ) && live);
+        require(i.rate != 0);
     }
 
     // --- Stability Engine ---

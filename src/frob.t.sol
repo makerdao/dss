@@ -43,9 +43,7 @@ contract WarpVow is Vow {
 contract FrobTest is DSTest {
     WarpVat vat;
     Dai20   pie;
-
     DSToken gold;
-    bytes32 gold_ilk;
 
     Adapter adapter;
 
@@ -65,13 +63,13 @@ contract FrobTest is DSTest {
         gold = new DSToken("GEM");
         gold.mint(1000 ether);
 
-        gold_ilk = vat.form();
-        adapter = new Adapter(vat, gold_ilk, gold);
+        vat.file("gold", "rate", ray(1 ether));
+        adapter = new Adapter(vat, "gold", gold);
         gold.approve(adapter);
         adapter.join(1000 ether);
 
-        vat.file(gold_ilk, "spot", ray(1 ether));
-        vat.file(gold_ilk, "line", 1000 ether);
+        vat.file("gold", "spot", ray(1 ether));
+        vat.file("gold", "line", 1000 ether);
         vat.file("Line", 1000 ether);
 
         gold.approve(vat);
@@ -89,65 +87,65 @@ contract FrobTest is DSTest {
         assertEq(gold.balanceOf(adapter), 1250 ether);
     }
     function test_lock() public {
-        assertEq(vat.Ink(gold_ilk, this), 0 ether);
+        assertEq(vat.Ink("gold", this), 0 ether);
         assertEq(adapter.balanceOf(this), 1000 ether);
-        vat.frob(gold_ilk, 6 ether, 0);
-        assertEq(vat.Ink(gold_ilk, this), 6 ether);
+        vat.frob("gold", 6 ether, 0);
+        assertEq(vat.Ink("gold", this), 6 ether);
         assertEq(adapter.balanceOf(this), 994 ether);
-        vat.frob(gold_ilk, -6 ether, 0);
-        assertEq(vat.Ink(gold_ilk, this), 0 ether);
+        vat.frob("gold", -6 ether, 0);
+        assertEq(vat.Ink("gold", this), 0 ether);
         assertEq(adapter.balanceOf(this), 1000 ether);
     }
     function test_calm() public {
         // calm means that the debt ceiling is not exceeded
         // it's ok to increase debt as long as you remain calm
-        vat.file(gold_ilk, 'line', 10 ether);
-        assertTrue( try_frob(gold_ilk, 10 ether, 9 ether));
+        vat.file("gold", 'line', 10 ether);
+        assertTrue( try_frob("gold", 10 ether, 9 ether));
         // only if under debt ceiling
-        assertTrue(!try_frob(gold_ilk,  0 ether, 2 ether));
+        assertTrue(!try_frob("gold",  0 ether, 2 ether));
     }
     function test_cool() public {
         // cool means that the debt has decreased
         // it's ok to be over the debt ceiling as long as you're cool
-        vat.file(gold_ilk, 'line', 10 ether);
-        assertTrue(try_frob(gold_ilk, 10 ether,  8 ether));
-        vat.file(gold_ilk, 'line', 5 ether);
+        vat.file("gold", 'line', 10 ether);
+        assertTrue(try_frob("gold", 10 ether,  8 ether));
+        vat.file("gold", 'line', 5 ether);
         // can decrease debt when over ceiling
-        assertTrue(try_frob(gold_ilk,  0 ether, -1 ether));
+        assertTrue(try_frob("gold",  0 ether, -1 ether));
     }
     function test_safe() public {
         // safe means that the cdp is not risky
         // you can't frob a cdp into unsafe
-        vat.frob(gold_ilk, 10 ether, 5 ether);                // safe draw
-        assertTrue(!try_frob(gold_ilk, 0 ether, 6 ether));  // unsafe draw
+        vat.frob("gold", 10 ether, 5 ether);                // safe draw
+        assertTrue(!try_frob("gold", 0 ether, 6 ether));  // unsafe draw
     }
     function test_nice() public {
         // nice means that the collateral has increased or the debt has
         // decreased. remaining unsafe is ok as long as you're nice
 
-        vat.frob(gold_ilk, 10 ether, 10 ether);
-        vat.file(gold_ilk, 'spot', ray(0.5 ether));  // now unsafe
+        vat.frob("gold", 10 ether, 10 ether);
+        vat.file("gold", 'spot', ray(0.5 ether));  // now unsafe
 
         // debt can't increase if unsafe
-        assertTrue(!try_frob(gold_ilk,  0 ether,  1 ether));
+        assertTrue(!try_frob("gold",  0 ether,  1 ether));
         // debt can decrease
-        assertTrue( try_frob(gold_ilk,  0 ether, -1 ether));
+        assertTrue( try_frob("gold",  0 ether, -1 ether));
         // ink can't decrease
-        assertTrue(!try_frob(gold_ilk, -1 ether,  0 ether));
+        assertTrue(!try_frob("gold", -1 ether,  0 ether));
         // ink can increase
-        assertTrue( try_frob(gold_ilk,  1 ether,  0 ether));
+        assertTrue( try_frob("gold",  1 ether,  0 ether));
 
         // cdp is still unsafe
         // ink can't decrease, even if debt decreases more
-        assertTrue(!this.try_frob(gold_ilk, -2 ether, -4 ether));
+        assertTrue(!this.try_frob("gold", -2 ether, -4 ether));
         // debt can't increase, even if ink increases more
-        assertTrue(!this.try_frob(gold_ilk,  5 ether,  1 ether));
+        assertTrue(!this.try_frob("gold",  5 ether,  1 ether));
 
         // ink can decrease if end state is safe
-        assertTrue( this.try_frob(gold_ilk, -1 ether, -4 ether));
-        vat.file(gold_ilk, 'spot', ray(0.4 ether));  // now unsafe
+        assertTrue( this.try_frob("gold", -1 ether, -4 ether));
+        vat.file("gold", 'spot', ray(0.4 ether));  // now unsafe
         // debt can increase if end state is safe
-        assertTrue( this.try_frob(gold_ilk,  5 ether, 1 ether));
+        assertTrue( this.try_frob("gold",  5 ether, 1 ether));
     }
 }
 
@@ -156,9 +154,7 @@ contract BiteTest is DSTest {
     WarpVow vow;
     Cat     cat;
     Dai20   pie;
-
     DSToken gold;
-    bytes32 gold_ilk;
 
     Adapter adapter;
 
@@ -197,17 +193,17 @@ contract BiteTest is DSTest {
         gold = new DSToken("GEM");
         gold.mint(1000 ether);
 
-        gold_ilk = vat.form();
-        adapter = new Adapter(vat, gold_ilk, gold);
+        vat.file("gold", "rate", ray(1 ether));
+        adapter = new Adapter(vat, "gold", gold);
         gold.approve(adapter);
         adapter.join(1000 ether);
 
-        vat.file(gold_ilk, "spot", ray(1 ether));
-        vat.file(gold_ilk, "line", 1000 ether);
+        vat.file("gold", "spot", ray(1 ether));
+        vat.file("gold", "line", 1000 ether);
         vat.file("Line", 1000 ether);
-        flip = new Flipper(vat, gold_ilk);
-        cat.fuss(gold_ilk, flip);
-        cat.file(gold_ilk, "chop", int(ray(1 ether)));
+        flip = new Flipper(vat, "gold");
+        cat.fuss("gold", flip);
+        cat.file("gold", "chop", int(ray(1 ether)));
 
         gold.approve(vat);
         gov.approve(flap);
@@ -215,19 +211,19 @@ contract BiteTest is DSTest {
     function test_happy_bite() public {
         // spot = tag / (par . mat)
         // tag=5, mat=2
-        vat.file(gold_ilk, 'spot', ray(2.5 ether));
-        vat.frob(gold_ilk,  40 ether, 100 ether);
+        vat.file("gold", 'spot', ray(2.5 ether));
+        vat.frob("gold",  40 ether, 100 ether);
 
         // tag=4, mat=2
-        vat.file(gold_ilk, 'spot', ray(2 ether));  // now unsafe
+        vat.file("gold", 'spot', ray(2 ether));  // now unsafe
 
-        assertEq(vat.Ink(gold_ilk, this),  40 ether);
-        assertEq(vat.Art(gold_ilk, this), 100 ether);
+        assertEq(vat.Ink("gold", this),  40 ether);
+        assertEq(vat.Art("gold", this), 100 ether);
         assertEq(vow.woe(), 0 ether);
         assertEq(adapter.balanceOf(this), 960 ether);
-        uint id = cat.bite(gold_ilk, this);
-        assertEq(vat.Ink(gold_ilk, this), 0);
-        assertEq(vat.Art(gold_ilk, this), 0);
+        uint id = cat.bite("gold", this);
+        assertEq(vat.Ink("gold", this), 0);
+        assertEq(vat.Art("gold", this), 0);
         assertEq(vow.sin(vow.era()), 100 ether);
         assertEq(adapter.balanceOf(this), 960 ether);
 
@@ -247,19 +243,19 @@ contract BiteTest is DSTest {
         assertEq(pie.balanceOf(this), 100 ether);
         assertEq(pie.balanceOf(vow),  100 ether);
         assertEq(adapter.balanceOf(this), 962 ether);
-        assertEq(vat.Gem(gold_ilk, this), 962 ether);
+        assertEq(vat.Gem("gold", this), 962 ether);
 
         assertEq(vow.sin(vow.era()), 100 ether);
         assertEq(pie.balanceOf(vow), 100 ether);
     }
 
     function test_floppy_bite() public {
-        vat.file(gold_ilk, 'spot', ray(2.5 ether));
-        vat.frob(gold_ilk,  40 ether, 100 ether);
-        vat.file(gold_ilk, 'spot', ray(2 ether));  // now unsafe
+        vat.file("gold", 'spot', ray(2.5 ether));
+        vat.frob("gold",  40 ether, 100 ether);
+        vat.file("gold", 'spot', ray(2 ether));  // now unsafe
 
         assertEq(vow.sin(vow.era()),   0 ether);
-        cat.bite(gold_ilk, this);
+        cat.bite("gold", this);
         assertEq(vow.sin(vow.era()), 100 ether);
 
         assertEq(vow.Sin(), 100 ether);
