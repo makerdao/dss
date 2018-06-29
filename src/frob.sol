@@ -84,15 +84,15 @@ contract Vat {
         if (what == "rate") ilks[ilk].rate = int256(risk);
         if (what == "line") ilks[ilk].line = int256(risk);
     }
-    function flux(bytes32 ilk, address lad, int wad) public auth {
-        urns[ilk][lad].gem = add(urns[ilk][lad].gem, wad);
-    }
 
     // --- Fungibility Engine ---
     function move(address src, address dst, uint256 wad) public auth {
         require(dai[src] >= int(wad));
         dai[src] -= int(wad);
         dai[dst] += int(wad);
+    }
+    function slip(bytes32 ilk, address guy, int256 wad) public auth {
+        urns[ilk][guy].gem = add(urns[ilk][guy].gem, wad);
     }
 
     // --- CDP Engine ---

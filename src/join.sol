@@ -7,7 +7,7 @@ contract GemLike {
 }
 
 contract Fluxing {
-    function flux(bytes32,address,int) public;
+    function slip(bytes32,address,int) public;
     function Gem(bytes32,address) public view returns (uint);
 }
 
@@ -22,11 +22,11 @@ contract Adapter {
     }
     function join(uint wad) public {
         gem.move(msg.sender, this, wad);
-        vat.flux(ilk, msg.sender, int(wad));
+        vat.slip(ilk, msg.sender, int(wad));
     }
     function exit(uint wad) public {
         gem.move(this, msg.sender, wad);
-        vat.flux(ilk, msg.sender, -int(wad));
+        vat.slip(ilk, msg.sender, -int(wad));
     }
     function balanceOf(address guy) public view returns (uint) {
         return vat.Gem(ilk, guy);

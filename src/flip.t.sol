@@ -49,7 +49,7 @@ contract Guy {
 contract Vat is VatLike {
     mapping (address => int)  public gems;
     mapping (address => uint) public dai;
-    function flux(bytes32 ilk, address lad, int jam) public {
+    function slip(bytes32 ilk, address lad, int jam) public {
         gems[lad] += jam;
         ilk;
     }

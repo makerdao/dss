@@ -8,7 +8,7 @@ contract GemLike {
 
 contract VatLike {
     function move(address,address,uint) public;
-    function flux(bytes32,address,int)  public;
+    function slip(bytes32,address,int)  public;
 }
 
 
@@ -113,7 +113,7 @@ contract Flipper {
         require(wmul(beg, lot) <= bids[id].lot);
 
         vat.move(msg.sender, bids[id].guy, bid);
-        vat.flux(ilk, bids[id].lad, int(bids[id].lot - lot));
+        vat.slip(ilk, bids[id].lad, int(bids[id].lot - lot));
 
         bids[id].guy = msg.sender;
         bids[id].lot = lot;
@@ -122,7 +122,7 @@ contract Flipper {
     function deal(uint id) public {
         require(bids[id].tic < era() && bids[id].tic != 0 ||
                 bids[id].end < era());
-        vat.flux(ilk, bids[id].guy, int(bids[id].lot));
+        vat.slip(ilk, bids[id].guy, int(bids[id].lot));
         delete bids[id];
     }
 }
