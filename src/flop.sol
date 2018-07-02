@@ -65,7 +65,7 @@ contract Flopper is LogEvents {
 
         emit LogFlopKick(
           id, this, pie, gem, lot, bid, bids[id].guy,
-          gal, bids[id].end, uint48(now)
+          gal, bids[id].end, era()
         );
 
         return id;
@@ -85,7 +85,7 @@ contract Flopper is LogEvents {
         bids[id].tic = era() + ttl;
 
         emit LogDent(
-          id, lot, bids[id].guy, bids[id].tic, uint48(now)
+          id, lot, bids[id].guy, bids[id].tic, era()
         );
     }
     function deal(uint id) public {
@@ -94,6 +94,6 @@ contract Flopper is LogEvents {
         gem.mint(bids[id].guy, bids[id].lot);
         delete bids[id];
 
-        emit LogDeal(id, uint48(now));
+        emit LogDeal(id, era());
     }
 }

@@ -83,7 +83,7 @@ contract Flipper is LogEvents {
 
         emit LogFlipKick(
           id, this, vat, address(ilk), lot, bid, bids[id].guy, gal,
-          bids[id].end, uint48(now), bids[id].lad, bids[id].tab
+          bids[id].end, era(), bids[id].lad, bids[id].tab
         );
 
         return id;
@@ -110,7 +110,7 @@ contract Flipper is LogEvents {
         bids[id].tic = era() + ttl;
 
         emit LogTend(
-          id, bid, bids[id].guy, bids[id].tic, uint48(now)
+          id, bid, bids[id].guy, bids[id].tic, era()
         );
     }
     function dent(uint id, uint lot, uint bid) public {
@@ -130,7 +130,7 @@ contract Flipper is LogEvents {
         bids[id].tic = era() + ttl;
 
         emit LogDent(
-          id, lot, bids[id].guy, bids[id].tic, uint48(now)
+          id, lot, bids[id].guy, bids[id].tic, era()
         );
     }
     function deal(uint id) public {
@@ -139,6 +139,6 @@ contract Flipper is LogEvents {
         vat.flux(ilk, bids[id].guy, int(bids[id].lot));
         delete bids[id];
 
-        emit LogDeal(id, uint48(now));
+        emit LogDeal(id, era());
     }
 }

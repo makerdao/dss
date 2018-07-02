@@ -38,7 +38,7 @@ contract LogEvents {
     address guy, // high bidder (taker)
     address gal, // receives auction income
     uint48  end, // auction end
-    uint48  now, // event timestamp
+    uint48  era, // timestamp
     address lad, // cdp owner
     uint256 tab  // pie wanted
   );
@@ -54,7 +54,7 @@ contract LogEvents {
     address guy, // high bidder (taker)
     address gal, // receives auction income
     uint48  end, // auction end
-    uint48  now  // event timestamp
+    uint48  era  // timestamp
   );
 
   // Debt auction start
@@ -68,7 +68,7 @@ contract LogEvents {
     address guy, // high bidder (taker)
     address gal, // receives auction income
     uint48  end, // auction end
-    uint48  now  // event timestamp
+    uint48  era  // timestamp
   );
 
   // New tend phase bid
@@ -77,7 +77,7 @@ contract LogEvents {
     uint256 bid, // bid amount
     address guy, // high bidder (taker)
     uint48  tic, // bid expiry
-    uint48  now  // event timestamp
+    uint48  era  // timestamp
   );
 
   // New dent phase bid
@@ -86,13 +86,13 @@ contract LogEvents {
     uint256 lot, // lot amount
     address guy, // high bidder (taker)
     uint48  tic, // bid expiry
-    uint48  now  // event timestamp
+    uint48  era  // timestamp
   );
 
   // Auction settlement
   event LogDeal(
     uint256 id,
-    uint48 now
+    uint48  era
   );
 
 }
