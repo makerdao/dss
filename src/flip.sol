@@ -2,6 +2,8 @@
 
 pragma solidity ^0.4.23;
 
+import "src/logEvents.sol";
+
 contract GemLike {
     function move(address,address,uint) public;
 }
@@ -10,7 +12,6 @@ contract VatLike {
     function move(address,address,uint) public;
     function flux(bytes32,address,int)  public;
 }
-
 
 /*
    This thing lets you flip some gems for a given amount of pie.
@@ -26,7 +27,7 @@ contract VatLike {
  - `end` max auction duration
 */
 
-contract Flipper {
+contract Flipper is LogEvents {
     VatLike public vat;
     bytes32 public ilk;
 
@@ -80,6 +81,11 @@ contract Flipper {
         bids[id].gal = gal;
         bids[id].tab = tab;
 
+        emit LogFlipKick(
+          id, this, address(ilk), vat, lot, bid, bids[id].guy, gal,
+          bids[id].end, uint48(now), bids[id].lad, bids[id].tab
+        );
+
         return id;
     }
     function tick(uint id) public {
@@ -102,6 +108,10 @@ contract Flipper {
         bids[id].guy = msg.sender;
         bids[id].bid = bid;
         bids[id].tic = era() + ttl;
+
+        emit LogTend(
+          id, bid, bids[id].guy, bids[id].tic, uint48(now)
+        );
     }
     function dent(uint id, uint lot, uint bid) public {
         require(bids[id].guy != 0);
@@ -118,11 +128,17 @@ contract Flipper {
         bids[id].guy = msg.sender;
         bids[id].lot = lot;
         bids[id].tic = era() + ttl;
+
+        emit LogDent(
+          id, lot, bids[id].guy, bids[id].tic, uint48(now)
+        );
     }
     function deal(uint id) public {
         require(bids[id].tic < era() && bids[id].tic != 0 ||
                 bids[id].end < era());
         vat.flux(ilk, bids[id].guy, int(bids[id].lot));
         delete bids[id];
+
+        emit LogDeal(id, uint48(now));
     }
 }
