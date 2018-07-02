@@ -2,6 +2,8 @@
 
 pragma solidity ^0.4.23;
 
+import "src/logEvents.sol";
+
 contract GemLike {
     function move(address,address,uint) public;
 }
@@ -18,7 +20,7 @@ contract GemLike {
 */
 
 
-contract Flapper {
+contract Flapper is LogEvents {
     GemLike public pie;
     GemLike public gem;
 
@@ -64,6 +66,11 @@ contract Flapper {
         bids[id].end = era() + tau;
         bids[id].gal = gal;
 
+        emit LogKick(
+          id, this, pie, gem, lot, bid, bids[id].guy,
+          gal, bids[id].end, uint48(now)
+        );
+
         return id;
     }
     function tend(uint id, uint lot, uint bid) public {
@@ -80,11 +87,17 @@ contract Flapper {
         bids[id].guy = msg.sender;
         bids[id].bid = bid;
         bids[id].tic = era() + ttl;
+
+        emit LogTend(
+          id, bid, bids[id].guy, bids[id].tic, uint48(now)
+        );
     }
     function deal(uint id) public {
         require(bids[id].tic < era() && bids[id].tic != 0 ||
                 bids[id].end < era());
         pie.move(this, bids[id].guy, bids[id].lot);
         delete bids[id];
+
+        emit LogDeal(id, uint48(now));
     }
 }
