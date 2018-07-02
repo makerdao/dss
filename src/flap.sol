@@ -66,7 +66,7 @@ contract Flapper is LogEvents {
         bids[id].end = era() + tau;
         bids[id].gal = gal;
 
-        emit LogKick(
+        emit LogFlapKick(
           id, this, pie, gem, lot, bid, bids[id].guy,
           gal, bids[id].end, uint48(now)
         );

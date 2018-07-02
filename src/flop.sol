@@ -63,8 +63,8 @@ contract Flopper is LogEvents {
         bids[id].guy = gal;
         bids[id].end = era() + tau;
 
-        emit LogKick(
-          id, this, gem, pie, lot, bid, bids[id].guy,
+        emit LogFlopKick(
+          id, this, pie, gem, lot, bid, bids[id].guy,
           gal, bids[id].end, uint48(now)
         );
 

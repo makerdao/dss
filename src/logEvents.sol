@@ -19,13 +19,26 @@ contract LogEvents {
     uint256 Art
   );
 
-  event LogKick(
+  event LogFlapKick(
     uint256 id,     // bid id
     address mom,    // auction contract address
-    address lotKey, // lot (pie|gem) address
-    address bidKey, // bid (pie|gem) address
-    uint256 lot,    // lot amount
-    uint256 bid,    // bid amount
+    address pie,    // pie address
+    address gem,    // gem address
+    uint256 lot,    // pie amount
+    uint256 bid,    // gem amount
+    address guy,    // high bidder (taker)
+    address gal,    // receives auction income
+    uint48  end,    // auction end
+    uint48  now     // event timestamp
+  );
+
+  event LogFlopKick(
+    uint256 id,     // bid id
+    address mom,    // auction contract address
+    address pie,    // pie address
+    address gem,    // gem address
+    uint256 lot,    // gem amount
+    uint256 bid,    // pie amount
     address guy,    // high bidder (taker)
     address gal,    // receives auction income
     uint48  end,    // auction end
