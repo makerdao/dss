@@ -184,7 +184,7 @@ contract Vat is LogEvents {
 
         sin[era()] = add(sin[era()], tab);
 
-        emit LogBite(ilk, lad, i.Art);
+        emit LogBite(ilk, lad, ink, art, tab, i.Art);
 
         return flips.push(Flip(ilk, lad, ink, tab)) - 1;
     }

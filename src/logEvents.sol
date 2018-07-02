@@ -16,6 +16,9 @@ contract LogEvents {
   event LogBite(
     bytes32 ilk,
     address lad,
+    uint256 ink,
+    uint256 tab,
+    uint256 art,
     uint256 Art
   );
 
