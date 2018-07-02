@@ -2,6 +2,8 @@
 
 pragma solidity ^0.4.23;
 
+import "src/logEvents.sol";
+
 contract GemLike {
     function move(address,address,uint) public;
 }
@@ -15,7 +17,7 @@ contract Fusspot {
     function kick(address gal, uint lot, uint bid) public returns (uint);
 }
 
-contract Vat {
+contract Vat is LogEvents {
     address public root;
     bool    public live;
     uint256 public forms;
@@ -146,6 +148,8 @@ contract Vat {
         bool safe = rmul(u.ink, i.spot) >= rmul(u.art, i.rate);
 
         require(( calm || cool ) && ( cool && firm || safe ) && live);
+
+        emit LogFrob(ilk, msg.sender, u.gem, u.ink, u.art, i.Art, uint48(now));
     }
 
     // --- Stability Engine ---
@@ -179,6 +183,9 @@ contract Vat {
         require(rmul(ink, i.spot) < tab);  // !safe
 
         sin[era()] = add(sin[era()], tab);
+
+        emit LogBite(ilk, lad, i.Art);
+
         return flips.push(Flip(ilk, lad, ink, tab)) - 1;
     }
     function flog(uint48 tic) public {

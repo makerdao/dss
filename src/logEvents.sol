@@ -3,6 +3,21 @@
 pragma solidity ^0.4.23;
 
 contract LogEvents {
+  event LogFrob(
+    bytes32 ilk,
+    address lad,
+    uint256 gem,
+    uint256 ink,
+    uint256 art,
+    uint256 Art,
+    uint48  now
+  );
+
+  event LogBite(
+    bytes32 ilk,
+    address lad,
+    uint256 Art
+  );
 
   event LogKick(
     uint256 id,     // bid id
