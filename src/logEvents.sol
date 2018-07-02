@@ -17,8 +17,8 @@ contract LogEvents {
     bytes32 ilk,
     address lad,
     uint256 ink,
-    uint256 tab,
     uint256 art,
+    uint256 tab,
     uint256 Art
   );
 
@@ -51,8 +51,8 @@ contract LogEvents {
   event LogFlipKick(
     uint256 id,     // bid id
     address mom,    // auction contract address
-    address lotKey, // gem address
-    address bidKey, // pie address
+    address pie,    // pie address
+    address gem,    // gem address
     uint256 lot,    // gem amount
     uint256 bid,    // pie amount
     address guy,    // high bidder (taker)

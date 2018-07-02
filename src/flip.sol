@@ -82,7 +82,7 @@ contract Flipper is LogEvents {
         bids[id].tab = tab;
 
         emit LogFlipKick(
-          id, this, address(ilk), vat, lot, bid, bids[id].guy, gal,
+          id, this, vat, address(ilk), lot, bid, bids[id].guy, gal,
           bids[id].end, uint48(now), bids[id].lad, bids[id].tab
         );
 
