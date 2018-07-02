@@ -149,7 +149,7 @@ contract Vat is LogEvents {
 
         require(( calm || cool ) && ( cool && firm || safe ) && live);
 
-        emit LogFrob(ilk, msg.sender, u.gem, u.ink, u.art, i.Art, uint48(now));
+        emit LogFrob(ilk, msg.sender, u.gem, u.ink, u.art, i.Art, era());
     }
 
     // --- Stability Engine ---
@@ -184,9 +184,9 @@ contract Vat is LogEvents {
 
         sin[era()] = add(sin[era()], tab);
 
-        emit LogBite(ilk, lad, ink, art, tab, i.Art);
+        uint id = flips.push(Flip(ilk, lad, ink, tab)) - 1;
 
-        return flips.push(Flip(ilk, lad, ink, tab)) - 1;
+        emit LogBite(ilk, lad, ink, art, tab, i.Art, id, era());
     }
     function flog(uint48 tic) public {
         require(tic + wait <= era());
