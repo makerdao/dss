@@ -66,7 +66,7 @@ contract Flapper is LogEvents {
         bids[id].end = era() + tau;
         bids[id].gal = gal;
 
-        emit LogFlapKick(
+        emit FlapKick(
           id, this, pie, gem, lot, bid, bids[id].guy,
           gal, bids[id].end, era()
         );
@@ -88,8 +88,8 @@ contract Flapper is LogEvents {
         bids[id].bid = bid;
         bids[id].tic = era() + ttl;
 
-        emit LogTend(
-          id, bid, bids[id].guy, bids[id].tic, era()
+        emit Tend(
+          id, lot, bid, bids[id].guy, bids[id].tic, era()
         );
     }
     function deal(uint id) public {
@@ -98,6 +98,6 @@ contract Flapper is LogEvents {
         pie.move(this, bids[id].guy, bids[id].lot);
         delete bids[id];
 
-        emit LogDeal(id, era());
+        emit Deal(id, era());
     }
 }

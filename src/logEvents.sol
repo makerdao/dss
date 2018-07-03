@@ -4,8 +4,33 @@ pragma solidity ^0.4.23;
 
 contract LogEvents {
 
+  // Dai transfers
+  event Move(
+    address src,
+    address dst,
+    uint256 wad
+  );
+
+  // Dai mints (drip, frob)
+  event Mint(
+    address dst, // receiver
+    int256  wad, // pie amount
+    int256  pie, // updated receiver pie balance
+    uint256 Tab, // updated total supply
+    uint48  era  // timestamp
+  );
+
+  // Dai burns (flog)
+  event Burn(
+    address src, // burner
+    uint256 wad, // pie amount
+    int256  pie, // updated receiver pie balance
+    uint256 Tab, // updated total supply
+    uint48  era  // timestamp
+  );
+
   // CDP State change
-  event LogFrob(
+  event Frob(
     bytes32 ilk, // urn.ilk
     address lad, // urn.lad
     uint256 gem, // urn.gem
@@ -16,7 +41,7 @@ contract LogEvents {
   );
 
   // CDP Liquidation
-  event LogBite(
+  event Bite(
     bytes32 ilk,  // urn.ilk
     address lad,  // urn.lad
     uint256 ink,  // urn.ink
@@ -24,11 +49,12 @@ contract LogEvents {
     uint256 tab,  // outstanding debt
     uint256 Art,  // ilk.Art
     uint256 flip, // flips[flip] index
-    uint48  era   // sin[era] timestamp
+    uint256 sin,  // sin[era] amount
+    uint48  era   // sin[era] index
   );
 
   // Collateral auction start
-  event LogFlipKick(
+  event FlipKick(
     uint256 id,  // bid id
     address mom, // auction contract address
     address pie, // pie address
@@ -44,7 +70,7 @@ contract LogEvents {
   );
 
   // Surplus auction start
-  event LogFlapKick(
+  event FlapKick(
     uint256 id,  // bid id
     address mom, // auction contract address
     address pie, // pie address
@@ -58,7 +84,7 @@ contract LogEvents {
   );
 
   // Debt auction start
-  event LogFlopKick(
+  event FlopKick(
     uint256 id,  // bid id
     address mom, // auction contract address
     address pie, // pie address
@@ -72,8 +98,9 @@ contract LogEvents {
   );
 
   // New tend phase bid
-  event LogTend(
+  event Tend(
     uint256 id,  // bid id
+    uint256 lot, // lot amount
     uint256 bid, // bid amount
     address guy, // high bidder (taker)
     uint48  tic, // bid expiry
@@ -81,16 +108,17 @@ contract LogEvents {
   );
 
   // New dent phase bid
-  event LogDent(
+  event Dent(
     uint256 id,  // bid id
     uint256 lot, // lot amount
+    uint256 bid, // bid amount
     address guy, // high bidder (taker)
     uint48  tic, // bid expiry
     uint48  era  // timestamp
   );
 
   // Auction settlement
-  event LogDeal(
+  event Deal(
     uint256 id,
     uint48  era
   );
