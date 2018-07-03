@@ -2,11 +2,12 @@
 
 pragma solidity ^0.4.23;
 
+import "src/events.sol";
+
 contract GemLike {
     function move(address,address,uint) public;
     function mint(address,uint) public;
 }
-
 
 /*
    This thing creates gems on demand in return for pie.
@@ -19,7 +20,7 @@ contract GemLike {
  - `end` max auction duration
 */
 
-contract Flopper {
+contract Flopper is Events {
     GemLike public pie;
     GemLike public gem;
 
@@ -62,6 +63,11 @@ contract Flopper {
         bids[id].guy = gal;
         bids[id].end = era() + tau;
 
+        emit FlopKick(
+          id, this, pie, gem, lot, bid, bids[id].guy,
+          gal, bids[id].end, era()
+        );
+
         return id;
     }
     function dent(uint id, uint lot, uint bid) public {
@@ -77,11 +83,17 @@ contract Flopper {
         bids[id].guy = msg.sender;
         bids[id].lot = lot;
         bids[id].tic = era() + ttl;
+
+        emit Dent(
+          id, lot, bid, bids[id].guy, bids[id].tic, era()
+        );
     }
     function deal(uint id) public {
         require(bids[id].tic < era() && bids[id].tic != 0 ||
                 bids[id].end < era());
         gem.mint(bids[id].guy, bids[id].lot);
         delete bids[id];
+
+        emit Deal(id, era());
     }
 }

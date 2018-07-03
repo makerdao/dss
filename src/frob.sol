@@ -2,6 +2,8 @@
 
 pragma solidity ^0.4.23;
 
+import "src/events.sol";
+
 contract GemLike {
     function move(address,address,uint) public;
 }
@@ -15,7 +17,7 @@ contract Fusspot {
     function kick(address gal, uint lot, uint bid) public returns (uint);
 }
 
-contract Vat {
+contract Vat is Events {
     address public root;
     bool    public live;
     uint256 public forms;
@@ -124,6 +126,7 @@ contract Vat {
         require(dai[src] >= int(wad));
         dai[src] -= int(wad);
         dai[dst] += int(wad);
+        emit Move(src, dst, wad);
     }
 
     // --- CDP Engine ---
@@ -134,7 +137,8 @@ contract Vat {
         u.gem = addi(u.gem, -dink);
         u.ink = addi(u.ink,  dink);
 
-        dai[msg.sender] += rmuli(i.rate, dart);
+        int tax = rmuli(i.rate, dart);
+        dai[msg.sender] += tax;
         u.art = addi(u.art, dart);
         i.Art = addi(i.Art, dart);
         Tab   = addi(  Tab, rmuli(i.rate, dart));
@@ -146,12 +150,16 @@ contract Vat {
         bool safe = rmul(u.ink, i.spot) >= rmul(u.art, i.rate);
 
         require(( calm || cool ) && ( cool && firm || safe ) && live);
+
+        emit Mint(msg.sender, tax, dai[msg.sender], Tab, era());
+        emit Frob(ilk, msg.sender, u.gem, u.ink, u.art, i.Art, era());
     }
 
     // --- Stability Engine ---
     function drip(int wad) public {  // todo auth
         dai[this] += wad;
         Tab = addi(Tab, wad);
+        emit Mint(this, wad, dai[this], Tab, era());
     }
 
     // --- Liquidation Engine ---
@@ -179,12 +187,18 @@ contract Vat {
         require(rmul(ink, i.spot) < tab);  // !safe
 
         sin[era()] = add(sin[era()], tab);
-        return flips.push(Flip(ilk, lad, ink, tab)) - 1;
+
+        uint id = flips.push(Flip(ilk, lad, ink, tab)) - 1;
+
+        emit Bite(ilk, lad, ink, art, tab, i.Art, id, sin[era()], era());
     }
     function flog(uint48 tic) public {
         require(tic + wait <= era());
         dai[this] -= int(sin[tic]);
         Tab = sub(Tab, sin[tic]);
+
+        emit Burn(this, sin[tic], dai[this], Tab, era());
+
         sin[tic] = 0;
     }
 
