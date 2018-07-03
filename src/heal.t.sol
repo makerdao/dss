@@ -50,6 +50,8 @@ contract VowTest is DSTest {
 
     function grab(uint wad) internal {
         vow.fess(wad);
+        vat.file('', 'rate', 10 ** 27);
+        vat.grab('', address(vat), vow, 0, -int(wad));
     }
     function flog(uint wad) internal {
         grab(wad);
@@ -64,6 +66,7 @@ contract VowTest is DSTest {
 
     function test_no_flop_pending_joy() public {
         flog(200 ether);
+
         vat.mint(vow, 100 ether);
         assertTrue(!try_flop() );
 
@@ -79,6 +82,7 @@ contract VowTest is DSTest {
     function test_no_flap_pending_sin() public {
         vow.file("lump", uint256(0 ether));
         grab(100 ether);
+
         vat.mint(vow, 50 ether);
         assertTrue(!try_flap() );
     }

@@ -6,7 +6,7 @@ contract Fusspot {
 
 contract DaiLike {
     function dai (address) public view returns (int);
-    function heal(address,int) public;
+    function heal(address,address,int) public;
 }
 
 contract Vow {
@@ -14,12 +14,8 @@ contract Vow {
     address cow;  // flapper
     address row;  // flopper
 
-    modifier auth {
-        // todo: require(msg.sender == root);
-        _;
-    }
-
     function era() public view returns (uint48) { return uint48(now); }
+    modifier auth { _; }  // todo: require(msg.sender == root);
 
     constructor(address vat_) public { vat = vat_; }
 
@@ -47,15 +43,15 @@ contract Vow {
     function heal(uint wad) public {
         require(wad <= Joy() && wad <= Woe);
         Woe -= wad;
-        DaiLike(vat).heal(this, int(wad));
+        DaiLike(vat).heal(this, this, int(wad));
     }
     function kiss(uint wad) public {
         require(wad <= Ash && wad <= Joy());
         Ash -= wad;
-        DaiLike(vat).heal(this, int(wad));
+        DaiLike(vat).heal(this, this, int(wad));
     }
 
-    function fess(uint tab) public {
+    function fess(uint tab) public auth {
         sin[era()] += tab;
         Sin += tab;
     }

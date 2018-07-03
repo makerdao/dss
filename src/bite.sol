@@ -20,10 +20,7 @@ contract Cat {
     address public vow;
     uint256 public lump;  // fixed lot size
 
-    modifier auth {
-        // todo: require(msg.sender == root);
-        _;
-    }
+    modifier auth { _; }  // todo: require(msg.sender == root);
 
     struct Ilk {
         int256  chop;
@@ -61,7 +58,7 @@ contract Cat {
 
         require(rmul(ink, spot) < tab);  // !safe
 
-        VatLike(vat).grab(ilk, lad, this, -ink, -art);
+        VatLike(vat).grab(ilk, lad, vow, -ink, -art);
         VowLike(vow).fess(uint(tab));
 
         return flips.push(Flip(ilk, lad, uint(ink), uint(tab))) - 1;

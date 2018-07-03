@@ -18,11 +18,9 @@ contract WarpVat is Vat {
     uint48 _era; function warp(uint48 era_) public { _era = era_; }
     function era() public view returns (uint48) { return _era; }
 
-    function suck(address guy, uint wad) public {
-        dai[guy] += int(wad);
-    }
     function mint(address guy, uint wad) public {
         dai[guy] += int(wad);
+        Tab      += int(wad);
     }
 }
 
@@ -52,7 +50,7 @@ contract FrobTest is DSTest {
         return address(vat).call(sig, ilk, ink, art);
     }
 
-    function ray(uint wad) internal pure returns (uint) {
+    function ray(int wad) internal pure returns (int) {
         return wad * 10 ** 9;
     }
 
@@ -63,12 +61,12 @@ contract FrobTest is DSTest {
         gold = new DSToken("GEM");
         gold.mint(1000 ether);
 
-        vat.file("gold", "rate", ray(1 ether));
+        vat.file("gold", "rate", int(ray(1 ether)));
         adapter = new Adapter(vat, "gold", gold);
         gold.approve(adapter);
         adapter.join(1000 ether);
 
-        vat.file("gold", "spot", ray(1 ether));
+        vat.file("gold", "spot", int(ray(1 ether)));
         vat.file("gold", "line", 1000 ether);
         vat.file("Line", 1000 ether);
 
@@ -124,7 +122,7 @@ contract FrobTest is DSTest {
         // decreased. remaining unsafe is ok as long as you're nice
 
         vat.frob("gold", 10 ether, 10 ether);
-        vat.file("gold", 'spot', ray(0.5 ether));  // now unsafe
+        vat.file("gold", 'spot', int(ray(0.5 ether)));  // now unsafe
 
         // debt can't increase if unsafe
         assertTrue(!try_frob("gold",  0 ether,  1 ether));
@@ -143,7 +141,7 @@ contract FrobTest is DSTest {
 
         // ink can decrease if end state is safe
         assertTrue( this.try_frob("gold", -1 ether, -4 ether));
-        vat.file("gold", 'spot', ray(0.4 ether));  // now unsafe
+        vat.file("gold", 'spot', int(ray(0.4 ether)));  // now unsafe
         // debt can increase if end state is safe
         assertTrue( this.try_frob("gold",  5 ether, 1 ether));
     }
@@ -193,12 +191,12 @@ contract BiteTest is DSTest {
         gold = new DSToken("GEM");
         gold.mint(1000 ether);
 
-        vat.file("gold", "rate", ray(1 ether));
+        vat.file("gold", "rate", int(ray(1 ether)));
         adapter = new Adapter(vat, "gold", gold);
         gold.approve(adapter);
         adapter.join(1000 ether);
 
-        vat.file("gold", "spot", ray(1 ether));
+        vat.file("gold", "spot", int(ray(1 ether)));
         vat.file("gold", "line", 1000 ether);
         vat.file("Line", 1000 ether);
         flip = new Flipper(vat, "gold");
@@ -211,11 +209,11 @@ contract BiteTest is DSTest {
     function test_happy_bite() public {
         // spot = tag / (par . mat)
         // tag=5, mat=2
-        vat.file("gold", 'spot', ray(2.5 ether));
+        vat.file("gold", 'spot', int(ray(2.5 ether)));
         vat.frob("gold",  40 ether, 100 ether);
 
         // tag=4, mat=2
-        vat.file("gold", 'spot', ray(2 ether));  // now unsafe
+        vat.file("gold", 'spot', int(ray(2 ether)));  // now unsafe
 
         assertEq(vat.Ink("gold", this),  40 ether);
         assertEq(vat.Art("gold", this), 100 ether);
@@ -250,9 +248,9 @@ contract BiteTest is DSTest {
     }
 
     function test_floppy_bite() public {
-        vat.file("gold", 'spot', ray(2.5 ether));
+        vat.file("gold", 'spot', int(ray(2.5 ether)));
         vat.frob("gold",  40 ether, 100 ether);
-        vat.file("gold", 'spot', ray(2 ether));  // now unsafe
+        vat.file("gold", 'spot', int(ray(2 ether)));  // now unsafe
 
         assertEq(vow.sin(vow.era()),   0 ether);
         cat.bite("gold", this);

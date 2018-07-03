@@ -2,20 +2,14 @@
 
 pragma solidity ^0.4.23;
 
-contract GemLike {
-    function move(address,address,uint) public;
-}
-
 contract Vat {
     address public root;
     bool    public live;
     int256  public Line;
     int256  public vice;
 
-    modifier auth {
-        // todo: require(msg.sender == root);
-        _;
-    }
+    function era() public view returns (uint48) { return uint48(now); }
+    modifier auth { _; }  // todo: require(msg.sender == root);
 
     struct Ilk {
         int256  spot;  // ray
@@ -30,6 +24,7 @@ contract Vat {
     }
 
     mapping (address => int256)                   public dai;
+    mapping (address => int256)                   public sin;
     mapping (bytes32 => Ilk)                      public ilks;
     mapping (bytes32 => mapping (address => Urn)) public urns;
 
@@ -43,8 +38,6 @@ contract Vat {
         return urns[ilk][lad].art;
     }
     int public Tab;
-
-    function era() public view returns (uint48) { return uint48(now); }
 
     int constant RAY = 10 ** 27;
     function add(int x, int y) internal pure returns (int z) {
@@ -62,7 +55,7 @@ contract Vat {
         require(y == 0 || z / y == x);
     }
     function rmul(int x, int y) internal pure returns (int z) {
-        z = add(mul(x, y), RAY / 2) / RAY;
+        z = mul(x, y) / RAY;
     }
 
     constructor() public {
@@ -71,20 +64,20 @@ contract Vat {
     }
 
     // --- Administration Engine ---
-    function file(bytes32 what, uint risk) public auth {
-        if (what == "Line") Line = int256(risk);
+    function file(bytes32 what, int risk) public auth {
+        if (what == "Line") Line = risk;
     }
-    function file(bytes32 ilk, bytes32 what, uint risk) public auth {
-        if (what == "spot") ilks[ilk].spot = int256(risk);
-        if (what == "rate") ilks[ilk].rate = int256(risk);
-        if (what == "line") ilks[ilk].line = int256(risk);
+    function file(bytes32 ilk, bytes32 what, int risk) public auth {
+        if (what == "spot") ilks[ilk].spot = risk;
+        if (what == "rate") ilks[ilk].rate = risk;
+        if (what == "line") ilks[ilk].line = risk;
     }
 
     // --- Fungibility Engine ---
-    function move(address src, address dst, uint256 wad) public auth {
+    function move(address src, address dst, uint wad) public auth {
         require(dai[src] >= int(wad));
-        dai[src] -= int(wad);
-        dai[dst] += int(wad);
+        dai[src] = sub(dai[src], int(wad));
+        dai[dst] = add(dai[dst], int(wad));
     }
     function slip(bytes32 ilk, address guy, int256 wad) public auth {
         urns[ilk][guy].gem = add(urns[ilk][guy].gem, wad);
@@ -123,19 +116,25 @@ contract Vat {
     // --- Liquidation Engine ---
     function grab(bytes32 ilk, address lad, address vow, int dink, int dart) public auth {
         Urn storage u = urns[ilk][lad];
-        Urn storage v = urns[ilk][vow];
         Ilk storage i = ilks[ilk];
 
         u.ink = add(u.ink, dink);
-        v.gem = sub(v.gem, dink);
-
         u.art = add(u.art, dart);
         i.Art = add(i.Art, dart);
 
-        vice = sub(vice, rmul(i.rate, dart));
+        sin[vow] = sub(sin[vow], rmul(i.rate, dart));
+        vice     = sub(vice,     rmul(i.rate, dart));
     }
-    function heal(address vow, int wad) public auth {
-        dai[vow] = sub(dai[vow], wad);
+    function heal(address u, address v, int wad) public auth {
+        require(sin[u] >= wad);
+        require(dai[v] >= wad);
+        require(vice   >= wad);
+        require(Tab    >= wad);
+
+        sin[u] = sub(sin[u], wad);
+        dai[v] = sub(dai[v], wad);
+
         vice = sub(vice, wad);
+        Tab  = sub(Tab, wad);
     }
 }
