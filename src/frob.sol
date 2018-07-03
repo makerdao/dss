@@ -2,7 +2,7 @@
 
 pragma solidity ^0.4.23;
 
-import "src/logEvents.sol";
+import "src/events.sol";
 
 contract GemLike {
     function move(address,address,uint) public;
@@ -17,7 +17,7 @@ contract Fusspot {
     function kick(address gal, uint lot, uint bid) public returns (uint);
 }
 
-contract Vat is LogEvents {
+contract Vat is Events {
     address public root;
     bool    public live;
     uint256 public forms;

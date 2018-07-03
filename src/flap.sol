@@ -2,7 +2,7 @@
 
 pragma solidity ^0.4.23;
 
-import "src/logEvents.sol";
+import "src/events.sol";
 
 contract GemLike {
     function move(address,address,uint) public;
@@ -20,7 +20,7 @@ contract GemLike {
 */
 
 
-contract Flapper is LogEvents {
+contract Flapper is Events {
     GemLike public pie;
     GemLike public gem;
 

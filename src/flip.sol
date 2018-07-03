@@ -2,7 +2,7 @@
 
 pragma solidity ^0.4.23;
 
-import "src/logEvents.sol";
+import "src/events.sol";
 
 contract GemLike {
     function move(address,address,uint) public;
@@ -27,7 +27,7 @@ contract VatLike {
  - `end` max auction duration
 */
 
-contract Flipper is LogEvents {
+contract Flipper is Events {
     VatLike public vat;
     bytes32 public ilk;
 

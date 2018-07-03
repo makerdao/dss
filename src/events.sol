@@ -2,7 +2,7 @@
 
 pragma solidity ^0.4.23;
 
-contract LogEvents {
+contract Events {
 
   // Dai transfers
   event Move(
