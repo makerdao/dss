@@ -2,6 +2,8 @@
 
 pragma solidity ^0.4.23;
 
+import "src/events.sol";
+
 contract GemLike {
     function move(address,address,uint) public;
 }
@@ -26,7 +28,7 @@ contract VatLike {
  - `end` max auction duration
 */
 
-contract Flipper {
+contract Flipper is Events {
     VatLike public vat;
     bytes32 public ilk;
 
@@ -80,6 +82,11 @@ contract Flipper {
         bids[id].gal = gal;
         bids[id].tab = tab;
 
+        emit FlipKick(
+          id, this, vat, ilk, lot, bid, msg.sender, gal,
+          bids[id].end, era(), bids[id].lad, bids[id].tab
+        );
+
         return id;
     }
     function tick(uint id) public {
@@ -103,6 +110,8 @@ contract Flipper {
         bids[id].guy = msg.sender;
         bids[id].bid = bid;
         bids[id].tic = era() + ttl;
+
+        emit Tend(id, lot, bid, msg.sender, bids[id].tic, era());
     }
     function dent(uint id, uint lot, uint bid) public {
         require(bids[id].guy != 0);
@@ -120,11 +129,15 @@ contract Flipper {
         bids[id].guy = msg.sender;
         bids[id].lot = lot;
         bids[id].tic = era() + ttl;
+
+        emit Dent(id, lot, bid, msg.sender, bids[id].tic, era());
     }
     function deal(uint id) public {
         require(bids[id].tic < era() && bids[id].tic != 0 ||
                 bids[id].end < era());
         vat.slip(ilk, bids[id].guy, int(bids[id].lot));
         delete bids[id];
+
+        emit Deal(id, era());
     }
 }

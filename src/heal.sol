@@ -1,5 +1,7 @@
 pragma solidity ^0.4.23;
 
+import "src/events.sol";
+
 contract Fusspot {
     function kick(address gal, uint lot, uint bid) public returns (uint);
 }
@@ -9,7 +11,7 @@ contract DaiLike {
     function heal(address,address,int) public;
 }
 
-contract Vow {
+contract Vow is Events {
     address vat;
     address cow;  // flapper
     address row;  // flopper
@@ -34,10 +36,14 @@ contract Vow {
     function file(bytes32 what, uint risk) public auth {
         if (what == "lump") lump = risk;
         if (what == "pad")  pad  = risk;
+
+        emit FileUint(what, risk);
     }
     function file(bytes32 what, address fuss) public auth {
         if (what == "flap") cow = fuss;
         if (what == "flop") row = fuss;
+
+        emit FileFuss(what, fuss);
     }
 
     function heal(uint wad) public {

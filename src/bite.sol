@@ -1,4 +1,6 @@
-pragma solidity ^0.4.23;
+pragma solidity ^0.4.24;
+
+import "src/events.sol";
 
 contract Flippy{
     function kick(address lad, address gal, uint tab, uint lot, uint bid)
@@ -15,7 +17,7 @@ contract VowLike {
     function fess(uint) public;
 }
 
-contract Cat {
+contract Cat is Events {
     address public vat;
     address public vow;
     uint256 public lump;  // fixed lot size
@@ -61,7 +63,9 @@ contract Cat {
         VatLike(vat).grab(ilk, lad, vow, -ink, -art);
         VowLike(vow).fess(uint(tab));
 
-        return flips.push(Flip(ilk, lad, uint(ink), uint(tab))) - 1;
+        uint flip = flips.push(Flip(ilk, lad, uint(ink), uint(tab))) - 1;
+
+        emit Bite(ilk, lad, gem, ink, art, uint48(now), tab, flip);
     }
 
     function flip(uint n, uint wad) public returns (uint) {

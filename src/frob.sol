@@ -2,7 +2,9 @@
 
 pragma solidity ^0.4.23;
 
-contract Vat {
+import "src/events.sol";
+
+contract Vat is Events {
     address public root;
     bool    public live;
     int256  public Line;
@@ -67,11 +69,15 @@ contract Vat {
     // --- Administration Engine ---
     function file(bytes32 what, int risk) public auth {
         if (what == "Line") Line = risk;
+
+        emit FileInt(what, risk);
     }
     function file(bytes32 ilk, bytes32 what, int risk) public auth {
         if (what == "spot") ilks[ilk].spot = risk;
         if (what == "rate") ilks[ilk].rate = risk;
         if (what == "line") ilks[ilk].line = risk;
+
+        emit FileIlk(ilk, what, risk);
     }
 
     // --- Fungibility Engine ---
@@ -79,9 +85,13 @@ contract Vat {
         require(dai[src] >= int(wad));
         dai[src] = sub(dai[src], int(wad));
         dai[dst] = add(dai[dst], int(wad));
+
+        emit Move(src, dst, wad);
     }
     function slip(bytes32 ilk, address guy, int256 wad) public auth {
         urns[ilk][guy].gem = add(urns[ilk][guy].gem, wad);
+
+        emit Slip(ilk, guy, wad, urns[ilk][guy].gem);
     }
 
     // --- CDP Engine ---
@@ -104,6 +114,9 @@ contract Vat {
 
         require(( calm || cool ) && ( cool && firm || safe ) && live);
         require(i.rate != 0);
+
+        emit Push(this, msg.sender, rmul(i.rate, dart), "frob");
+        emit Frob(ilk, msg.sender, u.gem, u.ink, u.art, era());
     }
 
     // --- Liquidation Engine ---
@@ -129,6 +142,8 @@ contract Vat {
 
         vice = sub(vice, wad);
         Tab  = sub(Tab, wad);
+
+        emit Push(this, v, wad, "heal");
     }
 
     // --- Stability Engine ---
@@ -138,6 +153,8 @@ contract Vat {
         int wad  = rmul(i.Art, rate);
         dai[vow] = add(dai[vow], wad);
         Tab      = add(Tab, wad);
+
+        emit Push(this, vow, wad, "fold");
     }
 
 }
