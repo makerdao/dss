@@ -94,6 +94,7 @@ contract Flipper {
 
         require(lot == bids[id].lot);
         require(bid <= bids[id].tab);
+        require(bid >  bids[id].bid);
         require(bid >= wmul(beg, bids[id].bid) || bid == bids[id].tab);
 
         vat.move(msg.sender, bids[id].guy, bids[id].bid);
@@ -110,6 +111,7 @@ contract Flipper {
 
         require(bid == bids[id].bid);
         require(bid == bids[id].tab);
+        require(lot < bids[id].lot);
         require(wmul(beg, lot) <= bids[id].lot);
 
         vat.move(msg.sender, bids[id].guy, bid);

@@ -77,6 +77,7 @@ contract Flopper {
         require(bids[id].end > era());
 
         require(bid == bids[id].bid);
+        require(lot <  bids[id].lot);
         require(mul(beg, lot) <= bids[id].lot);
 
         pie.move(msg.sender, bids[id].guy, bid);

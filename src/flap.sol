@@ -72,6 +72,7 @@ contract Flapper {
         require(bids[id].end > era());
 
         require(lot == bids[id].lot);
+        require(bid >  bids[id].bid);
         require(bid >= mul(beg, bids[id].bid));
 
         gem.move(msg.sender, bids[id].guy, bids[id].bid);
