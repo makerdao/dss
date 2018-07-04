@@ -6,7 +6,6 @@ contract Vat {
     address public root;
     bool    public live;
     int256  public Line;
-    int256  public vice;
 
     function era() public view returns (uint48) { return uint48(now); }
     modifier auth { _; }  // todo: require(msg.sender == root);
@@ -28,6 +27,9 @@ contract Vat {
     mapping (bytes32 => Ilk)                      public ilks;
     mapping (bytes32 => mapping (address => Urn)) public urns;
 
+    int256  public Tab;
+    int256  public vice;
+
     function Gem(bytes32 ilk, address lad) public view returns (int) {
         return urns[ilk][lad].gem;
     }
@@ -37,9 +39,8 @@ contract Vat {
     function Art(bytes32 ilk, address lad) public view returns (int) {
         return urns[ilk][lad].art;
     }
-    int public Tab;
 
-    int constant RAY = 10 ** 27;
+    int256 constant RAY = 10 ** 27;
     function add(int x, int y) internal pure returns (int z) {
         z = x + y;
         require(y <= 0 || z > x);
@@ -92,8 +93,9 @@ contract Vat {
         u.ink = add(u.ink, dink);
         u.art = add(u.art, dart);
         i.Art = add(i.Art, dart);
-        Tab   = add(  Tab, rmul(i.rate, dart));
+
         dai[msg.sender] = add(dai[msg.sender], rmul(i.rate, dart));
+        Tab             = add(Tab,             rmul(i.rate, dart));
 
         bool calm = rmul(i.Art, i.rate) <= i.line && Tab < Line;
         bool cool = dart <= 0;
@@ -102,15 +104,6 @@ contract Vat {
 
         require(( calm || cool ) && ( cool && firm || safe ) && live);
         require(i.rate != 0);
-    }
-
-    // --- Stability Engine ---
-    function fold(bytes32 ilk, address vow, int rate) public auth {
-        Ilk storage i = ilks[ilk];
-        i.rate   = add(i.rate, rate);
-        int wad  = rmul(i.Art, rate);
-        dai[vow] = add(dai[vow], wad);
-        Tab      = add(Tab, wad);
     }
 
     // --- Liquidation Engine ---
@@ -137,4 +130,14 @@ contract Vat {
         vice = sub(vice, wad);
         Tab  = sub(Tab, wad);
     }
+
+    // --- Stability Engine ---
+    function fold(bytes32 ilk, address vow, int rate) public auth {
+        Ilk storage i = ilks[ilk];
+        i.rate   = add(i.rate, rate);
+        int wad  = rmul(i.Art, rate);
+        dai[vow] = add(dai[vow], wad);
+        Tab      = add(Tab, wad);
+    }
+
 }
