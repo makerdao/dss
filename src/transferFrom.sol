@@ -8,7 +8,7 @@ contract VatLike {
     function move(address,address,uint) public;
 }
 
-contract Dai20 {    /* erc20 is just, like, your opinion, bro */
+contract Dai20 {
     VatLike public vat;
     constructor(address vat_) public  { vat = VatLike(vat_); }
 
@@ -19,10 +19,17 @@ contract Dai20 {    /* erc20 is just, like, your opinion, bro */
         return vat.Tab();
     }
 
+    event Approval(address src, address dst, uint wad);
+    event Transfer(address src, address dst, uint wad);
+
     mapping (address => mapping (address => uint)) public allowance;
     function approve(address guy, uint wad) public returns (bool) {
         allowance[msg.sender][guy] += wad;
+        emit Approval(msg.sender, dst, wad * uint(-1));
         return true;
+    }
+    function approve(address guy) public {
+        approve(guy, uint(-1));
     }
 
     function transferFrom(address src, address dst, uint wad) public returns (bool) {
@@ -31,16 +38,21 @@ contract Dai20 {    /* erc20 is just, like, your opinion, bro */
             allowance[src][msg.sender] -= wad;
         }
         vat.move(src, dst, wad);
+        emit Transfer(src, dst, wad);
         return true;
     }
     function transfer(address guy, uint wad) public returns (bool) {
-        vat.move(msg.sender, guy, wad);
+        transferFrom(msg.sender, guy, wad);
         return true;
     }
 
-    function approve(address guy) public { approve(guy, uint(-1)); }
-    function push(address guy, uint wad) public { transfer(guy, wad); }
     function move(address src, address dst, uint wad) public {
         transferFrom(src, dst, wad);
+    }
+    function push(address dst, uint wad) public {
+        transferFrom(msg.sender, dst, wad);
+    }
+    function pull(address src, uint wad) public {
+        transferFrom(src, msg.sender, wad);
     }
 }
