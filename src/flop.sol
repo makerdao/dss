@@ -2,7 +2,7 @@
 
 // todo: case that nobody bids (maybe needs tick). who is initial guy?
 
-pragma solidity ^0.4.23;
+pragma solidity ^0.4.24;
 
 contract GemLike {
     function move(address,address,uint) public;

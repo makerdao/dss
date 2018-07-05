@@ -1,6 +1,6 @@
 // Copyright (C) 2018 AGPL
 
-pragma solidity ^0.4.23;
+pragma solidity ^0.4.24;
 
 contract VatLike {
     function dai(address) public view returns (int);
