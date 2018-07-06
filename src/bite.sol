@@ -13,12 +13,17 @@ contract VatLike {
     function grab(bytes32,address,address,int,int) public returns (uint);
 }
 
+contract LadLike {
+    function ilks(bytes32) public view returns (int,int);
+}
+
 contract VowLike {
     function fess(uint) public;
 }
 
 contract Cat is Events {
     address public vat;
+    address public lad;
     address public vow;
     uint256 public lump;  // fixed lot size
 
@@ -38,8 +43,9 @@ contract Cat is Events {
     }
     Flip[] public flips;
 
-    constructor(address vat_, address vow_) public {
+    constructor(address vat_, address lad_, address vow_) public {
         vat = vat_;
+        lad = lad_;
         vow = vow_;
     }
 
@@ -53,14 +59,15 @@ contract Cat is Events {
         ilks[ilk].flip = flip;
     }
 
-    function bite(bytes32 ilk, address lad) public returns (uint) {
-        (int spot, int rate)          = VatLike(vat).ilks(ilk);
-        (int gem , int ink , int art) = VatLike(vat).urns(ilk, lad); gem;
+    function bite(bytes32 ilk, address guy) public returns (uint) {
+        (int rate, int Art)           = VatLike(vat).ilks(ilk); Art;
+        (int spot, int line)          = LadLike(lad).ilks(ilk); line;
+        (int gem , int ink , int art) = VatLike(vat).urns(ilk, guy); gem;
         int tab = rmul(art, rate);
 
         require(rmul(ink, spot) < tab);  // !safe
 
-        VatLike(vat).grab(ilk, lad, vow, -ink, -art);
+        VatLike(vat).grab(ilk, guy, vow, -ink, -art);
         VowLike(vow).fess(uint(tab));
 
         uint flip = flips.push(Flip(ilk, lad, uint(ink), uint(tab))) - 1;
