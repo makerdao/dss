@@ -25,7 +25,7 @@ contract Dai20 {
     mapping (address => mapping (address => uint)) public allowance;
     function approve(address guy, uint wad) public returns (bool) {
         allowance[msg.sender][guy] += wad;
-        emit Approval(msg.sender, dst, wad * uint(-1));
+        emit Approval(msg.sender, guy, wad * uint(-1));
         return true;
     }
     function approve(address guy) public {
