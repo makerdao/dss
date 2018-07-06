@@ -3,8 +3,9 @@
 pragma solidity ^0.4.24;
 
 import './tune.sol';
+import './events.sol';
 
-contract Lad {
+contract Lad is Events {
     bool  public live;
     Vat   public  vat;
     int   public Line;
@@ -53,5 +54,7 @@ contract Lad {
 
         require(( calm || cool ) && ( cool && firm || safe ) && live);
         require(rate != 0);
+
+        emit Frob(ilk,  msg.sender, gem, ink, art, uint48(now));
     }
 }

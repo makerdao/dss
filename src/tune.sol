@@ -2,7 +2,9 @@
 
 pragma solidity ^0.4.24;
 
-contract Vat {
+import './events.sol';
+
+contract Vat is Events {
     address public root;
 
     function era() public view returns (uint48) { return uint48(now); }
@@ -67,6 +69,8 @@ contract Vat {
         require(dai[src] >= int(wad));
         dai[src] = sub(dai[src], int(wad));
         dai[dst] = add(dai[dst], int(wad));
+
+        emit Move(src, dst, wad);
     }
     function slip(bytes32 ilk, address guy, int256 wad) public auth {
         urns[ilk][guy].gem = add(urns[ilk][guy].gem, wad);
@@ -84,6 +88,8 @@ contract Vat {
 
         dai[lad] = add(dai[lad], rmul(i.rate, dart));
         Tab      = add(Tab,      rmul(i.rate, dart));
+
+        emit Push(this, lad,     rmul(i.rate, dart), "tune");
     }
 
     // --- Liquidation Engine ---
@@ -97,6 +103,8 @@ contract Vat {
 
         sin[vow] = sub(sin[vow], rmul(i.rate, dart));
         vice     = sub(vice,     rmul(i.rate, dart));
+
+        emit Push(this, vow,     rmul(i.rate, dart), "grab");
     }
     function heal(address u, address v, int wad) public auth {
         require(sin[u] >= wad);
@@ -109,6 +117,8 @@ contract Vat {
 
         vice = sub(vice, wad);
         Tab  = sub(Tab, wad);
+
+        emit Push(this, v, wad, "heal");
     }
 
     // --- Stability Engine ---
@@ -118,5 +128,7 @@ contract Vat {
         int wad  = rmul(i.Art, rate);
         dai[vow] = add(dai[vow], wad);
         Tab      = add(Tab, wad);
+
+        emit Push(this, vow, wad, "fold");
     }
 }
