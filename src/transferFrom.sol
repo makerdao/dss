@@ -12,11 +12,13 @@ contract Dai20 {
     VatLike public vat;
     constructor(address vat_) public  { vat = VatLike(vat_); }
 
+    uint256 constant ONE = 10 ** 27;
+
     function balanceOf(address guy) public view returns (uint) {
-        return uint(vat.dai(guy));
+        return uint(vat.dai(guy)) / ONE;
     }
     function totalSupply() public view returns (uint) {
-        return vat.Tab();
+        return vat.Tab() / ONE;
     }
 
     event Approval(address src, address dst, uint wad);

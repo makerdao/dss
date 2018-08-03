@@ -18,9 +18,10 @@ contract WarpVat is Vat {
     uint48 _era; function warp(uint48 era_) public { _era = era_; }
     function era() public view returns (uint48) { return _era; }
 
+    int256 constant ONE = 10 ** 27;
     function mint(address guy, uint wad) public {
-        dai[guy] += int(wad);
-        Tab      += int(wad);
+        dai[guy] += int(wad) * ONE;
+        Tab      += int(wad) * ONE;
     }
 }
 

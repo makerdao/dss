@@ -53,9 +53,10 @@ contract Vat is VatLike {
         gems[lad] += jam;
         ilk;
     }
+    uint256 constant ONE = 10 ** 27;
     function move(address src, address dst, uint wad) public {
-        dai[src] -= wad;
-        dai[dst] += wad;
+        dai[src] -= wad * ONE;
+        dai[dst] += wad * ONE;
     }
     function suck(address guy, uint wad) public {
         dai[guy] += wad;

@@ -28,13 +28,13 @@ contract Lad {
         if (what == "line") ilks[ilk].line = risk;
     }
 
-    int256 constant ONE = 10 ** 27;
-    function rmul(int x, int y) internal pure returns (int z) {
+    function mul(int x, int y) internal pure returns (int z) {
         z = x * y;
         require(y >= 0 || x != -2**255);
         require(y == 0 || z / y == x);
-        z = z / ONE;
     }
+
+    int256 constant ONE = 10 ** 27;
 
     function frob(bytes32 ilk, int dink, int dart) public {
         vat.tune(ilk, msg.sender, dink, dart);
@@ -42,10 +42,11 @@ contract Lad {
 
         (int rate, int Art)           = vat.ilks(ilk);
         (int gem,  int ink,  int art) = vat.urns(ilk, msg.sender); gem;
-        bool calm = rmul(Art, rate) <= ilks[ilk].line && vat.Tab() < Line;
+        bool calm = mul(Art, rate) <= mul(ilks[ilk].line, ONE) &&
+                        vat.Tab()  <  mul(Line, ONE);
         bool cool = dart <= 0;
         bool firm = dink >= 0;
-        bool safe = rmul(ink, i.spot) >= rmul(art, rate);
+        bool safe = mul(ink, i.spot) >= mul(art, rate);
 
         require(( calm || cool ) && ( cool && firm || safe ) && live);
         require(rate != 0);

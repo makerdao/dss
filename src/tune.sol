@@ -26,7 +26,6 @@ contract Vat {
     int256  public Tab;
     int256  public vice;
 
-    int256 constant ONE = 10 ** 27;
     function add(int x, int y) internal pure returns (int z) {
         z = x + y;
         require(y <= 0 || z > x);
@@ -36,11 +35,10 @@ contract Vat {
         require(y != -2**255);
         z = add(x, -y);
     }
-    function rmul(int x, int y) internal pure returns (int z) {
+    function mul(int x, int y) internal pure returns (int z) {
         z = x * y;
         require(y >= 0 || x != -2**255);
         require(y == 0 || z / y == x);
-        z = z / ONE;
     }
 
     constructor() public {
@@ -53,7 +51,9 @@ contract Vat {
     }
 
     // --- Fungibility Engine ---
-    function move(address src, address dst, uint wad) public auth {
+    int256 constant ONE = 10 ** 27;
+    function move(address src, address dst, uint wad_) public auth {
+        int wad = int(wad_) * ONE;
         require(dai[src] >= int(wad));
         dai[src] = sub(dai[src], int(wad));
         dai[dst] = add(dai[dst], int(wad));
@@ -72,8 +72,8 @@ contract Vat {
         u.art = add(u.art, dart);
         i.Art = add(i.Art, dart);
 
-        dai[lad] = add(dai[lad], rmul(i.rate, dart));
-        Tab      = add(Tab,      rmul(i.rate, dart));
+        dai[lad] = add(dai[lad], mul(i.rate, dart));
+        Tab      = add(Tab,      mul(i.rate, dart));
     }
 
     // --- Liquidation Engine ---
@@ -85,10 +85,11 @@ contract Vat {
         u.art = add(u.art, dart);
         i.Art = add(i.Art, dart);
 
-        sin[vow] = sub(sin[vow], rmul(i.rate, dart));
-        vice     = sub(vice,     rmul(i.rate, dart));
+        sin[vow] = sub(sin[vow], mul(i.rate, dart));
+        vice     = sub(vice,     mul(i.rate, dart));
     }
     function heal(address u, address v, int wad) public auth {
+        wad = wad * ONE;
         require(sin[u] >= wad);
         require(dai[v] >= wad);
         require(vice   >= wad);
@@ -105,7 +106,7 @@ contract Vat {
     function fold(bytes32 ilk, address vow, int rate) public auth {
         Ilk storage i = ilks[ilk];
         i.rate   = add(i.rate, rate);
-        int wad  = rmul(i.Art, rate);
+        int wad  = mul(i.Art, rate);
         dai[vow] = add(dai[vow], wad);
         Tab      = add(Tab, wad);
     }

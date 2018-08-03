@@ -28,8 +28,9 @@ contract Vow {
     uint256 public lump;  // fixed lot size
     uint256 public pad;   // surplus buffer
 
+    uint256 constant ONE = 10 ** 27;
     function Awe() public view returns (uint) { return Sin + Woe + Ash; }
-    function Joy() public view returns (uint) { return uint(DaiLike(vat).dai(this)); }
+    function Joy() public view returns (uint) { return uint(DaiLike(vat).dai(this)) / ONE; }
 
     function file(bytes32 what, uint risk) public auth {
         if (what == "lump") lump = risk;
