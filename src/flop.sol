@@ -47,10 +47,9 @@ contract Flopper {
 
     function era() public view returns (uint48) { return uint48(now); }
 
-    uint constant WAD = 10 ** 18;
+    uint constant ONE = 1 ether;
     function mul(uint x, uint y) internal pure returns (uint z) {
-        require((y == 0 || x * y / y == x) && (z = x * y + WAD / 2) >= x * y);
-        z = z / WAD;
+        require(y == 0 || (z = x * y) / y == x);
     }
 
     constructor(address pie_, address gem_) public {
@@ -78,7 +77,7 @@ contract Flopper {
 
         require(bid == bids[id].bid);
         require(lot <  bids[id].lot);
-        require(mul(beg, lot) <= bids[id].lot);
+        require(mul(beg, lot) / ONE <= bids[id].lot);  // div as lot can be huge
 
         pie.move(msg.sender, bids[id].guy, bid);
 

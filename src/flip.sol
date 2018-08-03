@@ -51,15 +51,9 @@ contract Flipper {
 
     function era() public view returns (uint48) { return uint48(now); }
 
-    function add(uint x, uint y) internal pure returns (uint z) {
-        require((z = x + y) >= x);
-    }
+    uint constant ONE = 10 ** 18;
     function mul(uint x, uint y) internal pure returns (uint z) {
         require(y == 0 || (z = x * y) / y == x);
-    }
-    uint constant WAD = 10 ** 18;
-    function wmul(uint x, uint y) internal pure returns (uint z) {
-        z = add(mul(x, y), WAD / 2) / WAD;
     }
 
     constructor(address vat_, bytes32 ilk_) public {
@@ -95,7 +89,7 @@ contract Flipper {
         require(lot == bids[id].lot);
         require(bid <= bids[id].tab);
         require(bid >  bids[id].bid);
-        require(bid >= wmul(beg, bids[id].bid) || bid == bids[id].tab);
+        require(mul(bid, ONE) >= mul(beg, bids[id].bid) || bid == bids[id].tab);
 
         vat.move(msg.sender, bids[id].guy, bids[id].bid);
         vat.move(msg.sender, bids[id].gal, bid - bids[id].bid);
@@ -112,7 +106,7 @@ contract Flipper {
         require(bid == bids[id].bid);
         require(bid == bids[id].tab);
         require(lot < bids[id].lot);
-        require(wmul(beg, lot) <= bids[id].lot);
+        require(mul(beg, lot) <= mul(bids[id].lot, ONE));
 
         vat.move(msg.sender, bids[id].guy, bid);
         vat.slip(ilk, bids[id].lad, int(bids[id].lot - lot));

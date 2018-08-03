@@ -41,10 +41,9 @@ contract Flapper {
 
     function era() public view returns (uint48) { return uint48(now); }
 
-    uint constant WAD = 10 ** 18;
+    uint constant ONE = 10 ** 18;
     function mul(uint x, uint y) internal pure returns (uint z) {
-        require((y == 0 || x * y / y == x) && (z = x * y + WAD / 2) >= x * y);
-        z = z / WAD;
+        require(y == 0 || (z = x * y) / y == x);
     }
 
     constructor(address pie_, address gem_) public {
@@ -73,7 +72,7 @@ contract Flapper {
 
         require(lot == bids[id].lot);
         require(bid >  bids[id].bid);
-        require(bid >= mul(beg, bids[id].bid));
+        require(mul(bid, ONE) >= mul(beg, bids[id].bid));
 
         gem.move(msg.sender, bids[id].guy, bids[id].bid);
         gem.move(msg.sender, bids[id].gal, bid - bids[id].bid);
