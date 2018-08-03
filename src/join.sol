@@ -28,7 +28,4 @@ contract Adapter {
         gem.move(this, msg.sender, wad);
         vat.slip(ilk, msg.sender, -int(wad));
     }
-    function balanceOf(address guy) public view returns (uint) {
-        return vat.Gem(ilk, guy);
-    }
 }

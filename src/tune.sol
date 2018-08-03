@@ -26,16 +26,6 @@ contract Vat {
     int256  public Tab;
     int256  public vice;
 
-    function Gem(bytes32 ilk, address lad) public view returns (int) {
-        return urns[ilk][lad].gem;
-    }
-    function Ink(bytes32 ilk, address lad) public view returns (int) {
-        return urns[ilk][lad].ink;
-    }
-    function Art(bytes32 ilk, address lad) public view returns (int) {
-        return urns[ilk][lad].art;
-    }
-
     int256 constant ONE = 10 ** 27;
     function add(int x, int y) internal pure returns (int z) {
         z = x + y;

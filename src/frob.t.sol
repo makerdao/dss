@@ -75,6 +75,19 @@ contract FrobTest is DSTest {
         gold.approve(vat);
     }
 
+    function gem(bytes32 ilk, address lad_) internal view returns (int) {
+        (int gem_, int ink_, int art_) = vat.urns(ilk, lad_); gem_; ink_; art_;
+        return gem_;
+    }
+    function ink(bytes32 ilk, address lad_) internal view returns (int) {
+        (int gem_, int ink_, int art_) = vat.urns(ilk, lad_); gem_; ink_; art_;
+        return ink_;
+    }
+    function art(bytes32 ilk, address lad_) internal view returns (int) {
+        (int gem_, int ink_, int art_) = vat.urns(ilk, lad_); gem_; ink_; art_;
+        return art_;
+    }
+
     function test_join() public {
         gold.mint(500 ether);
         assertEq(gold.balanceOf(this),     500 ether);
@@ -87,14 +100,14 @@ contract FrobTest is DSTest {
         assertEq(gold.balanceOf(adapter), 1250 ether);
     }
     function test_lock() public {
-        assertEq(vat.Ink("gold", this), 0 ether);
-        assertEq(adapter.balanceOf(this), 1000 ether);
+        assertEq(ink("gold", this),    0 ether);
+        assertEq(gem("gold", this), 1000 ether);
         lad.frob("gold", 6 ether, 0);
-        assertEq(vat.Ink("gold", this), 6 ether);
-        assertEq(adapter.balanceOf(this), 994 ether);
+        assertEq(ink("gold", this),   6 ether);
+        assertEq(gem("gold", this), 994 ether);
         lad.frob("gold", -6 ether, 0);
-        assertEq(vat.Ink("gold", this), 0 ether);
-        assertEq(adapter.balanceOf(this), 1000 ether);
+        assertEq(ink("gold", this),    0 ether);
+        assertEq(gem("gold", this), 1000 ether);
     }
     function test_calm() public {
         // calm means that the debt ceiling is not exceeded
@@ -174,6 +187,19 @@ contract BiteTest is DSTest {
         return wad * 10 ** 9;
     }
 
+    function gem(bytes32 ilk, address lad_) internal view returns (int) {
+        (int gem_, int ink_, int art_) = vat.urns(ilk, lad_); gem_; ink_; art_;
+        return gem_;
+    }
+    function ink(bytes32 ilk, address lad_) internal view returns (int) {
+        (int gem_, int ink_, int art_) = vat.urns(ilk, lad_); gem_; ink_; art_;
+        return ink_;
+    }
+    function art(bytes32 ilk, address lad_) internal view returns (int) {
+        (int gem_, int ink_, int art_) = vat.urns(ilk, lad_); gem_; ink_; art_;
+        return art_;
+    }
+
     function setUp() public {
         gov = new DSToken('GOV');
         gov.mint(100 ether);
@@ -219,15 +245,15 @@ contract BiteTest is DSTest {
         // tag=4, mat=2
         lad.file("gold", 'spot', int(ray(2 ether)));  // now unsafe
 
-        assertEq(vat.Ink("gold", this),  40 ether);
-        assertEq(vat.Art("gold", this), 100 ether);
+        assertEq(ink("gold", this),  40 ether);
+        assertEq(art("gold", this), 100 ether);
         assertEq(vow.woe(), 0 ether);
-        assertEq(adapter.balanceOf(this), 960 ether);
+        assertEq(gem("gold", this), 960 ether);
         uint id = cat.bite("gold", this);
-        assertEq(vat.Ink("gold", this), 0);
-        assertEq(vat.Art("gold", this), 0);
+        assertEq(ink("gold", this), 0);
+        assertEq(art("gold", this), 0);
         assertEq(vow.sin(vow.era()), 100 ether);
-        assertEq(adapter.balanceOf(this), 960 ether);
+        assertEq(gem("gold", this), 960 ether);
 
         cat.file("lump", uint(100 ether));
         uint auction = cat.flip(id, 100 ether);  // flip all the tab
@@ -239,13 +265,13 @@ contract BiteTest is DSTest {
         assertEq(pie.balanceOf(vow), 100 ether);
 
         assertEq(pie.balanceOf(this),       0 ether);
-        assertEq(adapter.balanceOf(this), 960 ether);
+        assertEq(gem("gold", this), 960 ether);
         vat.mint(this, 100 ether);  // magic up some pie for bidding
         flip.dent(auction, 38 ether,  100 ether);
         assertEq(pie.balanceOf(this), 100 ether);
         assertEq(pie.balanceOf(vow),  100 ether);
-        assertEq(adapter.balanceOf(this), 962 ether);
-        assertEq(vat.Gem("gold", this), 962 ether);
+        assertEq(gem("gold", this), 962 ether);
+        assertEq(gem("gold", this), 962 ether);
 
         assertEq(vow.sin(vow.era()), 100 ether);
         assertEq(pie.balanceOf(vow), 100 ether);
