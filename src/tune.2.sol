@@ -2,25 +2,7 @@
 
 pragma solidity ^0.4.24;
 
-interface VatI {
-  function grab(bytes32 ilk, address lad, address vow, int256 dink, int256 dart) external;
-  function era() external returns (uint48);
-  function urns(bytes32 ilk, address lad) external returns (int256 gem, int256 ink, int256 art);
-  function vice() external returns (int256);
-  function ilks(bytes32 ilk) external returns (int256 rate, int256 Art);
-  function dai(address lad) external returns (int256);
-  function slip(bytes32 ilk, address guy, int256 wad) external;
-  function file(bytes32 ilk, bytes32 what, int256 risk) external;
-  function tune(bytes32 ilk, address lad, int256 dink, int256 dart) external;
-  function fold(bytes32 ilk, address vow, int256 rate) external;
-  function move(address src, address dst, int256 rad) external;
-  function Tab() external returns (int256);
-  function root() external returns (address);
-  function heal(address u, address v, int256 rad) external;
-  function sin(address lad) external returns (int256);
-}
-
-contract Vat is VatI {
+contract Vat {
   constructor () public {
     assembly {
       sstore(0, caller)
