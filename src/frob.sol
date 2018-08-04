@@ -5,9 +5,9 @@ pragma solidity ^0.4.24;
 import './tune.sol';
 
 contract Lad {
-    bool  public live;
     Vat   public  vat;
     int   public Line;
+    bool  public live;
 
     constructor(address vat_) public { vat = Vat(vat_); live = true; }
 
