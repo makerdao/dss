@@ -25,7 +25,7 @@ contract Cat {
     address public vow;
     uint256 public lump;  // fixed lot size
 
-    modifier auth { _; }  // todo: require(msg.sender == root);
+    modifier auth { _; }  // todo
 
     struct Ilk {
         int256  chop;

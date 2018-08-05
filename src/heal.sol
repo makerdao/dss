@@ -15,7 +15,7 @@ contract Vow {
     address row;  // flopper
 
     function era() public view returns (uint48) { return uint48(now); }
-    modifier auth { _; }  // todo: require(msg.sender == root);
+    modifier auth { _; }  // todo
 
     constructor(address vat_) public { vat = vat_; }
 

@@ -3,10 +3,8 @@
 pragma solidity ^0.4.24;
 
 contract Vat {
-    address public root;
-
     function era() public view returns (uint48) { return uint48(now); }
-    modifier auth { _; }  // todo: require(msg.sender == root);
+    modifier auth { _; }  // todo
 
     struct Ilk {
         int256  rate;  // ray
@@ -39,10 +37,6 @@ contract Vat {
         z = x * y;
         require(y >= 0 || x != -2**255);
         require(y == 0 || z / y == x);
-    }
-
-    constructor() public {
-        root = msg.sender;
     }
 
     // --- Administration Engine ---

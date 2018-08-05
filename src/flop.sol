@@ -34,6 +34,8 @@ contract Flopper {
 
     uint256 public kicks;
 
+    modifier auth { _; }  // todo
+
     struct Bid {
         uint256 bid;
         uint256 lot;
@@ -57,9 +59,7 @@ contract Flopper {
         gem = GemLike(gem_);
     }
 
-    function kick(address gal, uint lot, uint bid)  // todo auth
-        public returns (uint)
-    {
+    function kick(address gal, uint lot, uint bid) public auth returns (uint) {
         uint id = ++kicks;
 
         bids[id].vow = msg.sender;

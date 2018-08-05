@@ -11,7 +11,7 @@ contract Lad {
 
     constructor(address vat_) public { vat = Vat(vat_); live = true; }
 
-    modifier auth { _; }  // todo: require(msg.sender == root);
+    modifier auth { _; }  // todo
 
     struct Ilk {
         int256  spot;  // ray
