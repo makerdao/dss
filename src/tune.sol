@@ -47,6 +47,9 @@ contract Vat {
     // --- Fungibility Engine ---
     int256 constant ONE = 10 ** 27;
     function move(address src, address dst, uint wad) public auth {
+        move(src, dst, int(wad));
+    }
+    function move(address src, address dst, int wad) public auth {
         int rad = int(wad) * ONE;
         dai[src] = sub(dai[src], rad);
         dai[dst] = add(dai[dst], rad);
