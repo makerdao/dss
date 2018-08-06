@@ -10,18 +10,18 @@ contract Vat {
         int256  Art;   // wad
     }
     struct Urn {
-        int256 gem;
-        int256 ink;
-        int256 art;
+        int256 gem;    // wad
+        int256 ink;    // wad
+        int256 art;    // wad
     }
 
-    mapping (address => int256)                   public dai;
-    mapping (address => int256)                   public sin;
+    mapping (address => int256)                   public dai;  // rad
+    mapping (address => int256)                   public sin;  // rad
     mapping (bytes32 => Ilk)                      public ilks;
     mapping (bytes32 => mapping (address => Urn)) public urns;
 
-    int256  public Tab;
-    int256  public vice;
+    int256  public Tab;   // rad
+    int256  public vice;  // rad
 
     function add(int x, int y) internal pure returns (int z) {
         z = x + y;
@@ -100,8 +100,8 @@ contract Vat {
     function fold(bytes32 ilk, address vow, int rate) public auth {
         Ilk storage i = ilks[ilk];
         i.rate   = add(i.rate, rate);
-        int wad  = mul(i.Art, rate);
-        dai[vow] = add(dai[vow], wad);
-        Tab      = add(Tab, wad);
+        int rad  = mul(i.Art, rate);
+        dai[vow] = add(dai[vow], rad);
+        Tab      = add(Tab, rad);
     }
 }
