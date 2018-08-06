@@ -3,7 +3,6 @@
 pragma solidity ^0.4.24;
 
 contract Vat {
-    function era() public view returns (uint48) { return uint48(now); }
     modifier auth { _; }  // todo
 
     struct Ilk {
