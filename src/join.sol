@@ -8,7 +8,6 @@ contract GemLike {
 
 contract Fluxing {
     function slip(bytes32,address,int) public;
-    function Gem(bytes32,address) public view returns (uint);
 }
 
 contract Adapter {
