@@ -46,11 +46,11 @@ contract Vat {
 
     // --- Fungibility Engine ---
     int256 constant ONE = 10 ** 27;
-    function move(address src, address dst, uint wad_) public auth {
-        int wad = int(wad_) * ONE;
-        require(dai[src] >= int(wad));
-        dai[src] = sub(dai[src], int(wad));
-        dai[dst] = add(dai[dst], int(wad));
+    function move(address src, address dst, uint wad) public auth {
+        int rad = int(wad) * ONE;
+        dai[src] = sub(dai[src], rad);
+        dai[dst] = add(dai[dst], rad);
+        require(dai[src] >= 0 && dai[dst] >= 0);
     }
     function slip(bytes32 ilk, address guy, int256 wad) public auth {
         urns[ilk][guy].gem = add(urns[ilk][guy].gem, wad);
@@ -83,17 +83,15 @@ contract Vat {
         vice     = sub(vice,     mul(i.rate, dart));
     }
     function heal(address u, address v, int wad) public auth {
-        wad = wad * ONE;
-        require(sin[u] >= wad);
-        require(dai[v] >= wad);
-        require(vice   >= wad);
-        require(Tab    >= wad);
+        int rad = wad * ONE;
 
-        sin[u] = sub(sin[u], wad);
-        dai[v] = sub(dai[v], wad);
+        sin[u] = sub(sin[u], rad);
+        dai[v] = sub(dai[v], rad);
+        vice   = sub(vice,   rad);
+        Tab    = sub(Tab,    rad);
 
-        vice = sub(vice, wad);
-        Tab  = sub(Tab, wad);
+        require(sin[u] >= 0 && dai[v] >= 0);
+        require(vice   >= 0 && Tab    >= 0);
     }
 
     // --- Stability Engine ---
