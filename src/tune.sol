@@ -49,7 +49,7 @@ contract Vat {
         move(src, dst, int(wad));
     }
     function move(address src, address dst, int wad) public auth {
-        int rad = int(wad) * ONE;
+        int rad = mul(wad, ONE);
         dai[src] = sub(dai[src], rad);
         dai[dst] = add(dai[dst], rad);
         require(dai[src] >= 0 && dai[dst] >= 0);
@@ -85,7 +85,7 @@ contract Vat {
         vice     = sub(vice,     mul(i.rate, dart));
     }
     function heal(address u, address v, int wad) public auth {
-        int rad = wad * ONE;
+        int rad = mul(wad, ONE);
 
         sin[u] = sub(sin[u], rad);
         dai[v] = sub(dai[v], rad);
