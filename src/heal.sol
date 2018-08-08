@@ -44,7 +44,18 @@ contract Vow {
     uint256 public pad;   // surplus buffer
 
     uint256 constant ONE = 10 ** 27;
-    function Awe() public view returns (uint) { return Sin + Woe + Ash; }
+
+    function add(uint x, uint y) internal pure returns (uint z) {
+        z = x + y;
+        require(z >= x);
+    }
+
+    function sub(uint x, uint y) internal pure returns (uint z) {
+        z = x - y;
+        require(z <= x);
+    }
+  
+    function Awe() public view returns (uint) { return add(add(Sin, Woe), Ash); }
     function Joy() public view returns (uint) { return uint(DaiLike(vat).dai(this)) / ONE; }
 
     function file(bytes32 what, uint risk) public auth {
@@ -58,35 +69,35 @@ contract Vow {
     }
 
     function heal(uint wad) public {
-        require(wad <= Joy() && wad <= Woe);
-        Woe -= wad;
+        require(wad <= Joy() && wad <= Woe && int(wad) >= 0);
+        Woe = sub(Woe, wad);
         DaiLike(vat).heal(this, this, int(wad));
     }
     function kiss(uint wad) public {
-        require(wad <= Ash && wad <= Joy());
-        Ash -= wad;
+        require(wad <= Ash && wad <= Joy() && int(wad) >= 0);
+        Ash = sub(Ash, wad);
         DaiLike(vat).heal(this, this, int(wad));
     }
 
     function fess(uint tab) public auth {
-        sin[era()] += tab;
-        Sin += tab;
+        sin[era()] = add(sin[era()], tab);
+        Sin = add(Sin, tab);
     }
     function flog(uint48 era_) public {
-        Sin -= sin[era_];
-        Woe += sin[era_];
+        Sin = sub(Sin, sin[era_]);
+        Woe = add(Woe, sin[era_]);
         sin[era_] = 0;
     }
 
     function flop() public returns (uint) {
         require(Woe >= lump);
         require(Joy() == 0);
-        Woe -= lump;
-        Ash += lump;
+        Woe = sub(Woe, lump);
+        Ash = add(Ash, lump);
         return Fusspot(row).kick(this, uint(-1), lump);
     }
     function flap() public returns (uint) {
-        require(Joy() >= Awe() + lump + pad);
+        require(Joy() >= add(add(Awe(), lump), pad));
         require(Woe == 0);
         return Fusspot(cow).kick(this, lump, 0);
     }
