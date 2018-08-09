@@ -35,10 +35,12 @@ contract Adapter {
         gem = GemLike(gem_);
     }
     function join(uint wad) public {
+        require(int(wad) >= 0);
         gem.move(msg.sender, this, wad);
         vat.slip(ilk, msg.sender, int(wad));
     }
     function exit(uint wad) public {
+        require(int(wad) >= 0);
         gem.move(this, msg.sender, wad);
         vat.slip(ilk, msg.sender, -int(wad));
     }
