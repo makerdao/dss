@@ -34,8 +34,6 @@ contract Vow {
     function era() public view returns (uint48) { return uint48(now); }
     modifier auth { _; }  // todo
 
-    constructor(address vat_) public { vat = vat_; }
-
     mapping (uint48 => uint256) public sin; // debt queue
     uint256 public Sin;   // queued debt
     uint256 public Woe;   // pre-auction 'bad' debt
@@ -53,9 +51,10 @@ contract Vow {
         if (what == "lump") lump = risk;
         if (what == "pad")  pad  = risk;
     }
-    function file(bytes32 what, address fuss) public auth {
-        if (what == "flap") cow = fuss;
-        if (what == "flop") row = fuss;
+    function file(bytes32 what, address addr) public auth {
+        if (what == "flap") cow = addr;
+        if (what == "flop") row = addr;
+        if (what == "vat")  vat = addr;
     }
 
     function heal(uint wad) public {

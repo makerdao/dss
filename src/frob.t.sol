@@ -15,9 +15,6 @@ import {WarpFlap as Flapper} from './flap.t.sol';
 
 
 contract WarpVat is Vat {
-    uint48 _era; function warp(uint48 era_) public { _era = era_; }
-    function era() public view returns (uint48) { return _era; }
-
     int256 constant ONE = 10 ** 27;
     function mint(address guy, uint wad) public {
         dai[guy] += int(wad) * ONE;
@@ -25,19 +22,7 @@ contract WarpVat is Vat {
     }
 }
 
-contract WarpVow is Vow {
-    constructor(address vat_) Vow(vat_) public { }
-
-    function woe() public view returns (uint) {
-        return Woe;
-    }
-    function joy() public view returns (uint) {
-        return Joy();
-    }
-    function stun(uint wad) public {
-        Woe += wad;
-    }
-}
+contract WarpVow is Vow {}
 
 contract FrobTest is DSTest {
     WarpVat vat;
@@ -166,7 +151,7 @@ contract FrobTest is DSTest {
 contract BiteTest is DSTest {
     WarpVat vat;
     Lad     lad;
-    WarpVow vow;
+    Vow     vow;
     Cat     cat;
     Dai20   pie;
     DSToken gold;
@@ -213,7 +198,8 @@ contract BiteTest is DSTest {
         flop = new Flopper(vat, gov);
         gov.setOwner(flop);
 
-        vow = new WarpVow(vat);
+        vow = new Vow();
+        vow.file("vat",  address(vat));
         vow.file("flap", address(flap));
         vow.file("flop", address(flop));
 
@@ -248,7 +234,7 @@ contract BiteTest is DSTest {
 
         assertEq(ink("gold", this),  40 ether);
         assertEq(art("gold", this), 100 ether);
-        assertEq(vow.woe(), 0 ether);
+        assertEq(vow.Woe(), 0 ether);
         assertEq(gem("gold", this), 960 ether);
         uint id = cat.bite("gold", this);
         assertEq(ink("gold", this), 0);
@@ -290,18 +276,18 @@ contract BiteTest is DSTest {
         assertEq(vow.Sin(), 100 ether);
         vow.flog(vow.era());
         assertEq(vow.Sin(),   0 ether);
-        assertEq(vow.woe(), 100 ether);
-        assertEq(vow.joy(),   0 ether);
+        assertEq(vow.Woe(), 100 ether);
+        assertEq(vow.Joy(),   0 ether);
         assertEq(vow.Ash(),   0 ether);
 
         vow.file("lump", uint(10 ether));
         uint f1 = vow.flop();
-        assertEq(vow.woe(),  90 ether);
-        assertEq(vow.joy(),   0 ether);
+        assertEq(vow.Woe(),  90 ether);
+        assertEq(vow.Joy(),   0 ether);
         assertEq(vow.Ash(),  10 ether);
         flop.dent(f1, 1000 ether, 10 ether);
-        assertEq(vow.woe(),  90 ether);
-        assertEq(vow.joy(),  10 ether);
+        assertEq(vow.Woe(),  90 ether);
+        assertEq(vow.Joy(),  10 ether);
         assertEq(vow.Ash(),  10 ether);
 
         assertEq(gov.balanceOf(this),  100 ether);

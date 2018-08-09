@@ -5,7 +5,7 @@ import "ds-test/test.sol";
 import {WarpFlop as Flop} from './flop.t.sol';
 import {WarpFlap as Flap} from './flap.t.sol';
 import {WarpVat  as Vat}  from './frob.t.sol';
-import {WarpVow  as Vow}  from './frob.t.sol';
+import {Vow}              from './heal.sol';
 
 contract Gem {
     mapping (address => uint256) public balanceOf;
@@ -14,22 +14,27 @@ contract Gem {
     }
 }
 
+contract WarpVow is Vow {
+    uint48 _era; function warp(uint48 era_) public { _era = era_; }
+    function era() public view returns (uint48) { return _era; }
+}
+
 contract VowTest is DSTest {
-    Vat  vat;
-    Vow  vow;
-    Flop flop;
-    Flap flap;
-    Gem  gov;
+    Vat      vat;
+    WarpVow  vow;
+    Flop     flop;
+    Flap     flap;
+    Gem      gov;
 
     function setUp() public {
         vat = new Vat();
-        vow = new Vow(vat);
-
+        vow = new WarpVow();
         gov = new Gem();
 
         flop = new Flop(vat, gov);
         flap = new Flap(vat, gov);
 
+        vow.file("vat",  address(vat));
         vow.file("flop", address(flop));
         vow.file("flap", address(flap));
         vow.file("lump", uint256(100 ether));
