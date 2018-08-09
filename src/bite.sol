@@ -87,7 +87,9 @@ contract Cat {
         VatLike(vat).grab(ilk, guy, vow, -ink, -art);
         VowLike(vow).fess(uint(tab));
 
-        flips[nflip++] = Flip(ilk, guy, uint(ink), uint(tab));
+        flips[nflip] = Flip(ilk, guy, uint(ink), uint(tab));
+
+        return nflip++;
     }
 
     function flip(uint n, uint wad) public returns (uint) {
