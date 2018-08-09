@@ -56,7 +56,9 @@ contract Cat {
         uint256 ink;
         uint256 tab;
     }
-    Flip[] public flips;
+
+    uint256                   public nflip;
+    mapping (uint256 => Flip) public flips;
 
     constructor(address vat_, address lad_, address vow_) public {
         vat = vat_;
@@ -85,7 +87,7 @@ contract Cat {
         VatLike(vat).grab(ilk, guy, vow, -ink, -art);
         VowLike(vow).fess(uint(tab));
 
-        return flips.push(Flip(ilk, guy, uint(ink), uint(tab))) - 1;
+        flips[nflip++] = Flip(ilk, guy, uint(ink), uint(tab));
     }
 
     function flip(uint n, uint wad) public returns (uint) {
