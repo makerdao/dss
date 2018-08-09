@@ -72,6 +72,7 @@ contract Vat {
     }
     function slip(bytes32 ilk, address guy, int256 wad) public auth {
         urns[ilk][guy].gem = add(urns[ilk][guy].gem, wad);
+        require(urns[ilk][guy].gem >= 0);
     }
 
     // --- CDP Engine ---
