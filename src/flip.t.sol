@@ -58,9 +58,6 @@ contract Vat is VatLike {
         dai[src] -= wad * ONE;
         dai[dst] += wad * ONE;
     }
-    function suck(address guy, uint wad) public {
-        dai[guy] += wad;
-    }
 }
 
 contract Gal {}
@@ -93,8 +90,6 @@ contract FlipTest is DSTest {
         gal = new Gal();
 
         pie.approve(flip);
-
-        vat.suck(this, 1000 ether);
 
         pie.push(ali, 200 ether);
         pie.push(bob, 200 ether);
