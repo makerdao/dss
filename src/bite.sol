@@ -60,15 +60,22 @@ contract Cat {
     uint256                   public nflip;
     mapping (uint256 => Flip) public flips;
 
-    uint constant ONE = 10 ** 27;
-    function rmul(uint x, uint y) internal pure returns (uint z) {
-        z = x * y / ONE;
-    }
-
     constructor(address vat_, address pit_, address vow_) public {
         vat = vat_;
         pit = pit_;
         vow = vow_;
+    }
+
+    function mul(uint x, uint y) internal pure returns (uint z) {
+        z = x * y;
+        require(y == 0 || z / y == x);
+    }
+
+    uint constant RAY = 10 ** 27;
+    function rmul(uint x, uint y) internal pure returns (uint z) {
+        z = x * y;
+        require(y == 0 || z / y == x);
+        z = z / RAY;
     }
 
     function file(bytes32 what, uint risk) public auth {
@@ -105,7 +112,7 @@ contract Cat {
         require(wad == lump || (wad < lump && wad == f.tab));
 
         uint tab = f.tab;
-        uint ink = f.ink * wad / tab;
+        uint ink = mul(f.ink, wad) / tab;
 
         f.tab -= wad;
         f.ink -= ink;
