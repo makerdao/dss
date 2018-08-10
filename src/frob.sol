@@ -19,7 +19,7 @@ pragma solidity ^0.4.24;
 
 import './tune.sol';
 
-contract Lad {
+contract Pit {
     Vat   public  vat;
     int   public Line;
     bool  public live;
