@@ -80,8 +80,8 @@ contract Flapper is Events {
         bids[id].gal = gal;
 
         emit FlapKick(
-          id, this, pie, gem, lot, bid,
-          msg.sender, gal, bids[id].end, era()
+          id, pie, gem, lot, bid, msg.sender, gal,
+          bids[id].end, era()
         );
 
         return id;

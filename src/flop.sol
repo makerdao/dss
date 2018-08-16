@@ -86,8 +86,7 @@ contract Flopper is Events {
         bids[id].end = era() + tau;
 
         emit FlopKick(
-          id, this, pie, gem, lot, bid,
-          gal, msg.sender, bids[id].end, era()
+          id, pie, gem, lot, bid, gal, msg.sender, bids[id].end, era()
         );
 
         return id;

@@ -92,7 +92,7 @@ contract Flipper is Events {
         bids[id].tab = tab;
 
         emit FlipKick(
-          id, this, vat, ilk, lot, bid, msg.sender, gal,
+          id, vat, ilk, lot, bid, msg.sender, gal,
           bids[id].end, era(), bids[id].lad, bids[id].tab
         );
 

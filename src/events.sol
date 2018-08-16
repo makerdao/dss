@@ -77,7 +77,6 @@ contract Events {
 
   event FlipKick(
     uint256 id,  // bid id
-    address mom, // auction contract address
     address vat, // vat address
     bytes32 ilk, // ilk address
     uint256 lot, // gem amount
@@ -92,7 +91,6 @@ contract Events {
 
   event FlopKick(
     uint256 id,  // bid id
-    address mom, // auction contract address
     address pie, // pie address
     address gem, // gem address
     uint256 lot, // gem amount
@@ -105,7 +103,6 @@ contract Events {
 
   event FlapKick(
     uint256 id,  // bid id
-    address mom, // auction contract address
     address pie, // pie address
     address gem, // gem address
     uint256 lot, // pie amount
