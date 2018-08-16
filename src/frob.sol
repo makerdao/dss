@@ -1,18 +1,33 @@
-// Copyright (C) 2018 AGPL
+/// frob.sol -- Dai CDP user interface
+
+// Copyright (C) 2018 Rain <rainbreak@riseup.net>
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 pragma solidity ^0.4.24;
 
 import './tune.sol';
 import './events.sol';
 
-contract Lad is Events {
-    bool  public live;
+contract Pit is Events {
     Vat   public  vat;
     int   public Line;
+    bool  public live;
 
     constructor(address vat_) public { vat = Vat(vat_); live = true; }
 
-    modifier auth { _; }  // todo: require(msg.sender == root);
+    modifier auth { _; }  // todo
 
     struct Ilk {
         int256  spot;  // ray
@@ -33,13 +48,13 @@ contract Lad is Events {
         emit FileIlk(ilk, what, risk);
     }
 
-    int256 constant ONE = 10 ** 27;
-    function rmul(int x, int y) internal pure returns (int z) {
+    function mul(int x, int y) internal pure returns (int z) {
         z = x * y;
         require(y >= 0 || x != -2**255);
         require(y == 0 || z / y == x);
-        z = z / ONE;
     }
+
+    int256 constant ONE = 10 ** 27;
 
     function frob(bytes32 ilk, int dink, int dart) public {
         vat.tune(ilk, msg.sender, dink, dart);
@@ -47,10 +62,11 @@ contract Lad is Events {
 
         (int rate, int Art)           = vat.ilks(ilk);
         (int gem,  int ink,  int art) = vat.urns(ilk, msg.sender); gem;
-        bool calm = rmul(Art, rate) <= ilks[ilk].line && vat.Tab() < Line;
+        bool calm = mul(Art, rate) <= mul(ilks[ilk].line, ONE) &&
+                        vat.Tab()  <  mul(Line, ONE);
         bool cool = dart <= 0;
         bool firm = dink >= 0;
-        bool safe = rmul(ink, i.spot) >= rmul(art, rate);
+        bool safe = mul(ink, i.spot) >= mul(art, rate);
 
         require(( calm || cool ) && ( cool && firm || safe ) && live);
         require(rate != 0);

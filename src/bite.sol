@@ -1,3 +1,20 @@
+/// bite.sol -- Dai liquidation module
+
+// Copyright (C) 2018 Rain <rainbreak@riseup.net>
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 pragma solidity ^0.4.24;
 
 import "src/events.sol";
@@ -13,7 +30,7 @@ contract VatLike {
     function grab(bytes32,address,address,int,int) public returns (uint);
 }
 
-contract LadLike {
+contract PitLike {
     function ilks(bytes32) public view returns (int,int);
 }
 
@@ -23,11 +40,11 @@ contract VowLike {
 
 contract Cat is Events {
     address public vat;
-    address public lad;
+    address public pit;
     address public vow;
     uint256 public lump;  // fixed lot size
 
-    modifier auth { _; }  // todo: require(msg.sender == root);
+    modifier auth { _; }  // todo
 
     struct Ilk {
         int256  chop;
@@ -41,11 +58,13 @@ contract Cat is Events {
         uint256 ink;
         uint256 tab;
     }
-    Flip[] public flips;
 
-    constructor(address vat_, address lad_, address vow_) public {
+    uint256                   public nflip;
+    mapping (uint256 => Flip) public flips;
+
+    constructor(address vat_, address pit_, address vow_) public {
         vat = vat_;
-        lad = lad_;
+        pit = pit_;
         vow = vow_;
     }
 
@@ -61,7 +80,7 @@ contract Cat is Events {
 
     function bite(bytes32 ilk, address guy) public returns (uint) {
         (int rate, int Art)           = VatLike(vat).ilks(ilk); Art;
-        (int spot, int line)          = LadLike(lad).ilks(ilk); line;
+        (int spot, int line)          = PitLike(pit).ilks(ilk); line;
         (int gem , int ink , int art) = VatLike(vat).urns(ilk, guy); gem;
         int tab = rmul(art, rate);
 
@@ -70,9 +89,11 @@ contract Cat is Events {
         VatLike(vat).grab(ilk, guy, vow, -ink, -art);
         VowLike(vow).fess(uint(tab));
 
-        uint flip = flips.push(Flip(ilk, lad, uint(ink), uint(tab))) - 1;
+        flips[nflip] = Flip(ilk, guy, uint(ink), uint(tab));
+        
+        emit Bite(ilk, lad, gem, ink, art, uint48(now), tab, nflip);
 
-        emit Bite(ilk, lad, gem, ink, art, uint48(now), tab, flip);
+        return nflip++;
     }
 
     function flip(uint n, uint wad) public returns (uint) {

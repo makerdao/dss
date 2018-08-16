@@ -53,12 +53,10 @@ contract Vat is VatLike {
         gems[lad] += jam;
         ilk;
     }
+    uint256 constant ONE = 10 ** 27;
     function move(address src, address dst, uint wad) public {
-        dai[src] -= wad;
-        dai[dst] += wad;
-    }
-    function suck(address guy, uint wad) public {
-        dai[guy] += wad;
+        dai[src] -= wad * ONE;
+        dai[dst] += wad * ONE;
     }
 }
 
@@ -92,8 +90,6 @@ contract FlipTest is DSTest {
         gal = new Gal();
 
         pie.approve(flip);
-
-        vat.suck(this, 1000 ether);
 
         pie.push(ali, 200 ether);
         pie.push(bob, 200 ether);
