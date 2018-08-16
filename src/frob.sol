@@ -71,6 +71,6 @@ contract Pit is Events {
         require(( calm || cool ) && ( cool && firm || safe ) && live);
         require(rate != 0);
 
-        emit Frob(ilk,  msg.sender, gem, ink, art, uint48(now));
+        emit Frob(ilk,  msg.sender, gem, dink, dart, ink, art, uint48(now));
     }
 }

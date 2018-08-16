@@ -47,12 +47,14 @@ contract Events {
   // --- CDP Events ---
 
   event Frob(
-    bytes32 ilk, // urn.ilk
-    address lad, // msg.sender
-    int256  gem, // urn.gem
-    int256  ink, // urn.ink
-    int256  art, // urn.art
-    uint48  era  // timestamp
+    bytes32 ilk,  // urn.ilk
+    address guy,  // msg.sender
+    int256  gem,  // urn.gem
+    int256  dink, // ink delta
+    int256  dart, // art delta
+    int256  ink,  // urn.ink
+    int256  art,  // urn.art
+    uint48  era   // timestamp
   );
 
   event Bite(
