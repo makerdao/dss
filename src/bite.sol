@@ -90,8 +90,8 @@ contract Cat is Events {
         VowLike(vow).fess(uint(tab));
 
         flips[nflip] = Flip(ilk, guy, uint(ink), uint(tab));
-        
-        emit Bite(ilk, lad, gem, ink, art, uint48(now), tab, nflip);
+
+        emit Bite(ilk, guy, gem, ink, art, uint48(now), tab, nflip);
 
         return nflip++;
     }

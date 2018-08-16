@@ -11,7 +11,7 @@ contract Events {
   event Move(
     address src,
     address dst,
-    uint256 wad
+    int256 wad
   );
 
   event Push(
@@ -29,9 +29,9 @@ contract Events {
     int256  risk  // value
   );
 
-  event FileFuss(
+  event FileAddr(
     bytes32 what, // risk param
-    address fuss  // auction address
+    address addr  // auction address
   );
 
   event FileInt(
@@ -57,7 +57,7 @@ contract Events {
 
   event Bite(
     bytes32 ilk, // urn.ilk
-    address lad, // urn.lad
+    address guy, // urn owner
     int256  gem, // urn.gem
     int256  ink, // urn.ink
     int256  art, // urn.art

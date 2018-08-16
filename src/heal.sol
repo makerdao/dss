@@ -56,7 +56,7 @@ contract Vow is Events {
         z = x - y;
         require(z <= x);
     }
-  
+
     function Awe() public view returns (uint) { return add(add(Sin, Woe), Ash); }
     function Joy() public view returns (uint) { return uint(DaiLike(vat).dai(this)) / ONE; }
 
@@ -71,8 +71,8 @@ contract Vow is Events {
         if (what == "flap") cow = addr;
         if (what == "flop") row = addr;
         if (what == "vat")  vat = addr;
-        
-        emit FileFuss(what, fuss);
+
+        emit FileAddr(what, addr);
     }
 
     function heal(uint wad) public {
