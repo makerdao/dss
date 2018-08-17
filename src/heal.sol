@@ -17,14 +17,7 @@
 
 pragma solidity ^0.4.24;
 
-contract Fusspot {
-    function kick(address gal, uint lot, uint bid) public returns (uint);
-}
-
-contract DaiLike {
-    function dai (bytes32) public view returns (int);
-    function heal(bytes32,bytes32,int) public;
-}
+import "./interfaces.sol";
 
 contract Vow {
     address vat;

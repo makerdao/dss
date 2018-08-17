@@ -17,13 +17,7 @@
 
 pragma solidity ^0.4.24;
 
-contract PieLike {
-    function move(bytes32,bytes32,uint) public;
-}
-
-contract GemLike {
-    function move(address,address,uint) public;
-}
+import "./interfaces.sol";
 
 /*
    This thing lets you sell some pie in return for gems.
