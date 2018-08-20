@@ -76,30 +76,32 @@ contract Vat {
     }
 
     // --- CDP Engine ---
-    function tune(bytes32 ilk, address lad, int dink, int dart) public auth {
-        Urn storage u = urns[ilk][lad];
+    function tune(bytes32 ilk, address u_, address v_, address w_, int dink, int dart) public auth {
+        Urn storage u = urns[ilk][u_];
+        Urn storage v = urns[ilk][v_];
         Ilk storage i = ilks[ilk];
 
-        u.gem = sub(u.gem, dink);
+        v.gem = sub(v.gem, dink);
         u.ink = add(u.ink, dink);
         u.art = add(u.art, dart);
         i.Art = add(i.Art, dart);
 
-        dai[lad] = add(dai[lad], mul(i.rate, dart));
-        Tab      = add(Tab,      mul(i.rate, dart));
+        dai[w_] = add(dai[w_], mul(i.rate, dart));
+        Tab     = add(Tab,     mul(i.rate, dart));
     }
 
     // --- Liquidation Engine ---
-    function grab(bytes32 ilk, address lad, address vow, int dink, int dart) public auth {
-        Urn storage u = urns[ilk][lad];
+    function grab(bytes32 ilk, address u_, address v_, address w_, int dink, int dart) public auth {
+        Urn storage u = urns[ilk][u_];
+        Urn storage v = urns[ilk][v_];
         Ilk storage i = ilks[ilk];
 
         u.ink = add(u.ink, dink);
         u.art = add(u.art, dart);
         i.Art = add(i.Art, dart);
 
-        sin[vow] = sub(sin[vow], mul(i.rate, dart));
-        vice     = sub(vice,     mul(i.rate, dart));
+        sin[w_] = sub(sin[w_], mul(i.rate, dart));
+        vice    = sub(vice,    mul(i.rate, dart));
     }
     function heal(address u, address v, int wad) public auth {
         int rad = mul(wad, ONE);
