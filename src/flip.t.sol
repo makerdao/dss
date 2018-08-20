@@ -53,6 +53,11 @@ contract Vat is VatLike {
         gems[lad] += jam;
         ilk;
     }
+    function flux(bytes32 ilk, address src, address dst, int jam) public {
+        gems[src] -= jam;
+        gems[dst] += jam;
+        ilk;
+    }
     uint256 constant ONE = 10 ** 27;
     function move(address src, address dst, uint wad) public {
         dai[src] -= wad * ONE;

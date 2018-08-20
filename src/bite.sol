@@ -84,7 +84,7 @@ contract Cat {
 
         require(rmul(ink, spot) < tab);  // !safe
 
-        VatLike(vat).grab(ilk, guy, vow, vow, -ink, -art);
+        VatLike(vat).grab(ilk, guy, this, vow, -ink, -art);
         VowLike(vow).fess(uint(tab));
 
         flips[nflip] = Flip(ilk, guy, uint(ink), uint(tab));

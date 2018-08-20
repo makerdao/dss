@@ -22,8 +22,8 @@ contract GemLike {
 }
 
 contract VatLike {
-    function move(address,address,uint) public;
-    function slip(bytes32,address,int)  public;
+    function move(address,address,uint)         public;
+    function flux(bytes32,address,address,int)  public;
 }
 
 
@@ -89,6 +89,8 @@ contract Flipper {
         bids[id].gal = gal;
         bids[id].tab = tab;
 
+        vat.flux(ilk, msg.sender, this, int(lot));
+
         return id;
     }
     function tick(uint id) public {
@@ -124,7 +126,7 @@ contract Flipper {
         require(mul(beg, lot) <= mul(bids[id].lot, ONE));
 
         vat.move(msg.sender, bids[id].guy, bid);
-        vat.slip(ilk, bids[id].lad, int(bids[id].lot - lot));
+        vat.flux(ilk, this, bids[id].lad, int(bids[id].lot - lot));
 
         bids[id].guy = msg.sender;
         bids[id].lot = lot;
@@ -133,7 +135,7 @@ contract Flipper {
     function deal(uint id) public {
         require(bids[id].tic < era() && bids[id].tic != 0 ||
                 bids[id].end < era());
-        vat.slip(ilk, bids[id].guy, int(bids[id].lot));
+        vat.flux(ilk, this, bids[id].guy, int(bids[id].lot));
         delete bids[id];
     }
 }

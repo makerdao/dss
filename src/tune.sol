@@ -74,6 +74,11 @@ contract Vat {
         urns[ilk][guy].gem = add(urns[ilk][guy].gem, wad);
         require(urns[ilk][guy].gem >= 0);
     }
+    function flux(bytes32 ilk, address src, address dst, int256 wad) public auth {
+        urns[ilk][src].gem = sub(urns[ilk][src].gem, wad);
+        urns[ilk][dst].gem = add(urns[ilk][dst].gem, wad);
+        require(urns[ilk][src].gem >= 0 && urns[ilk][dst].gem >= 0);
+    }
 
     // --- CDP Engine ---
     function tune(bytes32 ilk, address u_, address v_, address w_, int dink, int dart) public auth {
@@ -96,6 +101,7 @@ contract Vat {
         Urn storage v = urns[ilk][v_];
         Ilk storage i = ilks[ilk];
 
+        v.gem = sub(v.gem, dink);
         u.ink = add(u.ink, dink);
         u.art = add(u.art, dart);
         i.Art = add(i.Art, dart);
