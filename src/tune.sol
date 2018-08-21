@@ -59,15 +59,10 @@ contract Vat {
     }
 
     // --- Fungibility Engine ---
-    int256 constant ONE = 10 ** 27;
-    function move(bytes32 src, bytes32 dst, uint wad) public auth {
-        require(int(wad) >= 0);
-        move(src, dst, int(wad));
-    }
-    function move(bytes32 src, bytes32 dst, int wad) public auth {
-        int rad = mul(wad, ONE);
-        dai[src] = sub(dai[src], rad);
-        dai[dst] = add(dai[dst], rad);
+    function move(bytes32 src, bytes32 dst, uint256 rad) public auth {
+        require(int(rad) >= 0);
+        dai[src] = sub(dai[src], int(rad));
+        dai[dst] = add(dai[dst], int(rad));
         require(dai[src] >= 0 && dai[dst] >= 0);
     }
     function slip(bytes32 ilk, bytes32 guy, int256 wad) public auth {
@@ -109,9 +104,7 @@ contract Vat {
         sin[w_] = sub(sin[w_], mul(i.rate, dart));
         vice    = sub(vice,    mul(i.rate, dart));
     }
-    function heal(bytes32 u, bytes32 v, int wad) public auth {
-        int rad = mul(wad, ONE);
-
+    function heal(bytes32 u, bytes32 v, int rad) public auth {
         sin[u] = sub(sin[u], rad);
         dai[v] = sub(dai[v], rad);
         vice   = sub(vice,   rad);

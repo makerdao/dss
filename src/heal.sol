@@ -49,12 +49,14 @@ contract Vow {
         z = x + y;
         require(z >= x);
     }
-
     function sub(uint x, uint y) internal pure returns (uint z) {
         z = x - y;
         require(z <= x);
     }
-  
+    function mul(uint x, uint y) internal pure returns (uint z) {
+        require(y == 0 || (z = x * y) / y == x);
+    }
+
     function Awe() public view returns (uint) { return add(add(Sin, Woe), Ash); }
     function Joy() public view returns (uint) { return uint(DaiLike(vat).dai(bytes32(address(this)))) / ONE; }
 
@@ -69,14 +71,16 @@ contract Vow {
     }
 
     function heal(uint wad) public {
-        require(wad <= Joy() && wad <= Woe && int(wad) >= 0);
+        require(wad <= Joy() && wad <= Woe);
         Woe = sub(Woe, wad);
-        DaiLike(vat).heal(bytes32(address(this)), bytes32(address(this)), int(wad));
+        require(int(mul(wad, ONE)) >= 0);
+        DaiLike(vat).heal(bytes32(address(this)), bytes32(address(this)), int(mul(wad, ONE)));
     }
     function kiss(uint wad) public {
-        require(wad <= Ash && wad <= Joy() && int(wad) >= 0);
+        require(wad <= Ash && wad <= Joy());
         Ash = sub(Ash, wad);
-        DaiLike(vat).heal(bytes32(address(this)), bytes32(address(this)), int(wad));
+        require(int(mul(wad, ONE)) >= 0);
+        DaiLike(vat).heal(bytes32(address(this)), bytes32(address(this)), int(mul(wad, ONE)));
     }
 
     function fess(uint tab) public auth {

@@ -41,8 +41,9 @@ contract WarpFlop is Flopper {
 }
 
 contract VatLike is DSToken('') {
+    uint constant ONE = 10 ** 27;
     function move(bytes32 src, bytes32 dst, uint wad) public {
-        move(address(src), address(dst), wad);
+        move(address(src), address(dst), wad / ONE);
     }
 }
 

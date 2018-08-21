@@ -62,7 +62,8 @@ contract Flipper {
 
     function era() public view returns (uint48) { return uint48(now); }
 
-    uint constant ONE = 10 ** 18;
+    uint constant ONE = 10 ** 27;
+    uint constant WAD = 10 ** 18;
     function mul(uint x, uint y) internal pure returns (uint z) {
         require(y == 0 || (z = x * y) / y == x);
     }
@@ -102,10 +103,10 @@ contract Flipper {
         require(lot == bids[id].lot);
         require(bid <= bids[id].tab);
         require(bid >  bids[id].bid);
-        require(mul(bid, ONE) >= mul(beg, bids[id].bid) || bid == bids[id].tab);
+        require(mul(bid, WAD) >= mul(beg, bids[id].bid) || bid == bids[id].tab);
 
-        vat.move(bytes32(msg.sender), bytes32(bids[id].guy), bids[id].bid);
-        vat.move(bytes32(msg.sender), bytes32(bids[id].gal), bid - bids[id].bid);
+        vat.move(bytes32(msg.sender), bytes32(bids[id].guy), mul(bids[id].bid, ONE));
+        vat.move(bytes32(msg.sender), bytes32(bids[id].gal), mul(bid - bids[id].bid, ONE));
 
         bids[id].guy = msg.sender;
         bids[id].bid = bid;
@@ -119,9 +120,9 @@ contract Flipper {
         require(bid == bids[id].bid);
         require(bid == bids[id].tab);
         require(lot < bids[id].lot);
-        require(mul(beg, lot) <= mul(bids[id].lot, ONE));
+        require(mul(beg, lot) <= mul(bids[id].lot, WAD));
 
-        vat.move(bytes32(msg.sender), bytes32(bids[id].guy), bid);
+        vat.move(bytes32(msg.sender), bytes32(bids[id].guy), mul(bid, ONE));
         vat.flux(ilk, bytes32(address(this)), bytes32(bids[id].lad), int(bids[id].lot - lot));
 
         bids[id].guy = msg.sender;

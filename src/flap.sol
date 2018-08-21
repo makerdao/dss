@@ -60,7 +60,8 @@ contract Flapper {
 
     function era() public view returns (uint48) { return uint48(now); }
 
-    uint constant ONE = 10 ** 18;
+    uint constant ONE = 10 ** 27;
+    uint constant WAD = 10 ** 18;
     function mul(uint x, uint y) internal pure returns (uint z) {
         require(y == 0 || (z = x * y) / y == x);
     }
@@ -74,7 +75,7 @@ contract Flapper {
         public returns (uint)
     {
         uint id = ++kicks;
-        pie.move(bytes32(msg.sender), bytes32(address(this)), lot);
+        pie.move(bytes32(msg.sender), bytes32(address(this)), mul(lot, ONE));
 
         bids[id].bid = bid;
         bids[id].lot = lot;
@@ -91,7 +92,7 @@ contract Flapper {
 
         require(lot == bids[id].lot);
         require(bid >  bids[id].bid);
-        require(mul(bid, ONE) >= mul(beg, bids[id].bid));
+        require(mul(bid, WAD) >= mul(beg, bids[id].bid));
 
         gem.move(msg.sender, bids[id].guy, bids[id].bid);
         gem.move(msg.sender, bids[id].gal, bid - bids[id].bid);
@@ -103,7 +104,7 @@ contract Flapper {
     function deal(uint id) public {
         require(bids[id].tic < era() && bids[id].tic != 0 ||
                 bids[id].end < era());
-        pie.move(bytes32(address(this)), bytes32(bids[id].guy), bids[id].lot);
+        pie.move(bytes32(address(this)), bytes32(bids[id].guy), mul(bids[id].lot, ONE));
         delete bids[id];
     }
 }
