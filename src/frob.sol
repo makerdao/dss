@@ -56,7 +56,7 @@ contract Pit {
         vat.tune(ilk, guy, guy, guy, dink, dart);
 
         (int rate, int Art)           = vat.ilks(ilk);
-        (int gem,  int ink,  int art) = vat.urns(ilk, bytes32(msg.sender)); gem;
+        (int ink,  int art) = vat.urns(ilk, bytes32(msg.sender));
         bool calm = mul(Art, rate) <= mul(ilks[ilk].line, ONE) &&
                         vat.Tab()  <  mul(Line, ONE);
         bool safe = mul(ink, ilks[ilk].spot) >= mul(art, rate);

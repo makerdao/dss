@@ -25,15 +25,15 @@ contract Vat {
         int256  Art;   // wad
     }
     struct Urn {
-        int256 gem;    // wad
         int256 ink;    // wad
         int256 art;    // wad
     }
 
-    mapping (bytes32 => int256)                   public dai;  // rad
-    mapping (bytes32 => int256)                   public sin;  // rad
     mapping (bytes32 => Ilk)                      public ilks;
     mapping (bytes32 => mapping (bytes32 => Urn)) public urns;
+    mapping (bytes32 => mapping (bytes32 => int)) public gem;    // wad
+    mapping (bytes32 => int256)                   public dai;    // rad
+    mapping (bytes32 => int256)                   public sin;    // rad
 
     int256  public Tab;   // rad
     int256  public vice;  // rad
@@ -66,43 +66,41 @@ contract Vat {
         require(dai[src] >= 0 && dai[dst] >= 0);
     }
     function slip(bytes32 ilk, bytes32 guy, int256 wad) public auth {
-        urns[ilk][guy].gem = add(urns[ilk][guy].gem, wad);
-        require(urns[ilk][guy].gem >= 0);
+        gem[ilk][guy] = add(gem[ilk][guy], wad);
+        require(gem[ilk][guy] >= 0);
     }
     function flux(bytes32 ilk, bytes32 src, bytes32 dst, int256 wad) public auth {
-        urns[ilk][src].gem = sub(urns[ilk][src].gem, wad);
-        urns[ilk][dst].gem = add(urns[ilk][dst].gem, wad);
-        require(urns[ilk][src].gem >= 0 && urns[ilk][dst].gem >= 0);
+        gem[ilk][src] = sub(gem[ilk][src], wad);
+        gem[ilk][dst] = add(gem[ilk][dst], wad);
+        require(gem[ilk][src] >= 0 && gem[ilk][dst] >= 0);
     }
 
     // --- CDP Engine ---
-    function tune(bytes32 ilk, bytes32 u_, bytes32 v_, bytes32 w_, int dink, int dart) public auth {
+    function tune(bytes32 ilk, bytes32 u_, bytes32 v, bytes32 w, int dink, int dart) public auth {
         Urn storage u = urns[ilk][u_];
-        Urn storage v = urns[ilk][v_];
         Ilk storage i = ilks[ilk];
 
-        v.gem = sub(v.gem, dink);
         u.ink = add(u.ink, dink);
         u.art = add(u.art, dart);
         i.Art = add(i.Art, dart);
 
-        dai[w_] = add(dai[w_], mul(i.rate, dart));
-        Tab     = add(Tab,     mul(i.rate, dart));
+        gem[ilk][v] = sub(gem[ilk][v], dink);
+        dai[w]      = add(dai[w],      mul(i.rate, dart));
+        Tab         = add(Tab,         mul(i.rate, dart));
     }
 
     // --- Liquidation Engine ---
-    function grab(bytes32 ilk, bytes32 u_, bytes32 v_, bytes32 w_, int dink, int dart) public auth {
+    function grab(bytes32 ilk, bytes32 u_, bytes32 v, bytes32 w, int dink, int dart) public auth {
         Urn storage u = urns[ilk][u_];
-        Urn storage v = urns[ilk][v_];
         Ilk storage i = ilks[ilk];
 
-        v.gem = sub(v.gem, dink);
         u.ink = add(u.ink, dink);
         u.art = add(u.art, dart);
         i.Art = add(i.Art, dart);
 
-        sin[w_] = sub(sin[w_], mul(i.rate, dart));
-        vice    = sub(vice,    mul(i.rate, dart));
+        gem[ilk][v] = sub(gem[ilk][v], dink);
+        sin[w]      = sub(sin[w],      mul(i.rate, dart));
+        vice        = sub(vice,        mul(i.rate, dart));
     }
     function heal(bytes32 u, bytes32 v, int rad) public auth {
         sin[u] = sub(sin[u], rad);

@@ -62,17 +62,17 @@ contract FrobTest is DSTest {
     }
 
     function gem(bytes32 ilk, address lad) internal view returns (int) {
-        (int gem_, int ink_, int art_) = vat.urns(ilk, bytes32(lad)); ink_; art_;
-        return gem_;
+        return vat.gem(ilk, bytes32(lad));
     }
     function ink(bytes32 ilk, address lad) internal view returns (int) {
-        (int gem_, int ink_, int art_) = vat.urns(ilk, bytes32(lad)); gem_; art_;
+        (int ink_, int art_) = vat.urns(ilk, bytes32(lad)); art_;
         return ink_;
     }
     function art(bytes32 ilk, address lad) internal view returns (int) {
-        (int gem_, int ink_, int art_) = vat.urns(ilk, bytes32(lad)); gem_; ink_;
+        (int ink_, int art_) = vat.urns(ilk, bytes32(lad)); ink_;
         return art_;
     }
+
 
     function test_join() public {
         gold.mint(500 ether);
@@ -174,15 +174,14 @@ contract BiteTest is DSTest {
     }
 
     function gem(bytes32 ilk, address lad) internal view returns (int) {
-        (int gem_, int ink_, int art_) = vat.urns(ilk, bytes32(lad)); ink_; art_;
-        return gem_;
+        return vat.gem(ilk, bytes32(lad));
     }
     function ink(bytes32 ilk, address lad) internal view returns (int) {
-        (int gem_, int ink_, int art_) = vat.urns(ilk, bytes32(lad)); gem_; art_;
+        (int ink_, int art_) = vat.urns(ilk, bytes32(lad)); art_;
         return ink_;
     }
     function art(bytes32 ilk, address lad) internal view returns (int) {
-        (int gem_, int ink_, int art_) = vat.urns(ilk, bytes32(lad)); gem_; ink_;
+        (int ink_, int art_) = vat.urns(ilk, bytes32(lad)); ink_;
         return art_;
     }
 

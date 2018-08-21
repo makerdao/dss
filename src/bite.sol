@@ -24,7 +24,7 @@ contract Flippy{
 
 contract VatLike {
     function ilks(bytes32) public view returns (int,int);
-    function urns(bytes32,bytes32) public view returns (int,int,int);
+    function urns(bytes32,bytes32) public view returns (int,int);
     function grab(bytes32,bytes32,bytes32,bytes32,int,int) public returns (uint);
 }
 
@@ -79,7 +79,7 @@ contract Cat {
     function bite(bytes32 ilk, address guy) public returns (uint) {
         (int rate, int Art)           = VatLike(vat).ilks(ilk); Art;
         (int spot, int line)          = PitLike(pit).ilks(ilk); line;
-        (int gem , int ink , int art) = VatLike(vat).urns(ilk, bytes32(guy)); gem;
+        (int ink , int art) = VatLike(vat).urns(ilk, bytes32(guy));
         int tab = rmul(art, rate);
 
         require(rmul(ink, spot) < tab);  // !safe
