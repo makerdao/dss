@@ -35,14 +35,6 @@ contract Vat {
     mapping (bytes32 => Ilk)                      public ilks;
     mapping (bytes32 => mapping (bytes32 => Urn)) public urns;
 
-    function dai(address guy) public view returns (int) {
-        return dai[bytes32(guy)];
-    }
-    function urns(bytes32 ilk, address lad) public view returns (int,int,int) {
-        Urn storage u = urns[ilk][bytes32(lad)];
-        return (u.gem, u.ink, u.art);
-    }
-
     int256  public Tab;   // rad
     int256  public vice;  // rad
 
@@ -68,35 +60,30 @@ contract Vat {
 
     // --- Fungibility Engine ---
     int256 constant ONE = 10 ** 27;
-    function move(address src, address dst, uint wad) public auth {
+    function move(bytes32 src, bytes32 dst, uint wad) public auth {
         require(int(wad) >= 0);
         move(src, dst, int(wad));
     }
-    function move(address src_, address dst_, int wad) public auth {
-        bytes32 src = bytes32(src_);
-        bytes32 dst = bytes32(dst_);
+    function move(bytes32 src, bytes32 dst, int wad) public auth {
         int rad = mul(wad, ONE);
         dai[src] = sub(dai[src], rad);
         dai[dst] = add(dai[dst], rad);
         require(dai[src] >= 0 && dai[dst] >= 0);
     }
-    function slip(bytes32 ilk, address guy_, int256 wad) public auth {
-        bytes32 guy = bytes32(guy_);
+    function slip(bytes32 ilk, bytes32 guy, int256 wad) public auth {
         urns[ilk][guy].gem = add(urns[ilk][guy].gem, wad);
         require(urns[ilk][guy].gem >= 0);
     }
-    function flux(bytes32 ilk, address src_, address dst_, int256 wad) public auth {
-        bytes32 src = bytes32(src_);
-        bytes32 dst = bytes32(dst_);
+    function flux(bytes32 ilk, bytes32 src, bytes32 dst, int256 wad) public auth {
         urns[ilk][src].gem = sub(urns[ilk][src].gem, wad);
         urns[ilk][dst].gem = add(urns[ilk][dst].gem, wad);
         require(urns[ilk][src].gem >= 0 && urns[ilk][dst].gem >= 0);
     }
 
     // --- CDP Engine ---
-    function tune(bytes32 ilk, address u_, address v_, address w_, int dink, int dart) public auth {
-        Urn storage u = urns[ilk][bytes32(u_)];
-        Urn storage v = urns[ilk][bytes32(v_)];
+    function tune(bytes32 ilk, bytes32 u_, bytes32 v_, bytes32 w_, int dink, int dart) public auth {
+        Urn storage u = urns[ilk][u_];
+        Urn storage v = urns[ilk][v_];
         Ilk storage i = ilks[ilk];
 
         v.gem = sub(v.gem, dink);
@@ -104,14 +91,14 @@ contract Vat {
         u.art = add(u.art, dart);
         i.Art = add(i.Art, dart);
 
-        dai[bytes32(w_)] = add(dai[bytes32(w_)], mul(i.rate, dart));
+        dai[w_] = add(dai[w_], mul(i.rate, dart));
         Tab     = add(Tab,     mul(i.rate, dart));
     }
 
     // --- Liquidation Engine ---
-    function grab(bytes32 ilk, address u_, address v_, address w_, int dink, int dart) public auth {
-        Urn storage u = urns[ilk][bytes32(u_)];
-        Urn storage v = urns[ilk][bytes32(v_)];
+    function grab(bytes32 ilk, bytes32 u_, bytes32 v_, bytes32 w_, int dink, int dart) public auth {
+        Urn storage u = urns[ilk][u_];
+        Urn storage v = urns[ilk][v_];
         Ilk storage i = ilks[ilk];
 
         v.gem = sub(v.gem, dink);
@@ -119,12 +106,10 @@ contract Vat {
         u.art = add(u.art, dart);
         i.Art = add(i.Art, dart);
 
-        sin[bytes32(w_)] = sub(sin[bytes32(w_)], mul(i.rate, dart));
+        sin[w_] = sub(sin[w_], mul(i.rate, dart));
         vice    = sub(vice,    mul(i.rate, dart));
     }
-    function heal(address u_, address v_, int wad) public auth {
-        bytes32 u = bytes32(u_);
-        bytes32 v = bytes32(v_);
+    function heal(bytes32 u, bytes32 v, int wad) public auth {
         int rad = mul(wad, ONE);
 
         sin[u] = sub(sin[u], rad);
@@ -137,8 +122,7 @@ contract Vat {
     }
 
     // --- Stability Engine ---
-    function fold(bytes32 ilk, address vow_, int rate) public auth {
-        bytes32 vow = bytes32(vow_);
+    function fold(bytes32 ilk, bytes32 vow, int rate) public auth {
         Ilk storage i = ilks[ilk];
         i.rate   = add(i.rate, rate);
         int rad  = mul(i.Art, rate);

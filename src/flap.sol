@@ -17,6 +17,10 @@
 
 pragma solidity ^0.4.24;
 
+contract PieLike {
+    function move(bytes32,bytes32,uint) public;
+}
+
 contract GemLike {
     function move(address,address,uint) public;
 }
@@ -34,7 +38,7 @@ contract GemLike {
 
 
 contract Flapper {
-    GemLike public pie;
+    PieLike public pie;
     GemLike public gem;
 
     uint256 public beg = 1.05 ether;  // 5% minimum bid increase
@@ -62,7 +66,7 @@ contract Flapper {
     }
 
     constructor(address pie_, address gem_) public {
-        pie = GemLike(pie_);
+        pie = PieLike(pie_);
         gem = GemLike(gem_);
     }
 
@@ -70,7 +74,7 @@ contract Flapper {
         public returns (uint)
     {
         uint id = ++kicks;
-        pie.move(msg.sender, this, lot);
+        pie.move(bytes32(msg.sender), bytes32(address(this)), lot);
 
         bids[id].bid = bid;
         bids[id].lot = lot;
@@ -99,7 +103,7 @@ contract Flapper {
     function deal(uint id) public {
         require(bids[id].tic < era() && bids[id].tic != 0 ||
                 bids[id].end < era());
-        pie.move(this, bids[id].guy, bids[id].lot);
+        pie.move(bytes32(address(this)), bytes32(bids[id].guy), bids[id].lot);
         delete bids[id];
     }
 }

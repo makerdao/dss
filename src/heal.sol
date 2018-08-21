@@ -22,8 +22,8 @@ contract Fusspot {
 }
 
 contract DaiLike {
-    function dai (address) public view returns (int);
-    function heal(address,address,int) public;
+    function dai (bytes32) public view returns (int);
+    function heal(bytes32,bytes32,int) public;
 }
 
 contract Vow {
@@ -56,7 +56,7 @@ contract Vow {
     }
   
     function Awe() public view returns (uint) { return add(add(Sin, Woe), Ash); }
-    function Joy() public view returns (uint) { return uint(DaiLike(vat).dai(this)) / ONE; }
+    function Joy() public view returns (uint) { return uint(DaiLike(vat).dai(bytes32(address(this)))) / ONE; }
 
     function file(bytes32 what, uint risk) public auth {
         if (what == "lump") lump = risk;
@@ -71,12 +71,12 @@ contract Vow {
     function heal(uint wad) public {
         require(wad <= Joy() && wad <= Woe && int(wad) >= 0);
         Woe = sub(Woe, wad);
-        DaiLike(vat).heal(this, this, int(wad));
+        DaiLike(vat).heal(bytes32(address(this)), bytes32(address(this)), int(wad));
     }
     function kiss(uint wad) public {
         require(wad <= Ash && wad <= Joy() && int(wad) >= 0);
         Ash = sub(Ash, wad);
-        DaiLike(vat).heal(this, this, int(wad));
+        DaiLike(vat).heal(bytes32(address(this)), bytes32(address(this)), int(wad));
     }
 
     function fess(uint tab) public auth {

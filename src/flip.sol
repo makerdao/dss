@@ -17,13 +17,9 @@
 
 pragma solidity ^0.4.24;
 
-contract GemLike {
-    function move(address,address,uint) public;
-}
-
 contract VatLike {
-    function move(address,address,uint)         public;
-    function flux(bytes32,address,address,int)  public;
+    function move(bytes32,bytes32,uint)         public;
+    function flux(bytes32,bytes32,bytes32,int)  public;
 }
 
 
@@ -89,7 +85,7 @@ contract Flipper {
         bids[id].gal = gal;
         bids[id].tab = tab;
 
-        vat.flux(ilk, msg.sender, this, int(lot));
+        vat.flux(ilk, bytes32(msg.sender), bytes32(address(this)), int(lot));
 
         return id;
     }
@@ -108,8 +104,8 @@ contract Flipper {
         require(bid >  bids[id].bid);
         require(mul(bid, ONE) >= mul(beg, bids[id].bid) || bid == bids[id].tab);
 
-        vat.move(msg.sender, bids[id].guy, bids[id].bid);
-        vat.move(msg.sender, bids[id].gal, bid - bids[id].bid);
+        vat.move(bytes32(msg.sender), bytes32(bids[id].guy), bids[id].bid);
+        vat.move(bytes32(msg.sender), bytes32(bids[id].gal), bid - bids[id].bid);
 
         bids[id].guy = msg.sender;
         bids[id].bid = bid;
@@ -125,8 +121,8 @@ contract Flipper {
         require(lot < bids[id].lot);
         require(mul(beg, lot) <= mul(bids[id].lot, ONE));
 
-        vat.move(msg.sender, bids[id].guy, bid);
-        vat.flux(ilk, this, bids[id].lad, int(bids[id].lot - lot));
+        vat.move(bytes32(msg.sender), bytes32(bids[id].guy), bid);
+        vat.flux(ilk, bytes32(address(this)), bytes32(bids[id].lad), int(bids[id].lot - lot));
 
         bids[id].guy = msg.sender;
         bids[id].lot = lot;
@@ -135,7 +131,7 @@ contract Flipper {
     function deal(uint id) public {
         require(bids[id].tic < era() && bids[id].tic != 0 ||
                 bids[id].end < era());
-        vat.flux(ilk, this, bids[id].guy, int(bids[id].lot));
+        vat.flux(ilk, bytes32(address(this)), bytes32(bids[id].guy), int(bids[id].lot));
         delete bids[id];
     }
 }

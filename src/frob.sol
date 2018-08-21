@@ -52,10 +52,11 @@ contract Pit {
     int256 constant ONE = 10 ** 27;
 
     function frob(bytes32 ilk, int dink, int dart) public {
-        vat.tune(ilk, msg.sender, msg.sender, msg.sender, dink, dart);
+        bytes32 guy = bytes32(msg.sender);
+        vat.tune(ilk, guy, guy, guy, dink, dart);
 
         (int rate, int Art)           = vat.ilks(ilk);
-        (int gem,  int ink,  int art) = vat.urns(ilk, msg.sender); gem;
+        (int gem,  int ink,  int art) = vat.urns(ilk, bytes32(msg.sender)); gem;
         bool calm = mul(Art, rate) <= mul(ilks[ilk].line, ONE) &&
                         vat.Tab()  <  mul(Line, ONE);
         bool safe = mul(ink, ilks[ilk].spot) >= mul(art, rate);
