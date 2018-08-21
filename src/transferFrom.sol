@@ -19,7 +19,7 @@ pragma solidity ^0.4.24;
 
 contract VatLike {
     function dai(bytes32) public view returns (uint);
-    function Tab() public view returns (uint);
+    function debt() public view returns (uint);
     function move(bytes32,bytes32,uint) public;
 }
 
@@ -33,7 +33,7 @@ contract Dai20 {
         return vat.dai(bytes32(guy)) / ONE;
     }
     function totalSupply() public view returns (uint) {
-        return vat.Tab() / ONE;
+        return vat.debt() / ONE;
     }
 
     event Approval(address src, address dst, uint wad);

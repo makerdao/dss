@@ -18,7 +18,7 @@ contract WarpVat is Vat {
     uint256 constant ONE = 10 ** 27;
     function mint(address guy, uint wad) public {
         dai[bytes32(guy)] += wad * ONE;
-        Tab               += wad * ONE;
+        debt              += wad * ONE;
     }
 }
 

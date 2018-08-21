@@ -35,7 +35,7 @@ contract Vat {
     mapping (bytes32 => uint256)                   public dai;    // rad
     mapping (bytes32 => uint256)                   public sin;    // rad
 
-    uint256  public Tab;   // rad
+    uint256  public debt;   // rad
     uint256  public vice;  // rad
 
     function add(uint x, int y) internal pure returns (uint z) {
@@ -87,7 +87,7 @@ contract Vat {
 
         gem[ilk][v] = sub(gem[ilk][v], dink);
         dai[w]      = add(dai[w],      mul(i.rate, dart));
-        Tab         = add(Tab,         mul(i.rate, dart));
+        debt        = add(debt,        mul(i.rate, dart));
     }
 
     // --- Liquidation Engine ---
@@ -107,10 +107,10 @@ contract Vat {
         sin[u] = sub(sin[u], rad);
         dai[v] = sub(dai[v], rad);
         vice   = sub(vice,   rad);
-        Tab    = sub(Tab,    rad);
+        debt   = sub(debt,   rad);
 
         require(sin[u] >= 0 && dai[v] >= 0);
-        require(vice   >= 0 && Tab    >= 0);
+        require(vice   >= 0 && debt    >= 0);
     }
 
     // --- Stability Engine ---
@@ -119,6 +119,6 @@ contract Vat {
         i.rate   = add(i.rate, rate);
         int rad  = mul(i.Art, rate);
         dai[vow] = add(dai[vow], rad);
-        Tab      = add(Tab, rad);
+        debt     = add(debt, rad);
     }
 }

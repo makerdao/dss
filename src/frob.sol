@@ -55,7 +55,7 @@ contract Pit {
         (uint rate, uint Art) = vat.ilks(ilk);
         (uint ink,  uint art) = vat.urns(ilk, bytes32(msg.sender));
         bool calm = mul(Art, rate) <= mul(ilks[ilk].line, ONE) &&
-                        vat.Tab()  <  mul(Line, ONE);
+                        vat.debt() <  mul(Line, ONE);
         bool safe = mul(ink, ilks[ilk].spot) >= mul(art, rate);
 
         require( ( calm || dart<=0 ) && ( dart<=0 && dink>=0 || safe ) && live);
