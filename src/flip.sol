@@ -38,14 +38,15 @@ contract VatLike {
 */
 
 contract Flipper {
-    VatLike public vat;
-    bytes32 public ilk;
+    VatLike public   vat;
+    bytes32 public   ilk;
 
-    uint256 public beg = 1.05 ether;  // 5% minimum bid increase
-    uint48  public ttl = 3.00 hours;  // 3 hours bid duration
-    uint48  public tau = 1 weeks;     // 1 week total auction length
+    uint256 constant ONE = 1.00E27;
+    uint256 public   beg = 1.05E27;  // 5% minimum bid increase
+    uint48  public   ttl = 3 hours;  // 3 hours bid duration
+    uint48  public   tau = 1 weeks;  // 1 week total auction length
 
-    uint256 public kicks;
+    uint256 public   kicks;
 
     struct Bid {
         uint256 bid;
@@ -62,8 +63,6 @@ contract Flipper {
 
     function era() public view returns (uint48) { return uint48(now); }
 
-    uint constant ONE = 10 ** 27;
-    uint constant WAD = 10 ** 18;
     function mul(uint x, uint y) internal pure returns (uint z) {
         require(y == 0 || (z = x * y) / y == x);
     }
@@ -103,7 +102,7 @@ contract Flipper {
         require(lot == bids[id].lot);
         require(bid <= bids[id].tab);
         require(bid >  bids[id].bid);
-        require(mul(bid, WAD) >= mul(beg, bids[id].bid) || bid == bids[id].tab);
+        require(mul(bid, ONE) >= mul(beg, bids[id].bid) || bid == bids[id].tab);
 
         vat.move(bytes32(msg.sender), bytes32(bids[id].guy), mul(bids[id].bid, ONE));
         vat.move(bytes32(msg.sender), bytes32(bids[id].gal), mul(bid - bids[id].bid, ONE));
@@ -120,7 +119,7 @@ contract Flipper {
         require(bid == bids[id].bid);
         require(bid == bids[id].tab);
         require(lot < bids[id].lot);
-        require(mul(beg, lot) <= mul(bids[id].lot, WAD));
+        require(mul(beg, lot) <= mul(bids[id].lot, ONE));
 
         vat.move(bytes32(msg.sender), bytes32(bids[id].guy), mul(bid, ONE));
         vat.flux(ilk, bytes32(address(this)), bytes32(bids[id].lad), int(bids[id].lot - lot));

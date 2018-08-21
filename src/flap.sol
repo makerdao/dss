@@ -38,14 +38,15 @@ contract GemLike {
 
 
 contract Flapper {
-    PieLike public pie;
-    GemLike public gem;
+    PieLike  public   pie;
+    GemLike  public   gem;
 
-    uint256 public beg = 1.05 ether;  // 5% minimum bid increase
-    uint48  public ttl = 3.00 hours;  // 3 hours bid lifetime
-    uint48  public tau = 1 weeks;     // 1 week total auction length
+    uint256  constant ONE = 1.00E27;
+    uint256  public   beg = 1.05E27;  // 5% minimum bid increase
+    uint48   public   ttl = 3 hours;  // 3 hours bid duration
+    uint48   public   tau = 1 weeks;  // 1 week total auction length
 
-    uint256 public kicks;
+    uint256  public   kicks;
 
     struct Bid {
         uint256 bid;
@@ -60,8 +61,6 @@ contract Flapper {
 
     function era() public view returns (uint48) { return uint48(now); }
 
-    uint constant ONE = 10 ** 27;
-    uint constant WAD = 10 ** 18;
     function mul(uint x, uint y) internal pure returns (uint z) {
         require(y == 0 || (z = x * y) / y == x);
     }
@@ -92,7 +91,7 @@ contract Flapper {
 
         require(lot == bids[id].lot);
         require(bid >  bids[id].bid);
-        require(mul(bid, WAD) >= mul(beg, bids[id].bid));
+        require(mul(bid, ONE) >= mul(beg, bids[id].bid));
 
         gem.move(msg.sender, bids[id].guy, bids[id].bid);
         gem.move(msg.sender, bids[id].gal, bid - bids[id].bid);
