@@ -53,13 +53,14 @@ contract VowTest is DSTest {
         return address(flop).call(sig, id, lot, bid);
     }
 
-    function grab(uint wad) internal {
+    uint256 constant ONE = 10 ** 27;
+    function suck(address who, uint wad) internal {
         vow.fess(wad);
         vat.init('');
-        vat.grab('', bytes32(address(vat)), bytes32(address(vow)), bytes32(address(vow)), 0, -int(wad));
+        vat.heal(bytes32(address(vow)), bytes32(who), -int(wad * ONE));
     }
     function flog(uint wad) internal {
-        grab(wad);
+        suck(address(0), wad);  // suck dai into the zero address
         vow.flog(vow.era());
     }
 
@@ -86,7 +87,7 @@ contract VowTest is DSTest {
 
     function test_no_flap_pending_sin() public {
         vow.file("lump", uint256(0 ether));
-        grab(100 ether);
+        flog(100 ether);
 
         vat.mint(vow, 50 ether);
         assertTrue(!try_flap() );
