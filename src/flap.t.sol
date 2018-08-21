@@ -40,7 +40,7 @@ contract WarpFlap is Flapper {
     constructor(address pie_, address gem_) public Flapper(pie_, gem_) {}
 }
 
-contract VatLike is DSToken('') {
+contract VatToken is DSToken('') {
     uint constant ONE = 10 ** 27;
     function move(bytes32 src, bytes32 dst, uint wad) public {
         move(address(src), address(dst), wad / ONE);
@@ -49,7 +49,7 @@ contract VatLike is DSToken('') {
 
 contract FlapTest is DSTest {
     WarpFlap fuss;
-    VatLike pie;
+    VatToken pie;
     DSToken gem;
 
     Guy  ali;
@@ -57,7 +57,7 @@ contract FlapTest is DSTest {
     Gal  gal;
 
     function setUp() public {
-        pie = new VatLike();
+        pie = new VatToken();
         gem = new DSToken('');
 
         fuss = new WarpFlap(pie, gem);
