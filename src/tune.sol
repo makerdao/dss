@@ -21,40 +21,41 @@ contract Vat {
     modifier auth { _; }  // todo
 
     struct Ilk {
-        int256  rate;  // ray
-        int256  Art;   // wad
+        uint256  rate;  // ray
+        uint256  Art;   // wad
     }
     struct Urn {
-        int256 ink;    // wad
-        int256 art;    // wad
+        uint256 ink;    // wad
+        uint256 art;    // wad
     }
 
-    mapping (bytes32 => Ilk)                      public ilks;
-    mapping (bytes32 => mapping (bytes32 => Urn)) public urns;
-    mapping (bytes32 => mapping (bytes32 => int)) public gem;    // wad
-    mapping (bytes32 => int256)                   public dai;    // rad
-    mapping (bytes32 => int256)                   public sin;    // rad
+    mapping (bytes32 => Ilk)                       public ilks;
+    mapping (bytes32 => mapping (bytes32 => Urn )) public urns;
+    mapping (bytes32 => mapping (bytes32 => uint)) public gem;    // wad
+    mapping (bytes32 => uint256)                   public dai;    // rad
+    mapping (bytes32 => uint256)                   public sin;    // rad
 
-    int256  public Tab;   // rad
-    int256  public vice;  // rad
+    uint256  public Tab;   // rad
+    uint256  public vice;  // rad
 
-    function add(int x, int y) internal pure returns (int z) {
-        z = x + y;
+    function add(uint x, int y) internal pure returns (uint z) {
+        z = x + uint(y);
         require(y <= 0 || z > x);
-        require(y >= 0 || z < x);
+        // require(y >= 0 || z < x);  // fixme: why errors??
     }
-    function sub(int x, int y) internal pure returns (int z) {
-        require(y != -2**255);
+    function sub(uint x, int y) internal pure returns (uint z) {
         z = add(x, -y);
+        require(y != -2**255);
     }
-    function mul(int x, int y) internal pure returns (int z) {
-        z = x * y;
-        require(y >= 0 || x != -2**255);
-        require(y == 0 || z / y == x);
+    function mul(uint x, int y) internal pure returns (int z) {
+        z = int(x) * y;
+        require(int(x) > 0);
+        require(y >= 0 || int(x) != -2**255);
+        require(y == 0 || z / y == int(x));
     }
 
     // --- Administration Engine ---
-    function file(bytes32 ilk, bytes32 what, int risk) public auth {
+    function file(bytes32 ilk, bytes32 what, uint risk) public auth {
         if (what == "rate") ilks[ilk].rate = risk;
     }
 

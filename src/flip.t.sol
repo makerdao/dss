@@ -47,15 +47,11 @@ contract Guy {
 }
 
 contract Vat is VatLike {
-    mapping (bytes32 => int)  public gems;
+    mapping (bytes32 => uint) public gems;
     mapping (bytes32 => uint) public dai;
-    function slip(bytes32 ilk, bytes32 lad, int jam) public {
-        gems[lad] += jam;
-        ilk;
-    }
     function flux(bytes32 ilk, bytes32 src, bytes32 dst, int jam) public {
-        gems[src] -= jam;
-        gems[dst] += jam;
+        gems[src] -= uint(jam);
+        gems[dst] += uint(jam);
         ilk;
     }
     uint256 constant ONE = 10 ** 27;

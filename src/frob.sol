@@ -21,7 +21,7 @@ import './tune.sol';
 
 contract Pit {
     Vat   public  vat;
-    int   public Line;
+    uint  public Line;
     bool  public live;
 
     constructor(address vat_) public { vat = Vat(vat_); live = true; }
@@ -29,34 +29,31 @@ contract Pit {
     modifier auth { _; }  // todo
 
     struct Ilk {
-        int256  spot;  // ray
-        int256  line;  // wad
+        uint256  spot;  // ray
+        uint256  line;  // wad
     }
 
     mapping (bytes32 => Ilk) public ilks;
 
-    function file(bytes32 what, int risk) public auth {
+    function file(bytes32 what, uint risk) public auth {
         if (what == "Line") Line = risk;
     }
-    function file(bytes32 ilk, bytes32 what, int risk) public auth {
+    function file(bytes32 ilk, bytes32 what, uint risk) public auth {
         if (what == "spot") ilks[ilk].spot = risk;
         if (what == "line") ilks[ilk].line = risk;
     }
 
-    function mul(int x, int y) internal pure returns (int z) {
-        z = x * y;
-        require(y >= 0 || x != -2**255);
-        require(y == 0 || z / y == x);
+    uint256 constant ONE = 10 ** 27;
+    function mul(uint x, uint y) internal pure returns (uint z) {
+        require(y == 0 || (z = x * y) / y == x);
     }
-
-    int256 constant ONE = 10 ** 27;
 
     function frob(bytes32 ilk, int dink, int dart) public {
         bytes32 guy = bytes32(msg.sender);
         vat.tune(ilk, guy, guy, guy, dink, dart);
 
-        (int rate, int Art)           = vat.ilks(ilk);
-        (int ink,  int art) = vat.urns(ilk, bytes32(msg.sender));
+        (uint rate, uint Art) = vat.ilks(ilk);
+        (uint ink,  uint art) = vat.urns(ilk, bytes32(msg.sender));
         bool calm = mul(Art, rate) <= mul(ilks[ilk].line, ONE) &&
                         vat.Tab()  <  mul(Line, ONE);
         bool safe = mul(ink, ilks[ilk].spot) >= mul(art, rate);
