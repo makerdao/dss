@@ -17,7 +17,7 @@ import {WarpFlap as Flapper} from './flap.t.sol';
 contract WarpVat is Vat {
     int256 constant ONE = 10 ** 27;
     function mint(address guy, uint wad) public {
-        dai[guy] += int(wad) * ONE;
+        dai[bytes32(guy)] += int(wad) * ONE;
         Tab      += int(wad) * ONE;
     }
 }
