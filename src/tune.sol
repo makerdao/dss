@@ -50,7 +50,6 @@ contract Vat {
     function mul(uint x, int y) internal pure returns (int z) {
         z = int(x) * y;
         require(int(x) >= 0);
-        require(y >= 0 || int(x) != -2**255);
         require(y == 0 || z / y == int(x));
     }
 
