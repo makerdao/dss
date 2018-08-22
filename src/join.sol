@@ -22,7 +22,7 @@ contract GemLike {
 }
 
 contract Fluxing {
-    function slip(bytes32,address,int) public;
+    function slip(bytes32,bytes32,int) public;
 }
 
 contract Adapter {
@@ -37,11 +37,11 @@ contract Adapter {
     function join(uint wad) public {
         require(int(wad) >= 0);
         gem.move(msg.sender, this, wad);
-        vat.slip(ilk, msg.sender, int(wad));
+        vat.slip(ilk, bytes32(msg.sender), int(wad));
     }
     function exit(uint wad) public {
         require(int(wad) >= 0);
         gem.move(this, msg.sender, wad);
-        vat.slip(ilk, msg.sender, -int(wad));
+        vat.slip(ilk, bytes32(msg.sender), -int(wad));
     }
 }

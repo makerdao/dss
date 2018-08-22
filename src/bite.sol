@@ -25,13 +25,13 @@ contract Flippy{
 }
 
 contract VatLike {
-    function ilks(bytes32) public view returns (int,int);
-    function urns(bytes32,address) public view returns (int,int,int);
-    function grab(bytes32,address,address,int,int) public returns (uint);
+    function ilks(bytes32) public view returns (uint,uint);
+    function urns(bytes32,bytes32) public view returns (uint,uint);
+    function grab(bytes32,bytes32,bytes32,bytes32,int,int) public returns (uint);
 }
 
 contract PitLike {
-    function ilks(bytes32) public view returns (int,int);
+    function ilks(bytes32) public view returns (uint,uint);
 }
 
 contract VowLike {
@@ -47,7 +47,7 @@ contract Cat is Events {
     modifier auth { _; }  // todo
 
     struct Ilk {
-        int256  chop;
+        uint256 chop;
         address flip;
     }
     mapping (bytes32 => Ilk) public ilks;
@@ -68,10 +68,22 @@ contract Cat is Events {
         vow = vow_;
     }
 
+    function mul(uint x, uint y) internal pure returns (uint z) {
+        z = x * y;
+        require(y == 0 || z / y == x);
+    }
+
+    uint constant RAY = 10 ** 27;
+    function rmul(uint x, uint y) internal pure returns (uint z) {
+        z = x * y;
+        require(y == 0 || z / y == x);
+        z = z / RAY;
+    }
+
     function file(bytes32 what, uint risk) public auth {
         if (what == "lump") lump = risk;
     }
-    function file(bytes32 ilk, bytes32 what, int risk) public auth {
+    function file(bytes32 ilk, bytes32 what, uint risk) public auth {
         if (what == "chop") ilks[ilk].chop = risk;
     }
     function fuss(bytes32 ilk, address flip) public auth {
@@ -79,14 +91,14 @@ contract Cat is Events {
     }
 
     function bite(bytes32 ilk, address guy) public returns (uint) {
-        (int rate, int Art)           = VatLike(vat).ilks(ilk); Art;
-        (int spot, int line)          = PitLike(pit).ilks(ilk); line;
-        (int gem , int ink , int art) = VatLike(vat).urns(ilk, guy); gem;
-        int tab = rmul(art, rate);
+        (uint rate, uint Art)           = VatLike(vat).ilks(ilk); Art;
+        (uint spot, uint line)          = PitLike(pit).ilks(ilk); line;
+        (uint ink , uint art) = VatLike(vat).urns(ilk, bytes32(guy));
+        uint tab = rmul(art, rate);
 
         require(rmul(ink, spot) < tab);  // !safe
 
-        VatLike(vat).grab(ilk, guy, vow, -ink, -art);
+        VatLike(vat).grab(ilk, bytes32(guy), bytes32(address(this)), bytes32(vow), -int(ink), -int(art));
         VowLike(vow).fess(uint(tab));
 
         flips[nflip] = Flip(ilk, guy, uint(ink), uint(tab));
@@ -104,21 +116,16 @@ contract Cat is Events {
         require(wad == lump || (wad < lump && wad == f.tab));
 
         uint tab = f.tab;
-        uint ink = f.ink * wad / tab;
+        uint ink = mul(f.ink, wad) / tab;
 
         f.tab -= wad;
         f.ink -= ink;
 
         return Flippy(i.flip).kick({ lad: f.lad
                                    , gal: vow
-                                   , tab: uint(rmul(int(wad), i.chop))
+                                   , tab: uint(rmul(wad, i.chop))
                                    , lot: uint(ink)
                                    , bid: uint(0)
                                    });
-    }
-
-    int constant RAY = 10 ** 27;
-    function rmul(int x, int y) internal pure returns (int z) {
-        z = x * y / RAY;
     }
 }

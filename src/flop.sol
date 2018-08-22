@@ -21,13 +21,12 @@ pragma solidity ^0.4.24;
 
 import "src/events.sol";
 
-contract GemLike {
-    function move(address,address,uint) public;
-    function mint(address,uint) public;
+contract PieLike {
+    function move(bytes32,bytes32,uint) public;
 }
 
-contract VowLike {
-    function kiss(uint) public;
+contract GemLike {
+    function mint(address,uint) public;
 }
 
 /*
@@ -42,14 +41,15 @@ contract VowLike {
 */
 
 contract Flopper is Events {
-    GemLike public pie;
-    GemLike public gem;
+    PieLike  public   pie;
+    GemLike  public   gem;
 
-    uint256 public beg = 1.05 ether;  // 5% minimum bid increase
-    uint48  public ttl = 3.00 hours;  // 3 hours bid lifetime
-    uint48  public tau = 1 weeks;     // 1 week total auction length
+    uint256  constant ONE = 1.00E27;
+    uint256  public   beg = 1.05E27;  // 5% minimum bid increase
+    uint48   public   ttl = 3 hours;  // 3 hours bid lifetime
+    uint48   public   tau = 1 weeks;  // 1 week total auction length
 
-    uint256 public kicks;
+    uint256  public   kicks;
 
     modifier auth { _; }  // todo
 
@@ -66,13 +66,12 @@ contract Flopper is Events {
 
     function era() public view returns (uint48) { return uint48(now); }
 
-    uint constant ONE = 1 ether;
     function mul(uint x, uint y) internal pure returns (uint z) {
         require(y == 0 || (z = x * y) / y == x);
     }
 
     constructor(address pie_, address gem_) public {
-        pie = GemLike(pie_);
+        pie = PieLike(pie_);
         gem = GemLike(gem_);
     }
 
@@ -100,7 +99,7 @@ contract Flopper is Events {
         require(lot <  bids[id].lot);
         require(mul(beg, lot) / ONE <= bids[id].lot);  // div as lot can be huge
 
-        pie.move(msg.sender, bids[id].guy, bid);
+        pie.move(bytes32(msg.sender), bytes32(bids[id].guy), mul(bid, ONE));
 
         bids[id].guy = msg.sender;
         bids[id].lot = lot;

@@ -15,10 +15,10 @@ import {WarpFlap as Flapper} from './flap.t.sol';
 
 
 contract WarpVat is Vat {
-    int256 constant ONE = 10 ** 27;
+    uint256 constant ONE = 10 ** 27;
     function mint(address guy, uint wad) public {
-        dai[guy] += int(wad) * ONE;
-        Tab      += int(wad) * ONE;
+        dai[bytes32(guy)] += wad * ONE;
+        debt              += wad * ONE;
     }
 }
 
@@ -37,7 +37,7 @@ contract FrobTest is DSTest {
         return address(pit).call(sig, ilk, ink, art);
     }
 
-    function ray(int wad) internal pure returns (int) {
+    function ray(uint wad) internal pure returns (uint) {
         return wad * 10 ** 9;
     }
 
@@ -49,30 +49,30 @@ contract FrobTest is DSTest {
         gold = new DSToken("GEM");
         gold.mint(1000 ether);
 
-        vat.file("gold", "rate", int(ray(1 ether)));
+        vat.file("gold", "rate", ray(1 ether));
         adapter = new Adapter(vat, "gold", gold);
         gold.approve(adapter);
         adapter.join(1000 ether);
 
-        pit.file("gold", "spot", int(ray(1 ether)));
+        pit.file("gold", "spot", ray(1 ether));
         pit.file("gold", "line", 1000 ether);
         pit.file("Line", 1000 ether);
 
         gold.approve(vat);
     }
 
-    function gem(bytes32 ilk, address lad) internal view returns (int) {
-        (int gem_, int ink_, int art_) = vat.urns(ilk, lad); gem_; ink_; art_;
-        return gem_;
+    function gem(bytes32 ilk, address lad) internal view returns (uint) {
+        return vat.gem(ilk, bytes32(lad));
     }
-    function ink(bytes32 ilk, address lad) internal view returns (int) {
-        (int gem_, int ink_, int art_) = vat.urns(ilk, lad); gem_; ink_; art_;
+    function ink(bytes32 ilk, address lad) internal view returns (uint) {
+        (uint ink_, uint art_) = vat.urns(ilk, bytes32(lad)); art_;
         return ink_;
     }
-    function art(bytes32 ilk, address lad) internal view returns (int) {
-        (int gem_, int ink_, int art_) = vat.urns(ilk, lad); gem_; ink_; art_;
+    function art(bytes32 ilk, address lad) internal view returns (uint) {
+        (uint ink_, uint art_) = vat.urns(ilk, bytes32(lad)); ink_;
         return art_;
     }
+
 
     function test_join() public {
         gold.mint(500 ether);
@@ -123,7 +123,7 @@ contract FrobTest is DSTest {
         // decreased. remaining unsafe is ok as long as you're nice
 
         pit.frob("gold", 10 ether, 10 ether);
-        pit.file("gold", 'spot', int(ray(0.5 ether)));  // now unsafe
+        pit.file("gold", 'spot', ray(0.5 ether));  // now unsafe
 
         // debt can't increase if unsafe
         assertTrue(!try_frob("gold",  0 ether,  1 ether));
@@ -142,7 +142,7 @@ contract FrobTest is DSTest {
 
         // ink can decrease if end state is safe
         assertTrue( this.try_frob("gold", -1 ether, -4 ether));
-        pit.file("gold", 'spot', int(ray(0.4 ether)));  // now unsafe
+        pit.file("gold", 'spot', ray(0.4 ether));  // now unsafe
         // debt can increase if end state is safe
         assertTrue( this.try_frob("gold",  5 ether, 1 ether));
     }
@@ -173,16 +173,15 @@ contract BiteTest is DSTest {
         return wad * 10 ** 9;
     }
 
-    function gem(bytes32 ilk, address lad) internal view returns (int) {
-        (int gem_, int ink_, int art_) = vat.urns(ilk, lad); gem_; ink_; art_;
-        return gem_;
+    function gem(bytes32 ilk, address lad) internal view returns (uint) {
+        return vat.gem(ilk, bytes32(lad));
     }
-    function ink(bytes32 ilk, address lad) internal view returns (int) {
-        (int gem_, int ink_, int art_) = vat.urns(ilk, lad); gem_; ink_; art_;
+    function ink(bytes32 ilk, address lad) internal view returns (uint) {
+        (uint ink_, uint art_) = vat.urns(ilk, bytes32(lad)); art_;
         return ink_;
     }
-    function art(bytes32 ilk, address lad) internal view returns (int) {
-        (int gem_, int ink_, int art_) = vat.urns(ilk, lad); gem_; ink_; art_;
+    function art(bytes32 ilk, address lad) internal view returns (uint) {
+        (uint ink_, uint art_) = vat.urns(ilk, bytes32(lad)); ink_;
         return art_;
     }
 
@@ -208,17 +207,17 @@ contract BiteTest is DSTest {
         gold = new DSToken("GEM");
         gold.mint(1000 ether);
 
-        vat.file("gold", "rate", int(ray(1 ether)));
+        vat.file("gold", "rate", ray(1 ether));
         adapter = new Adapter(vat, "gold", gold);
         gold.approve(adapter);
         adapter.join(1000 ether);
 
-        pit.file("gold", "spot", int(ray(1 ether)));
+        pit.file("gold", "spot", ray(1 ether));
         pit.file("gold", "line", 1000 ether);
         pit.file("Line", 1000 ether);
         flip = new Flipper(vat, "gold");
         cat.fuss("gold", flip);
-        cat.file("gold", "chop", int(ray(1 ether)));
+        cat.file("gold", "chop", ray(1 ether));
 
         gold.approve(vat);
         gov.approve(flap);
@@ -226,11 +225,11 @@ contract BiteTest is DSTest {
     function test_happy_bite() public {
         // spot = tag / (par . mat)
         // tag=5, mat=2
-        pit.file("gold", 'spot', int(ray(2.5 ether)));
+        pit.file("gold", 'spot', ray(2.5 ether));
         pit.frob("gold",  40 ether, 100 ether);
 
         // tag=4, mat=2
-        pit.file("gold", 'spot', int(ray(2 ether)));  // now unsafe
+        pit.file("gold", 'spot', ray(2 ether));  // now unsafe
 
         assertEq(ink("gold", this),  40 ether);
         assertEq(art("gold", this), 100 ether);
@@ -265,9 +264,9 @@ contract BiteTest is DSTest {
     }
 
     function test_floppy_bite() public {
-        pit.file("gold", 'spot', int(ray(2.5 ether)));
+        pit.file("gold", 'spot', ray(2.5 ether));
         pit.frob("gold",  40 ether, 100 ether);
-        pit.file("gold", 'spot', int(ray(2 ether)));  // now unsafe
+        pit.file("gold", 'spot', ray(2 ether));  // now unsafe
 
         assertEq(vow.sin(vow.era()),   0 ether);
         cat.bite("gold", this);

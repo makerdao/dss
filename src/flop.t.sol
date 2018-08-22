@@ -40,9 +40,16 @@ contract WarpFlop is Flopper {
     constructor(address pie_, address gem_) public Flopper(pie_, gem_) {}
 }
 
+contract VatLike is DSToken('') {
+    uint constant ONE = 10 ** 27;
+    function move(bytes32 src, bytes32 dst, uint wad) public {
+        move(address(src), address(dst), wad / ONE);
+    }
+}
+
 contract FlopTest is DSTest {
     WarpFlop fuss;
-    DSToken pie;
+    VatLike pie;
     DSToken gem;
 
     Guy  ali;
@@ -52,8 +59,8 @@ contract FlopTest is DSTest {
     function kiss(uint) public pure { }  // arbitrary callback
 
     function setUp() public {
-        pie = new DSToken('pie');
-        gem = new DSToken('gem');
+        pie = new VatLike();
+        gem = new DSToken('');
 
         fuss = new WarpFlop(pie, gem);
 

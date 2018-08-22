@@ -47,16 +47,17 @@ contract Guy {
 }
 
 contract Vat is VatLike {
-    mapping (address => int)  public gems;
-    mapping (address => uint) public dai;
-    function slip(bytes32 ilk, address lad, int jam) public {
-        gems[lad] += jam;
+    mapping (bytes32 => uint) public gems;
+    mapping (bytes32 => uint) public dai;
+    function flux(bytes32 ilk, bytes32 src, bytes32 dst, int jam) public {
+        gems[src] -= uint(jam);
+        gems[dst] += uint(jam);
         ilk;
     }
     uint256 constant ONE = 10 ** 27;
-    function move(address src, address dst, uint wad) public {
-        dai[src] -= wad * ONE;
-        dai[dst] += wad * ONE;
+    function move(bytes32 src, bytes32 dst, uint rad) public {
+        dai[src] -= rad;
+        dai[dst] += rad;
     }
 }
 
@@ -131,7 +132,7 @@ contract FlipTest is DSTest {
         flip.warp(5 hours);
         bob.deal(id);
         // bob gets the winnings
-        assertEq(vat.gems(bob), 100 ether);
+        assertEq(vat.gems(bytes32(address(bob))), 100 ether);
     }
     function test_tend_later() public {
         uint id = flip.kick({ lot: 100 ether

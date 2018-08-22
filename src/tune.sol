@@ -23,114 +23,113 @@ contract Vat is Events {
     modifier auth { _; }  // todo
 
     struct Ilk {
-        int256  rate;  // ray
-        int256  Art;   // wad
+        uint256  rate;  // ray
+        uint256  Art;   // wad
     }
     struct Urn {
-        int256 gem;    // wad
-        int256 ink;    // wad
-        int256 art;    // wad
+        uint256 ink;    // wad
+        uint256 art;    // wad
     }
 
-    mapping (address => int256)                   public dai;  // rad
-    mapping (address => int256)                   public sin;  // rad
-    mapping (bytes32 => Ilk)                      public ilks;
-    mapping (bytes32 => mapping (address => Urn)) public urns;
+    mapping (bytes32 => Ilk)                       public ilks;
+    mapping (bytes32 => mapping (bytes32 => Urn )) public urns;
+    mapping (bytes32 => mapping (bytes32 => uint)) public gem;    // wad
+    mapping (bytes32 => uint256)                   public dai;    // rad
+    mapping (bytes32 => uint256)                   public sin;    // rad
 
-    int256  public Tab;   // rad
-    int256  public vice;  // rad
+    uint256  public debt;   // rad
+    uint256  public vice;  // rad
 
-    function add(int x, int y) internal pure returns (int z) {
-        z = x + y;
+    function add(uint x, int y) internal pure returns (uint z) {
+        z = x + uint(y);
         require(y <= 0 || z > x);
-        require(y >= 0 || z < x);
+        // require(y >= 0 || z < x);  // fixme: why errors??
     }
-    function sub(int x, int y) internal pure returns (int z) {
-        require(y != -2**255);
+    function sub(uint x, int y) internal pure returns (uint z) {
         z = add(x, -y);
+        require(y != -2**255);
     }
-    function mul(int x, int y) internal pure returns (int z) {
-        z = x * y;
-        require(y >= 0 || x != -2**255);
-        require(y == 0 || z / y == x);
+    function mul(uint x, int y) internal pure returns (int z) {
+        z = int(x) * y;
+        require(int(x) > 0);
+        require(y >= 0 || int(x) != -2**255);
+        require(y == 0 || z / y == int(x));
     }
 
     // --- Administration Engine ---
-    function file(bytes32 ilk, bytes32 what, int risk) public auth {
+    function file(bytes32 ilk, bytes32 what, uint risk) public auth {
         if (what == "rate") ilks[ilk].rate = risk;
     }
 
     // --- Fungibility Engine ---
-    int256 constant ONE = 10 ** 27;
-    function move(address src, address dst, uint wad) public auth {
-        require(int(wad) >= 0);
-        move(src, dst, int(wad));
-    }
-    function move(address src, address dst, int wad) public auth {
-        int rad = mul(wad, ONE);
-        dai[src] = sub(dai[src], rad);
-        dai[dst] = add(dai[dst], rad);
-
-        emit Move(src, dst, rad);
-
+    function move(bytes32 src, bytes32 dst, uint256 rad) public auth {
+        require(int(rad) >= 0);
+        dai[src] = sub(dai[src], int(rad));
+        dai[dst] = add(dai[dst], int(rad));
         require(dai[src] >= 0 && dai[dst] >= 0);
+        
+        emit Move(src, dst, rad);
     }
-    function slip(bytes32 ilk, address guy, int256 wad) public auth {
-        urns[ilk][guy].gem = add(urns[ilk][guy].gem, wad);
-        require(urns[ilk][guy].gem >= 0);
+    function slip(bytes32 ilk, bytes32 guy, int256 wad) public auth {
+        gem[ilk][guy] = add(gem[ilk][guy], wad);
+        require(gem[ilk][guy] >= 0);
+    }
+    function flux(bytes32 ilk, bytes32 src, bytes32 dst, int256 wad) public auth {
+        gem[ilk][src] = sub(gem[ilk][src], wad);
+        gem[ilk][dst] = add(gem[ilk][dst], wad);
+        require(gem[ilk][src] >= 0 && gem[ilk][dst] >= 0);
     }
 
     // --- CDP Engine ---
-    function tune(bytes32 ilk, address lad, int dink, int dart) public auth {
-        Urn storage u = urns[ilk][lad];
+    function tune(bytes32 ilk, bytes32 u_, bytes32 v, bytes32 w, int dink, int dart) public auth {
+        Urn storage u = urns[ilk][u_];
         Ilk storage i = ilks[ilk];
 
-        u.gem = sub(u.gem, dink);
         u.ink = add(u.ink, dink);
         u.art = add(u.art, dart);
         i.Art = add(i.Art, dart);
 
-        dai[lad] = add(dai[lad], mul(i.rate, dart));
-        Tab      = add(Tab,      mul(i.rate, dart));
-
+        gem[ilk][v] = sub(gem[ilk][v], dink);
+        dai[w]      = add(dai[w],      mul(i.rate, dart));
+        debt        = add(debt,        mul(i.rate, dart));
+        
         emit Push(this, lad,     mul(i.rate, dart), "tune");
     }
 
     // --- Liquidation Engine ---
-    function grab(bytes32 ilk, address lad, address vow, int dink, int dart) public auth {
-        Urn storage u = urns[ilk][lad];
+    function grab(bytes32 ilk, bytes32 u_, bytes32 v, bytes32 w, int dink, int dart) public auth {
+        Urn storage u = urns[ilk][u_];
         Ilk storage i = ilks[ilk];
 
         u.ink = add(u.ink, dink);
         u.art = add(u.art, dart);
         i.Art = add(i.Art, dart);
 
-        sin[vow] = sub(sin[vow], mul(i.rate, dart));
-        vice     = sub(vice,     mul(i.rate, dart));
+        gem[ilk][v] = sub(gem[ilk][v], dink);
+        sin[w]      = sub(sin[w],      mul(i.rate, dart));
+        vice        = sub(vice,        mul(i.rate, dart));
 
         emit Push(this, vow,     mul(i.rate, dart), "grab");
     }
-    function heal(address u, address v, int wad) public auth {
-        int rad = mul(wad, ONE);
-
+    function heal(bytes32 u, bytes32 v, int rad) public auth {
         sin[u] = sub(sin[u], rad);
         dai[v] = sub(dai[v], rad);
         vice   = sub(vice,   rad);
-        Tab    = sub(Tab,    rad);
+        debt   = sub(debt,   rad);
 
         emit Push(this, v, rad, "heal");
   
         require(sin[u] >= 0 && dai[v] >= 0);
-        require(vice   >= 0 && Tab    >= 0);
+        require(vice   >= 0 && debt    >= 0);
     }
 
     // --- Stability Engine ---
-    function fold(bytes32 ilk, address vow, int rate) public auth {
+    function fold(bytes32 ilk, bytes32 vow, int rate) public auth {
         Ilk storage i = ilks[ilk];
         i.rate   = add(i.rate, rate);
         int rad  = mul(i.Art, rate);
         dai[vow] = add(dai[vow], rad);
-        Tab      = add(Tab, rad);
+        debt     = add(debt, rad);
         
         emit Push(this, vow, rad, "fold");
     }

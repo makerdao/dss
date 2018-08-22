@@ -19,6 +19,10 @@ pragma solidity ^0.4.24;
 
 import "src/events.sol";
 
+contract PieLike {
+    function move(bytes32,bytes32,uint) public;
+}
+
 contract GemLike {
     function move(address,address,uint) public;
 }
@@ -35,14 +39,15 @@ contract GemLike {
 */
 
 contract Flapper is Events {
-    GemLike public pie;
-    GemLike public gem;
+    PieLike  public   pie;
+    GemLike  public   gem;
 
-    uint256 public beg = 1.05 ether;  // 5% minimum bid increase
-    uint48  public ttl = 3.00 hours;  // 3 hours bid lifetime
-    uint48  public tau = 1 weeks;     // 1 week total auction length
+    uint256  constant ONE = 1.00E27;
+    uint256  public   beg = 1.05E27;  // 5% minimum bid increase
+    uint48   public   ttl = 3 hours;  // 3 hours bid duration
+    uint48   public   tau = 1 weeks;  // 1 week total auction length
 
-    uint256 public kicks;
+    uint256  public   kicks;
 
     struct Bid {
         uint256 bid;
@@ -57,13 +62,12 @@ contract Flapper is Events {
 
     function era() public view returns (uint48) { return uint48(now); }
 
-    uint constant ONE = 10 ** 18;
     function mul(uint x, uint y) internal pure returns (uint z) {
         require(y == 0 || (z = x * y) / y == x);
     }
 
     constructor(address pie_, address gem_) public {
-        pie = GemLike(pie_);
+        pie = PieLike(pie_);
         gem = GemLike(gem_);
     }
 
@@ -71,7 +75,7 @@ contract Flapper is Events {
         public returns (uint)
     {
         uint id = ++kicks;
-        pie.move(msg.sender, this, lot);
+        pie.move(bytes32(msg.sender), bytes32(address(this)), mul(lot, ONE));
 
         bids[id].bid = bid;
         bids[id].lot = lot;
@@ -107,7 +111,7 @@ contract Flapper is Events {
     function deal(uint id) public {
         require(bids[id].tic < era() && bids[id].tic != 0 ||
                 bids[id].end < era());
-        pie.move(this, bids[id].guy, bids[id].lot);
+        pie.move(bytes32(address(this)), bytes32(bids[id].guy), mul(bids[id].lot, ONE));
         delete bids[id];
 
         emit Deal(id, era());

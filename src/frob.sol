@@ -22,7 +22,7 @@ import './events.sol';
 
 contract Pit is Events {
     Vat   public  vat;
-    int   public Line;
+    uint  public Line;
     bool  public live;
 
     constructor(address vat_) public { vat = Vat(vat_); live = true; }
@@ -30,45 +30,40 @@ contract Pit is Events {
     modifier auth { _; }  // todo
 
     struct Ilk {
-        int256  spot;  // ray
-        int256  line;  // wad
+        uint256  spot;  // ray
+        uint256  line;  // wad
     }
 
     mapping (bytes32 => Ilk) public ilks;
 
-    function file(bytes32 what, int risk) public auth {
+    function file(bytes32 what, uint risk) public auth {
         if (what == "Line") Line = risk;
 
         emit FileInt(what, risk);
     }
-    function file(bytes32 ilk, bytes32 what, int risk) public auth {
+    function file(bytes32 ilk, bytes32 what, uint risk) public auth {
         if (what == "spot") ilks[ilk].spot = risk;
         if (what == "line") ilks[ilk].line = risk;
 
         emit FileIlk(ilk, what, risk);
     }
 
-    function mul(int x, int y) internal pure returns (int z) {
-        z = x * y;
-        require(y >= 0 || x != -2**255);
-        require(y == 0 || z / y == x);
+    uint256 constant ONE = 10 ** 27;
+    function mul(uint x, uint y) internal pure returns (uint z) {
+        require(y == 0 || (z = x * y) / y == x);
     }
 
-    int256 constant ONE = 10 ** 27;
-
     function frob(bytes32 ilk, int dink, int dart) public {
-        vat.tune(ilk, msg.sender, dink, dart);
-        Ilk storage i = ilks[ilk];
+        bytes32 guy = bytes32(msg.sender);
+        vat.tune(ilk, guy, guy, guy, dink, dart);
 
-        (int rate, int Art)           = vat.ilks(ilk);
-        (int gem,  int ink,  int art) = vat.urns(ilk, msg.sender); gem;
+        (uint rate, uint Art) = vat.ilks(ilk);
+        (uint ink,  uint art) = vat.urns(ilk, bytes32(msg.sender));
         bool calm = mul(Art, rate) <= mul(ilks[ilk].line, ONE) &&
-                        vat.Tab()  <  mul(Line, ONE);
-        bool cool = dart <= 0;
-        bool firm = dink >= 0;
-        bool safe = mul(ink, i.spot) >= mul(art, rate);
+                        vat.debt() <  mul(Line, ONE);
+        bool safe = mul(ink, ilks[ilk].spot) >= mul(art, rate);
 
-        require(( calm || cool ) && ( cool && firm || safe ) && live);
+        require( ( calm || dart<=0 ) && ( dart<=0 && dink>=0 || safe ) && live);
         require(rate != 0);
 
         emit Frob(ilk,  msg.sender, gem, dink, dart, ink, art, uint48(now));
