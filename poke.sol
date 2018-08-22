@@ -26,7 +26,7 @@ contract Price {
     }
 
     function setMat(uint mat_) public /*auth*/ {
-        mat = mat_; // 10**27
+        mat = mat_;
     }
 
     function poke() public {
