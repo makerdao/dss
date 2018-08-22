@@ -39,7 +39,7 @@ contract Vow {
     uint256 public Woe;   // pre-auction 'bad' debt
     uint256 public Ash;   // on-auction debt
 
-    uint256 public wait;  // todo: flop delay
+    uint256 public wait;  // flop delay
     uint256 public lump;  // fixed lot size
     uint256 public pad;   // surplus buffer
 
@@ -61,6 +61,7 @@ contract Vow {
     function Joy() public view returns (uint) { return uint(DaiLike(vat).dai(bytes32(address(this)))) / ONE; }
 
     function file(bytes32 what, uint risk) public auth {
+        if (what == "wait") wait = risk;
         if (what == "lump") lump = risk;
         if (what == "pad")  pad  = risk;
     }
@@ -88,6 +89,7 @@ contract Vow {
         Sin = add(Sin, tab);
     }
     function flog(uint48 era_) public {
+        require(add(era_, wait) <= era());
         Sin = sub(Sin, sin[era_]);
         Woe = add(Woe, sin[era_]);
         sin[era_] = 0;

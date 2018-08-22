@@ -40,6 +40,10 @@ contract VowTest is DSTest {
         vow.file("lump", uint256(100 ether));
     }
 
+    function try_flog(uint48 era) internal returns (bool) {
+        bytes4 sig = bytes4(keccak256("flog(uint48)"));
+        return address(vow).call(sig, era);
+    }
     function try_flop() internal returns (bool) {
         bytes4 sig = bytes4(keccak256("flop()"));
         return address(vow).call(sig);
@@ -62,6 +66,18 @@ contract VowTest is DSTest {
     function flog(uint wad) internal {
         suck(address(0), wad);  // suck dai into the zero address
         vow.flog(vow.era());
+    }
+
+    function test_flog_wait() public {
+        assertEq(vow.wait(), 0);
+        vow.file('wait', uint(100 seconds));
+        assertEq(vow.wait(), 100 seconds);
+
+        uint48 tic = uint48(now);
+        vow.fess(100 ether);
+        assertTrue(!try_flog(tic) );
+        vow.warp(tic + uint48(100 seconds));
+        assertTrue( try_flog(tic) );
     }
 
     function test_no_reflop() public {
