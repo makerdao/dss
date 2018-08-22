@@ -17,11 +17,7 @@
 
 pragma solidity ^0.4.24;
 
-contract VatLike {
-    function dai(bytes32) public view returns (uint);
-    function debt() public view returns (uint);
-    function move(bytes32,bytes32,uint) public;
-}
+import "./interfaces.sol";
 
 contract Dai20 {
     VatLike public vat;

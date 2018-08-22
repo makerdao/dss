@@ -17,13 +17,7 @@
 
 pragma solidity ^0.4.20;
 
-contract GemLike {
-    function move(address,address,uint) public;  // i.e. transferFrom
-}
-
-contract Fluxing {
-    function slip(bytes32,bytes32,int) public;
-}
+import "./interfaces.sol";
 
 contract Adapter {
     Fluxing public vat;

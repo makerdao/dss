@@ -17,24 +17,7 @@
 
 pragma solidity ^0.4.24;
 
-contract Flippy{
-    function kick(address lad, address gal, uint tab, uint lot, uint bid)
-        public returns (uint);
-}
-
-contract VatLike {
-    function ilks(bytes32) public view returns (uint,uint);
-    function urns(bytes32,bytes32) public view returns (uint,uint);
-    function grab(bytes32,bytes32,bytes32,bytes32,int,int) public returns (uint);
-}
-
-contract PitLike {
-    function ilks(bytes32) public view returns (uint,uint);
-}
-
-contract VowLike {
-    function fess(uint) public;
-}
+import "./interfaces.sol";
 
 contract Cat {
     address public vat;

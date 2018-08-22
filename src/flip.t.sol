@@ -46,7 +46,7 @@ contract Guy {
     }
 }
 
-contract Vat is VatLike {
+contract Vat {
     mapping (bytes32 => uint) public gems;
     mapping (bytes32 => uint) public dai;
     function flux(bytes32 ilk, bytes32 src, bytes32 dst, int jam) public {

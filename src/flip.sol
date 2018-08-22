@@ -17,11 +17,7 @@
 
 pragma solidity ^0.4.24;
 
-contract VatLike {
-    function move(bytes32,bytes32,uint)         public;
-    function flux(bytes32,bytes32,bytes32,int)  public;
-}
-
+import "./interfaces.sol";
 
 /*
    This thing lets you flip some gems for a given amount of pie.

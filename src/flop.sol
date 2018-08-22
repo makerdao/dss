@@ -19,13 +19,7 @@
 
 pragma solidity ^0.4.24;
 
-contract PieLike {
-    function move(bytes32,bytes32,uint) public;
-}
-
-contract GemLike {
-    function mint(address,uint) public;
-}
+import "./interfaces.sol";
 
 /*
    This thing creates gems on demand in return for pie.
