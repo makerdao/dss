@@ -43,7 +43,7 @@ contract Vat is Events {
     function add(uint x, int y) internal pure returns (uint z) {
         z = x + uint(y);
         require(y <= 0 || z > x);
-        // require(y >= 0 || z < x);  // fixme: why errors??
+        require(y >= 0 || z < x);
     }
     function sub(uint x, int y) internal pure returns (uint z) {
         z = add(x, -y);
@@ -51,14 +51,14 @@ contract Vat is Events {
     }
     function mul(uint x, int y) internal pure returns (int z) {
         z = int(x) * y;
-        require(int(x) > 0);
-        require(y >= 0 || int(x) != -2**255);
+        require(int(x) >= 0);
         require(y == 0 || z / y == int(x));
     }
 
     // --- Administration Engine ---
-    function file(bytes32 ilk, bytes32 what, uint risk) public auth {
-        if (what == "rate") ilks[ilk].rate = risk;
+    function init(bytes32 ilk) public auth {
+        require(ilks[ilk].rate == 0);
+        ilks[ilk].rate = 10 ** 27;
     }
 
     // --- Fungibility Engine ---
@@ -66,21 +66,18 @@ contract Vat is Events {
         require(int(rad) >= 0);
         dai[src] = sub(dai[src], int(rad));
         dai[dst] = add(dai[dst], int(rad));
-        require(dai[src] >= 0 && dai[dst] >= 0);
 
         emit Dai(address(src), address(dst), int256(rad), "move");
     }
     function slip(bytes32 ilk, bytes32 guy, int256 wad) public auth {
         gem[ilk][guy] = add(gem[ilk][guy], wad);
-        require(gem[ilk][guy] >= 0);
 
         emit Gem(address(guy), this, wad, "slip");
     }
     function flux(bytes32 ilk, bytes32 src, bytes32 dst, int256 wad) public auth {
         gem[ilk][src] = sub(gem[ilk][src], wad);
         gem[ilk][dst] = add(gem[ilk][dst], wad);
-        require(gem[ilk][src] >= 0 && gem[ilk][dst] >= 0);
-
+        
         emit Gem(address(src), address(dst), wad, "flux");
     }
 
@@ -118,9 +115,6 @@ contract Vat is Events {
         dai[v] = sub(dai[v], rad);
         vice   = sub(vice,   rad);
         debt   = sub(debt,   rad);
-
-        require(sin[u] >= 0 && dai[v] >= 0);
-        require(vice   >= 0 && debt   >= 0);
     }
 
     // --- Stability Engine ---

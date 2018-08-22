@@ -49,7 +49,7 @@ contract FrobTest is DSTest {
         gold = new DSToken("GEM");
         gold.mint(1000 ether);
 
-        vat.file("gold", "rate", ray(1 ether));
+        vat.init("gold");
         adapter = new Adapter(vat, "gold", gold);
         gold.approve(adapter);
         adapter.join(1000 ether);
@@ -207,7 +207,7 @@ contract BiteTest is DSTest {
         gold = new DSToken("GEM");
         gold.mint(1000 ether);
 
-        vat.file("gold", "rate", ray(1 ether));
+        vat.init("gold");
         adapter = new Adapter(vat, "gold", gold);
         gold.approve(adapter);
         adapter.join(1000 ether);
