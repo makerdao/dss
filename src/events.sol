@@ -4,19 +4,20 @@ pragma solidity ^0.4.23;
 
 contract Events {
 
-  // TODO dai balances
-
   // --- Dai Events ---
 
-  event Move(
-    bytes32 src,
-    bytes32 dst,
-    uint256 wad
+  event Dai(
+    address src,
+    address dst,
+    int256 rad,
+    bytes32 act
   );
 
-  event Push(
-    bytes32 src,
-    bytes32 dst,
+  // --- Gem Events ---
+
+  event Gem(
+    address src,
+    address dst,
     int256  wad,
     bytes32 act
   );

@@ -68,16 +68,20 @@ contract Vat is Events {
         dai[dst] = add(dai[dst], int(rad));
         require(dai[src] >= 0 && dai[dst] >= 0);
 
-        emit Move(src, dst, rad);
+        emit Dai(address(src), address(dst), int256(rad), "move");
     }
     function slip(bytes32 ilk, bytes32 guy, int256 wad) public auth {
         gem[ilk][guy] = add(gem[ilk][guy], wad);
         require(gem[ilk][guy] >= 0);
+
+        emit Gem(address(guy), this, wad, "slip");
     }
     function flux(bytes32 ilk, bytes32 src, bytes32 dst, int256 wad) public auth {
         gem[ilk][src] = sub(gem[ilk][src], wad);
         gem[ilk][dst] = add(gem[ilk][dst], wad);
         require(gem[ilk][src] >= 0 && gem[ilk][dst] >= 0);
+
+        emit Gem(address(src), address(dst), wad, "flux");
     }
 
     // --- CDP Engine ---
@@ -106,6 +110,8 @@ contract Vat is Events {
         gem[ilk][v] = sub(gem[ilk][v], dink);
         sin[w]      = sub(sin[w],      mul(i.rate, dart));
         vice        = sub(vice,        mul(i.rate, dart));
+
+        emit Gem(this, address(v), dink, "grab");
     }
     function heal(bytes32 u, bytes32 v, int rad) public auth {
         sin[u] = sub(sin[u], rad);
@@ -114,7 +120,7 @@ contract Vat is Events {
         debt   = sub(debt,   rad);
 
         require(sin[u] >= 0 && dai[v] >= 0);
-        require(vice   >= 0 && debt    >= 0);
+        require(vice   >= 0 && debt   >= 0);
     }
 
     // --- Stability Engine ---
@@ -124,5 +130,7 @@ contract Vat is Events {
         int rad  = mul(i.Art, rate);
         dai[vow] = add(dai[vow], rad);
         debt     = add(debt, rad);
+
+        emit Dai(this, address(vow), rad, "fold");
     }
 }
