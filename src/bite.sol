@@ -18,7 +18,7 @@
 pragma solidity ^0.4.24;
 
 contract Flippy{
-    function kick(address lad, address gal, uint tab, uint lot, uint bid)
+    function kick(bytes32 lad, address gal, uint tab, uint lot, uint bid)
         public returns (uint);
 }
 
@@ -52,7 +52,7 @@ contract Cat {
 
     struct Flip {
         bytes32 ilk;
-        address lad;
+        bytes32 lad;
         uint256 ink;
         uint256 tab;
     }
@@ -88,15 +88,15 @@ contract Cat {
         ilks[ilk].flip = flip;
     }
 
-    function bite(bytes32 ilk, address guy) public returns (uint) {
+    function bite(bytes32 ilk, bytes32 guy) public returns (uint) {
         (uint rate, uint Art)           = VatLike(vat).ilks(ilk); Art;
         (uint spot, uint line)          = PitLike(pit).ilks(ilk); line;
-        (uint ink , uint art) = VatLike(vat).urns(ilk, bytes32(guy));
+        (uint ink , uint art) = VatLike(vat).urns(ilk, guy);
         uint tab = rmul(art, rate);
 
         require(rmul(ink, spot) < tab);  // !safe
 
-        VatLike(vat).grab(ilk, bytes32(guy), bytes32(address(this)), bytes32(vow), -int(ink), -int(art));
+        VatLike(vat).grab(ilk, guy, bytes32(address(this)), bytes32(vow), -int(ink), -int(art));
         VowLike(vow).fess(uint(tab));
 
         flips[nflip] = Flip(ilk, guy, uint(ink), uint(tab));

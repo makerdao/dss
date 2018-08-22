@@ -235,7 +235,7 @@ contract BiteTest is DSTest {
         assertEq(art("gold", this), 100 ether);
         assertEq(vow.Woe(), 0 ether);
         assertEq(gem("gold", this), 960 ether);
-        uint id = cat.bite("gold", this);
+        uint id = cat.bite("gold", bytes32(address(this)));
         assertEq(ink("gold", this), 0);
         assertEq(art("gold", this), 0);
         assertEq(vow.sin(vow.era()), 100 ether);
@@ -269,7 +269,7 @@ contract BiteTest is DSTest {
         pit.file("gold", 'spot', ray(2 ether));  // now unsafe
 
         assertEq(vow.sin(vow.era()),   0 ether);
-        cat.bite("gold", this);
+        cat.bite("gold", bytes32(address(this)));
         assertEq(vow.sin(vow.era()), 100 ether);
 
         assertEq(vow.Sin(), 100 ether);
