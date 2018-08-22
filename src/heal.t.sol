@@ -55,7 +55,7 @@ contract VowTest is DSTest {
 
     function grab(uint wad) internal {
         vow.fess(wad);
-        vat.file('', 'rate', 10 ** 27);
+        vat.init('');
         vat.grab('', bytes32(address(vat)), bytes32(address(vow)), bytes32(address(vow)), 0, -int(wad));
     }
     function flog(uint wad) internal {

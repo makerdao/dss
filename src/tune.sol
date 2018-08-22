@@ -55,8 +55,9 @@ contract Vat {
     }
 
     // --- Administration Engine ---
-    function file(bytes32 ilk, bytes32 what, uint risk) public auth {
-        if (what == "rate") ilks[ilk].rate = risk;
+    function init(bytes32 ilk) public auth {
+        require(ilks[ilk].rate == 0);
+        ilks[ilk].rate = 10 ** 27;
     }
 
     // --- Fungibility Engine ---
