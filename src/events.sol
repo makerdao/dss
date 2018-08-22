@@ -9,14 +9,14 @@ contract Events {
   // --- Dai Events ---
 
   event Move(
-    address src,
-    address dst,
-    int256 wad
+    bytes32 src,
+    bytes32 dst,
+    uint256 wad
   );
 
   event Push(
-    address src,
-    address dst,
+    bytes32 src,
+    bytes32 dst,
     int256  wad,
     bytes32 act
   );
@@ -26,7 +26,7 @@ contract Events {
   event FileIlk(
     bytes32 ilk,  // urn.ilk
     bytes32 what, // risk param
-    int256  risk  // value
+    uint256 risk  // value
   );
 
   event FileAddr(
@@ -36,7 +36,7 @@ contract Events {
 
   event FileInt(
     bytes32 what, // risk param
-    int256 risk  // value
+    uint256 risk  // value
   );
 
   event FileUint(
@@ -49,22 +49,20 @@ contract Events {
   event Frob(
     bytes32 ilk,  // urn.ilk
     address guy,  // msg.sender
-    int256  gem,  // urn.gem
     int256  dink, // ink delta
     int256  dart, // art delta
-    int256  ink,  // urn.ink
-    int256  art,  // urn.art
+    uint256 ink,  // urn.ink
+    uint256 art,  // urn.art
     uint48  era   // timestamp
   );
 
   event Bite(
     bytes32 ilk, // urn.ilk
     address guy, // urn owner
-    int256  gem, // urn.gem
-    int256  ink, // urn.ink
-    int256  art, // urn.art
+    uint256 ink, // urn.ink
+    uint256 art, // urn.art
     uint48  era, // timestamp
-    int256  tab, // outstanding debt
+    uint256 tab, // outstanding debt
     uint256 flip // flips[] index
   );
 

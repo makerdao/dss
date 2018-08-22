@@ -103,7 +103,7 @@ contract Cat is Events {
 
         flips[nflip] = Flip(ilk, guy, uint(ink), uint(tab));
 
-        emit Bite(ilk, guy, gem, ink, art, uint48(now), tab, nflip);
+        emit Bite(ilk, guy, ink, art, uint48(now), tab, nflip);
 
         return nflip++;
     }

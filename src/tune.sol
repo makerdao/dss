@@ -67,7 +67,7 @@ contract Vat is Events {
         dai[src] = sub(dai[src], int(rad));
         dai[dst] = add(dai[dst], int(rad));
         require(dai[src] >= 0 && dai[dst] >= 0);
-        
+
         emit Move(src, dst, rad);
     }
     function slip(bytes32 ilk, bytes32 guy, int256 wad) public auth {
@@ -92,8 +92,6 @@ contract Vat is Events {
         gem[ilk][v] = sub(gem[ilk][v], dink);
         dai[w]      = add(dai[w],      mul(i.rate, dart));
         debt        = add(debt,        mul(i.rate, dart));
-        
-        emit Push(this, lad,     mul(i.rate, dart), "tune");
     }
 
     // --- Liquidation Engine ---
@@ -108,8 +106,6 @@ contract Vat is Events {
         gem[ilk][v] = sub(gem[ilk][v], dink);
         sin[w]      = sub(sin[w],      mul(i.rate, dart));
         vice        = sub(vice,        mul(i.rate, dart));
-
-        emit Push(this, vow,     mul(i.rate, dart), "grab");
     }
     function heal(bytes32 u, bytes32 v, int rad) public auth {
         sin[u] = sub(sin[u], rad);
@@ -117,8 +113,6 @@ contract Vat is Events {
         vice   = sub(vice,   rad);
         debt   = sub(debt,   rad);
 
-        emit Push(this, v, rad, "heal");
-  
         require(sin[u] >= 0 && dai[v] >= 0);
         require(vice   >= 0 && debt    >= 0);
     }
@@ -130,7 +124,5 @@ contract Vat is Events {
         int rad  = mul(i.Art, rate);
         dai[vow] = add(dai[vow], rad);
         debt     = add(debt, rad);
-        
-        emit Push(this, vow, rad, "fold");
     }
 }

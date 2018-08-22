@@ -39,7 +39,7 @@ contract Pit is Events {
     function file(bytes32 what, uint risk) public auth {
         if (what == "Line") Line = risk;
 
-        emit FileInt(what, risk);
+        emit FileUint(what, risk);
     }
     function file(bytes32 ilk, bytes32 what, uint risk) public auth {
         if (what == "spot") ilks[ilk].spot = risk;
@@ -66,6 +66,6 @@ contract Pit is Events {
         require( ( calm || dart<=0 ) && ( dart<=0 && dink>=0 || safe ) && live);
         require(rate != 0);
 
-        emit Frob(ilk,  msg.sender, gem, dink, dart, ink, art, uint48(now));
+        emit Frob(ilk,  msg.sender, dink, dart, ink, art, uint48(now));
     }
 }
