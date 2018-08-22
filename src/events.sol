@@ -67,13 +67,6 @@ contract Events {
     uint256 flip // flips[] index
   );
 
-  event Slip(
-    bytes32 ilk, // urn.ilk
-    address lad, // msg.sender
-    int256  wad, // slip amount
-    int256  gem  // updated gem balance
-  );
-
   // --- Auction Events ---
 
   event FlipKick(
