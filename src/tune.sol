@@ -108,11 +108,11 @@ contract Vat {
     }
 
     // --- Stability Engine ---
-    function fold(bytes32 ilk, bytes32 vow, int rate) public auth {
+    function fold(bytes32 ilk, bytes32 guy, int rate) public auth {
         Ilk storage i = ilks[ilk];
-        i.rate   = add(i.rate, rate);
         int rad  = mul(i.Art, rate);
-        dai[vow] = add(dai[vow], rad);
-        debt     = add(debt, rad);
+        dai[guy] = add(dai[guy], rad);
+        debt     = add(debt,     rad);
+        i.rate   = add(i.rate, rate);
     }
 }
