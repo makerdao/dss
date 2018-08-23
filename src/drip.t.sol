@@ -25,6 +25,11 @@ contract DripTest is DSTest {
         (bytes32 vow, uint tax, uint48 rho_) = drip.ilks(ilk); vow; tax;
         return uint(rho_);
     }
+    function rate(bytes32 ilk) internal view returns (uint) {
+        (uint rate_, uint Art) = vat.ilks(ilk); Art;
+        return rate_;
+    }
+
     function setUp() public {
         vat  = new Vat();
         drip = new WarpDrip(vat);
@@ -33,7 +38,7 @@ contract DripTest is DSTest {
     }
     function test_drip_setup() public {
         assertEq(uint(drip.era()), 0);
-        (uint rate, uint Art) = vat.ilks("i"); rate;
+        (uint _, uint Art) = vat.ilks("i"); _;
         assertEq(Art, 100 ether);
     }
     function test_drip_updates_rho() public {
@@ -80,5 +85,17 @@ contract DripTest is DSTest {
         assertEq(wad(vat.dai("ali")), 0 ether);
         drip.drip("i");
         assertEq(wad(vat.dai("ali")), 15.7625 ether);
+    }
+    function test_drip_multi() public {
+        drip.file("i", "ali", 1000000564701133626865910626);  // 5% / day
+        drip.warp(1 days);
+        drip.drip("i");
+        assertEq(wad(vat.dai("ali")), 5 ether);
+        drip.file("i", "ali", 1000001103127689513476993127);  // 10% / day
+        drip.warp(2 days);
+        drip.drip("i");
+        assertEq(wad(vat.dai("ali")),  15.5 ether);
+        assertEq(wad(vat.debt()),     115.5 ether);
+        assertEq(rate("i") / 10 ** 9, 1.155 ether);
     }
 }
