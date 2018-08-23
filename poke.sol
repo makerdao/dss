@@ -1,6 +1,6 @@
 pragma solidity ^0.4.24;
 
-contract PitLike2 {
+contract PitLike {
     function file(bytes32, bytes32, uint) public;
 }
 
@@ -9,7 +9,7 @@ contract PipLike {
 }
 
 contract Price {
-    PitLike2 public pit;
+    PitLike public pit;
     bytes32 public ilk;
     PipLike public pip;
     uint public mat;
@@ -17,7 +17,7 @@ contract Price {
     uint256 constant ONE = 10 ** 27;
 
     constructor(address pit_, bytes32 ilk_) public {
-        pit = PitLike2(pit_);
+        pit = PitLike(pit_);
         ilk = ilk_;
     }
 
