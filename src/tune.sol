@@ -35,7 +35,7 @@ contract Vat {
     mapping (bytes32 => uint256)                   public dai;    // rad
     mapping (bytes32 => uint256)                   public sin;    // rad
 
-    uint256  public debt;   // rad
+    uint256  public debt;  // rad
     uint256  public vice;  // rad
 
     function add(uint x, int y) internal pure returns (uint z) {
