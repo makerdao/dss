@@ -62,8 +62,6 @@ contract Drip {
     }
     function drip(bytes32 ilk) public {
         Ilk storage i = ilks[ilk];
-        if ( i.rho == era() ) return;
-        if ( i.tax == ONE   ) return;
         require(era() >= i.rho);
         (uint rate, uint Art) = vat.ilks(ilk); Art;
         vat.fold(ilk, i.vow, diff(rmul(rpow(i.tax, era() - i.rho, ONE), rate), rate));
