@@ -36,6 +36,7 @@ contract VowTest is DSTest {
         flap = new Flap(vat, gov);
         vat.rely(flop);
         vat.rely(flap);
+        flop.rely(vow);
 
         vow.file("vat",  address(vat));
         vow.file("flop", address(flop));

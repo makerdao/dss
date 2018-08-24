@@ -258,6 +258,7 @@ contract BiteTest is DSTest {
         vow.file("vat",  address(vat));
         vow.file("flap", address(flap));
         vow.file("flop", address(flop));
+        flop.rely(vow);
 
         cat = new Cat(vat, pit, vow);
         vat.rely(cat);
