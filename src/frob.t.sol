@@ -235,7 +235,7 @@ contract BiteTest is DSTest {
         assertEq(art("gold", this), 100 ether);
         assertEq(vow.Woe(), 0 ether);
         assertEq(gem("gold", this), 960 ether);
-        uint id = cat.bite("gold", this);
+        uint id = cat.bite("gold", bytes32(address(this)));
         assertEq(ink("gold", this), 0);
         assertEq(art("gold", this), 0);
         assertEq(vow.sin(vow.era()), 100 ether);
@@ -269,7 +269,7 @@ contract BiteTest is DSTest {
         pit.file("gold", 'spot', ray(2 ether));  // now unsafe
 
         assertEq(vow.sin(vow.era()),   0 ether);
-        cat.bite("gold", this);
+        cat.bite("gold", bytes32(address(this)));
         assertEq(vow.sin(vow.era()), 100 ether);
 
         assertEq(vow.Sin(), 100 ether);
@@ -312,5 +312,34 @@ contract BiteTest is DSTest {
         flap.deal(id);
         assertEq(pie.balanceOf(this),   100 ether);
         assertEq(gov.balanceOf(this),    90 ether);
+    }
+}
+
+contract FoldTest is DSTest {
+    Vat vat;
+
+    function ray(uint wad) internal pure returns (uint) {
+        return wad * 10 ** 9;
+    }
+    function rad(uint wad) internal pure returns (uint) {
+        return wad * 10 ** 27;
+    }
+    function tab(bytes32 ilk, bytes32 lad) internal view returns (uint) {
+        (uint ink, uint art)  = vat.urns(ilk, lad); ink;
+        (uint rate, uint Art) = vat.ilks(ilk); Art;
+        return art * rate;
+    }
+
+    function setUp() public {
+        vat = new Vat();
+        vat.init("gold");
+    }
+    function test_fold() public {
+        vat.tune("gold", "bob", "bob", "bob", 0, 1 ether);
+
+        assertEq(tab("gold", "bob"), rad(1.00 ether));
+        vat.fold("gold", "ali",  int(ray(0.05 ether)));
+        assertEq(tab("gold", "bob"), rad(1.05 ether));
+        assertEq(vat.dai("ali"),     rad(0.05 ether));
     }
 }

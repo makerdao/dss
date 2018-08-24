@@ -57,7 +57,7 @@ contract Flipper is Events {
         address guy;  // high bidder
         uint48  tic;  // expiry time
         uint48  end;
-        address lad;
+        bytes32 lad;
         address gal;
         uint256 tab;
     }
@@ -75,7 +75,7 @@ contract Flipper is Events {
         vat = VatLike(vat_);
     }
 
-    function kick(address lad, address gal, uint tab, uint lot, uint bid)
+    function kick(bytes32 lad, address gal, uint tab, uint lot, uint bid)
         public returns (uint)
     {
         uint id = ++kicks;
@@ -132,7 +132,7 @@ contract Flipper is Events {
         require(mul(beg, lot) <= mul(bids[id].lot, ONE));
 
         vat.move(bytes32(msg.sender), bytes32(bids[id].guy), mul(bid, ONE));
-        vat.flux(ilk, bytes32(address(this)), bytes32(bids[id].lad), int(bids[id].lot - lot));
+        vat.flux(ilk, bytes32(address(this)), bids[id].lad, int(bids[id].lot - lot));
 
         bids[id].guy = msg.sender;
         bids[id].lot = lot;

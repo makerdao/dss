@@ -37,7 +37,7 @@ contract Vat is Events {
     mapping (bytes32 => uint256)                   public dai;    // rad
     mapping (bytes32 => uint256)                   public sin;    // rad
 
-    uint256  public debt;   // rad
+    uint256  public debt;  // rad
     uint256  public vice;  // rad
 
     function add(uint x, int y) internal pure returns (uint z) {
@@ -120,13 +120,13 @@ contract Vat is Events {
     }
 
     // --- Stability Engine ---
-    function fold(bytes32 ilk, bytes32 vow, int rate) public auth {
+    function fold(bytes32 ilk, bytes32 guy, int rate) public auth {
         Ilk storage i = ilks[ilk];
-        i.rate   = add(i.rate, rate);
         int rad  = mul(i.Art, rate);
-        dai[vow] = add(dai[vow], rad);
-        debt     = add(debt, rad);
-
-        emit Dai(this, address(vow), rad, "fold");
+        dai[guy] = add(dai[guy], rad);
+        debt     = add(debt,     rad);
+        i.rate   = add(i.rate, rate);
+        
+        emit Dai(this, address(guy), rad, "fold");
     }
 }
