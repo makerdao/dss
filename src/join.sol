@@ -64,17 +64,17 @@ contract ETHAdapter {
     }
 }
 
-contract DSToken {
+contract DSTokenLike {
     function mint(address,uint) public;
     function burn(address,uint) public;
 }
 
 contract DaiAdapter {
     VatLike public vat;
-    DSToken public dai;
+    DSTokenLike public dai;
     constructor(address vat_, address dai_) public {
         vat = VatLike(vat_);
-        dai = DSToken(dai_);
+        dai = DSTokenLike(dai_);
     }
     uint constant ONE = 10 ** 27;
     function join(uint wad) public {
