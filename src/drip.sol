@@ -14,11 +14,17 @@ contract Drip {
     }
     mapping (bytes32 => Ilk) public ilks;
 
-    modifier auth { _; }  // todo
+    mapping (address => bool) public wards;
+    function rely(address guy) public auth { wards[guy] = true;  }
+    function deny(address guy) public auth { wards[guy] = false; }
+    modifier auth { require(wards[msg.sender]); _;  }
 
     function era() public view returns (uint48) { return uint48(now); }
 
-    constructor(address vat_) public { vat = VatLike(vat_); }
+    constructor(address vat_) public {
+        wards[msg.sender] = true;
+        vat = VatLike(vat_);
+    }
 
     function file(bytes32 ilk, bytes32 vow, uint tax) public auth {
         Ilk storage i = ilks[ilk];
