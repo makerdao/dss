@@ -7,7 +7,7 @@ import './frob.sol';
 import './bite.sol';
 import './heal.sol';
 import {Dai20} from './transferFrom.sol';
-import {Adapter} from './join.sol';
+import {Adapter, ETHAdapter, DaiAdapter} from './join.sol';
 
 import {WarpFlip as Flipper} from './flip.t.sol';
 import {WarpFlop as Flopper} from './flop.t.sol';
@@ -145,6 +145,53 @@ contract FrobTest is DSTest {
         pit.file("gold", 'spot', ray(0.4 ether));  // now unsafe
         // debt can increase if end state is safe
         assertTrue( this.try_frob("gold",  5 ether, 1 ether));
+    }
+}
+
+contract JoinTest is DSTest {
+    WarpVat    vat;
+    ETHAdapter ethA;
+    DaiAdapter daiA;
+    DSToken    dai;
+    bytes32     me;
+
+    function setUp() public {
+        vat = new WarpVat();
+        vat.init("eth");
+
+        ethA = new ETHAdapter(vat, "eth");
+        dai  = new DSToken("Dai");
+        daiA = new DaiAdapter(vat, dai);
+        dai.setOwner(daiA);
+
+        me = bytes32(address(this));
+    }
+    function () external payable {}
+    function test_eth_join() public {
+        ethA.join.value(10 ether)();
+        assertEq(vat.gem("eth", me), 10 ether);
+    }
+    function test_eth_exit() public {
+        ethA.join.value(50 ether)();
+        ethA.exit(10 ether);
+        assertEq(vat.gem("eth", me), 40 ether);
+    }
+    function rad(uint wad) internal pure returns (uint) {
+        return wad * 10 ** 27;
+    }
+    function test_dai_exit() public {
+        vat.mint(address(me), 100 ether);
+        daiA.exit(60 ether);
+        assertEq(dai.balanceOf(address(me)), 60 ether);
+        assertEq(vat.dai(me),            rad(40 ether));
+    }
+    function test_dai_exit_join() public {
+        vat.mint(address(me), 100 ether);
+        daiA.exit(60 ether);
+        dai.approve(daiA, uint(-1));
+        daiA.join(30 ether);
+        assertEq(dai.balanceOf(address(me)), 30 ether);
+        assertEq(vat.dai(me),            rad(70 ether));
     }
 }
 
