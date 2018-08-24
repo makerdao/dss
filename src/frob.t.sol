@@ -261,6 +261,7 @@ contract BiteTest is DSTest {
 
         cat = new Cat(vat, pit, vow);
         vat.rely(cat);
+        vow.rely(cat);
 
         gold = new DSToken("GEM");
         gold.mint(1000 ether);

@@ -32,7 +32,12 @@ contract Vow {
     address row;  // flopper
 
     function era() public view returns (uint48) { return uint48(now); }
-    modifier auth { _; }  // todo
+
+    mapping (address => bool) public wards;
+    function rely(address guy) public auth { wards[guy] = true;  }
+    function deny(address guy) public auth { wards[guy] = false; }
+    modifier auth { require(wards[msg.sender]); _;  }
+    constructor() public { wards[msg.sender] = true; }
 
     mapping (uint48 => uint256) public sin; // debt queue
     uint256 public Sin;   // queued debt
