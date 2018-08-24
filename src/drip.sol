@@ -22,7 +22,7 @@ contract Drip {
 
     function file(bytes32 ilk, bytes32 vow, uint tax) public auth {
         Ilk storage i = ilks[ilk];
-        require(i.rho == era());
+        require(i.rho == era() || i.tax == 0);
         i.vow = vow;
         i.tax = tax;
     }
