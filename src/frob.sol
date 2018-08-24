@@ -24,9 +24,16 @@ contract Pit {
     uint  public Line;
     bool  public live;
 
-    constructor(address vat_) public { vat = Vat(vat_); live = true; }
+    mapping (address => bool) public wards;
+    function rely(address guy) public auth { wards[guy] = true;  }
+    function deny(address guy) public auth { wards[guy] = false; }
+    modifier auth { require(wards[msg.sender]); _;  }
 
-    modifier auth { _; }  // todo
+    constructor(address vat_) public {
+        wards[msg.sender] = true;
+        vat = Vat(vat_);
+        live = true;
+    }
 
     struct Ilk {
         uint256  spot;  // ray
