@@ -51,14 +51,19 @@ contract FrobTest is DSTest {
 
         vat.init("gold");
         adapter = new Adapter(vat, "gold", gold);
-        gold.approve(adapter);
-        adapter.join(1000 ether);
 
         pit.file("gold", "spot", ray(1 ether));
         pit.file("gold", "line", 1000 ether);
         pit.file("Line", 1000 ether);
 
+        gold.approve(adapter);
         gold.approve(vat);
+
+        vat.rely(pit);
+        vat.rely(pie);
+        vat.rely(adapter);
+
+        adapter.join(1000 ether);
     }
 
     function gem(bytes32 ilk, address lad) internal view returns (uint) {
@@ -160,8 +165,11 @@ contract JoinTest is DSTest {
         vat.init("eth");
 
         ethA = new ETHAdapter(vat, "eth");
+        vat.rely(ethA);
+
         dai  = new DSToken("Dai");
         daiA = new DaiAdapter(vat, dai);
+        vat.rely(daiA);
         dai.setOwner(daiA);
 
         me = bytes32(address(this));
@@ -238,7 +246,9 @@ contract BiteTest is DSTest {
 
         vat = new WarpVat();
         pit = new Pit(vat);
+        vat.rely(pit);
         pie = new Dai20(vat);
+        vat.rely(pie);
 
         flap = new Flapper(vat, gov);
         flop = new Flopper(vat, gov);
@@ -250,12 +260,14 @@ contract BiteTest is DSTest {
         vow.file("flop", address(flop));
 
         cat = new Cat(vat, pit, vow);
+        vat.rely(cat);
 
         gold = new DSToken("GEM");
         gold.mint(1000 ether);
 
         vat.init("gold");
         adapter = new Adapter(vat, "gold", gold);
+        vat.rely(adapter);
         gold.approve(adapter);
         adapter.join(1000 ether);
 
@@ -265,6 +277,10 @@ contract BiteTest is DSTest {
         flip = new Flipper(vat, "gold");
         cat.fuss("gold", flip);
         cat.file("gold", "chop", ray(1 ether));
+
+        vat.rely(flip);
+        vat.rely(flap);
+        vat.rely(flop);
 
         gold.approve(vat);
         gov.approve(flap);

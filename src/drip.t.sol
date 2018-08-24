@@ -33,6 +33,7 @@ contract DripTest is DSTest {
     function setUp() public {
         vat  = new Vat();
         drip = new WarpDrip(vat);
+        vat.rely(drip);
         vat.init("i");
         vat.tune("i", "u", "v", "w", 0, 100 ether);
     }
