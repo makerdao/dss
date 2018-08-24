@@ -20,7 +20,12 @@ pragma solidity ^0.4.24;
 import './events.sol';
 
 contract Vat is Events {
-    modifier auth { _; }  // todo
+    mapping (address => bool) public wards;
+    function rely(address guy) public auth { wards[guy] = true;  }
+    function deny(address guy) public auth { wards[guy] = false; }
+    modifier auth { require(wards[msg.sender]); _;  }
+
+    constructor() public { wards[msg.sender] = true; }
 
     struct Ilk {
         uint256  rate;  // ray

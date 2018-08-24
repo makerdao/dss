@@ -44,7 +44,10 @@ contract Cat is Events {
     address public vow;
     uint256 public lump;  // fixed lot size
 
-    modifier auth { _; }  // todo
+    mapping (address => bool) public wards;
+    function rely(address guy) public auth { wards[guy] = true;  }
+    function deny(address guy) public auth { wards[guy] = false; }
+    modifier auth { require(wards[msg.sender]); _;  }
 
     struct Ilk {
         uint256 chop;
@@ -63,6 +66,7 @@ contract Cat is Events {
     mapping (uint256 => Flip) public flips;
 
     constructor(address vat_, address pit_, address vow_) public {
+        wards[msg.sender] = true;
         vat = vat_;
         pit = pit_;
         vow = vow_;

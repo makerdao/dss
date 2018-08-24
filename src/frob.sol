@@ -20,14 +20,26 @@ pragma solidity ^0.4.24;
 import './tune.sol';
 import './events.sol';
 
+contract Drip {
+    function drip(bytes32) public;
+}
+
 contract Pit is Events {
     Vat   public  vat;
     uint  public Line;
     bool  public live;
+    Drip  public drip;
 
-    constructor(address vat_) public { vat = Vat(vat_); live = true; }
+    mapping (address => bool) public wards;
+    function rely(address guy) public auth { wards[guy] = true;  }
+    function deny(address guy) public auth { wards[guy] = false; }
+    modifier auth { require(wards[msg.sender]); _;  }
 
-    modifier auth { _; }  // todo
+    constructor(address vat_) public {
+        wards[msg.sender] = true;
+        vat = Vat(vat_);
+        live = true;
+    }
 
     struct Ilk {
         uint256  spot;  // ray
@@ -36,6 +48,9 @@ contract Pit is Events {
 
     mapping (bytes32 => Ilk) public ilks;
 
+    function file(bytes32 what, address drip_) public auth {
+        if (what == "drip") drip = Drip(drip_);
+    }
     function file(bytes32 what, uint risk) public auth {
         if (what == "Line") Line = risk;
 
@@ -54,6 +69,7 @@ contract Pit is Events {
     }
 
     function frob(bytes32 ilk, int dink, int dart) public {
+        drip.drip(ilk);
         bytes32 guy = bytes32(msg.sender);
         vat.tune(ilk, guy, guy, guy, dink, dart);
 

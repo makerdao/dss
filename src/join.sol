@@ -18,30 +18,71 @@
 pragma solidity ^0.4.20;
 
 contract GemLike {
-    function move(address,address,uint) public;  // i.e. transferFrom
+    function transferFrom(address,address,uint) public returns (bool);
 }
 
-contract Fluxing {
+contract VatLike {
     function slip(bytes32,bytes32,int) public;
+    function move(bytes32,bytes32,uint) public;
 }
 
 contract Adapter {
-    Fluxing public vat;
+    VatLike public vat;
     bytes32 public ilk;
     GemLike public gem;
     constructor(address vat_, bytes32 ilk_, address gem_) public {
-        vat = Fluxing(vat_);
+        vat = VatLike(vat_);
         ilk = ilk_;
         gem = GemLike(gem_);
     }
     function join(uint wad) public {
         require(int(wad) >= 0);
-        gem.move(msg.sender, this, wad);
+        require(gem.transferFrom(msg.sender, this, wad));
         vat.slip(ilk, bytes32(msg.sender), int(wad));
     }
     function exit(uint wad) public {
         require(int(wad) >= 0);
-        gem.move(this, msg.sender, wad);
+        require(gem.transferFrom(this, msg.sender, wad));
         vat.slip(ilk, bytes32(msg.sender), -int(wad));
+    }
+}
+
+contract ETHAdapter {
+    VatLike public vat;
+    bytes32 public ilk;
+    constructor(address vat_, bytes32 ilk_) public {
+        vat = VatLike(vat_);
+        ilk = ilk_;
+    }
+    function join() public payable {
+        vat.slip(ilk, bytes32(msg.sender), int(msg.value));
+    }
+    function exit(uint wad) public {
+        require(int(wad) >= 0);
+        vat.slip(ilk, bytes32(msg.sender), -int(wad));
+        msg.sender.transfer(wad);
+    }
+}
+
+contract DSTokenLike {
+    function mint(address,uint) public;
+    function burn(address,uint) public;
+}
+
+contract DaiAdapter {
+    VatLike public vat;
+    DSTokenLike public dai;
+    constructor(address vat_, address dai_) public {
+        vat = VatLike(vat_);
+        dai = DSTokenLike(dai_);
+    }
+    uint constant ONE = 10 ** 27;
+    function join(uint wad) public {
+        vat.move(bytes32(address(this)), bytes32(msg.sender), wad * ONE);
+        dai.burn(msg.sender, wad);
+    }
+    function exit(uint wad) public {
+        vat.move(bytes32(msg.sender), bytes32(address(this)), wad * ONE);
+        dai.mint(msg.sender, wad);
     }
 }

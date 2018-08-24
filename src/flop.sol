@@ -51,7 +51,10 @@ contract Flopper is Events {
 
     uint256  public   kicks;
 
-    modifier auth { _; }  // todo
+    mapping (address => bool) public wards;
+    function rely(address guy) public auth { wards[guy] = true;  }
+    function deny(address guy) public auth { wards[guy] = false; }
+    modifier auth { require(wards[msg.sender]); _;  }
 
     struct Bid {
         uint256 bid;
@@ -71,6 +74,7 @@ contract Flopper is Events {
     }
 
     constructor(address pie_, address gem_) public {
+        wards[msg.sender] = true;
         pie = PieLike(pie_);
         gem = GemLike(gem_);
     }
