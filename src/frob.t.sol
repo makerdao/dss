@@ -3,9 +3,11 @@ pragma solidity ^0.4.24;
 import "ds-test/test.sol";
 import "ds-token/token.sol";
 
-import './frob.sol';
-import './bite.sol';
-import './heal.sol';
+import {Vat} from './tune.sol';
+import {Pit} from './frob.sol';
+import {Cat} from './bite.sol';
+import {Vow} from './heal.sol';
+import {Drip} from './drip.sol';
 import {Dai20} from './transferFrom.sol';
 import {Adapter, ETHAdapter, DaiAdapter} from './join.sol';
 
@@ -29,6 +31,7 @@ contract FrobTest is DSTest {
     Pit     pit;
     Dai20   pie;
     DSToken gold;
+    Drip    drip;
 
     Adapter adapter;
 
@@ -54,7 +57,11 @@ contract FrobTest is DSTest {
 
         pit.file("gold", "spot", ray(1 ether));
         pit.file("gold", "line", 1000 ether);
-        pit.file("Line", 1000 ether);
+        pit.file("Line", uint(1000 ether));
+        drip = new Drip(vat);
+        drip.file("gold", 0x00, 10 ** 27);
+        vat.rely(drip);
+        pit.file("drip", drip);
 
         gold.approve(adapter);
         gold.approve(vat);
@@ -210,6 +217,7 @@ contract BiteTest is DSTest {
     Cat     cat;
     Dai20   pie;
     DSToken gold;
+    Drip    drip;
 
     Adapter adapter;
 
@@ -260,6 +268,11 @@ contract BiteTest is DSTest {
         vow.file("flop", address(flop));
         flop.rely(vow);
 
+        drip = new Drip(vat);
+        drip.file("gold", bytes32(address(vow)), 10 ** 27);
+        vat.rely(drip);
+        pit.file("drip", drip);
+
         cat = new Cat(vat, pit, vow);
         vat.rely(cat);
         vow.rely(cat);
@@ -275,7 +288,7 @@ contract BiteTest is DSTest {
 
         pit.file("gold", "spot", ray(1 ether));
         pit.file("gold", "line", 1000 ether);
-        pit.file("Line", 1000 ether);
+        pit.file("Line", uint(1000 ether));
         flip = new Flipper(vat, "gold");
         cat.fuss("gold", flip);
         cat.file("gold", "chop", ray(1 ether));
