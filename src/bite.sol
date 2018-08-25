@@ -17,6 +17,8 @@
 
 pragma solidity ^0.4.24;
 
+import "ds-note/note.sol";
+
 contract Flippy {
     function kick(bytes32 lad, address gal, uint tab, uint lot, uint bid)
         public returns (uint);
@@ -36,7 +38,7 @@ contract VowLike {
     function fess(uint) public;
 }
 
-contract Cat {
+contract Cat is DSNote {
     // --- Auth ---
     mapping (address => bool) public wards;
     function rely(address guy) public auth { wards[guy] = true;  }
@@ -64,6 +66,17 @@ contract Cat {
     PitLike public pit;
     VowLike public vow;
 
+    // --- Events ---
+    event Bite(
+      bytes32 indexed ilk,
+      bytes32 indexed lad,
+      uint256 ink,
+      uint256 art,
+      uint256 tab,
+      uint256 flip,
+      uint256 Art
+    );
+
     // --- Init ---
     constructor(address vat_, address pit_, address vow_) public {
         wards[msg.sender] = true;
@@ -86,11 +99,11 @@ contract Cat {
     }
 
     // --- Administration ---
-    function file(bytes32 ilk, bytes32 what, uint risk) public auth {
+    function file(bytes32 ilk, bytes32 what, uint risk) public note auth {
         if (what == "chop") ilks[ilk].chop = risk;
         if (what == "lump") ilks[ilk].lump = risk;
     }
-    function file(bytes32 ilk, bytes32 what, address flip) public auth {
+    function file(bytes32 ilk, bytes32 what, address flip) public note auth {
         if (what == "flip") ilks[ilk].flip = flip;
     }
 
@@ -108,9 +121,11 @@ contract Cat {
 
         flips[nflip] = Flip(ilk, lad, ink, tab);
 
+        emit Bite(ilk, lad, ink, art, tab, nflip, Art);
+
         return nflip++;
     }
-    function flip(uint n, uint wad) public returns (uint) {
+    function flip(uint n, uint wad) public note returns (uint) {
         Flip storage f = flips[n];
         Ilk  storage i = ilks[f.ilk];
 

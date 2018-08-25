@@ -1,11 +1,13 @@
 pragma solidity ^0.4.24;
 
+import "ds-note/note.sol";
+
 contract VatLike {
     function ilks(bytes32) public returns (uint,uint);
     function fold(bytes32,bytes32,int) public;
 }
 
-contract Drip {
+contract Drip is DSNote {
     // --- Administration ---
     mapping (address => bool) public wards;
     function rely(address guy) public auth { wards[guy] = true;  }
@@ -67,7 +69,7 @@ contract Drip {
     }
 
     // --- Administration ---
-    function file(bytes32 ilk, bytes32 vow, uint tax) public auth {
+    function file(bytes32 ilk, bytes32 vow, uint tax) public note auth {
         Ilk storage i = ilks[ilk];
         require(i.rho == era() || i.tax == 0);
         i.vow = vow;
@@ -78,7 +80,7 @@ contract Drip {
     }
 
     // --- Stability Fee Collection ---
-    function drip(bytes32 ilk) public {
+    function drip(bytes32 ilk) public note {
         Ilk storage i = ilks[ilk];
         require(era() >= i.rho);
         (uint rate, uint Art) = vat.ilks(ilk); Art;

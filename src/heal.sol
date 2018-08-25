@@ -17,6 +17,8 @@
 
 pragma solidity ^0.4.24;
 
+import "ds-note/note.sol";
+
 contract Fusspot {
     function kick(address gal, uint lot, uint bid) public returns (uint);
 }
@@ -26,7 +28,7 @@ contract DaiLike {
     function heal(bytes32,bytes32,int) public;
 }
 
-contract Vow {
+contract Vow is DSNote {
     // --- Auth ---
     mapping (address => bool) public wards;
     function rely(address guy) public auth { wards[guy] = true;  }
@@ -69,12 +71,12 @@ contract Vow {
     }
 
     // --- Administration ---
-    function file(bytes32 what, uint risk) public auth {
+    function file(bytes32 what, uint risk) public note auth {
         if (what == "wait") wait = risk;
         if (what == "lump") lump = risk;
         if (what == "pad")  pad  = risk;
     }
-    function file(bytes32 what, address addr) public auth {
+    function file(bytes32 what, address addr) public note auth {
         if (what == "flap") cow = addr;
         if (what == "flop") row = addr;
         if (what == "vat")  vat = addr;
@@ -89,11 +91,11 @@ contract Vow {
     }
 
     // --- Repentance ---
-    function fess(uint tab) public auth {
+    function fess(uint tab) public note auth {
         sin[era()] = add(sin[era()], tab);
         Sin = add(Sin, tab);
     }
-    function flog(uint48 era_) public {
+    function flog(uint48 era_) public note {
         require(add(era_, wait) <= era());
         Sin = sub(Sin, sin[era_]);
         Woe = add(Woe, sin[era_]);
@@ -101,13 +103,13 @@ contract Vow {
     }
 
     // --- Salvation ---
-    function heal(uint wad) public {
+    function heal(uint wad) public note {
         require(wad <= Joy() && wad <= Woe);
         Woe = sub(Woe, wad);
         require(int(mul(wad, ONE)) >= 0);
         DaiLike(vat).heal(bytes32(address(this)), bytes32(address(this)), int(mul(wad, ONE)));
     }
-    function kiss(uint wad) public {
+    function kiss(uint wad) public note {
         require(wad <= Ash && wad <= Joy());
         Ash = sub(Ash, wad);
         require(int(mul(wad, ONE)) >= 0);

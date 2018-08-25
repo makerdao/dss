@@ -17,6 +17,8 @@
 
 pragma solidity ^0.4.20;
 
+import "ds-note/note.sol";
+
 contract GemLike {
     function transferFrom(address,address,uint) public returns (bool);
     function mint(address,uint) public;
@@ -28,7 +30,7 @@ contract VatLike {
     function move(bytes32,bytes32,int) public;
 }
 
-contract Adapter {
+contract Adapter is DSNote {
     VatLike public vat;
     bytes32 public ilk;
     GemLike public gem;
@@ -37,36 +39,36 @@ contract Adapter {
         ilk = ilk_;
         gem = GemLike(gem_);
     }
-    function join(bytes32 urn, uint wad) public {
+    function join(bytes32 urn, uint wad) public note {
         require(int(wad) >= 0);
         require(gem.transferFrom(msg.sender, this, wad));
         vat.slip(ilk, urn, int(wad));
     }
-    function exit(address guy, uint wad) public {
+    function exit(address guy, uint wad) public note {
         require(int(wad) >= 0);
         require(gem.transferFrom(this, guy, wad));
         vat.slip(ilk, bytes32(msg.sender), -int(wad));
     }
 }
 
-contract ETHAdapter {
+contract ETHAdapter is DSNote {
     VatLike public vat;
     bytes32 public ilk;
     constructor(address vat_, bytes32 ilk_) public {
         vat = VatLike(vat_);
         ilk = ilk_;
     }
-    function join(bytes32 urn) public payable {
+    function join(bytes32 urn) public payable note {
         vat.slip(ilk, urn, int(msg.value));
     }
-    function exit(address guy, uint wad) public {
+    function exit(address guy, uint wad) public note {
         require(int(wad) >= 0);
         vat.slip(ilk, bytes32(msg.sender), -int(wad));
         guy.transfer(wad);
     }
 }
 
-contract DaiAdapter {
+contract DaiAdapter is DSNote {
     VatLike public vat;
     GemLike public dai;
     constructor(address vat_, address dai_) public {
@@ -74,12 +76,12 @@ contract DaiAdapter {
         dai = GemLike(dai_);
     }
     uint constant ONE = 10 ** 27;
-    function join(bytes32 urn, uint wad) public {
+    function join(bytes32 urn, uint wad) public note {
         require(int(wad * ONE) >= 0);
         vat.move(bytes32(address(this)), urn, int(wad * ONE));
         dai.burn(msg.sender, wad);
     }
-    function exit(address guy, uint wad) public {
+    function exit(address guy, uint wad) public note {
         require(int(wad * ONE) >= 0);
         vat.move(bytes32(msg.sender), bytes32(address(this)), int(wad * ONE));
         dai.mint(guy, wad);

@@ -17,6 +17,8 @@
 
 pragma solidity ^0.4.24;
 
+import "ds-note/note.sol";
+
 contract VatLike {
     function debt() public view returns (uint);
     function ilks(bytes32) public view returns (uint,uint);
@@ -28,7 +30,7 @@ contract Dripper {
     function drip(bytes32) public;
 }
 
-contract Pit {
+contract Pit is DSNote {
     // --- Auth ---
     mapping (address => bool) public wards;
     function rely(address guy) public auth { wards[guy] = true;  }
@@ -47,6 +49,17 @@ contract Pit {
     bool    public live;  // Access Flag
     Dripper public drip;  // Stability Fee Calculator
 
+    // --- Events ---
+    event Frob(
+      bytes32 indexed ilk,
+      bytes32 indexed lad,
+      uint256 ink,
+      uint256 art,
+      int256  dink,
+      int256  dart,
+      uint256 Art
+    );
+
     // --- Init ---
     constructor(address vat_) public {
         wards[msg.sender] = true;
@@ -62,13 +75,13 @@ contract Pit {
     }
 
     // --- Administration ---
-    function file(bytes32 what, address drip_) public auth {
+    function file(bytes32 what, address drip_) public note auth {
         if (what == "drip") drip = Dripper(drip_);
     }
-    function file(bytes32 what, uint risk) public auth {
+    function file(bytes32 what, uint risk) public note auth {
         if (what == "Line") Line = risk;
     }
-    function file(bytes32 ilk, bytes32 what, uint risk) public auth {
+    function file(bytes32 ilk, bytes32 what, uint risk) public note auth {
         if (what == "spot") ilks[ilk].spot = risk;
         if (what == "line") ilks[ilk].line = risk;
     }
@@ -88,5 +101,7 @@ contract Pit {
         require(live);
         require(rate != 0);
         require((calm || dart <= 0) && (dart <= 0 && dink >= 0 || safe));
+
+        emit Frob(ilk, lad, ink, art, dink, dart, Art);
     }
 }

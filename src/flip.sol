@@ -17,11 +17,12 @@
 
 pragma solidity ^0.4.24;
 
+import "ds-note/note.sol";
+
 contract VatLike {
     function move(bytes32,bytes32,int)         public;
     function flux(bytes32,bytes32,bytes32,int) public;
 }
-
 
 /*
    This thing lets you flip some gems for a given amount of pie.
@@ -37,7 +38,7 @@ contract VatLike {
  - `end` max auction duration
 */
 
-contract Flipper {
+contract Flipper is DSNote {
     // --- Data ---
     struct Bid {
         uint256 bid;
@@ -63,6 +64,17 @@ contract Flipper {
     uint256 public   kicks;
 
     function era() public view returns (uint48) { return uint48(now); }
+
+    // --- Events ---
+    event Kick(
+      uint256 indexed id,
+      uint256 lot,
+      uint256 bid,
+      address gal,
+      uint48  end,
+      bytes32 indexed lad,
+      uint256 tab
+    );
 
     // --- Init ---
     constructor(address vat_, bytes32 ilk_) public {
@@ -94,14 +106,16 @@ contract Flipper {
         require(int(lot) >= 0);
         vat.flux(ilk, bytes32(msg.sender), bytes32(address(this)), int(lot));
 
+        emit Kick(id, lot, bid, gal, bids[id].end, bids[id].lad, bids[id].tab);
+
         return id;
     }
-    function tick(uint id) public {
+    function tick(uint id) public note {
         require(bids[id].end < era());
         require(bids[id].tic == 0);
         bids[id].end = era() + tau;
     }
-    function tend(uint id, uint lot, uint bid) public {
+    function tend(uint id, uint lot, uint bid) public note {
         require(bids[id].guy != 0);
         require(bids[id].tic > era() || bids[id].tic == 0);
         require(bids[id].end > era());
@@ -118,7 +132,7 @@ contract Flipper {
         bids[id].bid = bid;
         bids[id].tic = era() + ttl;
     }
-    function dent(uint id, uint lot, uint bid) public {
+    function dent(uint id, uint lot, uint bid) public note {
         require(bids[id].guy != 0);
         require(bids[id].tic > era() || bids[id].tic == 0);
         require(bids[id].end > era());
@@ -135,7 +149,7 @@ contract Flipper {
         bids[id].lot = lot;
         bids[id].tic = era() + ttl;
     }
-    function deal(uint id) public {
+    function deal(uint id) public note {
         require(bids[id].tic < era() && bids[id].tic != 0 ||
                 bids[id].end < era());
         vat.flux(ilk, bytes32(address(this)), bytes32(bids[id].guy), int(bids[id].lot));

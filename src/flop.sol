@@ -17,6 +17,8 @@
 
 pragma solidity ^0.4.24;
 
+import "ds-note/note.sol";
+
 contract PieLike {
     function move(bytes32,bytes32,int) public;
 }
@@ -36,7 +38,7 @@ contract GemLike {
  - `end` max auction duration
 */
 
-contract Flopper {
+contract Flopper is DSNote {
     // --- Auth ---
     mapping (address => bool) public wards;
     function rely(address guy) public auth { wards[guy] = true;  }
@@ -67,6 +69,15 @@ contract Flopper {
 
     function era() public view returns (uint48) { return uint48(now); }
 
+    // --- Events ---
+    event Kick(
+      uint256 indexed id,
+      uint256 lot,
+      uint256 bid,
+      address gal,
+      uint48  end
+    );
+
     // --- Init ---
     constructor(address pie_, address gem_) public {
         wards[msg.sender] = true;
@@ -91,9 +102,11 @@ contract Flopper {
         bids[id].guy = gal;
         bids[id].end = era() + tau;
 
+        emit Kick(id, lot, bid, gal, bids[id].end);
+
         return id;
     }
-    function dent(uint id, uint lot, uint bid) public {
+    function dent(uint id, uint lot, uint bid) public note {
         require(bids[id].guy != 0);
         require(bids[id].tic > era() || bids[id].tic == 0);
         require(bids[id].end > era());
@@ -108,7 +121,7 @@ contract Flopper {
         bids[id].lot = lot;
         bids[id].tic = era() + ttl;
     }
-    function deal(uint id) public {
+    function deal(uint id) public note {
         require(bids[id].tic < era() && bids[id].tic != 0 ||
                 bids[id].end < era());
         gem.mint(bids[id].guy, bids[id].lot);
