@@ -76,10 +76,9 @@ contract Vat {
         gem[ilk][src] = sub(gem[ilk][src], wad);
         gem[ilk][dst] = add(gem[ilk][dst], wad);
     }
-    function move(bytes32 src, bytes32 dst, uint256 rad) public auth {
-        require(int(rad) >= 0);
-        dai[src] = sub(dai[src], int(rad));
-        dai[dst] = add(dai[dst], int(rad));
+    function move(bytes32 src, bytes32 dst, int256 rad) public auth {
+        dai[src] = sub(dai[src], rad);
+        dai[dst] = add(dai[dst], rad);
     }
 
     // --- CDP ---

@@ -20,7 +20,7 @@
 pragma solidity ^0.4.24;
 
 contract PieLike {
-    function move(bytes32,bytes32,uint) public;
+    function move(bytes32,bytes32,int) public;
 }
 
 contract GemLike {
@@ -77,8 +77,10 @@ contract Flopper {
     }
 
     // --- Math ---
-    function mul(uint x, uint y) internal pure returns (uint z) {
-        require(y == 0 || (z = x * y) / y == x);
+    function mul(uint x, uint y) internal pure returns (int z) {
+        z = int(x * y);
+        require(int(z) >= 0);
+        require(y == 0 || uint(z) / y == x);
     }
 
     // --- Auction ---
@@ -100,7 +102,7 @@ contract Flopper {
 
         require(bid == bids[id].bid);
         require(lot <  bids[id].lot);
-        require(mul(beg, lot) / ONE <= bids[id].lot);  // div as lot can be huge
+        require(uint(mul(beg, lot)) / ONE <= bids[id].lot);  // div as lot can be huge
 
         pie.move(bytes32(msg.sender), bytes32(bids[id].guy), mul(bid, ONE));
 

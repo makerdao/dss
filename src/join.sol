@@ -25,7 +25,7 @@ contract GemLike {
 
 contract VatLike {
     function slip(bytes32,bytes32,int) public;
-    function move(bytes32,bytes32,uint) public;
+    function move(bytes32,bytes32,int) public;
 }
 
 contract Adapter {
@@ -75,11 +75,13 @@ contract DaiAdapter {
     }
     uint constant ONE = 10 ** 27;
     function join(uint wad) public {
-        vat.move(bytes32(address(this)), bytes32(msg.sender), wad * ONE);
+        require(int(wad * ONE) >= 0);
+        vat.move(bytes32(address(this)), bytes32(msg.sender), int(wad * ONE));
         dai.burn(msg.sender, wad);
     }
     function exit(uint wad) public {
-        vat.move(bytes32(msg.sender), bytes32(address(this)), wad * ONE);
+        require(int(wad * ONE) >= 0);
+        vat.move(bytes32(msg.sender), bytes32(address(this)), int(wad * ONE));
         dai.mint(msg.sender, wad);
     }
 }

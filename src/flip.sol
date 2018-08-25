@@ -18,8 +18,8 @@
 pragma solidity ^0.4.24;
 
 contract VatLike {
-    function move(bytes32,bytes32,uint)         public;
-    function flux(bytes32,bytes32,bytes32,int)  public;
+    function move(bytes32,bytes32,int)         public;
+    function flux(bytes32,bytes32,bytes32,int) public;
 }
 
 
@@ -71,8 +71,10 @@ contract Flipper {
     }
 
     // --- Math ---
-    function mul(uint x, uint y) internal pure returns (uint z) {
-        require(y == 0 || (z = x * y) / y == x);
+    function mul(uint x, uint y) internal pure returns (int z) {
+        z = int(x * y);
+        require(int(z) >= 0);
+        require(y == 0 || uint(z) / y == x);
     }
 
     // --- Auction ---
@@ -126,7 +128,7 @@ contract Flipper {
         require(mul(beg, lot) <= mul(bids[id].lot, ONE));
 
         vat.move(bytes32(msg.sender), bytes32(bids[id].guy), mul(bid, ONE));
-        vat.flux(ilk, bytes32(address(this)), bids[id].lad, int(bids[id].lot - lot));
+        vat.flux(ilk, bytes32(address(this)), bids[id].lad,  int(bids[id].lot - lot));
 
         bids[id].guy = msg.sender;
         bids[id].lot = lot;

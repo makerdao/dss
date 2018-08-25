@@ -55,9 +55,9 @@ contract Vat is VatLike {
         ilk;
     }
     uint256 constant ONE = 10 ** 27;
-    function move(bytes32 src, bytes32 dst, uint rad) public {
-        dai[src] -= rad;
-        dai[dst] += rad;
+    function move(bytes32 src, bytes32 dst, int rad) public {
+        dai[src] -= uint(rad);
+        dai[dst] += uint(rad);
     }
 }
 

@@ -18,7 +18,7 @@
 pragma solidity ^0.4.24;
 
 contract PieLike {
-    function move(bytes32,bytes32,uint) public;
+    function move(bytes32,bytes32,int)  public;
 }
 
 contract GemLike {
@@ -63,8 +63,10 @@ contract Flapper {
     function era() public view returns (uint48) { return uint48(now); }
 
     // --- Math ---
-    function mul(uint x, uint y) internal pure returns (uint z) {
-        require(y == 0 || (z = x * y) / y == x);
+    function mul(uint x, uint y) internal pure returns (int z) {
+        z = int(x * y);
+        require(int(z) >= 0);
+        require(y == 0 || uint(z) / y == x);
     }
 
     // --- Init ---
