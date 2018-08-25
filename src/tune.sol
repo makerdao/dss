@@ -48,18 +48,31 @@ contract Vat {
 
     // --- Math ---
     function add(uint x, int y) internal pure returns (uint z) {
-        z = x + uint(y);
-        require(y <= 0 || z > x);
-        require(y >= 0 || z < x);
+      assembly {
+        z := add(x, y)
+        // iff y <= 0 || z > x
+        if sgt(y, 0) { if iszero(gt(z, x)) { revert(0, 0) } }
+        // iff y >= 0 || z < x
+        if slt(y, 0) { if iszero(lt(z, x)) { revert(0, 0) } }
+      }
     }
     function sub(uint x, int y) internal pure returns (uint z) {
-        z = add(x, -y);
-        require(y != -2**255);
+      assembly {
+        z := sub(x, y)
+        // iff y >= 0 || z > x
+        if slt(y, 0) { if iszero(gt(z, x)) { revert(0, 0) } }
+        // iff y <= 0 || z < x
+        if sgt(y, 0) { if iszero(lt(z, x)) { revert(0, 0) } }
+      }
     }
     function mul(uint x, int y) internal pure returns (int z) {
-        z = int(x) * y;
-        require(int(x) >= 0);
-        require(y == 0 || z / y == int(x));
+      assembly {
+        z := mul(x, y)
+        // iff int(x) >= 0
+        if slt(x, 0) { revert(0, 0) }
+        // iff y == 0 || z / y == x
+        if iszero(eq(y, 0)) { if iszero(eq(sdiv(z, y), x)) { revert(0, 0) } }
+      }
     }
 
     // --- Administration ---
