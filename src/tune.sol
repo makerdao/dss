@@ -83,31 +83,31 @@ contract Vat {
     }
 
     // --- CDP ---
-    function tune(bytes32 ilk, bytes32 u_, bytes32 v, bytes32 w, int dink, int dart) public auth {
-        Urn storage u = urns[ilk][u_];
-        Ilk storage i = ilks[ilk];
+    function tune(bytes32 i, bytes32 u, bytes32 v, bytes32 w, int dink, int dart) public auth {
+        Urn storage urn = urns[i][u];
+        Ilk storage ilk = ilks[i];
 
-        u.ink = add(u.ink, dink);
-        u.art = add(u.art, dart);
-        i.Art = add(i.Art, dart);
+        urn.ink = add(urn.ink, dink);
+        urn.art = add(urn.art, dart);
+        ilk.Art = add(ilk.Art, dart);
 
-        gem[ilk][v] = sub(gem[ilk][v], dink);
-        dai[w]      = add(dai[w],      mul(i.rate, dart));
-        debt        = add(debt,        mul(i.rate, dart));
+        gem[i][v] = sub(gem[i][v], dink);
+        dai[w]    = add(dai[w],    mul(ilk.rate, dart));
+        debt      = add(debt,      mul(ilk.rate, dart));
     }
 
     // --- Liquidation ---
-    function grab(bytes32 ilk, bytes32 u_, bytes32 v, bytes32 w, int dink, int dart) public auth {
-        Urn storage u = urns[ilk][u_];
-        Ilk storage i = ilks[ilk];
+    function grab(bytes32 i, bytes32 u, bytes32 v, bytes32 w, int dink, int dart) public auth {
+        Urn storage urn = urns[i][u];
+        Ilk storage ilk = ilks[i];
 
-        u.ink = add(u.ink, dink);
-        u.art = add(u.art, dart);
-        i.Art = add(i.Art, dart);
+        urn.ink = add(urn.ink, dink);
+        urn.art = add(urn.art, dart);
+        ilk.Art = add(ilk.Art, dart);
 
-        gem[ilk][v] = sub(gem[ilk][v], dink);
-        sin[w]      = sub(sin[w],      mul(i.rate, dart));
-        vice        = sub(vice,        mul(i.rate, dart));
+        gem[i][v] = sub(gem[i][v], dink);
+        sin[w]    = sub(sin[w],    mul(ilk.rate, dart));
+        vice      = sub(vice,      mul(ilk.rate, dart));
     }
     function heal(bytes32 u, bytes32 v, int rad) public auth {
         sin[u] = sub(sin[u], rad);
@@ -117,11 +117,11 @@ contract Vat {
     }
 
     // --- Rates ---
-    function fold(bytes32 ilk, bytes32 guy, int rate) public auth {
-        Ilk storage i = ilks[ilk];
-        int rad  = mul(i.Art, rate);
-        dai[guy] = add(dai[guy], rad);
-        debt     = add(debt,     rad);
-        i.rate   = add(i.rate, rate);
+    function fold(bytes32 i, bytes32 u, int rate) public auth {
+        Ilk storage ilk = ilks[i];
+        int rad  = mul(ilk.Art, rate);
+        dai[u]   = add(dai[u], rad);
+        debt     = add(debt,   rad);
+        ilk.rate = add(ilk.rate, rate);
     }
 }
