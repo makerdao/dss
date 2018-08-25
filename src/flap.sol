@@ -17,6 +17,8 @@
 
 pragma solidity ^0.4.24;
 
+import "ds-note/note.sol";
+
 contract PieLike {
     function move(bytes32,bytes32,int)  public;
 }
@@ -36,8 +38,7 @@ contract GemLike {
  - `end` max auction duration
 */
 
-
-contract Flapper {
+contract Flapper is DSNote {
     // --- Data ---
     struct Bid {
         uint256 bid;
@@ -62,17 +63,26 @@ contract Flapper {
 
     function era() public view returns (uint48) { return uint48(now); }
 
-    // --- Math ---
-    function mul(uint x, uint y) internal pure returns (int z) {
-        z = int(x * y);
-        require(int(z) >= 0);
-        require(y == 0 || uint(z) / y == x);
-    }
+    // --- Events ---
+    event Kick(
+      uint256 indexed id,
+      uint256 lot,
+      uint256 bid,
+      address gal,
+      uint48  end
+    );
 
     // --- Init ---
     constructor(address pie_, address gem_) public {
         pie = PieLike(pie_);
         gem = GemLike(gem_);
+    }
+
+    // --- Math ---
+    function mul(uint x, uint y) internal pure returns (int z) {
+        z = int(x * y);
+        require(int(z) >= 0);
+        require(y == 0 || uint(z) / y == x);
     }
 
     // --- Auction ---
@@ -89,9 +99,11 @@ contract Flapper {
 
         pie.move(bytes32(msg.sender), bytes32(address(this)), mul(lot, ONE));
 
+        emit Kick(id, lot, bid, gal, bids[id].end);
+
         return id;
     }
-    function tend(uint id, uint lot, uint bid) public {
+    function tend(uint id, uint lot, uint bid) public note {
         require(bids[id].guy != 0);
         require(bids[id].tic > era() || bids[id].tic == 0);
         require(bids[id].end > era());
@@ -107,7 +119,7 @@ contract Flapper {
         bids[id].bid = bid;
         bids[id].tic = era() + ttl;
     }
-    function deal(uint id) public {
+    function deal(uint id) public note {
         require(bids[id].tic < era() && bids[id].tic != 0 ||
                 bids[id].end < era());
         pie.move(bytes32(address(this)), bytes32(bids[id].guy), mul(bids[id].lot, ONE));
