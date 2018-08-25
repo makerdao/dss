@@ -39,21 +39,13 @@ contract GemLike {
 */
 
 contract Flopper {
-    PieLike  public   pie;
-    GemLike  public   gem;
-
-    uint256  constant ONE = 1.00E27;
-    uint256  public   beg = 1.05E27;  // 5% minimum bid increase
-    uint48   public   ttl = 3 hours;  // 3 hours bid lifetime
-    uint48   public   tau = 1 weeks;  // 1 week total auction length
-
-    uint256  public   kicks;
-
+    // --- Auth ---
     mapping (address => bool) public wards;
     function rely(address guy) public auth { wards[guy] = true;  }
     function deny(address guy) public auth { wards[guy] = false; }
     modifier auth { require(wards[msg.sender]); _;  }
 
+    // --- Data ---
     struct Bid {
         uint256 bid;
         uint256 lot;
@@ -65,18 +57,31 @@ contract Flopper {
 
     mapping (uint => Bid) public bids;
 
+    PieLike  public   pie;
+    GemLike  public   gem;
+
+    uint256  constant ONE = 1.00E27;
+    uint256  public   beg = 1.05E27;  // 5% minimum bid increase
+    uint48   public   ttl = 3 hours;  // 3 hours bid lifetime
+    uint48   public   tau = 1 weeks;  // 1 week total auction length
+
+    uint256  public   kicks;
+
     function era() public view returns (uint48) { return uint48(now); }
 
-    function mul(uint x, uint y) internal pure returns (uint z) {
-        require(y == 0 || (z = x * y) / y == x);
-    }
-
+    // --- Init ---
     constructor(address pie_, address gem_) public {
         wards[msg.sender] = true;
         pie = PieLike(pie_);
         gem = GemLike(gem_);
     }
 
+    // --- Math ---
+    function mul(uint x, uint y) internal pure returns (uint z) {
+        require(y == 0 || (z = x * y) / y == x);
+    }
+
+    // --- Auction ---
     function kick(address gal, uint lot, uint bid) public auth returns (uint) {
         uint id = ++kicks;
 

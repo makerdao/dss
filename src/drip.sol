@@ -6,33 +6,31 @@ contract VatLike {
 }
 
 contract Drip {
-    VatLike vat;
-    struct Ilk {
-        bytes32 vow;
-        uint256 tax;
-        uint48  rho;
-    }
-    mapping (bytes32 => Ilk) public ilks;
-
+    // --- Administration ---
     mapping (address => bool) public wards;
     function rely(address guy) public auth { wards[guy] = true;  }
     function deny(address guy) public auth { wards[guy] = false; }
     modifier auth { require(wards[msg.sender]); _;  }
 
+    // --- Data ---
+    struct Ilk {
+        bytes32 vow;
+        uint256 tax;
+        uint48  rho;
+    }
+
+    mapping (bytes32 => Ilk) public ilks;
+    VatLike                  public vat;
+
     function era() public view returns (uint48) { return uint48(now); }
 
+    // --- Init ---
     constructor(address vat_) public {
         wards[msg.sender] = true;
         vat = VatLike(vat_);
     }
 
-    function file(bytes32 ilk, bytes32 vow, uint tax) public auth {
-        Ilk storage i = ilks[ilk];
-        require(i.rho == era() || i.tax == 0);
-        i.vow = vow;
-        i.tax = tax;
-    }
-
+    // --- Math ---
     function rpow(uint x, uint n, uint base) internal pure returns (uint z) {
       assembly {
         switch x case 0 {switch n case 0 {z := base} default {z := 0}}
@@ -66,6 +64,16 @@ contract Drip {
         require(y == 0 || z / y == x);
         z = z / ONE;
     }
+
+    // --- Administration ---
+    function file(bytes32 ilk, bytes32 vow, uint tax) public auth {
+        Ilk storage i = ilks[ilk];
+        require(i.rho == era() || i.tax == 0);
+        i.vow = vow;
+        i.tax = tax;
+    }
+
+    // --- Stability Fee Collection ---
     function drip(bytes32 ilk) public {
         Ilk storage i = ilks[ilk];
         require(era() >= i.rho);

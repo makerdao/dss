@@ -37,22 +37,17 @@ contract VowLike {
 }
 
 contract Cat {
-    address public vat;
-    address public pit;
-    address public vow;
-    uint256 public lump;  // fixed lot size
-
+    // --- Auth ---
     mapping (address => bool) public wards;
     function rely(address guy) public auth { wards[guy] = true;  }
     function deny(address guy) public auth { wards[guy] = false; }
     modifier auth { require(wards[msg.sender]); _;  }
 
+    // --- Data ---
     struct Ilk {
         uint256 chop;
         address flip;
     }
-    mapping (bytes32 => Ilk) public ilks;
-
     struct Flip {
         bytes32 ilk;
         bytes32 lad;
@@ -60,9 +55,16 @@ contract Cat {
         uint256 tab;
     }
 
-    uint256                   public nflip;
+    mapping (bytes32 => Ilk)  public ilks;
     mapping (uint256 => Flip) public flips;
+    uint256                   public nflip;
 
+    address public vat;
+    address public pit;
+    address public vow;
+    uint256 public lump;  // fixed lot size
+
+    // --- Init ---
     constructor(address vat_, address pit_, address vow_) public {
         wards[msg.sender] = true;
         vat = vat_;
@@ -70,18 +72,20 @@ contract Cat {
         vow = vow_;
     }
 
+    // --- Math ---
+    uint constant ONE = 10 ** 27;
+
     function mul(uint x, uint y) internal pure returns (uint z) {
         z = x * y;
         require(y == 0 || z / y == x);
     }
-
-    uint constant RAY = 10 ** 27;
     function rmul(uint x, uint y) internal pure returns (uint z) {
         z = x * y;
         require(y == 0 || z / y == x);
-        z = z / RAY;
+        z = z / ONE;
     }
 
+    // --- Administration ---
     function file(bytes32 what, uint risk) public auth {
         if (what == "lump") lump = risk;
     }
@@ -92,6 +96,7 @@ contract Cat {
         ilks[ilk].flip = flip;
     }
 
+    // --- CDP Liquidation ---
     function bite(bytes32 ilk, bytes32 guy) public returns (uint) {
         (uint rate, uint Art)           = VatLike(vat).ilks(ilk); Art;
         (uint spot, uint line)          = PitLike(pit).ilks(ilk); line;
@@ -107,7 +112,6 @@ contract Cat {
 
         return nflip++;
     }
-
     function flip(uint n, uint wad) public returns (uint) {
         Flip storage f = flips[n];
         Ilk  storage i = ilks[f.ilk];

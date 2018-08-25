@@ -38,16 +38,7 @@ contract VatLike {
 */
 
 contract Flipper {
-    VatLike public   vat;
-    bytes32 public   ilk;
-
-    uint256 constant ONE = 1.00E27;
-    uint256 public   beg = 1.05E27;  // 5% minimum bid increase
-    uint48  public   ttl = 3 hours;  // 3 hours bid duration
-    uint48  public   tau = 1 weeks;  // 1 week total auction length
-
-    uint256 public   kicks;
-
+    // --- Data ---
     struct Bid {
         uint256 bid;
         uint256 lot;
@@ -61,17 +52,30 @@ contract Flipper {
 
     mapping (uint => Bid) public bids;
 
+    VatLike public   vat;
+    bytes32 public   ilk;
+
+    uint256 constant ONE = 1.00E27;
+    uint256 public   beg = 1.05E27;  // 5% minimum bid increase
+    uint48  public   ttl = 3 hours;  // 3 hours bid duration
+    uint48  public   tau = 1 weeks;  // 1 week total auction length
+
+    uint256 public   kicks;
+
     function era() public view returns (uint48) { return uint48(now); }
 
-    function mul(uint x, uint y) internal pure returns (uint z) {
-        require(y == 0 || (z = x * y) / y == x);
-    }
-
+    // --- Init ---
     constructor(address vat_, bytes32 ilk_) public {
         ilk = ilk_;
         vat = VatLike(vat_);
     }
 
+    // --- Math ---
+    function mul(uint x, uint y) internal pure returns (uint z) {
+        require(y == 0 || (z = x * y) / y == x);
+    }
+
+    // --- Auction ---
     function kick(bytes32 lad, address gal, uint tab, uint lot, uint bid)
         public returns (uint)
     {

@@ -19,6 +19,8 @@ pragma solidity ^0.4.20;
 
 contract GemLike {
     function transferFrom(address,address,uint) public returns (bool);
+    function mint(address,uint) public;
+    function burn(address,uint) public;
 }
 
 contract VatLike {
@@ -64,17 +66,12 @@ contract ETHAdapter {
     }
 }
 
-contract DSTokenLike {
-    function mint(address,uint) public;
-    function burn(address,uint) public;
-}
-
 contract DaiAdapter {
     VatLike public vat;
-    DSTokenLike public dai;
+    GemLike public dai;
     constructor(address vat_, address dai_) public {
         vat = VatLike(vat_);
-        dai = DSTokenLike(dai_);
+        dai = GemLike(dai_);
     }
     uint constant ONE = 10 ** 27;
     function join(uint wad) public {

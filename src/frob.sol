@@ -24,29 +24,39 @@ contract Drip {
 }
 
 contract Pit {
-    Vat   public  vat;
-    uint  public Line;
-    bool  public live;
-    Drip  public drip;
-
+    // --- Auth ---
     mapping (address => bool) public wards;
     function rely(address guy) public auth { wards[guy] = true;  }
     function deny(address guy) public auth { wards[guy] = false; }
     modifier auth { require(wards[msg.sender]); _;  }
 
+    // --- Data ---
+    struct Ilk {
+        uint256  spot;  // Price with Safety Margin, ray
+        uint256  line;  // Debt Ceiling, wad
+    }
+    mapping (bytes32 => Ilk) public ilks;
+
+    Vat   public  vat;  // CDP Engine
+    uint  public Line;  // Debt Ceiling
+    bool  public live;  // Access Flag
+    Drip  public drip;  // Stability Fee Calculator
+
+    // --- Init ---
     constructor(address vat_) public {
         wards[msg.sender] = true;
         vat = Vat(vat_);
         live = true;
     }
 
-    struct Ilk {
-        uint256  spot;  // ray
-        uint256  line;  // wad
+    // --- Math ---
+    uint256 constant ONE = 10 ** 27;
+
+    function mul(uint x, uint y) internal pure returns (uint z) {
+        require(y == 0 || (z = x * y) / y == x);
     }
 
-    mapping (bytes32 => Ilk) public ilks;
-
+    // --- Administration ---
     function file(bytes32 what, address drip_) public auth {
         if (what == "drip") drip = Drip(drip_);
     }
@@ -58,11 +68,7 @@ contract Pit {
         if (what == "line") ilks[ilk].line = risk;
     }
 
-    uint256 constant ONE = 10 ** 27;
-    function mul(uint x, uint y) internal pure returns (uint z) {
-        require(y == 0 || (z = x * y) / y == x);
-    }
-
+    // --- CDP Owner Interface ---
     function frob(bytes32 ilk, int dink, int dart) public {
         drip.drip(ilk);
         bytes32 guy = bytes32(msg.sender);

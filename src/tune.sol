@@ -18,13 +18,13 @@
 pragma solidity ^0.4.24;
 
 contract Vat {
+    // --- Auth ---
     mapping (address => bool) public wards;
     function rely(address guy) public auth { wards[guy] = true;  }
     function deny(address guy) public auth { wards[guy] = false; }
     modifier auth { require(wards[msg.sender]); _;  }
 
-    constructor() public { wards[msg.sender] = true; }
-
+    // --- Data ---
     struct Ilk {
         uint256  rate;  // ray
         uint256  Art;   // wad
@@ -43,6 +43,10 @@ contract Vat {
     uint256  public debt;  // rad
     uint256  public vice;  // rad
 
+    // --- Init ---
+    constructor() public { wards[msg.sender] = true; }
+
+    // --- Math ---
     function add(uint x, int y) internal pure returns (uint z) {
         z = x + uint(y);
         require(y <= 0 || z > x);
@@ -58,18 +62,13 @@ contract Vat {
         require(y == 0 || z / y == int(x));
     }
 
-    // --- Administration Engine ---
+    // --- Administration ---
     function init(bytes32 ilk) public auth {
         require(ilks[ilk].rate == 0);
         ilks[ilk].rate = 10 ** 27;
     }
 
-    // --- Fungibility Engine ---
-    function move(bytes32 src, bytes32 dst, uint256 rad) public auth {
-        require(int(rad) >= 0);
-        dai[src] = sub(dai[src], int(rad));
-        dai[dst] = add(dai[dst], int(rad));
-    }
+    // --- Fungibility ---
     function slip(bytes32 ilk, bytes32 guy, int256 wad) public auth {
         gem[ilk][guy] = add(gem[ilk][guy], wad);
     }
@@ -77,8 +76,13 @@ contract Vat {
         gem[ilk][src] = sub(gem[ilk][src], wad);
         gem[ilk][dst] = add(gem[ilk][dst], wad);
     }
+    function move(bytes32 src, bytes32 dst, uint256 rad) public auth {
+        require(int(rad) >= 0);
+        dai[src] = sub(dai[src], int(rad));
+        dai[dst] = add(dai[dst], int(rad));
+    }
 
-    // --- CDP Engine ---
+    // --- CDP ---
     function tune(bytes32 ilk, bytes32 u_, bytes32 v, bytes32 w, int dink, int dart) public auth {
         Urn storage u = urns[ilk][u_];
         Ilk storage i = ilks[ilk];
@@ -92,7 +96,7 @@ contract Vat {
         debt        = add(debt,        mul(i.rate, dart));
     }
 
-    // --- Liquidation Engine ---
+    // --- Liquidation ---
     function grab(bytes32 ilk, bytes32 u_, bytes32 v, bytes32 w, int dink, int dart) public auth {
         Urn storage u = urns[ilk][u_];
         Ilk storage i = ilks[ilk];
@@ -112,7 +116,7 @@ contract Vat {
         debt   = sub(debt,   rad);
     }
 
-    // --- Stability Engine ---
+    // --- Rates ---
     function fold(bytes32 ilk, bytes32 guy, int rate) public auth {
         Ilk storage i = ilks[ilk];
         int rad  = mul(i.Art, rate);

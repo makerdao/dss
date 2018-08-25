@@ -27,17 +27,18 @@ contract DaiLike {
 }
 
 contract Vow {
-    address vat;
-    address cow;  // flapper
-    address row;  // flopper
-
-    function era() public view returns (uint48) { return uint48(now); }
-
+    // --- Auth ---
     mapping (address => bool) public wards;
     function rely(address guy) public auth { wards[guy] = true;  }
     function deny(address guy) public auth { wards[guy] = false; }
     modifier auth { require(wards[msg.sender]); _;  }
-    constructor() public { wards[msg.sender] = true; }
+
+
+    // --- Data ---
+    function era() public view returns (uint48) { return uint48(now); }
+    address public vat;
+    address public cow;  // flapper
+    address public row;  // flopper
 
     mapping (uint48 => uint256) public sin; // debt queue
     uint256 public Sin;   // queued debt
@@ -48,6 +49,10 @@ contract Vow {
     uint256 public lump;  // fixed lot size
     uint256 public pad;   // surplus buffer
 
+    // --- Init ---
+    constructor() public { wards[msg.sender] = true; }
+
+    // --- Math ---
     uint256 constant ONE = 10 ** 27;
 
     function add(uint x, uint y) internal pure returns (uint z) {
@@ -62,9 +67,7 @@ contract Vow {
         require(y == 0 || (z = x * y) / y == x);
     }
 
-    function Awe() public view returns (uint) { return add(add(Sin, Woe), Ash); }
-    function Joy() public view returns (uint) { return uint(DaiLike(vat).dai(bytes32(address(this)))) / ONE; }
-
+    // --- Administration ---
     function file(bytes32 what, uint risk) public auth {
         if (what == "wait") wait = risk;
         if (what == "lump") lump = risk;
@@ -76,6 +79,27 @@ contract Vow {
         if (what == "vat")  vat = addr;
     }
 
+    // --- Indicators ---
+    function Awe() public view returns (uint) {
+        return add(add(Sin, Woe), Ash);
+    }
+    function Joy() public view returns (uint) {
+        return uint(DaiLike(vat).dai(bytes32(address(this)))) / ONE;
+    }
+
+    // --- Repentance ---
+    function fess(uint tab) public auth {
+        sin[era()] = add(sin[era()], tab);
+        Sin = add(Sin, tab);
+    }
+    function flog(uint48 era_) public {
+        require(add(era_, wait) <= era());
+        Sin = sub(Sin, sin[era_]);
+        Woe = add(Woe, sin[era_]);
+        sin[era_] = 0;
+    }
+
+    // --- Salvation ---
     function heal(uint wad) public {
         require(wad <= Joy() && wad <= Woe);
         Woe = sub(Woe, wad);
@@ -89,17 +113,7 @@ contract Vow {
         DaiLike(vat).heal(bytes32(address(this)), bytes32(address(this)), int(mul(wad, ONE)));
     }
 
-    function fess(uint tab) public auth {
-        sin[era()] = add(sin[era()], tab);
-        Sin = add(Sin, tab);
-    }
-    function flog(uint48 era_) public {
-        require(add(era_, wait) <= era());
-        Sin = sub(Sin, sin[era_]);
-        Woe = add(Woe, sin[era_]);
-        sin[era_] = 0;
-    }
-
+    // --- Auctions ---
     function flop() public returns (uint) {
         require(Woe >= lump);
         require(Joy() == 0);
