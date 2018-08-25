@@ -26,8 +26,8 @@ contract DripTest is DSTest {
         return uint(rho_);
     }
     function rate(bytes32 ilk) internal view returns (uint) {
-        (uint rate_, uint Art) = vat.ilks(ilk); Art;
-        return rate_;
+        (uint t, uint r, uint I, uint A) = vat.ilks(ilk); t; A; I;
+        return r;
     }
 
     function setUp() public {
@@ -39,8 +39,8 @@ contract DripTest is DSTest {
     }
     function test_drip_setup() public {
         assertEq(uint(drip.era()), 0);
-        (uint _, uint Art) = vat.ilks("i"); _;
-        assertEq(Art, 100 ether);
+        (uint t, uint r, uint I, uint A) = vat.ilks("i"); t; r; I;
+        assertEq(A, 100 ether);
     }
     function test_drip_updates_rho() public {
         drip.file("i", "ali", 10 ** 27);

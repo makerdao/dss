@@ -51,12 +51,12 @@ contract Guy {
 contract Vat is DSToken {
     mapping (bytes32 => uint) public gems;
     mapping (bytes32 => uint) public dai;
+    uint256 constant ONE = 10 ** 27;
     function flux(bytes32 ilk, bytes32 src, bytes32 dst, int jam) public {
-        gems[src] -= uint(jam);
-        gems[dst] += uint(jam);
+        gems[src] -= uint(jam) / ONE;
+        gems[dst] += uint(jam) / ONE;
         ilk;
     }
-    uint256 constant ONE = 10 ** 27;
     function move(bytes32 src, bytes32 dst, int rad) public {
         dai[src] -= uint(rad);
         dai[dst] += uint(rad);

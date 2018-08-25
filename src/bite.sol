@@ -31,7 +31,7 @@ contract Hopeful {
 }
 
 contract VatLike {
-    function ilks(bytes32) public view returns (uint,uint);
+    function ilks(bytes32) public view returns (uint,uint,uint,uint);
     function urns(bytes32,bytes32) public view returns (uint,uint);
     function grab(bytes32,bytes32,bytes32,bytes32,int,int) public;
 }
@@ -118,7 +118,7 @@ contract Cat is DSNote {
     // --- CDP Liquidation ---
     function bite(bytes32 ilk, bytes32 lad) public returns (uint) {
         require(live == 1);
-        (uint rate, uint Art)  = vat.ilks(ilk); Art;
+        (uint take, uint rate, uint Ink, uint Art) = vat.ilks(ilk); Art; Ink; take;
         (uint spot, uint line) = pit.ilks(ilk); line;
         (uint ink , uint art)  = vat.urns(ilk, lad);
         uint tab = rmul(art, rate);

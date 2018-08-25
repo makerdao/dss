@@ -40,15 +40,19 @@ contract Adapter is DSNote {
         ilk = ilk_;
         gem = GemLike(gem_);
     }
+    uint constant ONE = 10 ** 27;
+    function mul(uint x, uint y) internal pure returns (int z) {
+        z = int(x * y);
+        require(int(z) >= 0);
+        require(y == 0 || uint(z) / y == x);
+    }
     function join(bytes32 urn, uint wad) public note {
-        require(int(wad) >= 0);
         require(gem.transferFrom(msg.sender, this, wad));
-        vat.slip(ilk, urn, int(wad));
+        vat.slip(ilk, urn, mul(ONE, wad));
     }
     function exit(address guy, uint wad) public note {
-        require(int(wad) >= 0);
         require(gem.transferFrom(this, guy, wad));
-        vat.slip(ilk, bytes32(msg.sender), -int(wad));
+        vat.slip(ilk, bytes32(msg.sender), -mul(ONE, wad));
     }
 }
 
@@ -59,13 +63,18 @@ contract ETHAdapter is DSNote {
         vat = VatLike(vat_);
         ilk = ilk_;
     }
+    uint constant ONE = 10 ** 27;
+    function mul(uint x, uint y) internal pure returns (int z) {
+        z = int(x * y);
+        require(int(z) >= 0);
+        require(y == 0 || uint(z) / y == x);
+    }
     function join(bytes32 urn) public payable note {
-        vat.slip(ilk, urn, int(msg.value));
+        vat.slip(ilk, urn, mul(ONE, msg.value));
     }
     function exit(address guy, uint wad) public note {
-        require(int(wad) >= 0);
-        vat.slip(ilk, bytes32(msg.sender), -int(wad));
         guy.transfer(wad);
+        vat.slip(ilk, bytes32(msg.sender), -mul(ONE, wad));
     }
 }
 
