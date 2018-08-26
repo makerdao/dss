@@ -99,4 +99,14 @@ contract DripTest is DSTest {
         assertEq(wad(vat.debt()),     115.5 ether);
         assertEq(rate("i") / 10 ** 9, 1.155 ether);
     }
+    function test_drip_repo() public {
+        vat.init("j");
+        vat.tune("j", "u", "v", "w", 0, 100 ether);
+        drip.file("i", "ali", 1050000000000000000000000000);  // 5% / second
+        drip.file("j", "ali", 1000000000000000000000000000);  // 0% / second
+        drip.file("repo",       50000000000000000000000000);  // 5% / second
+        drip.warp(1);
+        drip.drip("i");
+        assertEq(wad(vat.dai("ali")), 10 ether);
+    }
 }

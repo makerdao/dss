@@ -21,6 +21,7 @@ contract Drip {
 
     mapping (bytes32 => Ilk) public ilks;
     VatLike                  public vat;
+    uint256                  public repo;
 
     function era() public view returns (uint48) { return uint48(now); }
 
@@ -72,13 +73,16 @@ contract Drip {
         i.vow = vow;
         i.tax = tax;
     }
+    function file(bytes32 what, uint data) public auth {
+        if (what == "repo") repo = data;
+    }
 
     // --- Stability Fee Collection ---
     function drip(bytes32 ilk) public {
         Ilk storage i = ilks[ilk];
         require(era() >= i.rho);
         (uint rate, uint Art) = vat.ilks(ilk); Art;
-        vat.fold(ilk, i.vow, diff(rmul(rpow(i.tax, era() - i.rho, ONE), rate), rate));
+        vat.fold(ilk, i.vow, diff(rmul(rpow(repo + i.tax, era() - i.rho, ONE), rate), rate));
         i.rho = era();
     }
 }
