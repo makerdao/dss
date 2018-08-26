@@ -118,9 +118,9 @@ contract Vat {
     // --- Rates ---
     function fold(bytes32 i, bytes32 u, int rate) public auth {
         Ilk storage ilk = ilks[i];
+        ilk.rate = add(ilk.rate, rate);
         int rad  = mul(ilk.Art, rate);
         dai[u]   = add(dai[u], rad);
         debt     = add(debt,   rad);
-        ilk.rate = add(ilk.rate, rate);
     }
 }
