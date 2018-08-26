@@ -45,8 +45,9 @@ contract Cat {
 
     // --- Data ---
     struct Ilk {
-        uint256 chop;
         address flip;
+        uint256 chop;
+        uint256 lump;
     }
     struct Flip {
         bytes32 ilk;
@@ -62,7 +63,6 @@ contract Cat {
     address public vat;
     address public pit;
     address public vow;
-    uint256 public lump;  // fixed lot size
 
     // --- Init ---
     constructor(address vat_, address pit_, address vow_) public {
@@ -86,11 +86,9 @@ contract Cat {
     }
 
     // --- Administration ---
-    function file(bytes32 what, uint risk) public auth {
-        if (what == "lump") lump = risk;
-    }
     function file(bytes32 ilk, bytes32 what, uint risk) public auth {
         if (what == "chop") ilks[ilk].chop = risk;
+        if (what == "lump") ilks[ilk].lump = risk;
     }
     function fuss(bytes32 ilk, address flip) public auth {
         ilks[ilk].flip = flip;
@@ -117,7 +115,7 @@ contract Cat {
         Ilk  storage i = ilks[f.ilk];
 
         require(wad <= f.tab);
-        require(wad == lump || (wad < lump && wad == f.tab));
+        require(wad == i.lump || (wad < i.lump && wad == f.tab));
 
         uint tab = f.tab;
         uint ink = mul(f.ink, wad) / tab;

@@ -319,7 +319,7 @@ contract BiteTest is DSTest {
         assertEq(vow.sin(vow.era()), 100 ether);
         assertEq(gem("gold", this), 960 ether);
 
-        cat.file("lump", uint(100 ether));
+        cat.file("gold", "lump", uint(100 ether));
         uint auction = cat.flip(id, 100 ether);  // flip all the tab
 
         assertEq(pie.balanceOf(vow),   0 ether);
