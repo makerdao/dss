@@ -21,10 +21,10 @@ import 'ds-note/note.sol';
 
 contract Vat {
     // --- Auth ---
-    mapping (address => bool) public wards;
-    function rely(address guy) public auth { wards[guy] = true;  }
-    function deny(address guy) public auth { wards[guy] = false; }
-    modifier auth { require(wards[msg.sender]); _;  }
+    mapping (address => uint) public wards;
+    function rely(address guy) public auth { wards[guy] = 1;  }
+    function deny(address guy) public auth { wards[guy] = 0; }
+    modifier auth { require(wards[msg.sender] == 1); _;  }
 
     // --- Data ---
     struct Ilk {
@@ -65,7 +65,7 @@ contract Vat {
         emit Note(msg.sig, foo, bar, too, msg.data); _;
     }
     // --- Init ---
-    constructor() public { wards[msg.sender] = true; }
+    constructor() public { wards[msg.sender] = 1; }
 
     // --- Math ---
     function add(uint x, int y) internal pure returns (uint z) {

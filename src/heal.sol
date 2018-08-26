@@ -36,10 +36,10 @@ contract VatLike {
 
 contract Vow is DSNote {
     // --- Auth ---
-    mapping (address => bool) public wards;
-    function rely(address guy) public auth { wards[guy] = true;  }
-    function deny(address guy) public auth { wards[guy] = false; }
-    modifier auth { require(wards[msg.sender]); _;  }
+    mapping (address => uint) public wards;
+    function rely(address guy) public auth { wards[guy] = 1;  }
+    function deny(address guy) public auth { wards[guy] = 0; }
+    modifier auth { require(wards[msg.sender] == 1); _;  }
 
 
     // --- Data ---
@@ -59,7 +59,7 @@ contract Vow is DSNote {
     function era() public view returns (uint48) { return uint48(now); }
 
     // --- Init ---
-    constructor() public { wards[msg.sender] = true; }
+    constructor() public { wards[msg.sender] = 1; }
 
     // --- Math ---
     uint256 constant ONE = 10 ** 27;

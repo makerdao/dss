@@ -37,10 +37,10 @@ contract GemLike {
 
 contract Flopper is DSNote {
     // --- Auth ---
-    mapping (address => bool) public wards;
-    function rely(address guy) public auth { wards[guy] = true;  }
-    function deny(address guy) public auth { wards[guy] = false; }
-    modifier auth { require(wards[msg.sender]); _;  }
+    mapping (address => uint) public wards;
+    function rely(address guy) public auth { wards[guy] = 1;  }
+    function deny(address guy) public auth { wards[guy] = 0; }
+    modifier auth { require(wards[msg.sender] == 1); _;  }
 
     // --- Data ---
     struct Bid {
@@ -77,7 +77,7 @@ contract Flopper is DSNote {
 
     // --- Init ---
     constructor(address dai_, address gem_) public {
-        wards[msg.sender] = true;
+        wards[msg.sender] = 1;
         dai = GemLike(dai_);
         gem = GemLike(gem_);
     }
