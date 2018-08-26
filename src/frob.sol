@@ -17,9 +17,14 @@
 
 pragma solidity ^0.4.24;
 
-import './tune.sol';
+contract VatLike {
+    function debt() public view returns (uint);
+    function ilks(bytes32) public view returns (uint,uint);
+    function urns(bytes32,bytes32) public view returns (uint,uint);
+    function tune(bytes32,bytes32,bytes32,bytes32,int,int) public;
+}
 
-contract Drip {
+contract Dripper {
     function drip(bytes32) public;
 }
 
@@ -37,15 +42,15 @@ contract Pit {
     }
     mapping (bytes32 => Ilk) public ilks;
 
-    Vat   public  vat;  // CDP Engine
-    uint  public Line;  // Debt Ceiling
-    bool  public live;  // Access Flag
-    Drip  public drip;  // Stability Fee Calculator
+    VatLike public  vat;  // CDP Engine
+    uint256 public Line;  // Debt Ceiling
+    bool    public live;  // Access Flag
+    Dripper public drip;  // Stability Fee Calculator
 
     // --- Init ---
     constructor(address vat_) public {
         wards[msg.sender] = true;
-        vat = Vat(vat_);
+        vat = VatLike(vat_);
         live = true;
     }
 
@@ -58,7 +63,7 @@ contract Pit {
 
     // --- Administration ---
     function file(bytes32 what, address drip_) public auth {
-        if (what == "drip") drip = Drip(drip_);
+        if (what == "drip") drip = Dripper(drip_);
     }
     function file(bytes32 what, uint risk) public auth {
         if (what == "Line") Line = risk;
@@ -72,12 +77,12 @@ contract Pit {
     function frob(bytes32 ilk, int dink, int dart) public {
         drip.drip(ilk);
         bytes32 lad = bytes32(msg.sender);
-        vat.tune(ilk, lad, lad, lad, dink, dart);
+        VatLike(vat).tune(ilk, lad, lad, lad, dink, dart);
 
         (uint rate, uint Art) = vat.ilks(ilk);
         (uint ink,  uint art) = vat.urns(ilk, lad);
-        bool calm = mul(Art, rate) <= mul(ilks[ilk].line, ONE) &&
-                        vat.debt() <= mul(Line, ONE);
+        bool calm = mul(Art, rate) <= mul(ilks[ilk].line, ONE)
+                    &&  vat.debt() <= mul(Line, ONE);
         bool safe = mul(ink, ilks[ilk].spot) >= mul(art, rate);
 
         require(live);
