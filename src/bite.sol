@@ -38,10 +38,10 @@ contract VowLike {
 
 contract Cat {
     // --- Auth ---
-    mapping (address => bool) public wards;
-    function rely(address guy) public auth { wards[guy] = true;  }
-    function deny(address guy) public auth { wards[guy] = false; }
-    modifier auth { require(wards[msg.sender]); _;  }
+    mapping (address => uint) public wards;
+    function rely(address guy) public auth { wards[guy] = 1;  }
+    function deny(address guy) public auth { wards[guy] = 0; }
+    modifier auth { require(wards[msg.sender] == 1); _;  }
 
     // --- Data ---
     struct Ilk {
@@ -66,7 +66,7 @@ contract Cat {
 
     // --- Init ---
     constructor(address vat_, address pit_, address vow_) public {
-        wards[msg.sender] = true;
+        wards[msg.sender] = 1;
         vat = VatLike(vat_);
         pit = PitLike(pit_);
         vow = VowLike(vow_);

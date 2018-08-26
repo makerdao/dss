@@ -40,10 +40,10 @@ contract GemLike {
 
 contract Flopper {
     // --- Auth ---
-    mapping (address => bool) public wards;
-    function rely(address guy) public auth { wards[guy] = true;  }
-    function deny(address guy) public auth { wards[guy] = false; }
-    modifier auth { require(wards[msg.sender]); _;  }
+    mapping (address => uint) public wards;
+    function rely(address guy) public auth { wards[guy] = 1;  }
+    function deny(address guy) public auth { wards[guy] = 0; }
+    modifier auth { require(wards[msg.sender] == 1); _;  }
 
     // --- Data ---
     struct Bid {
@@ -71,7 +71,7 @@ contract Flopper {
 
     // --- Init ---
     constructor(address pie_, address gem_) public {
-        wards[msg.sender] = true;
+        wards[msg.sender] = 1;
         pie = PieLike(pie_);
         gem = GemLike(gem_);
     }
