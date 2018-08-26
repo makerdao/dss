@@ -71,16 +71,17 @@ contract Pit {
     // --- CDP Owner Interface ---
     function frob(bytes32 ilk, int dink, int dart) public {
         drip.drip(ilk);
-        bytes32 guy = bytes32(msg.sender);
-        vat.tune(ilk, guy, guy, guy, dink, dart);
+        bytes32 lad = bytes32(msg.sender);
+        vat.tune(ilk, lad, lad, lad, dink, dart);
 
         (uint rate, uint Art) = vat.ilks(ilk);
-        (uint ink,  uint art) = vat.urns(ilk, bytes32(msg.sender));
+        (uint ink,  uint art) = vat.urns(ilk, lad);
         bool calm = mul(Art, rate) <= mul(ilks[ilk].line, ONE) &&
-                        vat.debt() <  mul(Line, ONE);
+                        vat.debt() <= mul(Line, ONE);
         bool safe = mul(ink, ilks[ilk].spot) >= mul(art, rate);
 
-        require( ( calm || dart<=0 ) && ( dart<=0 && dink>=0 || safe ) && live);
+        require(live);
         require(rate != 0);
+        require((calm || dart <= 0) && (dart <= 0 && dink >= 0 || safe));
     }
 }

@@ -17,7 +17,7 @@
 
 pragma solidity ^0.4.24;
 
-contract Flippy{
+contract Flippy {
     function kick(bytes32 lad, address gal, uint tab, uint lot, uint bid)
         public returns (uint);
 }
@@ -25,7 +25,7 @@ contract Flippy{
 contract VatLike {
     function ilks(bytes32) public view returns (uint,uint);
     function urns(bytes32,bytes32) public view returns (uint,uint);
-    function grab(bytes32,bytes32,bytes32,bytes32,int,int) public returns (uint);
+    function grab(bytes32,bytes32,bytes32,bytes32,int,int) public;
 }
 
 contract PitLike {
@@ -60,16 +60,16 @@ contract Cat {
     mapping (uint256 => Flip) public flips;
     uint256                   public nflip;
 
-    address public vat;
-    address public pit;
-    address public vow;
+    VatLike public vat;
+    PitLike public pit;
+    VowLike public vow;
 
     // --- Init ---
     constructor(address vat_, address pit_, address vow_) public {
         wards[msg.sender] = true;
-        vat = vat_;
-        pit = pit_;
-        vow = vow_;
+        vat = VatLike(vat_);
+        pit = PitLike(pit_);
+        vow = VowLike(vow_);
     }
 
     // --- Math ---
@@ -90,23 +90,23 @@ contract Cat {
         if (what == "chop") ilks[ilk].chop = risk;
         if (what == "lump") ilks[ilk].lump = risk;
     }
-    function fuss(bytes32 ilk, address flip) public auth {
-        ilks[ilk].flip = flip;
+    function file(bytes32 ilk, bytes32 what, address flip) public auth {
+        if (what == "flip") ilks[ilk].flip = flip;
     }
 
     // --- CDP Liquidation ---
-    function bite(bytes32 ilk, bytes32 guy) public returns (uint) {
-        (uint rate, uint Art)           = VatLike(vat).ilks(ilk); Art;
-        (uint spot, uint line)          = PitLike(pit).ilks(ilk); line;
-        (uint ink , uint art) = VatLike(vat).urns(ilk, guy);
+    function bite(bytes32 ilk, bytes32 lad) public returns (uint) {
+        (uint rate, uint Art)  = vat.ilks(ilk); Art;
+        (uint spot, uint line) = pit.ilks(ilk); line;
+        (uint ink , uint art)  = vat.urns(ilk, lad);
         uint tab = rmul(art, rate);
 
         require(rmul(ink, spot) < tab);  // !safe
 
-        VatLike(vat).grab(ilk, guy, bytes32(address(this)), bytes32(vow), -int(ink), -int(art));
-        VowLike(vow).fess(uint(tab));
+        vat.grab(ilk, lad, bytes32(address(this)), bytes32(address(vow)), -int(ink), -int(art));
+        vow.fess(tab);
 
-        flips[nflip] = Flip(ilk, guy, uint(ink), uint(tab));
+        flips[nflip] = Flip(ilk, lad, ink, tab);
 
         return nflip++;
     }
@@ -125,9 +125,9 @@ contract Cat {
 
         return Flippy(i.flip).kick({ lad: f.lad
                                    , gal: vow
-                                   , tab: uint(rmul(wad, i.chop))
-                                   , lot: uint(ink)
-                                   , bid: uint(0)
+                                   , tab: rmul(wad, i.chop)
+                                   , lot: ink
+                                   , bid: 0
                                    });
     }
 }

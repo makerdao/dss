@@ -290,7 +290,7 @@ contract BiteTest is DSTest {
         pit.file("gold", "line", 1000 ether);
         pit.file("Line", uint(1000 ether));
         flip = new Flipper(vat, "gold");
-        cat.fuss("gold", flip);
+        cat.file("gold", "flip", flip);
         cat.file("gold", "chop", ray(1 ether));
 
         vat.rely(flip);
