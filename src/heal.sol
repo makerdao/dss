@@ -35,7 +35,6 @@ contract Vow {
 
 
     // --- Data ---
-    function era() public view returns (uint48) { return uint48(now); }
     address public vat;
     address public cow;  // flapper
     address public row;  // flopper
@@ -48,6 +47,8 @@ contract Vow {
     uint256 public wait;  // flop delay
     uint256 public lump;  // fixed lot size
     uint256 public pad;   // surplus buffer
+
+    function era() public view returns (uint48) { return uint48(now); }
 
     // --- Init ---
     constructor() public { wards[msg.sender] = true; }
