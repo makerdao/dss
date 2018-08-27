@@ -15,8 +15,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// todo: case that nobody bids (maybe needs tick). who is initial guy?
-
 pragma solidity ^0.4.24;
 
 contract PieLike {

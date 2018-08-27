@@ -80,13 +80,14 @@ contract Flapper {
         public returns (uint)
     {
         uint id = ++kicks;
-        pie.move(bytes32(msg.sender), bytes32(address(this)), mul(lot, ONE));
 
         bids[id].bid = bid;
         bids[id].lot = lot;
         bids[id].guy = msg.sender; // configurable??
         bids[id].end = era() + tau;
         bids[id].gal = gal;
+
+        pie.move(bytes32(msg.sender), bytes32(address(this)), mul(lot, ONE));
 
         return id;
     }
