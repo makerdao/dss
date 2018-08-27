@@ -70,7 +70,7 @@ contract FrobTest is DSTest {
         vat.rely(pie);
         vat.rely(adapter);
 
-        adapter.join(1000 ether);
+        adapter.join(bytes32(address(this)), 1000 ether);
     }
 
     function gem(bytes32 ilk, address lad) internal view returns (uint) {
@@ -88,14 +88,14 @@ contract FrobTest is DSTest {
 
     function test_join() public {
         gold.mint(500 ether);
-        assertEq(gold.balanceOf(this),     500 ether);
-        assertEq(gold.balanceOf(adapter), 1000 ether);
-        adapter.join(500 ether);
-        assertEq(gold.balanceOf(this),       0 ether);
-        assertEq(gold.balanceOf(adapter), 1500 ether);
-        adapter.exit(250 ether);
-        assertEq(gold.balanceOf(this),     250 ether);
-        assertEq(gold.balanceOf(adapter), 1250 ether);
+        assertEq(gold.balanceOf(this),       500 ether);
+        assertEq(gold.balanceOf(adapter),   1000 ether);
+        adapter.join(bytes32(address(this)), 500 ether);
+        assertEq(gold.balanceOf(this),         0 ether);
+        assertEq(gold.balanceOf(adapter),   1500 ether);
+        adapter.exit(this, 250 ether);
+        assertEq(gold.balanceOf(this),       250 ether);
+        assertEq(gold.balanceOf(adapter),   1250 ether);
     }
     function test_lock() public {
         assertEq(ink("gold", this),    0 ether);
@@ -183,12 +183,12 @@ contract JoinTest is DSTest {
     }
     function () external payable {}
     function test_eth_join() public {
-        ethA.join.value(10 ether)();
+        ethA.join.value(10 ether)(bytes32(address(this)));
         assertEq(vat.gem("eth", me), 10 ether);
     }
     function test_eth_exit() public {
-        ethA.join.value(50 ether)();
-        ethA.exit(10 ether);
+        ethA.join.value(50 ether)(bytes32(address(this)));
+        ethA.exit(this, 10 ether);
         assertEq(vat.gem("eth", me), 40 ether);
     }
     function rad(uint wad) internal pure returns (uint) {
@@ -196,15 +196,15 @@ contract JoinTest is DSTest {
     }
     function test_dai_exit() public {
         vat.mint(address(me), 100 ether);
-        daiA.exit(60 ether);
+        daiA.exit(this, 60 ether);
         assertEq(dai.balanceOf(address(me)), 60 ether);
         assertEq(vat.dai(me),            rad(40 ether));
     }
     function test_dai_exit_join() public {
         vat.mint(address(me), 100 ether);
-        daiA.exit(60 ether);
+        daiA.exit(this, 60 ether);
         dai.approve(daiA, uint(-1));
-        daiA.join(30 ether);
+        daiA.join(bytes32(address(this)), 30 ether);
         assertEq(dai.balanceOf(address(me)), 30 ether);
         assertEq(vat.dai(me),            rad(70 ether));
     }
@@ -284,7 +284,7 @@ contract BiteTest is DSTest {
         adapter = new Adapter(vat, "gold", gold);
         vat.rely(adapter);
         gold.approve(adapter);
-        adapter.join(1000 ether);
+        adapter.join(bytes32(address(this)), 1000 ether);
 
         pit.file("gold", "spot", ray(1 ether));
         pit.file("gold", "line", 1000 ether);

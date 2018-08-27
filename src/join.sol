@@ -37,14 +37,14 @@ contract Adapter {
         ilk = ilk_;
         gem = GemLike(gem_);
     }
-    function join(uint wad) public {
+    function join(bytes32 urn, uint wad) public {
         require(int(wad) >= 0);
         require(gem.transferFrom(msg.sender, this, wad));
-        vat.slip(ilk, bytes32(msg.sender), int(wad));
+        vat.slip(ilk, urn, int(wad));
     }
-    function exit(uint wad) public {
+    function exit(address guy, uint wad) public {
         require(int(wad) >= 0);
-        require(gem.transferFrom(this, msg.sender, wad));
+        require(gem.transferFrom(this, guy, wad));
         vat.slip(ilk, bytes32(msg.sender), -int(wad));
     }
 }
@@ -56,13 +56,13 @@ contract ETHAdapter {
         vat = VatLike(vat_);
         ilk = ilk_;
     }
-    function join() public payable {
-        vat.slip(ilk, bytes32(msg.sender), int(msg.value));
+    function join(bytes32 urn) public payable {
+        vat.slip(ilk, urn, int(msg.value));
     }
-    function exit(uint wad) public {
+    function exit(address guy, uint wad) public {
         require(int(wad) >= 0);
         vat.slip(ilk, bytes32(msg.sender), -int(wad));
-        msg.sender.transfer(wad);
+        guy.transfer(wad);
     }
 }
 
@@ -74,14 +74,14 @@ contract DaiAdapter {
         dai = GemLike(dai_);
     }
     uint constant ONE = 10 ** 27;
-    function join(uint wad) public {
+    function join(bytes32 urn, uint wad) public {
         require(int(wad * ONE) >= 0);
-        vat.move(bytes32(address(this)), bytes32(msg.sender), int(wad * ONE));
+        vat.move(bytes32(address(this)), urn, int(wad * ONE));
         dai.burn(msg.sender, wad);
     }
-    function exit(uint wad) public {
+    function exit(address guy, uint wad) public {
         require(int(wad * ONE) >= 0);
         vat.move(bytes32(msg.sender), bytes32(address(this)), int(wad * ONE));
-        dai.mint(msg.sender, wad);
+        dai.mint(guy, wad);
     }
 }
