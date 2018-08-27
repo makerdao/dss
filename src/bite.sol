@@ -80,7 +80,7 @@ contract Cat is DSNote {
       uint256 art,
       uint256 tab,
       uint256 flip,
-      uint256 Art
+      uint256 iArt
     );
 
     // --- Init ---
