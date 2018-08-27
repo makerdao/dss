@@ -10,6 +10,8 @@ contract Guy {
     Flipper flip;
     constructor(Flipper flip_) public {
         flip = flip_;
+        DSToken(flip.dai()).approve(flip);
+        DSToken(flip.gem()).approve(flip);
     }
     function tend(uint id, uint lot, uint bid) public {
         flip.tend(id, lot, bid);
@@ -46,7 +48,7 @@ contract Guy {
     }
 }
 
-contract Vat is VatLike {
+contract Vat is DSToken {
     mapping (bytes32 => uint) public gems;
     mapping (bytes32 => uint) public dai;
     function flux(bytes32 ilk, bytes32 src, bytes32 dst, int jam) public {
@@ -61,18 +63,27 @@ contract Vat is VatLike {
     }
 }
 
+contract Dai is DSToken('Dai') {}
+contract Gem is DSToken('Gem') {
+    function push(bytes32 guy, uint wad) public {
+        push(address(guy), wad);
+    }
+}
+
 contract Gal {}
 
 contract WarpFlip is Flipper {
     uint48 _era; function warp(uint48 era_) public { _era = era_; }
     function era() public view returns (uint48) { return _era; }
-    constructor(address vat_, bytes32 ilk_) public
-        Flipper(vat_, ilk_) {}
+    constructor(address dai_, address gem_) public
+        Flipper(dai_, gem_) {}
 }
 
 contract FlipTest is DSTest {
     WarpFlip flip;
-    Dai20   pie;
+
+    Dai  dai;
+    Gem  gem;
 
     Guy  ali;
     Guy  bob;
@@ -80,9 +91,10 @@ contract FlipTest is DSTest {
     Vat  vat;
 
     function setUp() public {
-        vat = new Vat();
-        pie = new Dai20(vat);
-        flip = new WarpFlip(vat, 'fake ilk');
+        dai = new Dai();
+        gem = new Gem();
+
+        flip = new WarpFlip(dai, gem);
 
         flip.warp(1 hours);
 
@@ -90,10 +102,13 @@ contract FlipTest is DSTest {
         bob = new Guy(flip);
         gal = new Gal();
 
-        pie.approve(flip);
+        dai.approve(flip);
+        gem.approve(flip);
 
-        pie.push(ali, 200 ether);
-        pie.push(bob, 200 ether);
+        gem.mint(this, 1000 ether);
+
+        dai.mint(ali, 200 ether);
+        dai.mint(bob, 200 ether);
     }
     function test_kick() public {
         flip.kick({ lot: 100 ether
@@ -117,22 +132,22 @@ contract FlipTest is DSTest {
 
         ali.tend(id, 100 ether, 1 ether);
         // bid taken from bidder
-        assertEq(pie.balanceOf(ali),   199 ether);
+        assertEq(dai.balanceOf(ali),   199 ether);
         // gal receives payment
-        assertEq(pie.balanceOf(gal),     1 ether);
+        assertEq(dai.balanceOf(gal),     1 ether);
 
         bob.tend(id, 100 ether, 2 ether);
         // bid taken from bidder
-        assertEq(pie.balanceOf(bob), 198 ether);
+        assertEq(dai.balanceOf(bob), 198 ether);
         // prev bidder refunded
-        assertEq(pie.balanceOf(ali), 200 ether);
+        assertEq(dai.balanceOf(ali), 200 ether);
         // gal receives excess
-        assertEq(pie.balanceOf(gal),   2 ether);
+        assertEq(dai.balanceOf(gal),   2 ether);
 
         flip.warp(5 hours);
         bob.deal(id);
         // bob gets the winnings
-        assertEq(vat.gems(bytes32(address(bob))), 100 ether);
+        assertEq(gem.balanceOf(bob), 100 ether);
     }
     function test_tend_later() public {
         uint id = flip.kick({ lot: 100 ether
@@ -145,9 +160,9 @@ contract FlipTest is DSTest {
 
         ali.tend(id, 100 ether, 1 ether);
         // bid taken from bidder
-        assertEq(pie.balanceOf(ali), 199 ether);
+        assertEq(dai.balanceOf(ali), 199 ether);
         // gal receives payment
-        assertEq(pie.balanceOf(gal),   1 ether);
+        assertEq(dai.balanceOf(gal),   1 ether);
     }
     function test_dent() public {
         uint id = flip.kick({ lot: 100 ether
@@ -161,9 +176,9 @@ contract FlipTest is DSTest {
 
         ali.dent(id,  95 ether, 50 ether);
         // plop the gems
-        assertEq(vat.gems(bytes32(address(0xacab))), 5 ether);
-        assertEq(pie.balanceOf(ali),  150 ether);
-        assertEq(pie.balanceOf(bob),  200 ether);
+        assertEq(gem.balanceOf(0xacab), 5 ether);
+        assertEq(dai.balanceOf(ali),  150 ether);
+        assertEq(dai.balanceOf(bob),  200 ether);
     }
     function test_beg() public {
         uint id = flip.kick({ lot: 100 ether

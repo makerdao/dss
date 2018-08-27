@@ -21,9 +21,15 @@ import "ds-note/note.sol";
 
 contract Fusspot {
     function kick(address gal, uint lot, uint bid) public returns (uint);
+    function dai() public returns (address);
 }
 
-contract DaiLike {
+contract Hopeful {
+    function hope(address) public;
+    function nope(address) public;
+}
+
+contract VatLike {
     function dai (bytes32) public view returns (int);
     function heal(bytes32,bytes32,int) public;
 }
@@ -87,7 +93,7 @@ contract Vow is DSNote {
         return add(add(Sin, Woe), Ash);
     }
     function Joy() public view returns (uint) {
-        return uint(DaiLike(vat).dai(bytes32(address(this)))) / ONE;
+        return uint(VatLike(vat).dai(bytes32(address(this)))) / ONE;
     }
 
     // --- Repentance ---
@@ -107,26 +113,28 @@ contract Vow is DSNote {
         require(wad <= Joy() && wad <= Woe);
         Woe = sub(Woe, wad);
         require(int(mul(wad, ONE)) >= 0);
-        DaiLike(vat).heal(bytes32(address(this)), bytes32(address(this)), int(mul(wad, ONE)));
+        VatLike(vat).heal(bytes32(address(this)), bytes32(address(this)), int(mul(wad, ONE)));
     }
     function kiss(uint wad) public note {
         require(wad <= Ash && wad <= Joy());
         Ash = sub(Ash, wad);
         require(int(mul(wad, ONE)) >= 0);
-        DaiLike(vat).heal(bytes32(address(this)), bytes32(address(this)), int(mul(wad, ONE)));
+        VatLike(vat).heal(bytes32(address(this)), bytes32(address(this)), int(mul(wad, ONE)));
     }
 
     // --- Auctions ---
-    function flop() public returns (uint) {
+    function flop() public returns (uint id) {
         require(Woe >= lump);
         require(Joy() == 0);
         Woe = sub(Woe, lump);
         Ash = add(Ash, lump);
         return Fusspot(row).kick(this, uint(-1), lump);
     }
-    function flap() public returns (uint) {
+    function flap() public returns (uint id) {
         require(Joy() >= add(add(Awe(), lump), pad));
         require(Woe == 0);
-        return Fusspot(cow).kick(this, lump, 0);
+        Hopeful(Fusspot(cow).dai()).hope(cow);
+        id = Fusspot(cow).kick(this, lump, 0);
+        Hopeful(Fusspot(cow).dai()).nope(cow);
     }
 }

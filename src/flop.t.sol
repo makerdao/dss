@@ -9,7 +9,7 @@ contract Guy {
     Flopper fuss;
     constructor(Flopper fuss_) public {
         fuss = fuss_;
-        DSToken(fuss.pie()).approve(fuss);
+        DSToken(fuss.dai()).approve(fuss);
         DSToken(fuss.gem()).approve(fuss);
     }
     function dent(uint id, uint lot, uint bid) public {
@@ -37,7 +37,7 @@ contract Gal {}
 contract WarpFlop is Flopper {
     uint48 _era; function warp(uint48 era_) public { _era = era_; }
     function era() public view returns (uint48) { return _era; }
-    constructor(address pie_, address gem_) public Flopper(pie_, gem_) {}
+    constructor(address dai_, address gem_) public Flopper(dai_, gem_) {}
 }
 
 contract VatLike is DSToken('') {
@@ -49,7 +49,7 @@ contract VatLike is DSToken('') {
 
 contract FlopTest is DSTest {
     WarpFlop fuss;
-    VatLike pie;
+    VatLike dai;
     DSToken gem;
 
     Guy  ali;
@@ -59,10 +59,10 @@ contract FlopTest is DSTest {
     function kiss(uint) public pure { }  // arbitrary callback
 
     function setUp() public {
-        pie = new VatLike();
+        dai = new VatLike();
         gem = new DSToken('');
 
-        fuss = new WarpFlop(pie, gem);
+        fuss = new WarpFlop(dai, gem);
 
         fuss.warp(1 hours);
 
@@ -70,23 +70,23 @@ contract FlopTest is DSTest {
         bob = new Guy(fuss);
         gal = new Gal();
 
-        pie.approve(fuss);
+        dai.approve(fuss);
         gem.approve(fuss);
 
-        pie.mint(1000 ether);
+        dai.mint(1000 ether);
 
-        pie.push(ali, 200 ether);
-        pie.push(bob, 200 ether);
+        dai.push(ali, 200 ether);
+        dai.push(bob, 200 ether);
     }
     function test_kick() public {
-        assertEq(pie.balanceOf(this), 600 ether);
+        assertEq(dai.balanceOf(this), 600 ether);
         assertEq(gem.balanceOf(this),   0 ether);
         fuss.kick({ lot: uint(-1)   // or whatever high starting value
                   , gal: gal
                   , bid: 0
                   });
         // no value transferred
-        assertEq(pie.balanceOf(this), 600 ether);
+        assertEq(dai.balanceOf(this), 600 ether);
         assertEq(gem.balanceOf(this),   0 ether);
     }
     function test_dent() public {
@@ -97,17 +97,17 @@ contract FlopTest is DSTest {
 
         ali.dent(id, 100 ether, 10 ether);
         // bid taken from bidder
-        assertEq(pie.balanceOf(ali), 190 ether);
+        assertEq(dai.balanceOf(ali), 190 ether);
         // gal receives payment
-        assertEq(pie.balanceOf(gal),  10 ether);
+        assertEq(dai.balanceOf(gal),  10 ether);
 
         bob.dent(id, 80 ether, 10 ether);
         // bid taken from bidder
-        assertEq(pie.balanceOf(bob), 190 ether);
+        assertEq(dai.balanceOf(bob), 190 ether);
         // prev bidder refunded
-        assertEq(pie.balanceOf(ali), 200 ether);
+        assertEq(dai.balanceOf(ali), 200 ether);
         // gal receives no more
-        assertEq(pie.balanceOf(gal), 10 ether);
+        assertEq(dai.balanceOf(gal), 10 ether);
 
         fuss.warp(5 weeks);
         assertEq(gem.totalSupply(),  0 ether);

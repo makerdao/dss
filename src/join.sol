@@ -52,17 +52,16 @@ contract Adapter is DSNote {
     }
 
     mapping(address => mapping (address => bool)) public can;
-    function hope(address guy) public {
-        can[msg.sender][guy] = true;
-    }
+    function hope(address guy) public { can[msg.sender][guy] = true; }
+    function nope(address guy) public { can[msg.sender][guy] = false; }
     function move(address src, address dst, uint wad) public {
         require(int(wad) >= 0);
-        require(can[src][msg.sender]);
+        require(src == msg.sender || can[src][msg.sender]);
         vat.flux(ilk, bytes32(src), bytes32(dst), int(wad));
     }
     function push(bytes32 urn, uint wad) public {
         require(int(wad) >= 0);
-        vat.flux(bytes32(msg.sender), urn, int(wad));
+        vat.flux(ilk, bytes32(msg.sender), urn, int(wad));
     }
 }
 
@@ -83,12 +82,11 @@ contract ETHAdapter is DSNote {
     }
 
     mapping(address => mapping (address => bool)) public can;
-    function hope(address guy, bool ok) public {
-        can[msg.sender][guy] = ok;
-    }
+    function hope(address guy) public { can[msg.sender][guy] = true; }
+    function nope(address guy) public { can[msg.sender][guy] = false; }
     function move(address src, address dst, uint wad) public {
         require(int(wad) >= 0);
-        require(can[src][msg.sender]);
+        require(src == msg.sender || can[src][msg.sender]);
         vat.flux(ilk, bytes32(src), bytes32(dst), int(wad));
     }
 }
@@ -101,24 +99,26 @@ contract DaiAdapter is DSNote {
         dai = GemLike(dai_);
     }
     uint constant ONE = 10 ** 27;
+    function mul(uint x, uint y) internal pure returns (int z) {
+        z = int(x * y);
+        require(int(z) >= 0);
+        require(y == 0 || uint(z) / y == x);
+    }
     function join(bytes32 urn, uint wad) public note {
-        require(int(wad * ONE) >= 0);
-        vat.move(bytes32(address(this)), urn, int(wad * ONE));
+        vat.move(bytes32(address(this)), urn, mul(ONE, wad));
         dai.burn(msg.sender, wad);
     }
     function exit(address guy, uint wad) public note {
-        require(int(wad * ONE) >= 0);
-        vat.move(bytes32(msg.sender), bytes32(address(this)), int(wad * ONE));
+        vat.move(bytes32(msg.sender), bytes32(address(this)), mul(ONE, wad));
         dai.mint(guy, wad);
     }
 
     mapping(address => mapping (address => bool)) public can;
-    function hope(address guy, bool ok) public {
-        can[msg.sender][guy] = ok;
-    }
+    function hope(address guy) public { can[msg.sender][guy] = true; }
+    function nope(address guy) public { can[msg.sender][guy] = false; }
     function move(address src, address dst, uint wad) public {
         require(int(wad) >= 0);
-        require(can[src][msg.sender]);
-        vat.move(bytes32(src), bytes32(dst), int(wad));
+        require(src == msg.sender || can[src][msg.sender]);
+        vat.move(bytes32(src), bytes32(dst), mul(ONE, wad));
     }
 }

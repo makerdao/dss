@@ -19,18 +19,14 @@ pragma solidity ^0.4.24;
 
 import "ds-note/note.sol";
 
-contract PieLike {
-    function move(bytes32,bytes32,int)  public;
-}
-
 contract GemLike {
     function move(address,address,uint) public;
 }
 
 /*
-   This thing lets you sell some pie in return for gems.
+   This thing lets you sell some dai in return for gems.
 
- - `lot` pie for sale
+ - `lot` dai for sale
  - `bid` gems paid
  - `gal` receives gem income
  - `ttl` single bid lifetime
@@ -51,7 +47,7 @@ contract Flapper is DSNote {
 
     mapping (uint => Bid) public bids;
 
-    PieLike  public   pie;
+    GemLike  public   dai;
     GemLike  public   gem;
 
     uint256  constant ONE = 1.00E27;
@@ -73,8 +69,8 @@ contract Flapper is DSNote {
     );
 
     // --- Init ---
-    constructor(address pie_, address gem_) public {
-        pie = PieLike(pie_);
+    constructor(address dai_, address gem_) public {
+        dai = GemLike(dai_);
         gem = GemLike(gem_);
     }
 
@@ -97,7 +93,7 @@ contract Flapper is DSNote {
         bids[id].end = era() + tau;
         bids[id].gal = gal;
 
-        pie.move(bytes32(msg.sender), bytes32(address(this)), mul(lot, ONE));
+        dai.move(msg.sender, this, lot);
 
         emit Kick(id, lot, bid, gal, bids[id].end);
 
@@ -122,7 +118,7 @@ contract Flapper is DSNote {
     function deal(uint id) public note {
         require(bids[id].tic < era() && bids[id].tic != 0 ||
                 bids[id].end < era());
-        pie.move(bytes32(address(this)), bytes32(bids[id].guy), mul(bids[id].lot, ONE));
+        dai.move(this, bids[id].guy, bids[id].lot);
         delete bids[id];
     }
 }

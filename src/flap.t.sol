@@ -9,7 +9,7 @@ contract Guy {
     Flapper fuss;
     constructor(Flapper fuss_) public {
         fuss = fuss_;
-        DSToken(fuss.pie()).approve(fuss);
+        DSToken(fuss.dai()).approve(fuss);
         DSToken(fuss.gem()).approve(fuss);
     }
     function tend(uint id, uint lot, uint bid) public {
@@ -37,7 +37,7 @@ contract Gal {}
 contract WarpFlap is Flapper {
     uint48 _era; function warp(uint48 era_) public { _era = era_; }
     function era() public view returns (uint48) { return _era; }
-    constructor(address pie_, address gem_) public Flapper(pie_, gem_) {}
+    constructor(address dai_, address gem_) public Flapper(dai_, gem_) {}
 }
 
 contract VatLike is DSToken('') {
@@ -49,7 +49,7 @@ contract VatLike is DSToken('') {
 
 contract FlapTest is DSTest {
     WarpFlap fuss;
-    VatLike pie;
+    VatLike dai;
     DSToken gem;
 
     Guy  ali;
@@ -57,10 +57,10 @@ contract FlapTest is DSTest {
     Gal  gal;
 
     function setUp() public {
-        pie = new VatLike();
+        dai = new VatLike();
         gem = new DSToken('');
 
-        fuss = new WarpFlap(pie, gem);
+        fuss = new WarpFlap(dai, gem);
 
         fuss.warp(1 hours);
 
@@ -68,24 +68,24 @@ contract FlapTest is DSTest {
         bob = new Guy(fuss);
         gal = new Gal();
 
-        pie.approve(fuss);
+        dai.approve(fuss);
         gem.approve(fuss);
 
-        pie.mint(1000 ether);
+        dai.mint(1000 ether);
         gem.mint(1000 ether);
 
         gem.push(ali, 200 ether);
         gem.push(bob, 200 ether);
     }
     function test_kick() public {
-        assertEq(pie.balanceOf(this), 1000 ether);
-        assertEq(pie.balanceOf(fuss),    0 ether);
+        assertEq(dai.balanceOf(this), 1000 ether);
+        assertEq(dai.balanceOf(fuss),    0 ether);
         fuss.kick({ lot: 100 ether
                   , gal: gal
                   , bid: 0
                   });
-        assertEq(pie.balanceOf(this),  900 ether);
-        assertEq(pie.balanceOf(fuss),  100 ether);
+        assertEq(dai.balanceOf(this),  900 ether);
+        assertEq(dai.balanceOf(fuss),  100 ether);
     }
     function test_tend() public {
         uint id = fuss.kick({ lot: 100 ether
@@ -93,7 +93,7 @@ contract FlapTest is DSTest {
                             , bid: 0
                             });
         // lot taken from creator
-        assertEq(pie.balanceOf(this), 900 ether);
+        assertEq(dai.balanceOf(this), 900 ether);
 
         ali.tend(id, 100 ether, 1 ether);
         // bid taken from bidder
@@ -112,8 +112,8 @@ contract FlapTest is DSTest {
         fuss.warp(5 weeks);
         bob.deal(id);
         // bob gets the winnings
-        assertEq(pie.balanceOf(fuss),  0 ether);
-        assertEq(pie.balanceOf(bob), 100 ether);
+        assertEq(dai.balanceOf(fuss),  0 ether);
+        assertEq(dai.balanceOf(bob), 100 ether);
     }
     function test_beg() public {
         uint id = fuss.kick({ lot: 100 ether

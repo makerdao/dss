@@ -19,20 +19,17 @@ pragma solidity ^0.4.24;
 
 import "ds-note/note.sol";
 
-contract PieLike {
-    function move(bytes32,bytes32,int) public;
-}
-
 contract GemLike {
+    function move(address,address,uint) public;
     function mint(address,uint) public;
 }
 
 /*
-   This thing creates gems on demand in return for pie.
+   This thing creates gems on demand in return for dai.
 
  - `lot` gems for sale
- - `bid` pie paid
- - `gal` receives pie income
+ - `bid` dai paid
+ - `gal` receives dai income
  - `ttl` single bid lifetime
  - `beg` minimum bid increase
  - `end` max auction duration
@@ -57,7 +54,7 @@ contract Flopper is DSNote {
 
     mapping (uint => Bid) public bids;
 
-    PieLike  public   pie;
+    GemLike  public   dai;
     GemLike  public   gem;
 
     uint256  constant ONE = 1.00E27;
@@ -79,9 +76,9 @@ contract Flopper is DSNote {
     );
 
     // --- Init ---
-    constructor(address pie_, address gem_) public {
+    constructor(address dai_, address gem_) public {
         wards[msg.sender] = true;
-        pie = PieLike(pie_);
+        dai = GemLike(dai_);
         gem = GemLike(gem_);
     }
 
@@ -115,7 +112,7 @@ contract Flopper is DSNote {
         require(lot <  bids[id].lot);
         require(uint(mul(beg, lot)) / ONE <= bids[id].lot);  // div as lot can be huge
 
-        pie.move(bytes32(msg.sender), bytes32(bids[id].guy), mul(bid, ONE));
+        dai.move(msg.sender, bids[id].guy, bid);
 
         bids[id].guy = msg.sender;
         bids[id].lot = lot;

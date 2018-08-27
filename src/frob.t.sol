@@ -29,11 +29,11 @@ contract WarpVow is Vow {}
 contract FrobTest is DSTest {
     WarpVat vat;
     Pit     pit;
-    Dai20   pie;
+    Dai20   dai;
     DSToken gold;
     Drip    drip;
 
-    Adapter adapter;
+    Adapter gemA;
 
     function try_frob(bytes32 ilk, int ink, int art) public returns(bool) {
         bytes4 sig = bytes4(keccak256("frob(bytes32,int256,int256)"));
@@ -47,13 +47,13 @@ contract FrobTest is DSTest {
     function setUp() public {
         vat = new WarpVat();
         pit = new Pit(vat);
-        pie = new Dai20(vat);
+        dai = new Dai20(vat);
 
         gold = new DSToken("GEM");
         gold.mint(1000 ether);
 
         vat.init("gold");
-        adapter = new Adapter(vat, "gold", gold);
+        gemA = new Adapter(vat, "gold", gold);
 
         pit.file("gold", "spot", ray(1 ether));
         pit.file("gold", "line", 1000 ether);
@@ -63,14 +63,14 @@ contract FrobTest is DSTest {
         vat.rely(drip);
         pit.file("drip", drip);
 
-        gold.approve(adapter);
+        gold.approve(gemA);
         gold.approve(vat);
 
         vat.rely(pit);
-        vat.rely(pie);
-        vat.rely(adapter);
+        vat.rely(dai);
+        vat.rely(gemA);
 
-        adapter.join(bytes32(address(this)), 1000 ether);
+        gemA.join(bytes32(address(this)), 1000 ether);
     }
 
     function gem(bytes32 ilk, address lad) internal view returns (uint) {
@@ -89,13 +89,13 @@ contract FrobTest is DSTest {
     function test_join() public {
         gold.mint(500 ether);
         assertEq(gold.balanceOf(this),       500 ether);
-        assertEq(gold.balanceOf(adapter),   1000 ether);
-        adapter.join(bytes32(address(this)), 500 ether);
+        assertEq(gold.balanceOf(gemA),   1000 ether);
+        gemA.join(bytes32(address(this)), 500 ether);
         assertEq(gold.balanceOf(this),         0 ether);
-        assertEq(gold.balanceOf(adapter),   1500 ether);
-        adapter.exit(this, 250 ether);
+        assertEq(gold.balanceOf(gemA),   1500 ether);
+        gemA.exit(this, 250 ether);
         assertEq(gold.balanceOf(this),       250 ether);
-        assertEq(gold.balanceOf(adapter),   1250 ether);
+        assertEq(gold.balanceOf(gemA),   1250 ether);
     }
     function test_lock() public {
         assertEq(ink("gold", this),    0 ether);
@@ -215,11 +215,12 @@ contract BiteTest is DSTest {
     Pit     pit;
     Vow     vow;
     Cat     cat;
-    Dai20   pie;
+    Dai20   dai;
     DSToken gold;
     Drip    drip;
 
-    Adapter adapter;
+    Adapter    gemA;
+    DaiAdapter daiA;
 
     Flipper flip;
     Flopper flop;
@@ -255,11 +256,14 @@ contract BiteTest is DSTest {
         vat = new WarpVat();
         pit = new Pit(vat);
         vat.rely(pit);
-        pie = new Dai20(vat);
-        vat.rely(pie);
+        dai = new Dai20(vat);
+        vat.rely(dai);
 
-        flap = new Flapper(vat, gov);
-        flop = new Flopper(vat, gov);
+        daiA = new DaiAdapter(vat, new DSToken("Dai"));
+        vat.rely(daiA);
+
+        flap = new Flapper(daiA, gov);
+        flop = new Flopper(daiA, gov);
         gov.setOwner(flop);
 
         vow = new Vow();
@@ -281,15 +285,15 @@ contract BiteTest is DSTest {
         gold.mint(1000 ether);
 
         vat.init("gold");
-        adapter = new Adapter(vat, "gold", gold);
-        vat.rely(adapter);
-        gold.approve(adapter);
-        adapter.join(bytes32(address(this)), 1000 ether);
+        gemA = new Adapter(vat, "gold", gold);
+        vat.rely(gemA);
+        gold.approve(gemA);
+        gemA.join(bytes32(address(this)), 1000 ether);
 
         pit.file("gold", "spot", ray(1 ether));
         pit.file("gold", "line", 1000 ether);
         pit.file("Line", uint(1000 ether));
-        flip = new Flipper(vat, "gold");
+        flip = new Flipper(daiA, gemA);
         cat.file("gold", "flip", flip);
         cat.file("gold", "chop", ray(1 ether));
 
@@ -297,6 +301,8 @@ contract BiteTest is DSTest {
         vat.rely(flap);
         vat.rely(flop);
 
+        daiA.hope(flip);
+        daiA.hope(flop);
         gold.approve(vat);
         gov.approve(flap);
     }
@@ -322,23 +328,23 @@ contract BiteTest is DSTest {
         cat.file("gold", "lump", uint(100 ether));
         uint auction = cat.flip(id, 100 ether);  // flip all the tab
 
-        assertEq(pie.balanceOf(vow),   0 ether);
+        assertEq(dai.balanceOf(vow),   0 ether);
         flip.tend(auction, 40 ether,   1 ether);
-        assertEq(pie.balanceOf(vow),   1 ether);
+        assertEq(dai.balanceOf(vow),   1 ether);
         flip.tend(auction, 40 ether, 100 ether);
-        assertEq(pie.balanceOf(vow), 100 ether);
+        assertEq(dai.balanceOf(vow), 100 ether);
 
-        assertEq(pie.balanceOf(this),       0 ether);
+        assertEq(dai.balanceOf(this),       0 ether);
         assertEq(gem("gold", this), 960 ether);
-        vat.mint(this, 100 ether);  // magic up some pie for bidding
+        vat.mint(this, 100 ether);  // magic up some dai for bidding
         flip.dent(auction, 38 ether,  100 ether);
-        assertEq(pie.balanceOf(this), 100 ether);
-        assertEq(pie.balanceOf(vow),  100 ether);
+        assertEq(dai.balanceOf(this), 100 ether);
+        assertEq(dai.balanceOf(vow),  100 ether);
         assertEq(gem("gold", this), 962 ether);
         assertEq(gem("gold", this), 962 ether);
 
         assertEq(vow.sin(vow.era()), 100 ether);
-        assertEq(pie.balanceOf(vow), 100 ether);
+        assertEq(dai.balanceOf(vow), 100 ether);
     }
 
     function test_floppy_bite() public {
@@ -376,19 +382,19 @@ contract BiteTest is DSTest {
     function test_flappy_bite() public {
         // get some surplus
         vat.mint(vow, 100 ether);
-        assertEq(pie.balanceOf(vow),  100 ether);
+        assertEq(dai.balanceOf(vow),  100 ether);
         assertEq(gov.balanceOf(this), 100 ether);
 
         vow.file("lump", uint(100 ether));
         assertEq(vow.Awe(), 0 ether);
         uint id = vow.flap();
 
-        assertEq(pie.balanceOf(this),   0 ether);
+        assertEq(dai.balanceOf(this),   0 ether);
         assertEq(gov.balanceOf(this), 100 ether);
         flap.tend(id, 100 ether, 10 ether);
         flap.warp(4 hours);
         flap.deal(id);
-        assertEq(pie.balanceOf(this),   100 ether);
+        assertEq(dai.balanceOf(this),   100 ether);
         assertEq(gov.balanceOf(this),    90 ether);
     }
 }

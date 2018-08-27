@@ -22,6 +22,12 @@ import "ds-note/note.sol";
 contract Flippy {
     function kick(bytes32 lad, address gal, uint tab, uint lot, uint bid)
         public returns (uint);
+    function gem() public returns (address);
+}
+
+contract Hopeful {
+    function hope(address) public;
+    function nope(address) public;
 }
 
 contract VatLike {
@@ -125,7 +131,7 @@ contract Cat is DSNote {
 
         return nflip++;
     }
-    function flip(uint n, uint wad) public note returns (uint) {
+    function flip(uint n, uint wad) public note returns (uint id) {
         Flip storage f = flips[n];
         Ilk  storage i = ilks[f.ilk];
 
@@ -138,11 +144,13 @@ contract Cat is DSNote {
         f.tab -= wad;
         f.ink -= ink;
 
-        return Flippy(i.flip).kick({ lad: f.lad
-                                   , gal: vow
-                                   , tab: rmul(wad, i.chop)
-                                   , lot: ink
-                                   , bid: 0
-                                   });
+        Hopeful(Flippy(i.flip).gem()).hope(i.flip);
+        id = Flippy(i.flip).kick({ lad: f.lad
+                                 , gal: vow
+                                 , tab: rmul(wad, i.chop)
+                                 , lot: ink
+                                 , bid: 0
+                                 });
+        Hopeful(Flippy(i.flip).gem()).nope(i.flip);
     }
 }
