@@ -91,6 +91,7 @@ contract Flipper {
         bids[id].gal = gal;
         bids[id].tab = tab;
 
+        require(int(lot) >= 0);
         vat.flux(ilk, bytes32(msg.sender), bytes32(address(this)), int(lot));
 
         return id;
