@@ -5,7 +5,7 @@ import "ds-test/test.sol";
 import {WarpFlop as Flop} from './flop.t.sol';
 import {WarpFlap as Flap} from './flap.t.sol';
 import {WarpVat  as Vat}  from './frob.t.sol';
-import {DaiAdapter}       from './join.sol';
+import {DaiMove}          from './move.sol';
 import {Vow}              from './heal.sol';
 
 contract Gem {
@@ -27,19 +27,19 @@ contract VowTest is DSTest {
     Flap     flap;
     Gem      gov;
 
-    DaiAdapter daiA;
+    DaiMove daiM;
 
     function setUp() public {
         vat = new Vat();
         vow = new WarpVow();
         vat.rely(vow);
-        gov = new Gem();
-        daiA = new DaiAdapter(vat, 0x00);
+        gov  = new Gem();
+        daiM = new DaiMove(vat);
 
-        flop = new Flop(daiA, gov);
-        flap = new Flap(daiA, gov);
-        daiA.hope(flop);
-        vat.rely(daiA);
+        flop = new Flop(daiM, gov);
+        flap = new Flap(daiM, gov);
+        daiM.hope(flop);
+        vat.rely(daiM);
         vat.rely(flop);
         vat.rely(flap);
         flop.rely(vow);

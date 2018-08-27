@@ -10,6 +10,7 @@ import {Vow} from './heal.sol';
 import {Drip} from './drip.sol';
 import {Dai20} from './transferFrom.sol';
 import {Adapter, ETHAdapter, DaiAdapter} from './join.sol';
+import {GemMove, DaiMove} from './move.sol';
 
 import {WarpFlip as Flipper} from './flip.t.sol';
 import {WarpFlop as Flopper} from './flop.t.sol';
@@ -219,8 +220,9 @@ contract BiteTest is DSTest {
     DSToken gold;
     Drip    drip;
 
-    Adapter    gemA;
-    DaiAdapter daiA;
+    Adapter gemA;
+    GemMove gemM;
+    DaiMove daiM;
 
     Flipper flip;
     Flopper flop;
@@ -259,11 +261,11 @@ contract BiteTest is DSTest {
         dai = new Dai20(vat);
         vat.rely(dai);
 
-        daiA = new DaiAdapter(vat, new DSToken("Dai"));
-        vat.rely(daiA);
+        daiM = new DaiMove(vat);
+        vat.rely(daiM);
 
-        flap = new Flapper(daiA, gov);
-        flop = new Flopper(daiA, gov);
+        flap = new Flapper(daiM, gov);
+        flop = new Flopper(daiM, gov);
         gov.setOwner(flop);
 
         vow = new Vow();
@@ -290,10 +292,13 @@ contract BiteTest is DSTest {
         gold.approve(gemA);
         gemA.join(bytes32(address(this)), 1000 ether);
 
+        gemM = new GemMove(vat, "gold");
+        vat.rely(gemM);
+
         pit.file("gold", "spot", ray(1 ether));
         pit.file("gold", "line", 1000 ether);
         pit.file("Line", uint(1000 ether));
-        flip = new Flipper(daiA, gemA);
+        flip = new Flipper(daiM, gemM);
         cat.file("gold", "flip", flip);
         cat.file("gold", "chop", ray(1 ether));
 
@@ -301,8 +306,8 @@ contract BiteTest is DSTest {
         vat.rely(flap);
         vat.rely(flop);
 
-        daiA.hope(flip);
-        daiA.hope(flop);
+        daiM.hope(flip);
+        daiM.hope(flop);
         gold.approve(vat);
         gov.approve(flap);
     }
