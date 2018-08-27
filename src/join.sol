@@ -28,6 +28,7 @@ contract GemLike {
 contract VatLike {
     function slip(bytes32,bytes32,int) public;
     function move(bytes32,bytes32,int) public;
+    function flux(bytes32,bytes32,bytes32,int) public;
 }
 
 contract Adapter is DSNote {
@@ -49,6 +50,20 @@ contract Adapter is DSNote {
         require(gem.transferFrom(this, guy, wad));
         vat.slip(ilk, bytes32(msg.sender), -int(wad));
     }
+
+    mapping(address => mapping (address => bool)) public can;
+    function hope(address guy) public {
+        can[msg.sender][guy] = true;
+    }
+    function move(address src, address dst, uint wad) public {
+        require(int(wad) >= 0);
+        require(can[src][msg.sender]);
+        vat.flux(ilk, bytes32(src), bytes32(dst), int(wad));
+    }
+    function push(bytes32 urn, uint wad) public {
+        require(int(wad) >= 0);
+        vat.flux(bytes32(msg.sender), urn, int(wad));
+    }
 }
 
 contract ETHAdapter is DSNote {
@@ -65,6 +80,16 @@ contract ETHAdapter is DSNote {
         require(int(wad) >= 0);
         vat.slip(ilk, bytes32(msg.sender), -int(wad));
         guy.transfer(wad);
+    }
+
+    mapping(address => mapping (address => bool)) public can;
+    function hope(address guy, bool ok) public {
+        can[msg.sender][guy] = ok;
+    }
+    function move(address src, address dst, uint wad) public {
+        require(int(wad) >= 0);
+        require(can[src][msg.sender]);
+        vat.flux(ilk, bytes32(src), bytes32(dst), int(wad));
     }
 }
 
@@ -85,5 +110,15 @@ contract DaiAdapter is DSNote {
         require(int(wad * ONE) >= 0);
         vat.move(bytes32(msg.sender), bytes32(address(this)), int(wad * ONE));
         dai.mint(guy, wad);
+    }
+
+    mapping(address => mapping (address => bool)) public can;
+    function hope(address guy, bool ok) public {
+        can[msg.sender][guy] = ok;
+    }
+    function move(address src, address dst, uint wad) public {
+        require(int(wad) >= 0);
+        require(can[src][msg.sender]);
+        vat.move(bytes32(src), bytes32(dst), int(wad));
     }
 }
