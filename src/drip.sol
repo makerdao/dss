@@ -75,7 +75,7 @@ contract Drip is DSNote {
         i.vow = vow;
         i.tax = tax;
     }
-    function file(bytes32 what, uint data) public auth {
+    function file(bytes32 what, uint data) public note auth {
         if (what == "repo") repo = data;
     }
 
