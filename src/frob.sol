@@ -33,8 +33,8 @@ contract Dripper {
 contract Pit is DSNote {
     // --- Auth ---
     mapping (address => uint) public wards;
-    function rely(address guy) public auth { wards[guy] = 1;  }
-    function deny(address guy) public auth { wards[guy] = 0; }
+    function rely(address guy) public note auth { wards[guy] = 1;  }
+    function deny(address guy) public note auth { wards[guy] = 0; }
     modifier auth { require(wards[msg.sender] == 1); _;  }
 
     // --- Data ---

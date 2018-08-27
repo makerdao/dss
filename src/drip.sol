@@ -10,8 +10,8 @@ contract VatLike {
 contract Drip is DSNote {
     // --- Administration ---
     mapping (address => bool) public wards;
-    function rely(address guy) public auth { wards[guy] = true;  }
-    function deny(address guy) public auth { wards[guy] = false; }
+    function rely(address guy) public note auth { wards[guy] = true;  }
+    function deny(address guy) public note auth { wards[guy] = false; }
     modifier auth { require(wards[msg.sender]); _;  }
 
     // --- Data ---
