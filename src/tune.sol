@@ -17,8 +17,6 @@
 
 pragma solidity ^0.4.24;
 
-import 'ds-note/note.sol';
-
 contract Vat {
     // --- Auth ---
     mapping (address => uint) public wards;
