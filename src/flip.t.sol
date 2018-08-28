@@ -223,10 +223,10 @@ contract FlipTest is DSTest {
                             });
 
         // or after end
-        flip.warp(1 weeks);
+        flip.warp(2 days);
         ali.tend(ie, 100 ether, 1 ether);
         assertTrue(!bob.try_deal(ie));
-        flip.warp(1.1 weeks);
+        flip.warp(3 days);
         assertTrue( bob.try_deal(ie));
     }
     function test_tick() public {

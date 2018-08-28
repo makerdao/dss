@@ -59,7 +59,7 @@ contract Flipper is DSNote {
     uint256 constant ONE = 1.00E27;
     uint256 public   beg = 1.05E27;  // 5% minimum bid increase
     uint48  public   ttl = 3 hours;  // 3 hours bid duration
-    uint48  public   tau = 2 days;   // 1 week total auction length
+    uint48  public   tau = 2 days;   // 2 days total auction length
 
     uint256 public   kicks;
 
