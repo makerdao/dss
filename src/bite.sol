@@ -68,6 +68,7 @@ contract Cat is DSNote {
     mapping (uint256 => Flip) public flips;
     uint256                   public nflip;
 
+    uint256 public live;
     VatLike public vat;
     PitLike public pit;
     VowLike public vow;
@@ -89,6 +90,7 @@ contract Cat is DSNote {
         vat = VatLike(vat_);
         pit = PitLike(pit_);
         vow = VowLike(vow_);
+        live = 1;
     }
 
     // --- Math ---
@@ -105,9 +107,9 @@ contract Cat is DSNote {
     }
 
     // --- Administration ---
-    function file(bytes32 ilk, bytes32 what, uint risk) public note auth {
-        if (what == "chop") ilks[ilk].chop = risk;
-        if (what == "lump") ilks[ilk].lump = risk;
+    function file(bytes32 ilk, bytes32 what, uint data) public note auth {
+        if (what == "chop") ilks[ilk].chop = data;
+        if (what == "lump") ilks[ilk].lump = data;
     }
     function file(bytes32 ilk, bytes32 what, address flip) public note auth {
         if (what == "flip") ilks[ilk].flip = flip;
@@ -115,6 +117,7 @@ contract Cat is DSNote {
 
     // --- CDP Liquidation ---
     function bite(bytes32 ilk, bytes32 lad) public returns (uint) {
+        require(live == 1);
         (uint rate, uint Art)  = vat.ilks(ilk); Art;
         (uint spot, uint line) = pit.ilks(ilk); line;
         (uint ink , uint art)  = vat.urns(ilk, lad);
@@ -132,6 +135,7 @@ contract Cat is DSNote {
         return nflip++;
     }
     function flip(uint n, uint wad) public note returns (uint id) {
+        require(live == 1);
         Flip storage f = flips[n];
         Ilk  storage i = ilks[f.ilk];
 

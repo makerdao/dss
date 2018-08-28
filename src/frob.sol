@@ -44,9 +44,9 @@ contract Pit is DSNote {
     }
     mapping (bytes32 => Ilk) public ilks;
 
-    VatLike public  vat;  // CDP Engine
+    uint256 public live;  // Access Flag
     uint256 public Line;  // Debt Ceiling
-    bool    public live;  // Access Flag
+    VatLike public  vat;  // CDP Engine
     Dripper public drip;  // Stability Fee Calculator
 
     // --- Events ---
@@ -64,7 +64,7 @@ contract Pit is DSNote {
     constructor(address vat_) public {
         wards[msg.sender] = 1;
         vat = VatLike(vat_);
-        live = true;
+        live = 1;
     }
 
     // --- Math ---
@@ -75,15 +75,15 @@ contract Pit is DSNote {
     }
 
     // --- Administration ---
-    function file(bytes32 what, address drip_) public note auth {
-        if (what == "drip") drip = Dripper(drip_);
+    function file(bytes32 what, address data) public note auth {
+        if (what == "drip") drip = Dripper(data);
     }
-    function file(bytes32 what, uint risk) public note auth {
-        if (what == "Line") Line = risk;
+    function file(bytes32 what, uint data) public note auth {
+        if (what == "Line") Line = data;
     }
-    function file(bytes32 ilk, bytes32 what, uint risk) public note auth {
-        if (what == "spot") ilks[ilk].spot = risk;
-        if (what == "line") ilks[ilk].line = risk;
+    function file(bytes32 ilk, bytes32 what, uint data) public note auth {
+        if (what == "spot") ilks[ilk].spot = data;
+        if (what == "line") ilks[ilk].line = data;
     }
 
     // --- CDP Owner Interface ---
@@ -98,7 +98,7 @@ contract Pit is DSNote {
                     &&  vat.debt() <= mul(Line, ONE);
         bool safe = mul(ink, ilks[ilk].spot) >= mul(art, rate);
 
-        require(live);
+        require(live == 1);
         require(rate != 0);
         require((calm || dart <= 0) && (dart <= 0 && dink >= 0 || safe));
 

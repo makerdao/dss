@@ -77,10 +77,10 @@ contract Vow is DSNote {
     }
 
     // --- Administration ---
-    function file(bytes32 what, uint risk) public note auth {
-        if (what == "wait") wait = risk;
-        if (what == "lump") lump = risk;
-        if (what == "pad")  pad  = risk;
+    function file(bytes32 what, uint data) public note auth {
+        if (what == "wait") wait = data;
+        if (what == "lump") lump = data;
+        if (what == "pad")  pad  = data;
     }
     function file(bytes32 what, address addr) public note auth {
         if (what == "flap") cow = addr;
