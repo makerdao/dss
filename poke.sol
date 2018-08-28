@@ -14,31 +14,38 @@ contract Price {
     PipLike public pip;
     uint public mat;
 
-    uint256 constant ONE = 10 ** 27;
-
     mapping (address => bool) public wards;
     function rely(address guy) public auth { wards[guy] = true;  }
     function deny(address guy) public auth { wards[guy] = false; }
     modifier auth { require(wards[msg.sender]); _; }
 
+    // --- Init ---
     constructor(address pit_, bytes32 ilk_) public {
         wards[msg.sender] = true;
         pit = PitLike(pit_);
         ilk = ilk_;
     }
 
+    // --- Math ---
+    uint256 constant ONE = 10 ** 27;
+
+    function mul(uint x, uint y) internal pure returns (uint z) {
+        require(y == 0 || (z = x * y) / y == x);
+    }
+
+    // --- Administration ---
     function file(address pip_) public auth {
         pip = PipLike(pip_);
     }
-
     function file(uint mat_) public auth {
         mat = mat_;
     }
 
+    // --- Update value ---
     function poke() public {
         (bytes32 val, bool zzz) = pip.peek();
         if (zzz) {
-            pit.file(ilk, "spot", uint(val) * ONE / mat);
+            pit.file(ilk, "spot", mul(mul(uint(val), 10 ** 9), ONE) / mat);
         }
     }
 }
