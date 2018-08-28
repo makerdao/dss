@@ -9,10 +9,10 @@ contract VatLike {
 
 contract Drip is DSNote {
     // --- Administration ---
-    mapping (address => bool) public wards;
-    function rely(address guy) public note auth { wards[guy] = true;  }
-    function deny(address guy) public note auth { wards[guy] = false; }
-    modifier auth { require(wards[msg.sender]); _;  }
+    mapping (address => uint) public wards;
+    function rely(address guy) public note auth { wards[guy] = 1;  }
+    function deny(address guy) public note auth { wards[guy] = 0; }
+    modifier auth { require(wards[msg.sender] == 1); _;  }
 
     // --- Data ---
     struct Ilk {
@@ -29,7 +29,7 @@ contract Drip is DSNote {
 
     // --- Init ---
     constructor(address vat_) public {
-        wards[msg.sender] = true;
+        wards[msg.sender] = 1;
         vat = VatLike(vat_);
     }
 
