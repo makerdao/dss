@@ -53,15 +53,15 @@ contract Cat is DSNote {
 
     // --- Data ---
     struct Ilk {
-        address flip;
-        uint256 chop;
-        uint256 lump;
+        address flip;  // Liquidator
+        uint256 chop;  // Liquidation Penalty   [ray]
+        uint256 lump;  // Liquidation Quantity  [wad]
     }
     struct Flip {
-        bytes32 ilk;
-        bytes32 lad;
-        uint256 ink;
-        uint256 tab;
+        bytes32 ilk;  // Collateral Type
+        bytes32 lad;  // CDP Identifier
+        uint256 ink;  // Collateral Quantity [wad]
+        uint256 tab;  // Debt Outstanding    [wad]
     }
 
     mapping (bytes32 => Ilk)  public ilks;

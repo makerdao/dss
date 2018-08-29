@@ -32,18 +32,18 @@ contract Vat {
         uint256 Art;   // wad
     }
     struct Urn {
-        uint256 ink;    // wad
-        uint256 art;    // wad
+        uint256 ink;   // wad
+        uint256 art;   // wad
     }
 
     mapping (bytes32 => Ilk)                       public ilks;
     mapping (bytes32 => mapping (bytes32 => Urn )) public urns;
-    mapping (bytes32 => mapping (bytes32 => uint)) public gem;    // rad
-    mapping (bytes32 => uint256)                   public dai;    // rad
-    mapping (bytes32 => uint256)                   public sin;    // rad
+    mapping (bytes32 => mapping (bytes32 => uint)) public gem;  // rad
+    mapping (bytes32 => uint256)                   public dai;  // rad
+    mapping (bytes32 => uint256)                   public sin;  // rad
 
-    uint256  public debt;  // rad
-    uint256  public vice;  // rad
+    uint256 public debt;  // rad
+    uint256 public vice;  // rad
 
     // --- Logs ---
     event Note(
@@ -64,6 +64,7 @@ contract Vat {
         }
         emit Note(msg.sig, foo, bar, too, msg.data); _;
     }
+
     // --- Init ---
     constructor() public { wards[msg.sender] = 1; }
 
@@ -99,12 +100,12 @@ contract Vat {
     }
 
     // --- Fungibility ---
-    function slip(bytes32 ilk, bytes32 guy, int256 wad) public note auth {
-        gem[ilk][guy] = add(gem[ilk][guy], wad);
+    function slip(bytes32 ilk, bytes32 guy, int256 rad) public note auth {
+        gem[ilk][guy] = add(gem[ilk][guy], rad);
     }
-    function flux(bytes32 ilk, bytes32 src, bytes32 dst, int256 wad) public note auth {
-        gem[ilk][src] = sub(gem[ilk][src], wad);
-        gem[ilk][dst] = add(gem[ilk][dst], wad);
+    function flux(bytes32 ilk, bytes32 src, bytes32 dst, int256 rad) public note auth {
+        gem[ilk][src] = sub(gem[ilk][src], rad);
+        gem[ilk][dst] = add(gem[ilk][dst], rad);
     }
     function move(bytes32 src, bytes32 dst, int256 rad) public note auth {
         dai[src] = sub(dai[src], rad);
@@ -125,8 +126,6 @@ contract Vat {
         dai[w]    = add(dai[w],    mul(ilk.rate, dart));
         debt      = add(debt,      mul(ilk.rate, dart));
     }
-
-    // --- Liquidation ---
     function grab(bytes32 i, bytes32 u, bytes32 v, bytes32 w, int dink, int dart) public note auth {
         Urn storage urn = urns[i][u];
         Ilk storage ilk = ilks[i];
@@ -140,6 +139,8 @@ contract Vat {
         sin[w]    = sub(sin[w],    mul(ilk.rate, dart));
         vice      = sub(vice,      mul(ilk.rate, dart));
     }
+
+    // --- Settlement ---
     function heal(bytes32 u, bytes32 v, int rad) public note auth {
         sin[u] = sub(sin[u], rad);
         dai[v] = sub(dai[v], rad);

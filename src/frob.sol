@@ -39,13 +39,13 @@ contract Pit is DSNote {
 
     // --- Data ---
     struct Ilk {
-        uint256  spot;  // Price with Safety Margin, ray
-        uint256  line;  // Debt Ceiling, wad
+        uint256  spot;  // Price with Safety Margin  [ray]
+        uint256  line;  // Debt Ceiling              [wad]
     }
     mapping (bytes32 => Ilk) public ilks;
 
     uint256 public live;  // Access Flag
-    uint256 public Line;  // Debt Ceiling
+    uint256 public Line;  // Debt Ceiling  [wad]
     VatLike public  vat;  // CDP Engine
     Dripper public drip;  // Stability Fee Calculator
 
@@ -89,7 +89,7 @@ contract Pit is DSNote {
     // --- CDP Owner Interface ---
     function frob(bytes32 ilk, int dink, int dart) public {
         drip.drip(ilk);
-        VatLike(vat).tune(ilk, bytes32(msg.sender), bytes32(msg.sender), 
+        VatLike(vat).tune(ilk, bytes32(msg.sender), bytes32(msg.sender),
                           bytes32(msg.sender), dink, dart);
 
         (uint take, uint rate, uint Ink, uint Art) = vat.ilks(ilk); take; Ink;
