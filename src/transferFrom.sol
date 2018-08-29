@@ -54,8 +54,9 @@ contract Dai20 {
             require(allowance[src][msg.sender] >= wad);
             allowance[src][msg.sender] -= wad;
         }
-        require(int(wad * ONE) >= 0);
-        vat.move(bytes32(src), bytes32(dst), int(wad * ONE));
+        int rad = int(ONE * wad);
+        require(wad == 0 || uint(rad) / ONE == wad && rad >= 0);
+        vat.move(bytes32(src), bytes32(dst), rad);
         emit Transfer(src, dst, wad);
         return true;
     }
