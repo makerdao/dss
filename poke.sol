@@ -8,11 +8,11 @@ contract PipLike {
     function peek() public returns (bytes32, bool);
 }
 
-contract Price {
+contract Spotter {
     PitLike public pit;
     bytes32 public ilk;
     PipLike public pip;
-    uint public mat;
+    uint256 public mat;
 
     mapping (address => uint) public wards;
     function rely(address guy) public auth { wards[guy] = 1;  }
