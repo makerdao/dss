@@ -9,7 +9,7 @@ import {Cat} from './bite.sol';
 import {Vow} from './heal.sol';
 import {Drip} from './drip.sol';
 import {Dai20} from './transferFrom.sol';
-import {Adapter, ETHAdapter, DaiAdapter} from './join.sol';
+import {GemJoin, ETHJoin, DaiJoin} from './join.sol';
 import {GemMove, DaiMove} from './move.sol';
 
 import {WarpFlip as Flipper} from './flip.t.sol';
@@ -34,7 +34,7 @@ contract FrobTest is DSTest {
     DSToken gold;
     Drip    drip;
 
-    Adapter gemA;
+    GemJoin gemA;
 
     function try_frob(bytes32 ilk, int ink, int art) public returns(bool) {
         bytes4 sig = bytes4(keccak256("frob(bytes32,int256,int256)"));
@@ -54,7 +54,7 @@ contract FrobTest is DSTest {
         gold.mint(1000 ether);
 
         vat.init("gold");
-        gemA = new Adapter(vat, "gold", gold);
+        gemA = new GemJoin(vat, "gold", gold);
 
         pit.file("gold", "spot", ray(1 ether));
         pit.file("gold", "line", 1000 ether);
@@ -162,21 +162,21 @@ contract FrobTest is DSTest {
 }
 
 contract JoinTest is DSTest {
-    WarpVat    vat;
-    ETHAdapter ethA;
-    DaiAdapter daiA;
-    DSToken    dai;
-    bytes32     me;
+    WarpVat vat;
+    ETHJoin ethA;
+    DaiJoin daiA;
+    DSToken dai;
+    bytes32 me;
 
     function setUp() public {
         vat = new WarpVat();
         vat.init("eth");
 
-        ethA = new ETHAdapter(vat, "eth");
+        ethA = new ETHJoin(vat, "eth");
         vat.rely(ethA);
 
         dai  = new DSToken("Dai");
-        daiA = new DaiAdapter(vat, dai);
+        daiA = new DaiJoin(vat, dai);
         vat.rely(daiA);
         dai.setOwner(daiA);
 
@@ -220,7 +220,7 @@ contract BiteTest is DSTest {
     DSToken gold;
     Drip    drip;
 
-    Adapter gemA;
+    GemJoin gemA;
     GemMove gemM;
     DaiMove daiM;
 
@@ -287,7 +287,7 @@ contract BiteTest is DSTest {
         gold.mint(1000 ether);
 
         vat.init("gold");
-        gemA = new Adapter(vat, "gold", gold);
+        gemA = new GemJoin(vat, "gold", gold);
         vat.rely(gemA);
         gold.approve(gemA);
         gemA.join(bytes32(address(this)), 1000 ether);

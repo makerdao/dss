@@ -31,7 +31,7 @@ contract VatLike {
     function flux(bytes32,bytes32,bytes32,int) public;
 }
 
-contract Adapter is DSNote {
+contract GemJoin is DSNote {
     VatLike public vat;
     bytes32 public ilk;
     GemLike public gem;
@@ -56,7 +56,7 @@ contract Adapter is DSNote {
     }
 }
 
-contract ETHAdapter is DSNote {
+contract ETHJoin is DSNote {
     VatLike public vat;
     bytes32 public ilk;
     constructor(address vat_, bytes32 ilk_) public {
@@ -78,7 +78,7 @@ contract ETHAdapter is DSNote {
     }
 }
 
-contract DaiAdapter is DSNote {
+contract DaiJoin is DSNote {
     VatLike public vat;
     GemLike public dai;
     constructor(address vat_, address dai_) public {
