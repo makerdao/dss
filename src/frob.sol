@@ -52,7 +52,7 @@ contract Pit is DSNote {
     // --- Events ---
     event Frob(
       bytes32 indexed ilk,
-      bytes32 indexed lad,
+      bytes32 indexed urn,
       uint256 ink,
       uint256 art,
       int256  dink,

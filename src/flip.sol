@@ -32,7 +32,7 @@ contract GemLike {
  - `tab` total dai wanted
  - `bid` dai paid
  - `gal` receives dai income
- - `lad` receives gem forgone
+ - `urn` receives gem forgone
  - `ttl` single bid lifetime
  - `beg` minimum bid increase
  - `end` max auction duration
@@ -46,7 +46,7 @@ contract Flipper is DSNote {
         address guy;  // high bidder
         uint48  tic;  // expiry time
         uint48  end;
-        bytes32 lad;
+        bytes32 urn;
         address gal;
         uint256 tab;
     }
@@ -72,7 +72,7 @@ contract Flipper is DSNote {
       uint256 bid,
       address gal,
       uint48  end,
-      bytes32 indexed lad,
+      bytes32 indexed urn,
       uint256 tab
     );
 
@@ -90,7 +90,7 @@ contract Flipper is DSNote {
     }
 
     // --- Auction ---
-    function kick(bytes32 lad, address gal, uint tab, uint lot, uint bid)
+    function kick(bytes32 urn, address gal, uint tab, uint lot, uint bid)
         public returns (uint)
     {
         uint id = ++kicks;
@@ -99,13 +99,13 @@ contract Flipper is DSNote {
         bids[id].lot = lot;
         bids[id].guy = msg.sender; // configurable??
         bids[id].end = era() + tau;
-        bids[id].lad = lad;
+        bids[id].urn = urn;
         bids[id].gal = gal;
         bids[id].tab = tab;
 
         gem.move(msg.sender, this, lot);
 
-        emit Kick(id, lot, bid, gal, bids[id].end, bids[id].lad, bids[id].tab);
+        emit Kick(id, lot, bid, gal, bids[id].end, bids[id].urn, bids[id].tab);
 
         return id;
     }
@@ -142,7 +142,7 @@ contract Flipper is DSNote {
         require(mul(beg, lot) <= mul(bids[id].lot, ONE));
 
         dai.move(msg.sender, bids[id].guy, bid);
-        gem.push(bids[id].lad, bids[id].lot - lot);
+        gem.push(bids[id].urn, bids[id].lot - lot);
 
         bids[id].guy = msg.sender;
         bids[id].lot = lot;

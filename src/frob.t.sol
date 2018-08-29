@@ -74,15 +74,15 @@ contract FrobTest is DSTest {
         gemA.join(bytes32(address(this)), 1000 ether);
     }
 
-    function gem(bytes32 ilk, address lad) internal view returns (uint) {
-        return vat.gem(ilk, bytes32(lad)) / 10 ** 27;
+    function gem(bytes32 ilk, address urn) internal view returns (uint) {
+        return vat.gem(ilk, bytes32(urn)) / 10 ** 27;
     }
-    function ink(bytes32 ilk, address lad) internal view returns (uint) {
-        (uint ink_, uint art_) = vat.urns(ilk, bytes32(lad)); art_;
+    function ink(bytes32 ilk, address urn) internal view returns (uint) {
+        (uint ink_, uint art_) = vat.urns(ilk, bytes32(urn)); art_;
         return ink_;
     }
-    function art(bytes32 ilk, address lad) internal view returns (uint) {
-        (uint ink_, uint art_) = vat.urns(ilk, bytes32(lad)); ink_;
+    function art(bytes32 ilk, address urn) internal view returns (uint) {
+        (uint ink_, uint art_) = vat.urns(ilk, bytes32(urn)); ink_;
         return art_;
     }
 
@@ -239,15 +239,15 @@ contract BiteTest is DSTest {
         return wad * 10 ** 9;
     }
 
-    function gem(bytes32 ilk, address lad) internal view returns (uint) {
-        return vat.gem(ilk, bytes32(lad)) / 10 ** 27;
+    function gem(bytes32 ilk, address urn) internal view returns (uint) {
+        return vat.gem(ilk, bytes32(urn)) / 10 ** 27;
     }
-    function ink(bytes32 ilk, address lad) internal view returns (uint) {
-        (uint ink_, uint art_) = vat.urns(ilk, bytes32(lad)); art_;
+    function ink(bytes32 ilk, address urn) internal view returns (uint) {
+        (uint ink_, uint art_) = vat.urns(ilk, bytes32(urn)); art_;
         return ink_;
     }
-    function art(bytes32 ilk, address lad) internal view returns (uint) {
-        (uint ink_, uint art_) = vat.urns(ilk, bytes32(lad)); ink_;
+    function art(bytes32 ilk, address urn) internal view returns (uint) {
+        (uint ink_, uint art_) = vat.urns(ilk, bytes32(urn)); ink_;
         return art_;
     }
 
@@ -413,13 +413,13 @@ contract FoldTest is DSTest {
     function rad(uint wad) internal pure returns (uint) {
         return wad * 10 ** 27;
     }
-    function tab(bytes32 ilk, bytes32 lad) internal view returns (uint) {
-        (uint ink, uint art)  = vat.urns(ilk, lad); ink;
+    function tab(bytes32 ilk, bytes32 urn) internal view returns (uint) {
+        (uint ink, uint art)  = vat.urns(ilk, urn); ink;
         (uint take, uint rate, uint Ink, uint Art) = vat.ilks(ilk); Art; Ink; take;
         return art * rate;
     }
-    function jam(bytes32 ilk, bytes32 lad) internal view returns (uint) {
-        (uint ink, uint art)  = vat.urns(ilk, lad); art;
+    function jam(bytes32 ilk, bytes32 urn) internal view returns (uint) {
+        (uint ink, uint art)  = vat.urns(ilk, urn); art;
         (uint take, uint rate, uint Ink, uint Art) = vat.ilks(ilk); Art; Ink; rate;
         return ink * take;
     }

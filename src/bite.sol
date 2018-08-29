@@ -20,7 +20,7 @@ pragma solidity ^0.4.24;
 import "ds-note/note.sol";
 
 contract Flippy {
-    function kick(bytes32 lad, address gal, uint tab, uint lot, uint bid)
+    function kick(bytes32 urn, address gal, uint tab, uint lot, uint bid)
         public returns (uint);
     function gem() public returns (address);
 }
@@ -59,7 +59,7 @@ contract Cat is DSNote {
     }
     struct Flip {
         bytes32 ilk;  // Collateral Type
-        bytes32 lad;  // CDP Identifier
+        bytes32 urn;  // CDP Identifier
         uint256 ink;  // Collateral Quantity [wad]
         uint256 tab;  // Debt Outstanding    [wad]
     }
@@ -76,7 +76,7 @@ contract Cat is DSNote {
     // --- Events ---
     event Bite(
       bytes32 indexed ilk,
-      bytes32 indexed lad,
+      bytes32 indexed urn,
       uint256 ink,
       uint256 art,
       uint256 tab,
@@ -116,21 +116,21 @@ contract Cat is DSNote {
     }
 
     // --- CDP Liquidation ---
-    function bite(bytes32 ilk, bytes32 lad) public returns (uint) {
+    function bite(bytes32 ilk, bytes32 urn) public returns (uint) {
         require(live == 1);
         (uint take, uint rate, uint Ink, uint Art) = vat.ilks(ilk); Art; Ink; take;
         (uint spot, uint line) = pit.ilks(ilk); line;
-        (uint ink , uint art)  = vat.urns(ilk, lad);
+        (uint ink , uint art)  = vat.urns(ilk, urn);
         uint tab = rmul(art, rate);
 
         require(rmul(ink, spot) < tab);  // !safe
 
-        vat.grab(ilk, lad, bytes32(address(this)), bytes32(address(vow)), -int(ink), -int(art));
+        vat.grab(ilk, urn, bytes32(address(this)), bytes32(address(vow)), -int(ink), -int(art));
         vow.fess(tab);
 
-        flips[nflip] = Flip(ilk, lad, ink, tab);
+        flips[nflip] = Flip(ilk, urn, ink, tab);
 
-        emit Bite(ilk, lad, ink, art, tab, nflip, Art);
+        emit Bite(ilk, urn, ink, art, tab, nflip, Art);
 
         return nflip++;
     }
@@ -149,7 +149,7 @@ contract Cat is DSNote {
         f.ink -= ink;
 
         Hopeful(Flippy(i.flip).gem()).hope(i.flip);
-        id = Flippy(i.flip).kick({ lad: f.lad
+        id = Flippy(i.flip).kick({ urn: f.urn
                                  , gal: vow
                                  , tab: rmul(wad, i.chop)
                                  , lot: ink

@@ -113,7 +113,7 @@ contract FlipTest is DSTest {
     function test_kick() public {
         flip.kick({ lot: 100 ether
                   , tab: 50 ether
-                  , lad: bytes32(address(0xacab))
+                  , urn: bytes32(address(0xacab))
                   , gal: gal
                   , bid: 0
                   });
@@ -125,7 +125,7 @@ contract FlipTest is DSTest {
     function test_tend() public {
         uint id = flip.kick({ lot: 100 ether
                             , tab: 50 ether
-                            , lad: bytes32(address(0xacab))
+                            , urn: bytes32(address(0xacab))
                             , gal: gal
                             , bid: 0
                             });
@@ -152,7 +152,7 @@ contract FlipTest is DSTest {
     function test_tend_later() public {
         uint id = flip.kick({ lot: 100 ether
                             , tab: 50 ether
-                            , lad: bytes32(address(0xacab))
+                            , urn: bytes32(address(0xacab))
                             , gal: gal
                             , bid: 0
                             });
@@ -167,7 +167,7 @@ contract FlipTest is DSTest {
     function test_dent() public {
         uint id = flip.kick({ lot: 100 ether
                             , tab: 50 ether
-                            , lad: bytes32(address(0xacab))
+                            , urn: bytes32(address(0xacab))
                             , gal: gal
                             , bid: 0
                             });
@@ -183,7 +183,7 @@ contract FlipTest is DSTest {
     function test_beg() public {
         uint id = flip.kick({ lot: 100 ether
                             , tab: 50 ether
-                            , lad: bytes32(address(0xacab))
+                            , urn: bytes32(address(0xacab))
                             , gal: gal
                             , bid: 0
                             });
@@ -204,7 +204,7 @@ contract FlipTest is DSTest {
     function test_deal() public {
         uint id = flip.kick({ lot: 100 ether
                             , tab: 50 ether
-                            , lad: bytes32(address(0xacab))
+                            , urn: bytes32(address(0xacab))
                             , gal: gal
                             , bid: 0
                             });
@@ -217,7 +217,7 @@ contract FlipTest is DSTest {
 
         uint ie = flip.kick({ lot: 100 ether
                             , tab: 50 ether
-                            , lad: bytes32(address(0xacab))
+                            , urn: bytes32(address(0xacab))
                             , gal: gal
                             , bid: 0
                             });
@@ -233,7 +233,7 @@ contract FlipTest is DSTest {
         // start an auction
         uint id = flip.kick({ lot: 100 ether
                             , tab: 50 ether
-                            , lad: bytes32(address(0xacab))
+                            , urn: bytes32(address(0xacab))
                             , gal: gal
                             , bid: 0
                             });
