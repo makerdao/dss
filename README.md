@@ -1,80 +1,146 @@
-## Dai v2
+# Multi Collateral Dai
 
-Extra things since the last update.
+This repository contains the core smart contract code for Multi
+Collateral Dai. This is a high level description of the system, assuming
+familiarity with the basic economic mechanics as described in the
+whitepaper.
 
-### Adapters
+
+### TODO
+
+- Global settlement needs realising from current prototype
+- Reward Dai. Similarly, prototype exists.
+
+
+## Design Considerations
+
+- Token agnostic
+  - system doesn't care about the implementation of external tokens
+  - can operate entirely independently, provided an authority assigns
+    initial collateral to users in the system and provides price data.
+
+- Verifiable
+  - designed from the bottom up to be amenable to formal verification
+  - the core cdp and balance database makes *no* external calls and
+    contains *no* precision loss (i.e. no division)
+
+- Modular
+  - multi contract core system is made to be very adaptable to changing
+    requirements.
+  - allows for implementations of e.g. auctions, liquidation, CDP risk
+    conditions, to be altered on a live system.
+  - allows for the addition of novel collateral types (e.g. whitelisting)
+
+
+## Collateral, Adapters and Wrappers
+
+Collateral is the foundation of Dai and Dai creation is not possible
+without it. There are many potential candidates for collateral, whether
+native ether, ERC20 tokens, other fungible token standards like ERC777,
+non-fungible tokens, or any number of other financial instruments.
 
 Token wrappers are one solution to the need to standardise collateral
 behaviour in Dai. Inconsistent decimals and transfer semantics are
-reasons for wrapping.
+reasons for wrapping. For example, the WETH token is an ERC20 wrapper
+around native ether.
 
-A wrapper creates a secondary fully transferrable token. Dai v2 instead
-introduces the concept of *adapters*. Rather than creating a secondary
-token, we set a simple user balance and manipulate it directly within
-the system.
+In MCD, we abstract all of these different token behaviours away behind
+*Adapters*.
 
-`join` and `exit` are the regular token entry points.
+Adapters manipulate a single core system function: `slip`, which
+modifies user collateral balances.
 
 Adapters should be very small and well defined contracts. Adapters are
-potentially very powerful and should be carefully vetted by MKR holders.
+very powerful and should be carefully vetted by MKR holders. Some
+examples are given in `join.sol`. Note that the adapter is the only
+connection between a given collateral type and the concrete on-chain
+token that it represents.
 
-An example adapter can be seen in `join.sol`. This adapter would work
-with DSTokens, which are well behaved. Note that the only pairing
-between an `ilk` and a `gem` is made in the adapter, meaning an ilk
-could have multiple equivalent gems.
-
-
-### Dai20 Frontend
-
-There is no separate Dai token, nor is the core ERC20 compliant. Rather,
-the core stores the minimal information for a token, user balances, and
-exposes a balance transfer method `move`, which is only callable by
-specified frontends. 
-
-Similar to adapters, Dai frontends should be small and carefully vetted
-as they require write-access to user balances.  An example of an ERC20
-interface is provided in `transferFrom.sol`.
+There can be a multitude of adapters for each collateral type, for
+different requirements. For example, ETH collateral could have an
+adapter for native ether and *also* for WETH.
 
 
-### Fixed Lot Size
+## The Dai Token
 
-The `lump` is the globally configured fixed lot size. `flop` and `flap`
-will only happen with `lump` Dai as the buy or sell amount,
-respectively.
+The fundamental state of a Dai balance is given by the balance in the
+core (`vat.dai`, sometimes referred to as `D`).
 
-`flip` of a CDP with debt smaller than `lump` will start an auction
-attempting to cover the full debt. Larger CDPs can be partially flipped,
-in quantities of `lump`.
+Given this, there are a number of ways to implement the Dai that is used
+outside of the system, with different trade offs.
 
-A candidate value for `lump` might be 10,000 Dai.
+*Fundamentally, "Dai" is any token that is directly fungible with the
+core.*
 
+In the Kovan deployment, "Dai" is represented by an ERC20 DSToken.
+After interacting with CDPs and auctions, users must `exit` from the
+system to gain a balance of this token, which can then be used in Oasis
+etc.
 
-### Sin Queue
-
-`bite` starts two auctions: the collateral auction `flip` and the debt
-auction `flop`. Both of these are demanding of Dai, leading to a concern
-that liquidation of a large CDP may absorb all available Dai supply.
-
-To address this concern we introduce `sin`, a queue of debts to cover,
-and only allow these debts to go to auction after some time period,
-`wait`, which could be 1 week.
-
-In addition, the collateral auction does not start immediately but only
-after calling `flip`.
+It is possible to have multiple fungible Dai tokens, allowing for the
+adoption of new token standards. This needs careful consideration from a
+UX perspective, with the notion of a canonical token address becoming
+problematic.
 
 
-### Missing features
+## Price Feeds
 
-1. Authentication. This code currently has no caller
-   checks and should absolutely not be used in production.
+Price feeds are a crucial part of the Dai system. The code here assumes
+that there are working price feeds and that their values are being
+pushed to the contracts.
 
-2. Global settlement. A prototype of global settlement exists, but needs
-   to be adapted to the current code.
+Specifically, the price that is required is the highest acceptable
+quantity of CDP Dai debt per unit of collateral.
 
-3. Rate accumulation. The rate accumulator is left as an exercise for
-   the reader, with the code behaving as if rates are all 0%.
 
-4. Fully safe math.
+## Liquidation and Auctions
 
-5. Administration. There are some opinionated constants in the code,
-   particularly in the auctions. These should be configurable.
+An important difference between SCD and MCD is the switch from fixed
+price sell offs to auctions as the means of liquidating collateral.
+
+The auctions implemented here are simple and expect liquidations to
+occur in *fixed size lots* (say $10,000).
+
+
+## Settlement
+
+Another important difference between SCD and MCD is in the handling of
+System Debt. System Debt is debt that has been taken from risky CDPs.
+In SCD this is covered by diluting the collateral pool via the PETH
+mechanism. In MCD this is covered by dilution of an external token,
+namely MKR.
+
+As in collateral liquidation, this dilution occurs by an auction
+(`flop`), using a fixed-size lot.
+
+In order to reduce the collateral intensity of large CDP liquidations,
+MKR dilution is delayed by a configurable period (e.g 1 week).
+
+Similarly, System Surplus is handled by an auction (`flap`), which sells
+off Dai surplus in return for the highest bidder in MKR.
+
+
+## Authentication
+
+The contracts here use a very simple multi-owner authentication system,
+where a contract totally trusts multiple other contracts to call its
+functions and configure it.
+
+It is expected that modification of this state will be via an interface
+that is used by the Governance layer.
+
+
+## Code style
+
+This is obviously opinionated and you may even disagree, but here are
+the considerations that make this code look like it does:
+
+- Distinct things should have distinct names ("memes")
+
+- Lack of symmetry and typographic alignment is a code smell.
+
+- Inheritance masks complexity and encourages over abstraction, be
+  explicit about what you want.
+
+- In this modular system, contracts generally shouldn't call or jump
+  into themselves, except for math. Again, this masks complexity.
