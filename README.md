@@ -80,7 +80,11 @@ etc.
 It is possible to have multiple fungible Dai tokens, allowing for the
 adoption of new token standards. This needs careful consideration from a
 UX perspective, with the notion of a canonical token address becoming
-problematic.
+increasingly restrictive. In the future, cross-chain communication and
+scalable sidechains will likely lead to a proliferation of multiple Dai
+tokens. Users of the core could `exit` into a Plasma sidechain, an
+Ethereum shard, or a different blockchain entirely via e.g. the Cosmos
+Hub.
 
 
 ## Price Feeds
