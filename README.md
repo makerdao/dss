@@ -134,17 +134,3 @@ It is expected that modification of this state will be via an interface
 that is used by the Governance layer.
 
 
-## Code style
-
-This is obviously opinionated and you may even disagree, but here are
-the considerations that make this code look like it does:
-
-- Distinct things should have distinct names ("memes")
-
-- Lack of symmetry and typographic alignment is a code smell.
-
-- Inheritance masks complexity and encourages over abstraction, be
-  explicit about what you want.
-
-- In this modular system, contracts generally shouldn't call or jump
-  into themselves, except for math. Again, this masks complexity.
