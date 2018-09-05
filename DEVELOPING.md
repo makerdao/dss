@@ -147,6 +147,8 @@ The `Pit` exposes one public function:
 - `frob(ilk, dink, dart)`: manipulate the callers CDP in the given `ilk`
   by `dink` and `dart`, subject to the risk parameters
 
+![MCD frob](img/mcd-frob.png)
+
 
 ## Liquidation Interface
 
@@ -163,3 +165,5 @@ The `Cat` exposes two public functions
 
 - `bite(ilk, urn)`: mark a specific CDP for liquidation
 - `flip(n, wad)`: initiate liquidation
+
+![MCD bite](img/mcd-bite.png)
