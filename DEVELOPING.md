@@ -127,9 +127,6 @@ encumbered debt balance of all urns in the ilk by the ratio `rate`.
 The practical use of these mechanisms is in applying stability fees and
 seizing collateral in the case of global settlement.
 
-![MCD vat](img/mcd-vat.png)
-
-
 ## CDP Interface
 
 The `Vat` is unsuitable for use by untrusted actors. External
@@ -169,3 +166,11 @@ The `Cat` exposes two public functions
 - `flip(n, wad)`: initiate liquidation
 
 ![MCD cat](img/mcd-cat.png)
+
+## Gem Fungibility
+
+![MCD GemA](img/mcd-gemA.png)
+
+## Dai Fungibility
+
+![MCD DaiA](img/mcd-daiA.png)
