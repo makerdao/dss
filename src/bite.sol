@@ -85,11 +85,9 @@ contract Cat is DSNote {
     );
 
     // --- Init ---
-    constructor(address vat_, address pit_, address vow_) public {
+    constructor(address vat_) public {
         wards[msg.sender] = 1;
         vat = VatLike(vat_);
-        pit = PitLike(pit_);
-        vow = VowLike(vow_);
         live = 1;
     }
 
@@ -107,6 +105,10 @@ contract Cat is DSNote {
     }
 
     // --- Administration ---
+    function file(bytes32 what, address data) public note auth {
+        if (what == "pit") pit = PitLike(data);
+        if (what == "vow") vow = VowLike(data);
+    }
     function file(bytes32 ilk, bytes32 what, uint data) public note auth {
         if (what == "chop") ilks[ilk].chop = data;
         if (what == "lump") ilks[ilk].lump = data;
