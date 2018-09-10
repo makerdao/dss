@@ -53,7 +53,8 @@ contract Vow is DSNote {
     uint256 public Ash;   // on-auction debt
 
     uint256 public wait;  // flop delay
-    uint256 public lump;  // fixed lot size
+    uint256 public sump;  // flop fixed lot size
+    uint256 public bump;  // flap fixed lot size
     uint256 public pad;   // surplus buffer
 
     function era() public view returns (uint48) { return uint48(now); }
@@ -79,7 +80,8 @@ contract Vow is DSNote {
     // --- Administration ---
     function file(bytes32 what, uint data) public note auth {
         if (what == "wait") wait = data;
-        if (what == "lump") lump = data;
+        if (what == "bump") bump = data;
+        if (what == "sump") sump = data;
         if (what == "pad")  pad  = data;
     }
     function file(bytes32 what, address addr) public note auth {
@@ -124,17 +126,17 @@ contract Vow is DSNote {
 
     // --- Auctions ---
     function flop() public returns (uint id) {
-        require(Woe >= lump);
+        require(Woe >= sump);
         require(Joy() == 0);
-        Woe = sub(Woe, lump);
-        Ash = add(Ash, lump);
-        return Fusspot(row).kick(this, uint(-1), lump);
+        Woe = sub(Woe, sump);
+        Ash = add(Ash, sump);
+        return Fusspot(row).kick(this, uint(-1), sump);
     }
     function flap() public returns (uint id) {
-        require(Joy() >= add(add(Awe(), lump), pad));
+        require(Joy() >= add(add(Awe(), bump), pad));
         require(Woe == 0);
         Hopeful(Fusspot(cow).dai()).hope(cow);
-        id = Fusspot(cow).kick(this, lump, 0);
+        id = Fusspot(cow).kick(this, bump, 0);
         Hopeful(Fusspot(cow).dai()).nope(cow);
     }
 }

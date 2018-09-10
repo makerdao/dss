@@ -368,7 +368,7 @@ contract BiteTest is DSTest {
         assertEq(vow.Joy(),   0 ether);
         assertEq(vow.Ash(),   0 ether);
 
-        vow.file("lump", uint(10 ether));
+        vow.file("sump", uint(10 ether));
         uint f1 = vow.flop();
         assertEq(vow.Woe(),  90 ether);
         assertEq(vow.Joy(),   0 ether);
@@ -390,7 +390,7 @@ contract BiteTest is DSTest {
         assertEq(dai.balanceOf(vow),  100 ether);
         assertEq(gov.balanceOf(this), 100 ether);
 
-        vow.file("lump", uint(100 ether));
+        vow.file("bump", uint(100 ether));
         assertEq(vow.Awe(), 0 ether);
         uint id = vow.flap();
 

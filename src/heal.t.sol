@@ -47,7 +47,8 @@ contract VowTest is DSTest {
         vow.file("vat",  address(vat));
         vow.file("flop", address(flop));
         vow.file("flap", address(flap));
-        vow.file("lump", uint256(100 ether));
+        vow.file("bump", uint256(100 ether));
+        vow.file("sump", uint256(100 ether));
     }
 
     function try_flog(uint48 era) internal returns (bool) {
@@ -112,14 +113,14 @@ contract VowTest is DSTest {
     }
 
     function test_no_flap_pending_sin() public {
-        vow.file("lump", uint256(0 ether));
+        vow.file("bump", uint256(0 ether));
         flog(100 ether);
 
         vat.mint(vow, 50 ether);
         assertTrue(!try_flap() );
     }
     function test_no_flap_nonzero_woe() public {
-        vow.file("lump", uint256(0 ether));
+        vow.file("bump", uint256(0 ether));
         flog(100 ether);
         vat.mint(vow, 50 ether);
         assertTrue(!try_flap() );
