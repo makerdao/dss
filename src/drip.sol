@@ -16,13 +16,13 @@ contract Drip is DSNote {
 
     // --- Data ---
     struct Ilk {
-        bytes32 vow;
         uint256 tax;
         uint48  rho;
     }
 
     mapping (bytes32 => Ilk) public ilks;
     VatLike                  public vat;
+    bytes32                  public vow;
     uint256                  public repo;
 
     function era() public view returns (uint48) { return uint48(now); }
@@ -69,14 +69,22 @@ contract Drip is DSNote {
     }
 
     // --- Administration ---
-    function file(bytes32 ilk, bytes32 vow, uint tax) public note auth {
+    function init(bytes32 ilk) public note auth {
         Ilk storage i = ilks[ilk];
-        require(i.rho == era() || i.tax == 0);
-        i.vow = vow;
-        i.tax = tax;
+        require(i.tax == 0);
+        i.tax = ONE;
+        i.rho = era();
+    }
+    function file(bytes32 ilk, bytes32 what, uint data) public note auth {
+        Ilk storage i = ilks[ilk];
+        require(i.rho == era());
+        if (what == "tax") i.tax = data;
     }
     function file(bytes32 what, uint data) public note auth {
         if (what == "repo") repo = data;
+    }
+    function file(bytes32 what, bytes32 data) public note auth {
+        if (what == "vow") vow = data;
     }
 
     // --- Stability Fee Collection ---
@@ -84,7 +92,7 @@ contract Drip is DSNote {
         Ilk storage i = ilks[ilk];
         require(era() >= i.rho);
         (uint take, uint rate, uint Ink, uint Art) = vat.ilks(ilk); Art; Ink; take;
-        vat.fold(ilk, i.vow, diff(rmul(rpow(repo + i.tax, era() - i.rho, ONE), rate), rate));
+        vat.fold(ilk, vow, diff(rmul(rpow(repo + i.tax, era() - i.rho, ONE), rate), rate));
         i.rho = era();
     }
 }

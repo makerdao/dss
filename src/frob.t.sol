@@ -60,7 +60,7 @@ contract FrobTest is DSTest {
         pit.file("gold", "line", 1000 ether);
         pit.file("Line", uint(1000 ether));
         drip = new Drip(vat);
-        drip.file("gold", 0x00, 10 ** 27);
+        drip.init("gold");
         vat.rely(drip);
         pit.file("drip", drip);
 
@@ -275,7 +275,8 @@ contract BiteTest is DSTest {
         flop.rely(vow);
 
         drip = new Drip(vat);
-        drip.file("gold", bytes32(address(vow)), 10 ** 27);
+        drip.init("gold");
+        drip.file("vow", bytes32(address(vow)));
         vat.rely(drip);
         pit.file("drip", drip);
 
