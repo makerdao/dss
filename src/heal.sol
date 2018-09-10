@@ -136,7 +136,7 @@ contract Vow is DSNote {
         require(Joy() >= add(add(Awe(), bump), pad));
         require(Woe == 0);
         Hopeful(Fusspot(cow).dai()).hope(cow);
-        id = Fusspot(cow).kick(this, bump, 0);
+        id = Fusspot(cow).kick(address(0), bump, 0);
         Hopeful(Fusspot(cow).dai()).nope(cow);
     }
 }
