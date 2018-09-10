@@ -55,7 +55,7 @@ contract Vow is DSNote {
     uint256 public wait;  // flop delay
     uint256 public sump;  // flop fixed lot size
     uint256 public bump;  // flap fixed lot size
-    uint256 public pad;   // surplus buffer
+    uint256 public hump;  // surplus buffer
 
     function era() public view returns (uint48) { return uint48(now); }
 
@@ -82,7 +82,7 @@ contract Vow is DSNote {
         if (what == "wait") wait = data;
         if (what == "bump") bump = data;
         if (what == "sump") sump = data;
-        if (what == "pad")  pad  = data;
+        if (what == "hump") hump = data;
     }
     function file(bytes32 what, address addr) public note auth {
         if (what == "flap") cow = addr;
@@ -133,7 +133,7 @@ contract Vow is DSNote {
         return Fusspot(row).kick(this, uint(-1), sump);
     }
     function flap() public returns (uint id) {
-        require(Joy() >= add(add(Awe(), bump), pad));
+        require(Joy() >= add(add(Awe(), bump), hump));
         require(Woe == 0);
         Hopeful(Fusspot(cow).dai()).hope(cow);
         id = Fusspot(cow).kick(address(0), bump, 0);
