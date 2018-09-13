@@ -58,6 +58,10 @@ contract Drip is DSNote {
       }
     }
     uint256 constant ONE = 10 ** 27;
+    function add(uint x, uint y) internal pure returns (uint z) {
+        z = x + y;
+        require(z >= x);
+    }
     function diff(uint x, uint y) internal pure returns (int z) {
         z = int(x) - int(y);
         require(int(x) >= 0 && int(y) >= 0);
@@ -92,7 +96,7 @@ contract Drip is DSNote {
         Ilk storage i = ilks[ilk];
         require(era() >= i.rho);
         (uint take, uint rate, uint Ink, uint Art) = vat.ilks(ilk); Art; Ink; take;
-        vat.fold(ilk, vow, diff(rmul(rpow(repo + i.tax, era() - i.rho, ONE), rate), rate));
+        vat.fold(ilk, vow, diff(rmul(rpow(add(repo, i.tax), era() - i.rho, ONE), rate), rate));
         i.rho = era();
     }
 }
