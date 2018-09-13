@@ -146,9 +146,6 @@ The `Pit` exposes one public function:
 - `frob(ilk, dink, dart)`: manipulate the callers CDP in the given `ilk`
   by `dink` and `dart`, subject to the risk parameters
 
-![MCD pit](img/mcd-pit.png)
-
-
 ## Liquidation Interface
 
 The companion to CDP management is CDP liquidation, which is defined via
@@ -164,13 +161,3 @@ The `Cat` exposes two public functions
 
 - `bite(ilk, urn)`: mark a specific CDP for liquidation
 - `flip(n, wad)`: initiate liquidation
-
-![MCD cat](img/mcd-cat.png)
-
-## Gem Fungibility
-
-![MCD GemA](img/mcd-gemA.png)
-
-## Dai Fungibility
-
-![MCD DaiA](img/mcd-daiA.png)
