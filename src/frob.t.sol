@@ -8,7 +8,6 @@ import {Pit} from './frob.sol';
 import {Cat} from './bite.sol';
 import {Vow} from './heal.sol';
 import {Drip} from './drip.sol';
-import {Dai20} from './transferFrom.sol';
 import {GemJoin, ETHJoin, DaiJoin} from './join.sol';
 import {GemMove, DaiMove} from './move.sol';
 
@@ -23,6 +22,9 @@ contract WarpVat is Vat {
         dai[bytes32(guy)] += wad * ONE;
         debt              += wad * ONE;
     }
+    function balanceOf(address guy) public returns (uint) {
+        return dai[bytes32(guy)] / ONE;
+    }
 }
 
 contract WarpVow is Vow {}
@@ -30,7 +32,6 @@ contract WarpVow is Vow {}
 contract FrobTest is DSTest {
     WarpVat vat;
     Pit     pit;
-    Dai20   dai;
     DSToken gold;
     Drip    drip;
 
@@ -48,7 +49,6 @@ contract FrobTest is DSTest {
     function setUp() public {
         vat = new WarpVat();
         pit = new Pit(vat);
-        dai = new Dai20(vat);
 
         gold = new DSToken("GEM");
         gold.mint(1000 ether);
@@ -68,7 +68,6 @@ contract FrobTest is DSTest {
         gold.approve(vat);
 
         vat.rely(pit);
-        vat.rely(dai);
         vat.rely(gemA);
 
         gemA.join(bytes32(address(this)), 1000 ether);
@@ -216,7 +215,6 @@ contract BiteTest is DSTest {
     Pit     pit;
     Vow     vow;
     Cat     cat;
-    Dai20   dai;
     DSToken gold;
     Drip    drip;
 
@@ -258,8 +256,6 @@ contract BiteTest is DSTest {
         vat = new WarpVat();
         pit = new Pit(vat);
         vat.rely(pit);
-        dai = new Dai20(vat);
-        vat.rely(dai);
 
         daiM = new DaiMove(vat);
         vat.rely(daiM);
@@ -336,23 +332,23 @@ contract BiteTest is DSTest {
         cat.file("gold", "lump", uint(100 ether));
         uint auction = cat.flip(id, 100 ether);  // flip all the tab
 
-        assertEq(dai.balanceOf(vow),   0 ether);
+        assertEq(vat.balanceOf(vow),   0 ether);
         flip.tend(auction, 40 ether,   1 ether);
-        assertEq(dai.balanceOf(vow),   1 ether);
+        assertEq(vat.balanceOf(vow),   1 ether);
         flip.tend(auction, 40 ether, 100 ether);
-        assertEq(dai.balanceOf(vow), 100 ether);
+        assertEq(vat.balanceOf(vow), 100 ether);
 
-        assertEq(dai.balanceOf(this),       0 ether);
+        assertEq(vat.balanceOf(this),       0 ether);
         assertEq(gem("gold", this), 960 ether);
         vat.mint(this, 100 ether);  // magic up some dai for bidding
         flip.dent(auction, 38 ether,  100 ether);
-        assertEq(dai.balanceOf(this), 100 ether);
-        assertEq(dai.balanceOf(vow),  100 ether);
+        assertEq(vat.balanceOf(this), 100 ether);
+        assertEq(vat.balanceOf(vow),  100 ether);
         assertEq(gem("gold", this), 962 ether);
         assertEq(gem("gold", this), 962 ether);
 
         assertEq(vow.sin(vow.era()), 100 ether);
-        assertEq(dai.balanceOf(vow), 100 ether);
+        assertEq(vat.balanceOf(vow), 100 ether);
     }
 
     function test_floppy_bite() public {
@@ -390,19 +386,19 @@ contract BiteTest is DSTest {
     function test_flappy_bite() public {
         // get some surplus
         vat.mint(vow, 100 ether);
-        assertEq(dai.balanceOf(vow),  100 ether);
+        assertEq(vat.balanceOf(vow),  100 ether);
         assertEq(gov.balanceOf(this), 100 ether);
 
         vow.file("bump", uint(100 ether));
         assertEq(vow.Awe(), 0 ether);
         uint id = vow.flap();
 
-        assertEq(dai.balanceOf(this),   0 ether);
+        assertEq(vat.balanceOf(this),   0 ether);
         assertEq(gov.balanceOf(this), 100 ether);
         flap.tend(id, 100 ether, 10 ether);
         flap.warp(4 hours);
         flap.deal(id);
-        assertEq(dai.balanceOf(this),   100 ether);
+        assertEq(vat.balanceOf(this),   100 ether);
         assertEq(gov.balanceOf(this),    90 ether);
     }
 }

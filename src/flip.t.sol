@@ -4,7 +4,6 @@ import "ds-test/test.sol";
 import "ds-token/token.sol";
 
 import "./flip.sol";
-import {Dai20} from './transferFrom.sol';
 
 contract Guy {
     Flipper flip;
