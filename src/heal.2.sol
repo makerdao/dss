@@ -375,7 +375,7 @@ contract Vow {
       }
       function Awe() -> wad {
         // wad := Sin + Woe + Ash
-        wad := uadd(uadd(sload(6), sload(6)), sload(7))
+        wad := uadd(uadd(sload(5), sload(6)), sload(7))
       }
       function Joy() -> wad {
         // put bytes4(keccak256("dai(bytes32)")) << 28 bytes
