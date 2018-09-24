@@ -201,7 +201,7 @@ contract Vow {
         if or(or(gt(calldataload(4), Joy()), gt(calldataload(4), Woe_)), slt(rad, 0)) { revert(0, 0) }
 
         // set Woe = Woe_ - wad
-        sstore(5, usub(Woe_, calldataload(4)))
+        sstore(6, usub(Woe_, calldataload(4)))
 
         // put bytes4(keccak256("heal(bytes32,bytes32,int256)")) << 28 bytes
         mstore(0, 0x990a5f6300000000000000000000000000000000000000000000000000000000)
@@ -227,7 +227,7 @@ contract Vow {
         if or(or(gt(calldataload(4), Ash_), gt(calldataload(4), Joy())), slt(rad, 0)) { revert(0, 0) }
 
         // set Ash = Ash_ - wad
-        sstore(6, usub(Ash_, calldataload(4)))
+        sstore(7, usub(Ash_, calldataload(4)))
 
         // put bytes4(keccak256("heal(bytes32,bytes32,int256)")) << 28 bytes
         mstore(0, 0x990a5f6300000000000000000000000000000000000000000000000000000000)
