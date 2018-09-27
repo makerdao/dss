@@ -40,7 +40,7 @@ interface DripI {
 contract Drip {
   constructor (address vat_) public {
     assembly {
-      let hash_0 := hash2(10, caller)
+      let hash_0 := hash2(0, caller)
 
       // set wards[caller] = true
       sstore(hash_0, 1)
@@ -114,6 +114,9 @@ contract Drip {
       }
       if eq(sig, 0x3b663195 /*   function init(bytes32 ilk); */) {
 
+        // iff auth
+        if pleb() { revert(0, 0) }
+
         let hash_0 := hash2(1, calldataload(4))
 
         // iff ilks[ilk].tax == 0
@@ -129,6 +132,9 @@ contract Drip {
       }
       if eq(sig, 0x1a0b287e /*   function file(bytes32 ilk, bytes32 what, uint256 data); */) {
 
+        // iff auth
+        if pleb() { revert(0, 0) }
+
         let hash_0 := hash2(1, calldataload(4))
 
         // iff i.rho == era()
@@ -141,12 +147,18 @@ contract Drip {
       }
       if eq(sig, 0x29ae8114 /*   function file(bytes32 what, uint256 data) external; */) {
 
+        // iff auth
+        if pleb() { revert(0, 0) }
+
         // if what == "repo" set repo = data
         if eq(calldataload(4), "repo") { sstore(4, calldataload(36)) }
 
         stop()
       }
       if eq(sig, 0xe9b674b9 /*   function file(bytes32 what, bytes32 data) external; */) {
+
+        // iff auth
+        if pleb() { revert(0, 0) }
 
         // if what == "vow" set vow = data
         if eq(calldataload(4), "vow") { sstore(3, calldataload(36)) }
