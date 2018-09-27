@@ -124,7 +124,7 @@ contract Cat {
         mstore(64, sload(5))
         return(64, 32)
       }
-      if eq(sig, 0x56cebd18 /*   function pit() external returns (address); */) {
+      if eq(sig, 0xf03c7c6e /*   function pit() external returns (address); */) {
         mstore(64, sload(6))
         return(64, 32)
       }
