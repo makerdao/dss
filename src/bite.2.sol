@@ -25,7 +25,7 @@ interface CatI {
   function wards(address guy) external returns (bool);
   function rely(address guy) external;
   function deny(address guy) external;
-  function ilks(bytes32 ilk) external returns (uint256 chop, address flip, uint256 lump);
+  function ilks(bytes32 ilk) external returns (address flip, uint256 chop, uint256 lump);
   function flips(uint256 n) external returns (bytes32 ilk, bytes32 lad, uint256 ink, uint256 tab);
   function nflip() external returns (uint256);
   function live() external returns (uint256);
@@ -95,7 +95,7 @@ contract Cat {
 
         stop()
       }
-      if eq(sig, 0xd9638d36 /*   function ilks(bytes32 ilk) external returns (uint256 chop, address flip, uint256 lump); */) {
+      if eq(sig, 0xd9638d36 /*   function ilks(bytes32 ilk) external returns (address flip, uint256 chop, uint256 lump); */) {
         let hash_0 := hash2(1, calldataload(4))
 
         mstore(64, sload(hash_0))
@@ -153,7 +153,7 @@ contract Cat {
         let hash_0 := hash2(1, calldataload(4))
 
         // if what == "chop" set ilks[ilk].chop = data
-        if eq(calldataload(36), "chop") { sstore(hash_0, calldataload(68)) }
+        if eq(calldataload(36), "chop") { sstore(add(hash_0, 1), calldataload(68)) }
 
         // if what == "lump" set ilks[ilk].lump = data
         if eq(calldataload(36), "lump") { sstore(add(hash_0, 2), calldataload(68)) }
@@ -168,7 +168,7 @@ contract Cat {
         let hash_0 := hash2(1, calldataload(4))
 
         // if what == "flip" set ilks[ilk].flip = flip
-        if eq(calldataload(36), "flip") { sstore(add(hash_0, 1), calldataload(68)) }
+        if eq(calldataload(36), "flip") { sstore(hash_0, calldataload(68)) }
 
         stop()
       }
@@ -296,7 +296,7 @@ contract Cat {
         sstore(add(hash_0, 2), sub(ink_, ink))
 
         // flip := ilks[ilk].flip
-        let flip := sload(add(hash_1, 1))
+        let flip := sload(hash_1)
 
         // put bytes4(keccak256("gem()")) << 28 bytes
         mstore(0, 0x7bd2bea700000000000000000000000000000000000000000000000000000000)
@@ -320,7 +320,7 @@ contract Cat {
         // put vow
         mstore(36, sload(7))
         // put rmul(wad, ilks[flips[n].ilk].chop)
-        mstore(68, rmul(calldataload(36), sload(hash_1)))
+        mstore(68, rmul(calldataload(36), sload(add(hash_1, 1))))
         // put ink
         mstore(100, ink)
         // put 0
