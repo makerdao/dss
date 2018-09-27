@@ -160,7 +160,7 @@ contract Cat {
 
         stop()
       }
-      if eq(sig, 0xebecb39d /*   function file(bytes32 ilk, bytes32 what, address flip) external; */) {
+      if eq(sig, 0xebecb39d /*   function file(bytes32 ilk, bytes32 what, address data) external; */) {
 
         // iff auth
         if pleb() { revert(0, 0) }
