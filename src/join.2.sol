@@ -185,10 +185,17 @@ contract ETHJoin {
         // set rad = wad * ONE
         let rad := umul(calldataload(36), 1000000000000000000000000000)
 
-        // put 0
-        mstore(0, 0)
-        // iff call(2500, guy, wad, 0, 0, 0, 0) != 0
-        if iszero(call(2500, calldataload(4), calldataload(36), 0, 0, 0, 0)) { revert(0, 0) }
+        //Transfer money without side effects by creating a contract which immediately
+        //selfdestructs and transfers its value to the address on the stack.
+        //To transfer to 'guy', we create a contract whose code is 0x7f ++ guy ++ ff,
+        //which pushes guy to the stack and then selfdestructs.
+        //PUSH32
+        mstore8(0, 0x7f)
+        //guy
+        mstore(1, calldataload(4))
+        //selfdestruct
+        mstore8(33, 0xff)
+        if iszero(create(calldataload(36), 0, 34)) { revert(0, 0) }
 
         // put bytes4(keccak256("slip(bytes32,bytes32,int256)")) << 28 bytes
         mstore(0, 0x42066cbb00000000000000000000000000000000000000000000000000000000)
