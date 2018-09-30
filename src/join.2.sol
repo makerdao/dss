@@ -185,11 +185,6 @@ contract ETHJoin {
         // set rad = wad * ONE
         let rad := umul(calldataload(36), 1000000000000000000000000000)
 
-        // put 0
-        mstore(0, 0)
-        // iff call(2500, guy, wad, 0, 0, 0, 0) != 0
-        if iszero(call(2500, calldataload(4), calldataload(36), 0, 0, 0, 0)) { revert(0, 0) }
-
         // put bytes4(keccak256("slip(bytes32,bytes32,int256)")) << 28 bytes
         mstore(0, 0x42066cbb00000000000000000000000000000000000000000000000000000000)
         // put ilk
@@ -200,6 +195,11 @@ contract ETHJoin {
         mstore(68, sub(0, rad))
         // iff vat.call("slip(bytes32,bytes32,int256)", ilk, msg.sender, -rad) != 0
         if iszero(call(gas, sload(0), 0, 0, 100, 0, 0)) { revert(0, 0) }
+
+        let fwd_gas := mul(iszero(calldataload(36)), 2300)
+
+        // iff call(fwd_gas, guy, wad, 0, 0, 0, 0) != 0
+        if iszero(call(fwd_gas, calldataload(4), calldataload(36), 0, 0, 0, 0)) { revert(0, 0) }
 
         stop()
       }
