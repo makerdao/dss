@@ -233,8 +233,8 @@ contract Vow {
         // rad := wad * 10^27
         let rad := umul(calldataload(4), 1000000000000000000000000000)
 
-        // iff wad <= Joy() && wad <= Woe && int(rad) >= 0
-        if or(or(gt(calldataload(4), Joy()), gt(calldataload(4), Woe_)), slt(rad, 0)) { revert(0, 0) }
+        // iff int(rad) >= 0
+        if slt(rad, 0) { revert(0, 0) }
 
         // set Woe = Woe_ - wad
         sstore(6, usub(Woe_, calldataload(4)))
@@ -253,14 +253,15 @@ contract Vow {
         stop()
       }
       if eq(sig, 0x2506855a /*   function kiss(uint256 wad) external; */) {
+
         // Ash_ := Ash
         let Ash_ := sload(7)
 
         // rad := wad * 10^27
         let rad := umul(calldataload(4), 1000000000000000000000000000)
 
-        // iff wad <= Ash_ && wad <= Joy() && int(rad) >= 0
-        if or(or(gt(calldataload(4), Ash_), gt(calldataload(4), Joy())), slt(rad, 0)) { revert(0, 0) }
+        // iff int(rad) >= 0
+        if slt(rad, 0) { revert(0, 0) }
 
         // set Ash = Ash_ - wad
         sstore(7, usub(Ash_, calldataload(4)))
