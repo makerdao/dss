@@ -64,15 +64,22 @@ contract Vow is DSNote {
     uint256 constant ONE = 10 ** 27;
 
     function add(uint x, uint y) internal pure returns (uint z) {
-        z = x + y;
-        require(z >= x);
+      assembly {
+          z := add(x, y)
+          if gt(y, 0) { if iszero(gt(z, x)) { revert(0, 0) } }
+      }
     }
     function sub(uint x, uint y) internal pure returns (uint z) {
-        z = x - y;
-        require(z <= x);
+      assembly {
+        z := sub(x, y)
+        if gt(y, 0) { if iszero(lt(z, x)) { revert(0, 0) } }
+      }
     }
     function mul(uint x, uint y) internal pure returns (uint z) {
-        require(y == 0 || (z = x * y) / y == x);
+      assembly {
+        z := mul(x, y)
+        if iszero(eq(y, 0)) { if iszero(eq(div(z, y), x)) { revert(0, 0) } }
+      }
     }
 
     // --- Administration ---
