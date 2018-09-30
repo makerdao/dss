@@ -85,7 +85,6 @@ contract Frob2Test is DSTest {
         drip = DripI(new Drip(vat));
         drip.init("gold");
         vat.rely(drip);
-        pit.file("drip", drip);
 
         gold.approve(gemA);
         gold.approve(vat);
@@ -301,7 +300,6 @@ contract Bite2Test is DSTest {
         drip.init("gold");
         drip.file("vow", bytes32(address(vow)));
         vat.rely(drip);
-        pit.file("drip", drip);
 
         cat = CatI(new Cat(vat));
         cat.file("pit", pit);

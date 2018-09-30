@@ -30,7 +30,6 @@ interface PitI {
   function vat() external returns (address);
   function drip() external returns (address);
   function ilks(bytes32 ilk) external returns (uint256 spot, uint256 line);
-  function file(bytes32 what, address who) external;
   function file(bytes32 what, uint256 data) external;
   function file(bytes32 ilk, bytes32 what, uint256 data) external;
   function frob(bytes32 ilk, int256 dink, int256 dart) external;
@@ -109,20 +108,6 @@ contract Pit {
         mstore(64, sload(4))
         return(64, 32)
       }
-      if eq(sig, 0x9f678cca /*   function drip() external returns (address); */) {
-        mstore(64, sload(5))
-        return(64, 32)
-      }
-      if eq(sig, 0xd4e8be83 /*   function file(bytes32 what, address who) external; */) {
-
-        // iff auth
-        if pleb() { revert(0, 0) }
-
-        // if what == "drip" set drip = who
-        if eq(calldataload(4), "drip") { sstore(5, calldataload(36)) }
-
-        stop()
-      }
       if eq(sig, 0x29ae8114 /*   function file(bytes32 what, uint256 data) external; */) {
 
         // iff auth
@@ -149,13 +134,6 @@ contract Pit {
         stop()
       }
       if eq(sig, 0x5a984ded /*   function frob(bytes32 ilk, int256 dink, int256 dart) external; */) {
-
-        // put bytes4(keccak256("drip(bytes32)")) << 28 bytes
-        mstore(0, 0x44e2a5a800000000000000000000000000000000000000000000000000000000)
-        // put ilk
-        mstore(4, calldataload(4))
-        // iff drip.call("drip(bytes32)", ilk) != 0
-        if iszero(call(gas, sload(5), 0, 0, 36, 0, 0)) { revert(0, 0) }
 
         // put bytes4(keccak256("tune(bytes32,bytes32,bytes32,bytes32,int256,int256)")) << 28 bytes
         mstore(0, 0x5dd6471a00000000000000000000000000000000000000000000000000000000)
