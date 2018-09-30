@@ -63,17 +63,6 @@ contract GemJoin {
 
         let rad := umul(calldataload(36), 1000000000000000000000000000)
 
-        // put bytes4(keccak256("transferFrom(address,address,uint256)")) << 28 bytes
-        mstore(0, 0x23b872dd00000000000000000000000000000000000000000000000000000000)
-        // put msg.sender
-        mstore(4, caller)
-        // put this
-        mstore(36, address)
-        // put wad
-        mstore(68, calldataload(36))
-        // iff gem.call("transferFrom(address,address,uint256)", msg.sender, this, wad) != 0
-        if iszero(call(gas, sload(2), 0, 0, 100, 0, 0)) { revert(0, 0) }
-
         // put bytes4(keccak256("slip(bytes32,bytes32,int256)")) << 28 bytes
         mstore(0, 0x42066cbb00000000000000000000000000000000000000000000000000000000)
         // put ilk
@@ -85,22 +74,22 @@ contract GemJoin {
         // iff vat.call("slip(bytes32,bytes32,int256)", ilk, msg.sender, rad) != 0
         if iszero(call(gas, sload(0), 0, 0, 100, 0, 0)) { revert(0, 0) }
 
+        // put bytes4(keccak256("transferFrom(address,address,uint256)")) << 28 bytes
+        mstore(0, 0x23b872dd00000000000000000000000000000000000000000000000000000000)
+        // put msg.sender
+        mstore(4, caller)
+        // put this
+        mstore(36, address)
+        // put wad
+        mstore(68, calldataload(36))
+        // iff gem.call("transferFrom(address,address,uint256)", msg.sender, this, wad) != 0
+        if iszero(call(gas, sload(2), 0, 0, 100, 0, 0)) { revert(0, 0) }
+
         stop()
       }
       if eq(sig, 0xef693bed /*   function exit(address guy, uint256 wad) external; */) {
 
         let rad := umul(calldataload(36), 1000000000000000000000000000)
-
-        // put bytes4(keccak256("transferFrom(address,address,uint256)")) << 28 bytes
-        mstore(0, 0x23b872dd00000000000000000000000000000000000000000000000000000000)
-        // put this
-        mstore(4, address)
-        // put guy
-        mstore(36, calldataload(4))
-        // put wad
-        mstore(68, calldataload(36))
-        // iff gem.call("transferFrom(address,address,uint256)", this, msg.sender, wad) != 0
-        if iszero(call(gas, sload(2), 0, 0, 100, 0, 0)) { revert(0, 0) }
 
         // put bytes4(keccak256("slip(bytes32,bytes32,int256)")) << 28 bytes
         mstore(0, 0x42066cbb00000000000000000000000000000000000000000000000000000000)
@@ -112,6 +101,17 @@ contract GemJoin {
         mstore(68, sub(0, rad))
         // iff vat.call("slip(bytes32,bytes32,int256)", ilk, msg.sender, -rad) != 0
         if iszero(call(gas, sload(0), 0, 0, 100, 0, 0)) { revert(0, 0) }
+
+        // put bytes4(keccak256("transferFrom(address,address,uint256)")) << 28 bytes
+        mstore(0, 0x23b872dd00000000000000000000000000000000000000000000000000000000)
+        // put this
+        mstore(4, address)
+        // put guy
+        mstore(36, calldataload(4))
+        // put wad
+        mstore(68, calldataload(36))
+        // iff gem.call("transferFrom(address,address,uint256)", this, msg.sender, wad) != 0
+        if iszero(call(gas, sload(2), 0, 0, 100, 0, 0)) { revert(0, 0) }
 
         stop()
       }
