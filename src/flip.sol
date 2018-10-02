@@ -81,7 +81,7 @@ contract Flipper is DSNote {
     }
 
     // --- Math ---
-    function add(uint x, uint y) internal pure returns (uint z) {
+    function add(uint48 x, uint48 y) internal pure returns (uint48 z) {
         z = x + y;
         require(z >= x);
     }
@@ -101,7 +101,7 @@ contract Flipper is DSNote {
         bids[id].bid = bid;
         bids[id].lot = lot;
         bids[id].guy = msg.sender; // configurable??
-        bids[id].end = uint48(add(now, tau));
+        bids[id].end = add(uint48(now), tau);
         bids[id].urn = urn;
         bids[id].gal = gal;
         bids[id].tab = tab;
@@ -113,7 +113,7 @@ contract Flipper is DSNote {
     function tick(uint id) public note {
         require(bids[id].end < now);
         require(bids[id].tic == 0);
-        bids[id].end = uint48(add(now, tau));
+        bids[id].end = add(uint48(now), tau);
     }
     function tend(uint id, uint lot, uint bid) public note {
         require(bids[id].guy != 0);
@@ -130,7 +130,7 @@ contract Flipper is DSNote {
 
         bids[id].guy = msg.sender;
         bids[id].bid = bid;
-        bids[id].tic = uint48(add(now, ttl));
+        bids[id].tic = add(uint48(now), ttl);
     }
     function dent(uint id, uint lot, uint bid) public note {
         require(bids[id].guy != 0);
@@ -147,7 +147,7 @@ contract Flipper is DSNote {
 
         bids[id].guy = msg.sender;
         bids[id].lot = lot;
-        bids[id].tic = uint48(add(now, ttl));
+        bids[id].tic = add(uint48(now), ttl);
     }
     function deal(uint id) public note {
         require(bids[id].tic != 0 && (bids[id].tic < now || bids[id].end < now));
