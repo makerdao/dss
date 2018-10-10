@@ -47,12 +47,12 @@ contract GemJoin is DSNote {
         require(y == 0 || uint(z) / y == x);
     }
     function join(bytes32 urn, uint wad) public note {
-        require(gem.transferFrom(msg.sender, this, wad));
         vat.slip(ilk, urn, mul(ONE, wad));
+        require(gem.transferFrom(msg.sender, this, wad));
     }
     function exit(address guy, uint wad) public note {
-        require(gem.transferFrom(this, guy, wad));
         vat.slip(ilk, bytes32(msg.sender), -mul(ONE, wad));
+        require(gem.transferFrom(this, guy, wad));
     }
 }
 
@@ -73,8 +73,8 @@ contract ETHJoin is DSNote {
         vat.slip(ilk, urn, mul(ONE, msg.value));
     }
     function exit(address guy, uint wad) public note {
-        guy.transfer(wad);
         vat.slip(ilk, bytes32(msg.sender), -mul(ONE, wad));
+        guy.transfer(wad);
     }
 }
 
