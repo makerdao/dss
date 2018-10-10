@@ -30,7 +30,7 @@ contract Hopeful {
 }
 
 contract VatLike {
-    function dai (bytes32) public view returns (int);
+    function dai (bytes32) public view returns (uint);
     function heal(bytes32,bytes32,int) public;
 }
 
