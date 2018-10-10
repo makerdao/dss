@@ -26,10 +26,6 @@ contract VatLike {
     function tune(bytes32,bytes32,bytes32,bytes32,int,int) public;
 }
 
-contract Dripper {
-    function drip(bytes32) public;
-}
-
 contract Pit is DSNote {
     // --- Auth ---
     mapping (address => uint) public wards;
@@ -47,7 +43,6 @@ contract Pit is DSNote {
     uint256 public live;  // Access Flag
     uint256 public Line;  // Debt Ceiling  [wad]
     VatLike public  vat;  // CDP Engine
-    Dripper public drip;  // Stability Fee Calculator
 
     // --- Events ---
     event Frob(
@@ -75,9 +70,6 @@ contract Pit is DSNote {
     }
 
     // --- Administration ---
-    function file(bytes32 what, address data) public note auth {
-        if (what == "drip") drip = Dripper(data);
-    }
     function file(bytes32 what, uint data) public note auth {
         if (what == "Line") Line = data;
     }
@@ -88,7 +80,6 @@ contract Pit is DSNote {
 
     // --- CDP Owner Interface ---
     function frob(bytes32 ilk, int dink, int dart) public {
-        drip.drip(ilk);
         VatLike(vat).tune(ilk, bytes32(msg.sender), bytes32(msg.sender),
                           bytes32(msg.sender), dink, dart);
 

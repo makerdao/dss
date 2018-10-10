@@ -79,7 +79,6 @@ contract Drip is DSNote {
     }
     function file(bytes32 ilk, bytes32 what, uint data) public note auth {
         Ilk storage i = ilks[ilk];
-        require(i.rho == now);
         if (what == "tax") i.tax = data;
     }
     function file(bytes32 what, uint data) public note auth {
