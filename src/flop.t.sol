@@ -5,6 +5,11 @@ import "ds-token/token.sol";
 
 import "./flop.sol";
 
+
+contract Hevm {
+    function warp(uint256) public;
+}
+
 contract Guy {
     Flopper fuss;
     constructor(Flopper fuss_) public {
@@ -34,12 +39,6 @@ contract Guy {
 
 contract Gal {}
 
-contract WarpFlop is Flopper {
-    uint48 _era; function warp(uint48 era_) public { _era = era_; }
-    function era() public view returns (uint48) { return _era; }
-    constructor(address dai_, address gem_) public Flopper(dai_, gem_) {}
-}
-
 contract VatLike is DSToken('') {
     uint constant ONE = 10 ** 27;
     function move(bytes32 src, bytes32 dst, int wad) public {
@@ -48,7 +47,9 @@ contract VatLike is DSToken('') {
 }
 
 contract FlopTest is DSTest {
-    WarpFlop fuss;
+    Hevm hevm;
+
+    Flopper fuss;
     VatLike dai;
     DSToken gem;
 
@@ -59,12 +60,13 @@ contract FlopTest is DSTest {
     function kiss(uint) public pure { }  // arbitrary callback
 
     function setUp() public {
+        hevm = Hevm(0x7109709ECfa91a80626fF3989D68f67F5b1DD12D);
+        hevm.warp(1 hours);
+
         dai = new VatLike();
         gem = new DSToken('');
 
-        fuss = new WarpFlop(dai, gem);
-
-        fuss.warp(1 hours);
+        fuss = new Flopper(dai, gem);
 
         ali = new Guy(fuss);
         bob = new Guy(fuss);
@@ -109,7 +111,7 @@ contract FlopTest is DSTest {
         // gal receives no more
         assertEq(dai.balanceOf(gal), 10 ether);
 
-        fuss.warp(5 weeks);
+        hevm.warp(5 weeks);
         assertEq(gem.totalSupply(),  0 ether);
         gem.setOwner(fuss);
         bob.deal(id);

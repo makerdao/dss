@@ -2,11 +2,15 @@ pragma solidity ^0.4.24;
 
 import "ds-test/test.sol";
 
-import {WarpFlop as Flop} from './flop.t.sol';
-import {WarpFlap as Flap} from './flap.t.sol';
-import {WarpVat  as Vat}  from './frob.t.sol';
-import {DaiMove}          from './move.sol';
-import {Vow}              from './heal.sol';
+import {Flopper as Flop} from './flop.t.sol';
+import {Flapper as Flap} from './flap.t.sol';
+import {TestVat  as Vat} from './frob.t.sol';
+import {DaiMove} from './move.sol';
+import {Vow}     from './heal.sol';
+
+contract Hevm {
+    function warp(uint256) public;
+}
 
 contract Gem {
     mapping (address => uint256) public balanceOf;
@@ -15,23 +19,23 @@ contract Gem {
     }
 }
 
-contract WarpVow is Vow {
-    uint48 _era; function warp(uint48 era_) public { _era = era_; }
-    function era() public view returns (uint48) { return _era; }
-}
-
 contract VowTest is DSTest {
-    Vat      vat;
-    WarpVow  vow;
-    Flop     flop;
-    Flap     flap;
-    Gem      gov;
+    Hevm hevm;
+
+    Vat  vat;
+    Vow  vow;
+    Flop flop;
+    Flap flap;
+    Gem  gov;
 
     DaiMove daiM;
 
     function setUp() public {
+        hevm = Hevm(0x7109709ECfa91a80626fF3989D68f67F5b1DD12D);
+        hevm.warp(0);
+
         vat = new Vat();
-        vow = new WarpVow();
+        vow = new Vow();
         vat.rely(vow);
         gov  = new Gem();
         daiM = new DaiMove(vat);
@@ -76,7 +80,7 @@ contract VowTest is DSTest {
     }
     function flog(uint wad) internal {
         suck(address(0), wad);  // suck dai into the zero address
-        vow.flog(vow.era());
+        vow.flog(uint48(now));
     }
 
     function test_flog_wait() public {
@@ -87,7 +91,7 @@ contract VowTest is DSTest {
         uint48 tic = uint48(now);
         vow.fess(100 ether);
         assertTrue(!try_flog(tic) );
-        vow.warp(tic + uint48(100 seconds));
+        hevm.warp(tic + uint48(100 seconds));
         assertTrue( try_flog(tic) );
     }
 

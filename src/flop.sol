@@ -64,8 +64,6 @@ contract Flopper is DSNote {
 
     uint256  public   kicks;
 
-    function era() public view returns (uint48) { return uint48(now); }
-
     // --- Events ---
     event Kick(
       uint256 indexed id,
@@ -97,7 +95,7 @@ contract Flopper is DSNote {
         bids[id].bid = bid;
         bids[id].lot = lot;
         bids[id].guy = gal;
-        bids[id].end = era() + tau;
+        bids[id].end = uint48(now) + tau;
 
         emit Kick(id, lot, bid, gal, bids[id].end);
 
@@ -105,8 +103,8 @@ contract Flopper is DSNote {
     }
     function dent(uint id, uint lot, uint bid) public note {
         require(bids[id].guy != 0);
-        require(bids[id].tic > era() || bids[id].tic == 0);
-        require(bids[id].end > era());
+        require(bids[id].tic > now || bids[id].tic == 0);
+        require(bids[id].end > now);
 
         require(bid == bids[id].bid);
         require(lot <  bids[id].lot);
@@ -116,11 +114,11 @@ contract Flopper is DSNote {
 
         bids[id].guy = msg.sender;
         bids[id].lot = lot;
-        bids[id].tic = era() + ttl;
+        bids[id].tic = uint48(now) + ttl;
     }
     function deal(uint id) public note {
-        require(bids[id].tic < era() && bids[id].tic != 0 ||
-                bids[id].end < era());
+        require(bids[id].tic < now && bids[id].tic != 0 ||
+                bids[id].end < now);
         gem.mint(bids[id].guy, bids[id].lot);
         delete bids[id];
     }

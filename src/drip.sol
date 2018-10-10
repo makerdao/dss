@@ -25,8 +25,6 @@ contract Drip is DSNote {
     bytes32                  public vow;
     uint256                  public repo;
 
-    function era() public view returns (uint48) { return uint48(now); }
-
     // --- Init ---
     constructor(address vat_) public {
         wards[msg.sender] = 1;
@@ -77,11 +75,11 @@ contract Drip is DSNote {
         Ilk storage i = ilks[ilk];
         require(i.tax == 0);
         i.tax = ONE;
-        i.rho = era();
+        i.rho = uint48(now);
     }
     function file(bytes32 ilk, bytes32 what, uint data) public note auth {
         Ilk storage i = ilks[ilk];
-        require(i.rho == era());
+        require(i.rho == now);
         if (what == "tax") i.tax = data;
     }
     function file(bytes32 what, uint data) public note auth {
@@ -94,9 +92,9 @@ contract Drip is DSNote {
     // --- Stability Fee Collection ---
     function drip(bytes32 ilk) public note {
         Ilk storage i = ilks[ilk];
-        require(era() >= i.rho);
+        require(now >= i.rho);
         (uint take, uint rate, uint Ink, uint Art) = vat.ilks(ilk); Art; Ink; take;
-        vat.fold(ilk, vow, diff(rmul(rpow(add(repo, i.tax), era() - i.rho, ONE), rate), rate));
-        i.rho = era();
+        vat.fold(ilk, vow, diff(rmul(rpow(add(repo, i.tax), now - i.rho, ONE), rate), rate));
+        i.rho = uint48(now);
     }
 }

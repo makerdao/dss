@@ -1,9 +1,14 @@
 pragma solidity ^0.4.24;
 
 import "ds-test/test.sol";
-import "ds-token/token.sol";
+import {DSToken} from "ds-token/token.sol";
 
-import "./flap.sol";
+import {Flapper} from "./flap.sol";
+
+
+contract Hevm {
+    function warp(uint256) public;
+}
 
 contract Guy {
     Flapper fuss;
@@ -34,12 +39,6 @@ contract Guy {
 
 contract Gal {}
 
-contract WarpFlap is Flapper {
-    uint48 _era; function warp(uint48 era_) public { _era = era_; }
-    function era() public view returns (uint48) { return _era; }
-    constructor(address dai_, address gem_) public Flapper(dai_, gem_) {}
-}
-
 contract VatLike is DSToken('') {
     uint constant ONE = 10 ** 27;
     function move(bytes32 src, bytes32 dst, int wad) public {
@@ -48,7 +47,9 @@ contract VatLike is DSToken('') {
 }
 
 contract FlapTest is DSTest {
-    WarpFlap fuss;
+    Hevm hevm;
+
+    Flapper fuss;
     VatLike dai;
     DSToken gem;
 
@@ -57,12 +58,13 @@ contract FlapTest is DSTest {
     Gal  gal;
 
     function setUp() public {
+        hevm = Hevm(0x7109709ECfa91a80626fF3989D68f67F5b1DD12D);
+        hevm.warp(1 hours);
+
         dai = new VatLike();
         gem = new DSToken('');
 
-        fuss = new WarpFlap(dai, gem);
-
-        fuss.warp(1 hours);
+        fuss = new Flapper(dai, gem);
 
         ali = new Guy(fuss);
         bob = new Guy(fuss);
@@ -109,7 +111,7 @@ contract FlapTest is DSTest {
         // gal receives excess
         assertEq(gem.balanceOf(gal),   2 ether);
 
-        fuss.warp(5 weeks);
+        hevm.warp(5 weeks);
         bob.deal(id);
         // bob gets the winnings
         assertEq(dai.balanceOf(fuss),  0 ether);

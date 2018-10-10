@@ -1,9 +1,13 @@
 pragma solidity ^0.4.24;
 
 import "ds-test/test.sol";
-import "ds-token/token.sol";
+import {DSToken} from "ds-token/token.sol";
 
-import "./flip.sol";
+import {Flipper} from "./flip.sol";
+
+contract Hevm {
+    function warp(uint256) public;
+}
 
 contract Guy {
     Flipper flip;
@@ -71,15 +75,11 @@ contract Gem is DSToken('Gem') {
 
 contract Gal {}
 
-contract WarpFlip is Flipper {
-    uint48 _era; function warp(uint48 era_) public { _era = era_; }
-    function era() public view returns (uint48) { return _era; }
-    constructor(address dai_, address gem_) public
-        Flipper(dai_, gem_) {}
-}
 
 contract FlipTest is DSTest {
-    WarpFlip flip;
+    Hevm hevm;
+
+    Flipper flip;
 
     Dai  dai;
     Gem  gem;
@@ -90,12 +90,13 @@ contract FlipTest is DSTest {
     Vat  vat;
 
     function setUp() public {
+        hevm = Hevm(0x7109709ECfa91a80626fF3989D68f67F5b1DD12D);
+        hevm.warp(1 hours);
+
         dai = new Dai();
         gem = new Gem();
 
-        flip = new WarpFlip(dai, gem);
-
-        flip.warp(1 hours);
+        flip = new Flipper(dai, gem);
 
         ali = new Guy(flip);
         bob = new Guy(flip);
@@ -143,7 +144,7 @@ contract FlipTest is DSTest {
         // gal receives excess
         assertEq(dai.balanceOf(gal),   2 ether);
 
-        flip.warp(5 hours);
+        hevm.warp(5 hours);
         bob.deal(id);
         // bob gets the winnings
         assertEq(gem.balanceOf(bob), 100 ether);
@@ -155,7 +156,7 @@ contract FlipTest is DSTest {
                             , gal: gal
                             , bid: 0
                             });
-        flip.warp(5 hours);
+        hevm.warp(5 hours);
 
         ali.tend(id, 100 ether, 1 ether);
         // bid taken from bidder
@@ -211,7 +212,7 @@ contract FlipTest is DSTest {
         // only after ttl
         ali.tend(id, 100 ether, 1 ether);
         assertTrue(!bob.try_deal(id));
-        flip.warp(4.1 hours);
+        hevm.warp(4.1 hours);
         assertTrue( bob.try_deal(id));
 
         uint ie = flip.kick({ lot: 100 ether
@@ -222,10 +223,10 @@ contract FlipTest is DSTest {
                             });
 
         // or after end
-        flip.warp(2 days);
+        hevm.warp(2 days);
         ali.tend(ie, 100 ether, 1 ether);
         assertTrue(!bob.try_deal(ie));
-        flip.warp(3 days);
+        hevm.warp(3 days);
         assertTrue( bob.try_deal(ie));
     }
     function test_tick() public {
@@ -239,7 +240,7 @@ contract FlipTest is DSTest {
         // check no tick
         assertTrue(!ali.try_tick(id));
         // run past the end
-        flip.warp(2 weeks);
+        hevm.warp(2 weeks);
         // check not biddable
         assertTrue(!ali.try_tend(id, 100 ether, 1 ether));
         assertTrue(ali.try_tick(id));

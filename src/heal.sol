@@ -57,8 +57,6 @@ contract Vow is DSNote {
     uint256 public bump;  // flap fixed lot size
     uint256 public hump;  // surplus buffer
 
-    function era() public view returns (uint48) { return uint48(now); }
-
     // --- Init ---
     constructor() public { wards[msg.sender] = 1; }
 
@@ -100,14 +98,14 @@ contract Vow is DSNote {
 
     // --- Repentance ---
     function fess(uint tab) public note auth {
-        sin[era()] = add(sin[era()], tab);
+        sin[uint48(now)] = add(sin[uint48(now)], tab);
         Sin = add(Sin, tab);
     }
-    function flog(uint48 era_) public note {
-        require(add(era_, wait) <= era());
-        Sin = sub(Sin, sin[era_]);
-        Woe = add(Woe, sin[era_]);
-        sin[era_] = 0;
+    function flog(uint48 era) public note {
+        require(add(era, wait) <= now);
+        Sin = sub(Sin, sin[era]);
+        Woe = add(Woe, sin[era]);
+        sin[era] = 0;
     }
 
     // --- Salvation ---
