@@ -339,7 +339,7 @@ contract Vow {
         // put bytes4(keccak256("kick(address,uint256,uint256)")) << 28 bytes
         mstore(0, 0xb7e9cd2400000000000000000000000000000000000000000000000000000000)
         // put this
-        mstore(4, 0)
+        mstore(4, address)
         // put bump
         mstore(36, bump)
         // put 0
