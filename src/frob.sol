@@ -52,6 +52,7 @@ contract Pit is DSNote {
       uint256 art,
       int256  dink,
       int256  dart,
+      uint256 iInk
       uint256 iArt
     );
 
@@ -93,6 +94,6 @@ contract Pit is DSNote {
         require(rate != 0);
         require((calm || dart <= 0) && (dart <= 0 && dink >= 0 || safe));
 
-        emit Frob(ilk, bytes32(msg.sender), ink, art, dink, dart, Art);
+        emit Frob(ilk, bytes32(msg.sender), ink, art, dink, dart, Ink, Art);
     }
 }
