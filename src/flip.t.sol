@@ -243,8 +243,23 @@ contract FlipTest is DSTest {
         hevm.warp(2 weeks);
         // check not biddable
         assertTrue(!ali.try_tend(id, 100 ether, 1 ether));
-        assertTrue(ali.try_tick(id));
+        assertTrue( ali.try_tick(id));
         // check biddable
         assertTrue( ali.try_tend(id, 100 ether, 1 ether));
+    }
+    function test_no_deal_after_end() public {
+        // if there are no bids and the auction ends, then it should not
+        // be refundable to the creator. Rather, it ticks indefinitely.
+        uint id = flip.kick({ lot: 100 ether
+                            , tab: 50 ether
+                            , urn: bytes32(address(0xacab))
+                            , gal: gal
+                            , bid: 0
+                            });
+        assertTrue(!ali.try_deal(id));
+        hevm.warp(2 weeks);
+        assertTrue(!ali.try_deal(id));
+        assertTrue( ali.try_tick(id));
+        assertTrue(!ali.try_deal(id));
     }
 }

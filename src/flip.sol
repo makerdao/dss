@@ -147,8 +147,7 @@ contract Flipper is DSNote {
         bids[id].tic = uint48(now) + ttl;
     }
     function deal(uint id) public note {
-        require(bids[id].tic < now && bids[id].tic != 0 ||
-                bids[id].end < now);
+        require(bids[id].tic != 0 && (bids[id].tic < now || bids[id].end < now));
         gem.push(bytes32(bids[id].guy), bids[id].lot);
         delete bids[id];
     }
