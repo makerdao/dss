@@ -89,9 +89,9 @@ contract Flipper is DSNote {
 
     // --- Auction ---
     function kick(bytes32 urn, address gal, uint tab, uint lot, uint bid)
-        public returns (uint)
+        public returns (uint id)
     {
-        uint id = ++kicks;
+        id = ++kicks;
 
         bids[id].bid = bid;
         bids[id].lot = lot;
@@ -104,8 +104,6 @@ contract Flipper is DSNote {
         gem.move(msg.sender, this, lot);
 
         emit Kick(id, lot, bid, gal, bids[id].end, bids[id].urn, bids[id].tab);
-
-        return id;
     }
     function tick(uint id) public note {
         require(bids[id].end < now);

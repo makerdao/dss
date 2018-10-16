@@ -81,9 +81,9 @@ contract Flapper is DSNote {
 
     // --- Auction ---
     function kick(address gal, uint lot, uint bid)
-        public returns (uint)
+        public returns (uint id)
     {
-        uint id = ++kicks;
+        id = ++kicks;
 
         bids[id].bid = bid;
         bids[id].lot = lot;
@@ -94,8 +94,6 @@ contract Flapper is DSNote {
         dai.move(msg.sender, this, lot);
 
         emit Kick(id, lot, bid, gal, bids[id].end);
-
-        return id;
     }
     function tend(uint id, uint lot, uint bid) public note {
         require(bids[id].guy != 0);

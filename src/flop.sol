@@ -88,8 +88,8 @@ contract Flopper is DSNote {
     }
 
     // --- Auction ---
-    function kick(address gal, uint lot, uint bid) public auth returns (uint) {
-        uint id = ++kicks;
+    function kick(address gal, uint lot, uint bid) public auth returns (uint id) {
+        id = ++kicks;
 
         bids[id].vow = msg.sender;
         bids[id].bid = bid;
@@ -98,8 +98,6 @@ contract Flopper is DSNote {
         bids[id].end = uint48(now) + tau;
 
         emit Kick(id, lot, bid, gal, bids[id].end);
-
-        return id;
     }
     function dent(uint id, uint lot, uint bid) public note {
         require(bids[id].guy != 0);
