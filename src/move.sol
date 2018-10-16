@@ -35,11 +35,11 @@ contract GemMove {
         require(int(z) >= 0);
         require(y == 0 || uint(z) / y == x);
     }
-    mapping(address => mapping (address => bool)) public can;
-    function hope(address guy) public { can[msg.sender][guy] = true; }
-    function nope(address guy) public { can[msg.sender][guy] = false; }
+    mapping(address => mapping (address => uint)) public can;
+    function hope(address guy) public { can[msg.sender][guy] = 1; }
+    function nope(address guy) public { can[msg.sender][guy] = 0; }
     function move(address src, address dst, uint wad) public {
-        require(src == msg.sender || can[src][msg.sender]);
+        require(src == msg.sender || can[src][msg.sender] == 1);
         vat.flux(ilk, bytes32(src), bytes32(dst), mul(ONE, wad));
     }
     function push(bytes32 urn, uint wad) public {
@@ -58,11 +58,11 @@ contract DaiMove {
         require(int(z) >= 0);
         require(y == 0 || uint(z) / y == x);
     }
-    mapping(address => mapping (address => bool)) public can;
-    function hope(address guy) public { can[msg.sender][guy] = true; }
-    function nope(address guy) public { can[msg.sender][guy] = false; }
+    mapping(address => mapping (address => uint)) public can;
+    function hope(address guy) public { can[msg.sender][guy] = 1; }
+    function nope(address guy) public { can[msg.sender][guy] = 0; }
     function move(address src, address dst, uint wad) public {
-        require(src == msg.sender || can[src][msg.sender]);
+        require(src == msg.sender || can[src][msg.sender] == 1);
         vat.move(bytes32(src), bytes32(dst), mul(ONE, wad));
     }
 }
