@@ -81,6 +81,10 @@ contract Flopper is DSNote {
     }
 
     // --- Math ---
+    function add(uint x, uint y) internal pure returns (uint z) {
+        z = x + y;
+        require(z >= x);
+    }
     function mul(uint x, uint y) internal pure returns (int z) {
         z = int(x * y);
         require(int(z) >= 0);
@@ -89,13 +93,14 @@ contract Flopper is DSNote {
 
     // --- Auction ---
     function kick(address gal, uint lot, uint bid) public auth returns (uint id) {
+        require(kicks < uint(-1));
         id = ++kicks;
 
         bids[id].vow = msg.sender;
         bids[id].bid = bid;
         bids[id].lot = lot;
         bids[id].guy = gal;
-        bids[id].end = uint48(now) + tau;
+        bids[id].end = uint48(add(now, tau));
 
         emit Kick(id, lot, bid, gal, bids[id].end);
     }
@@ -112,7 +117,7 @@ contract Flopper is DSNote {
 
         bids[id].guy = msg.sender;
         bids[id].lot = lot;
-        bids[id].tic = uint48(now) + ttl;
+        bids[id].tic = uint48(add(now, ttl));
     }
     function deal(uint id) public note {
         require(bids[id].tic < now && bids[id].tic != 0 ||
