@@ -81,6 +81,7 @@ contract Cat is DSNote {
       uint256 art,
       uint256 tab,
       uint256 flip,
+      uint256 iInk
       uint256 iArt
     );
 
@@ -132,7 +133,7 @@ contract Cat is DSNote {
 
         flips[nflip] = Flip(ilk, urn, ink, tab);
 
-        emit Bite(ilk, urn, ink, art, tab, nflip, Art);
+        emit Bite(ilk, urn, ink, art, tab, nflip, Ink, Art);
 
         return nflip++;
     }
