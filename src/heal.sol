@@ -95,29 +95,32 @@ contract Vow is DSNote {
         if (what == "vat")  vat = addr;
     }
 
-    // --- Indicators ---
+    // Total deficit
     function Awe() public view returns (uint) {
         return uint(VatLike(vat).sin(bytes32(address(this)))) / ONE;
     }
+    // Total surplus
     function Joy() public view returns (uint) {
         return uint(VatLike(vat).dai(bytes32(address(this)))) / ONE;
     }
+    // Unqueued, pre-auction debt
     function Woe() public view returns (uint) {
         return sub(sub(Awe(), Sin), Ash);
     }
 
-    // --- Repentance ---
+    // Push to debt-queue
     function fess(uint tab) public note auth {
         sin[uint48(now)] = add(sin[uint48(now)], tab);
         Sin = add(Sin, tab);
     }
+    // Pop from debt-queue
     function flog(uint48 era) public note {
         require(add(era, wait) <= now);
         Sin = sub(Sin, sin[era]);
         sin[era] = 0;
     }
 
-    // --- Salvation ---
+    // Debt settlement
     function heal(uint wad) public note {
         require(wad <= Joy() && wad <= Woe());
         require(int(mul(wad, ONE)) >= 0);
@@ -130,13 +133,14 @@ contract Vow is DSNote {
         VatLike(vat).heal(bytes32(address(this)), bytes32(address(this)), int(mul(wad, ONE)));
     }
 
-    // --- Auctions ---
+    // Debt auction
     function flop() public returns (uint id) {
         require(Woe() >= sump);
         require(Joy() == 0);
         Ash = add(Ash, sump);
         return Fusspot(row).kick(this, uint(-1), sump);
     }
+    // Surplus auction
     function flap() public returns (uint id) {
         require(Joy() >= add(add(Awe(), bump), hump));
         require(Woe() == 0);
