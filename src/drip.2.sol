@@ -29,7 +29,6 @@ interface DripI {
   function vat() external returns (address);
   function vow() external returns (bytes32);
   function repo() external returns (uint256);
-  function era() external returns (uint48);
   function init(bytes32 ilk) external;
   function file(bytes32 ilk, bytes32 what, uint256 data) external;
   function file(bytes32 what, uint256 data) external;
@@ -108,10 +107,6 @@ contract Drip {
         mstore(64, sload(4))
         return(64, 32)
       }
-      if eq(sig, 0x143e55e0 /*   function era() external returns (uint48); */) {
-        mstore(64, timestamp)
-        return(64, 32)
-      }
       if eq(sig, 0x3b663195 /*   function init(bytes32 ilk); */) {
 
         // iff auth
@@ -125,8 +120,8 @@ contract Drip {
         // set ilks[ilk].tax = 10**27
         sstore(hash_0, 1000000000000000000000000000)
 
-        // set ilks[ilk].rho = era()
-        sstore(add(hash_0, 1), era())
+        // set ilks[ilk].rho = timestamp
+        sstore(add(hash_0, 1), timestamp)
 
         stop()
       }
@@ -136,9 +131,6 @@ contract Drip {
         if pleb() { revert(0, 0) }
 
         let hash_0 := hash2(1, calldataload(4))
-
-        // iff i.rho == era()
-        if iszero(eq(sload(add(hash_0, 1)), era())) { revert(0, 0) }
 
         // if what == "tax" set ilks[ilk].tax = data
         if eq(calldataload(36), "tax") { sstore(hash_0, calldataload(68)) }
@@ -169,14 +161,14 @@ contract Drip {
 
         let hash_0 := hash2(1, calldataload(4))
 
-        // era_ := era()
-        let era_ := era()
+        // era := timestamp
+        let era := timestamp
 
         let tax_i := sload(hash_0)
         let rho_i := sload(add(hash_0, 1))
 
-        // iff era_ >= ilks[ilk].rho
-        if lt(era_, rho_i) { revert(0, 0) }
+        // iff era >= ilks[ilk].rho
+        if lt(era, rho_i) { revert(0, 0) }
 
         // put bytes4(keccak256("ilks(bytes32)")) << 28 bytes
         mstore(0, 0xd9638d3600000000000000000000000000000000000000000000000000000000)
@@ -191,7 +183,7 @@ contract Drip {
         let ray := 1000000000000000000000000000
 
         // drat := rmul(rpow(repo + tax_i, era_ - rho_i, ray), rate) - rate
-        let drat := diff(rmul(rpow(uadd(sload(4), tax_i), sub(era_, rho_i), ray), rate), rate)
+        let drat := diff(rmul(rpow(uadd(sload(4), tax_i), sub(era, rho_i), ray), rate), rate)
 
         // put bytes4(keccak256("fold(bytes32,bytes32,int256)")) << 28 bytes
         mstore(0, 0xe6a6a64d00000000000000000000000000000000000000000000000000000000)
@@ -203,8 +195,8 @@ contract Drip {
         mstore(68, drat)
         if iszero(call(gas, sload(2), 0, 0, 100, 0, 0)) { revert(0, 0) }
 
-        // set ilks[ilk].rho = era_
-        sstore(add(hash_0, 1), era_)
+        // set ilks[ilk].rho = era
+        sstore(add(hash_0, 1), era)
 
         stop()
       }

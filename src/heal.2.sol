@@ -28,21 +28,20 @@ interface VowI {
   function vat() external returns (address);
   function cow() external returns (address);
   function row() external returns (address);
-  function sin(uint48 era_) external returns (uint256);
+  function sin(uint48 era) external returns (uint256);
   function Sin() external returns (uint256);
-  function Woe() external returns (uint256);
   function Ash() external returns (uint256);
   function wait() external returns (uint256);
   function sump() external returns (uint256);
   function bump() external returns (uint256);
   function hump() external returns (uint256);
-  function era() external returns (uint48);
   function file(bytes32 what, uint256 data) external;
   function file(bytes32 what, address addr) external;
   function Awe() external returns (uint256);
   function Joy() external returns (uint256);
+  function Woe() external returns (uint256);
   function fess(uint256 tab) external;
-  function flog(uint48 era_) external;
+  function flog(uint48 era) external;
   function heal(uint256 wad) external;
   function kiss(uint256 wad) external;
   function flop() external returns (uint256);
@@ -109,17 +108,13 @@ contract Vow {
         mstore(64, sload(3))
         return(64, 32)
       }
-      if eq(sig, 0x7f49edc4 /*   function sin(uint48 era_) external returns (uint256); */) {
+      if eq(sig, 0x7f49edc4 /*   function sin(uint48 era) external returns (uint256); */) {
         let hash_0 := hash2(4, calldataload(4))
         mstore(64, sload(hash_0))
         return(64, 32)
       }
       if eq(sig, 0xd0adc35f /*   function Sin() external returns (uint256); */) {
         mstore(64, sload(5))
-        return(64, 32)
-      }
-      if eq(sig, 0x49dd5bb2 /*   function Woe() external returns (uint256); */) {
-        mstore(64, sload(6))
         return(64, 32)
       }
       if eq(sig, 0x2a1d2b3c /*   function Ash() external returns (uint256); */) {
@@ -140,10 +135,6 @@ contract Vow {
       }
       if eq(sig, 0x1b8e8cfa /*   function hump() external returns (uint256); */) {
         mstore(64, sload(11))
-        return(64, 32)
-      }
-      if eq(sig, 0x143e55e0 /*   function era() external returns (uint48); */) {
-        mstore(64, timestamp)
         return(64, 32)
       }
       if eq(sig, 0x29ae8114 /*   function file(bytes32 what, uint256 data) external; */) {
@@ -189,14 +180,18 @@ contract Vow {
         mstore(64, Joy())
         return(64, 32)
       }
+      if eq(sig, 0x49dd5bb2 /*   function Woe() external returns (uint256); */) {
+        mstore(64, Woe())
+        return(64, 32)
+      }
       if eq(sig, 0x697efb78 /*   function fess(uint256 tab) external; */) {
 
         // iff auth
         if pleb() { revert(0, 0) }
 
-        let hash_0 := hash2(4, era())
+        let hash_0 := hash2(4, timestamp)
 
-        // set sin[era()] += tab
+        // set sin[timestamp] += tab
         sstore(hash_0, uadd(sload(hash_0), calldataload(4)))
 
         // set Sin += tab
@@ -204,40 +199,31 @@ contract Vow {
 
         stop()
       }
-      if eq(sig, 0x35aee16f /*   function flog(uint48 era_) external; */) {
+      if eq(sig, 0x35aee16f /*   function flog(uint48 era) external; */) {
 
-        // iff era_ + wait <= era()
-        if gt(uadd(calldataload(4), sload(8)), era()) { revert(0, 0) }
+        // iff era + wait <= timestamp
+        if gt(uadd(calldataload(4), sload(8)), timestamp) { revert(0, 0) }
 
         let hash_0 := hash2(4, calldataload(4))
 
-        // sin_era_ := sin[era_]
-        let sin_era_ := sload(hash_0)
+        // sin_era := sin[era]
+        let sin_era := sload(hash_0)
 
-        // set Sin -= sin_era_
-        sstore(5, usub(sload(5), sin_era_))
+        // set Sin -= sin_era
+        sstore(5, usub(sload(5), sin_era))
 
-        // set Woe += sin_era_
-        sstore(6, uadd(sload(6), sin_era_))
-
-        // set sin[era_] = 0
+        // set sin[era] = 0
         sstore(hash_0, 0)
 
         stop()
       }
       if eq(sig, 0xf37ac61c /*   function heal(uint256 wad) external; */) {
 
-        // Woe_ := Woe
-        let Woe_ := sload(6)
-
         // rad := wad * 10^27
         let rad := umul(calldataload(4), 1000000000000000000000000000)
 
         // iff int(rad) >= 0
         if slt(rad, 0) { revert(0, 0) }
-
-        // set Woe = Woe_ - wad
-        sstore(6, usub(Woe_, calldataload(4)))
 
         // put bytes4(keccak256("heal(bytes32,bytes32,int256)")) << 28 bytes
         mstore(0, 0x990a5f6300000000000000000000000000000000000000000000000000000000)
@@ -281,19 +267,13 @@ contract Vow {
       }
       if eq(sig, 0xbbbb0d7b /*   function flop() external returns (uint256); */) {
 
-        // Woe_ := Woe
-        let Woe_ := sload(6)
-
         let sump := sload(9)
 
-        // iff Woe_ >= sump
-        if lt(Woe_, sump) { revert(0, 0) }
+        // iff Woe() >= sump
+        if lt(Woe(), sump) { revert(0, 0) }
 
         // iff Joy() == 0
         if iszero(eq(Joy(), 0)) { revert(0, 0) }
-
-        // set Woe -= sump
-        sstore(6, usub(Woe_, sump))
 
         // set Ash += sump
         sstore(7, uadd(sload(7), sump))
@@ -319,7 +299,7 @@ contract Vow {
         if lt(Joy(), uadd(uadd(Awe(), bump), sload(11))) { revert(0, 0) }
 
         // iff Woe == 0
-        if iszero(eq(sload(6), 0)) { revert(0, 0) }
+        if iszero(eq(Woe(), 0)) { revert(0, 0) }
 
         // put bytes4(keccak256("dai()")) << 28 bytes
         mstore(0, 0xf4b9fa7500000000000000000000000000000000000000000000000000000000)
@@ -364,19 +344,22 @@ contract Vow {
       // failed to select any of the public methods:
       revert(0, 0)
 
-      function era() -> era_ {
-        // era_ := timestamp
-        // put bytes4(keccak256("era()")) << 28 bytes
-        mstore(0, 0x143e55e000000000000000000000000000000000000000000000000000000000)
-        // iff this.call("era()") != 0
-        if iszero(call(gas, address, 0, 0, 4, 0, 32)) { revert(0, 0) }
-
-        // era_ := this.era()
-        era_ := mload(0)
-      }
       function Awe() -> wad {
-        // wad := Sin + Woe + Ash
-        wad := uadd(uadd(sload(5), sload(6)), sload(7))
+        // put bytes4(keccak256("sin(bytes32)")) << 28 bytes
+        mstore(0, 0xa60f1d3e00000000000000000000000000000000000000000000000000000000)
+        // put this
+        mstore(4, address)
+        // iff vat.call("sin(bytes32)", this) != 0
+        if iszero(call(gas, sload(1), 0, 0, 36, 0, 32)) { revert(0, 0) }
+
+        // vat_sin := vat.sin(this)
+        let vat_sin := mload(0)
+
+        // iff vat_sin >= 0
+        if lt(vat_sin, 0) { revert(0, 0) }
+
+        // wad := vat_sin / 10**27
+        wad := div(vat_sin, 1000000000000000000000000000)
       }
       function Joy() -> wad {
         // put bytes4(keccak256("dai(bytes32)")) << 28 bytes
@@ -394,6 +377,10 @@ contract Vow {
 
         // wad := vat_dai / 10**27
         wad := div(vat_dai, 1000000000000000000000000000)
+      }
+      function Woe() -> wad {
+        // wad := (Awe() - Sin) - Ash
+        wad := usub(usub(Awe(), sload(5)), sload(7))
       }
 
       function pleb() -> x {

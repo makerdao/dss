@@ -2,11 +2,15 @@ pragma solidity ^0.4.24;
 
 import "ds-test/test.sol";
 
-import {WarpFlop as Flop} from './flop.t.sol';
-import {WarpFlap as Flap} from './flap.t.sol';
-import {WarpVat  as Vat, WarpVatI as VatI}  from './frob.2.t.sol';
+import {Flopper as Flop} from './flop.t.sol';
+import {Flapper as Flap} from './flap.t.sol';
+import {TestVat  as Vat, TestVatI as VatI}  from './frob.2.t.sol';
 import {DaiMove}          from './move.sol';
 import {Vow, VowI}        from './heal.2.sol';
+
+contract Hevm {
+    function warp(uint256) public;
+}
 
 contract Gem {
     mapping (address => uint256) public balanceOf;
@@ -15,32 +19,23 @@ contract Gem {
     }
 }
 
-contract WarpVowI is VowI {
-    function warp(uint48 era_) external;
-    function era() external returns (uint48  _era);
-}
-
-contract WarpVow is Vow {
-    function warp(uint48 era_) public {
-      assembly { sstore(99, era_) }
-    }
-    function era() public view returns (uint48 _era) {
-      assembly { _era := sload(99) }
-    }
-}
-
 contract Vow2Test is DSTest {
-    VatI     vat;
-    WarpVowI vow;
-    Flop    flop;
-    Flap    flap;
-    Gem      gov;
+    Hevm hevm;
+
+    VatI  vat;
+    VowI  vow;
+    Flop flop;
+    Flap flap;
+    Gem   gov;
 
     DaiMove daiM;
 
     function setUp() public {
+        hevm = Hevm(0x7109709ECfa91a80626fF3989D68f67F5b1DD12D);
+        hevm.warp(0);
+
         vat = VatI(new Vat());
-        vow = WarpVowI(new WarpVow());
+        vow = VowI(new Vow());
         vat.rely(vow);
         gov  = new Gem();
         daiM = new DaiMove(vat);
@@ -85,7 +80,7 @@ contract Vow2Test is DSTest {
     }
     function flog(uint wad) internal {
         suck(address(0), wad);  // suck dai into the zero address
-        vow.flog(vow.era());
+        vow.flog(uint48(now));
     }
 
     function test_flog_wait() public {
@@ -96,7 +91,7 @@ contract Vow2Test is DSTest {
         uint48 tic = uint48(now);
         vow.fess(100 ether);
         assertTrue(!try_flog(tic) );
-        vow.warp(tic + uint48(100 seconds));
+        hevm.warp(tic + uint48(100 seconds));
         assertTrue( try_flog(tic) );
     }
 

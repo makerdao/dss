@@ -5,24 +5,14 @@ import "ds-test/test.sol";
 import {Drip, DripI} from "./drip.2.sol";
 import {Vat, VatI} from "./tune.2.sol";
 
-contract WarpDripI is DripI {
-    function era() external returns (uint48 _era);
-    function warp(uint48 era_) external;
-}
-
-contract WarpDrip is Drip {
-    constructor(address vat_) public Drip(vat_) {}
-    function warp(uint48 era_) public {
-      assembly { sstore(99, era_) }
-    }
-    function era() public view returns (uint48 _era) {
-      assembly { _era := sload(99) }
-    }
+contract Hevm {
+    function warp(uint256) public;
 }
 
 contract Drip2Test is DSTest {
-    VatI      vat;
-    WarpDripI drip;
+    Hevm  hevm;    
+    DripI drip;
+    VatI   vat;
 
     function rad(uint wad_) internal pure returns (uint) {
         return wad_ * 10 ** 27;
@@ -40,16 +30,23 @@ contract Drip2Test is DSTest {
     }
 
     function setUp() public {
+        hevm = Hevm(0x7109709ECfa91a80626fF3989D68f67F5b1DD12D);
+        hevm.warp(0);
+
         vat  = VatI(new Vat());
-        drip = WarpDripI(new WarpDrip(vat));
+        drip = DripI(new Drip(vat));
         vat.rely(drip);
         vat.init("i");
         vat.tune("i", "u", "v", "w", 0, 100 ether);
     }
     function test_drip_setup() public {
-        assertEq(uint(drip.era()), 0);
+        assertEq(uint(now), 0);
+        hevm.warp(1);
+        assertEq(uint(now), 1);
+        hevm.warp(2);
+        assertEq(uint(now), 2);
         (uint t, uint r, uint I, uint A) = vat.ilks("i"); t; r; I;
-        assertEq(A, 100 ether);
+        assertEq(A, 100 ether);        
     }
     function test_drip_updates_rho() public {
         drip.init("i");
@@ -58,18 +55,18 @@ contract Drip2Test is DSTest {
         drip.file("i", "tax", 10 ** 27);
         drip.drip("i");
         assertEq(rho("i"), 0);
-        drip.warp(1);
+        hevm.warp(1);
         assertEq(rho("i"), 0);
         drip.drip("i");
         assertEq(rho("i"), 1);
-        drip.warp(1 days);
+        hevm.warp(1 days);
         drip.drip("i");
         assertEq(rho("i"), 1 days);
     }
     function test_drip_file() public {
         drip.init("i");
         drip.file("i", "tax", 10 ** 27);
-        drip.warp(1);
+        hevm.warp(1);
         drip.drip("i");
         drip.file("i", "tax", 1000000564701133626865910626);  // 5% / day
     }
@@ -85,7 +82,7 @@ contract Drip2Test is DSTest {
         drip.file("vow", "ali");
 
         drip.file("i", "tax", 1000000564701133626865910626);  // 5% / day
-        drip.warp(1 days);
+        hevm.warp(1 days);
         assertEq(wad(vat.dai("ali")), 0 ether);
         drip.drip("i");
         assertEq(wad(vat.dai("ali")), 5 ether);
@@ -95,7 +92,7 @@ contract Drip2Test is DSTest {
         drip.file("vow", "ali");
         drip.file("i", "tax", 1000000564701133626865910626);  // 5% / day
 
-        drip.warp(2 days);
+        hevm.warp(2 days);
         assertEq(wad(vat.dai("ali")), 0 ether);
         drip.drip("i");
         assertEq(wad(vat.dai("ali")), 10.25 ether);
@@ -105,7 +102,7 @@ contract Drip2Test is DSTest {
         drip.file("vow", "ali");
 
         drip.file("i", "tax", 1000000564701133626865910626);  // 5% / day
-        drip.warp(3 days);
+        hevm.warp(3 days);
         assertEq(wad(vat.dai("ali")), 0 ether);
         drip.drip("i");
         assertEq(wad(vat.dai("ali")), 15.7625 ether);
@@ -115,11 +112,11 @@ contract Drip2Test is DSTest {
         drip.file("vow", "ali");
 
         drip.file("i", "tax", 1000000564701133626865910626);  // 5% / day
-        drip.warp(1 days);
+        hevm.warp(1 days);
         drip.drip("i");
         assertEq(wad(vat.dai("ali")), 5 ether);
         drip.file("i", "tax", 1000001103127689513476993127);  // 10% / day
-        drip.warp(2 days);
+        hevm.warp(2 days);
         drip.drip("i");
         assertEq(wad(vat.dai("ali")),  15.5 ether);
         assertEq(wad(vat.debt()),     115.5 ether);
@@ -136,7 +133,7 @@ contract Drip2Test is DSTest {
         drip.file("i", "tax", 1050000000000000000000000000);  // 5% / second
         drip.file("j", "tax", 1000000000000000000000000000);  // 0% / second
         drip.file("repo",  uint(50000000000000000000000000)); // 5% / second
-        drip.warp(1);
+        hevm.warp(1);
         drip.drip("i");
         assertEq(wad(vat.dai("ali")), 10 ether);
     }

@@ -28,7 +28,6 @@ interface PitI {
   function live() external returns (bool);
   function Line() external returns (uint256);
   function vat() external returns (address);
-  function drip() external returns (address);
   function ilks(bytes32 ilk) external returns (uint256 spot, uint256 line);
   function file(bytes32 what, uint256 data) external;
   function file(bytes32 ilk, bytes32 what, uint256 data) external;
