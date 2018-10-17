@@ -81,7 +81,7 @@ contract Cat is DSNote {
       uint256 art,
       uint256 tab,
       uint256 flip,
-      uint256 iInk
+      uint256 iInk,
       uint256 iArt
     );
 
