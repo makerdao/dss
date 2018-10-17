@@ -52,7 +52,7 @@ contract Pit is DSNote {
       uint256 art,
       int256  dink,
       int256  dart,
-      uint256 iInk
+      uint256 iInk,
       uint256 iArt
     );
 
