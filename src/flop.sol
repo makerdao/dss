@@ -61,8 +61,7 @@ contract Flopper is DSNote {
     uint256  public   beg = 1.05E27;  // 5% minimum bid increase
     uint48   public   ttl = 3 hours;  // 3 hours bid lifetime
     uint48   public   tau = 2 days;   // 2 days total auction length
-
-    uint256  public   kicks;
+    uint256  public kicks = 0;
 
     // --- Events ---
     event Kick(
