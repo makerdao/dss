@@ -25,6 +25,15 @@ contract Drip is DSNote {
     bytes32                  public vow;
     uint256                  public repo;
 
+    // --- Events ---
+    event Drip(
+      bytes32 indexed ilk,
+      uint256 Art,
+      uint256 rate,
+      int256  diff,
+      uint48  rho
+    );
+
     // --- Init ---
     constructor(address vat_) public {
         wards[msg.sender] = 1;
@@ -60,7 +69,7 @@ contract Drip is DSNote {
         z = x + y;
         require(z >= x);
     }
-    function diff(uint x, uint y) internal pure returns (int z) {
+    function sub(uint x, uint y) internal pure returns (int z) {
         z = int(x) - int(y);
         require(int(x) >= 0 && int(y) >= 0);
     }
@@ -93,7 +102,10 @@ contract Drip is DSNote {
         Ilk storage i = ilks[ilk];
         require(now >= i.rho);
         (uint take, uint rate, uint Ink, uint Art) = vat.ilks(ilk); Art; Ink; take;
-        vat.fold(ilk, vow, diff(rmul(rpow(add(repo, i.tax), now - i.rho, ONE), rate), rate));
+        int diff = sub(rmul(rpow(add(repo, i.tax), now - i.rho, ONE), rate), rate);
+        vat.fold(ilk, vow, diff);
         i.rho = uint48(now);
+
+        emit Drip(ilk, Art, rate, diff, i.rho);
     }
 }
