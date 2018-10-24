@@ -98,7 +98,7 @@ contract Drip is DSNote {
     }
 
     // --- Stability Fee Collection ---
-    function drip(bytes32 ilk) public note {
+    function drip(bytes32 ilk) public {
         Ilk storage i = ilks[ilk];
         require(now >= i.rho);
         (uint take, uint rate, uint Ink, uint Art) = vat.ilks(ilk); Art; Ink; take;
