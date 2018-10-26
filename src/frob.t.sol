@@ -209,6 +209,12 @@ contract JoinTest is DSTest {
         assertEq(dai.balanceOf(address(me)), 30 ether);
         assertEq(vat.dai(me),            rad(70 ether));
     }
+    function test_fallback_reverts() public {
+        assertTrue(!address(ethA).call("invalid calldata"));
+    }
+    function test_nonzero_fallback_reverts() public {
+        assertTrue(!address(ethA).call.value(10)("invalid calldata"));
+    }
 }
 
 contract BiteTest is DSTest {
