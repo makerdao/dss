@@ -16,7 +16,7 @@ whitepaper.
 
 - Token agnostic
   - system doesn't care about the implementation of external tokens
-  - can operate entirely independently, provided an authority assigns
+  - can operate entirely independently of other systems, provided an authority assigns
     initial collateral to users in the system and provides price data.
 
 - Verifiable
