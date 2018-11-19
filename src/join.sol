@@ -20,6 +20,7 @@ pragma solidity ^0.4.24;
 import "ds-note/note.sol";
 
 contract GemLike {
+    function transfer(address,uint) public returns (bool);
     function transferFrom(address,address,uint) public returns (bool);
     function mint(address,uint) public;
     function burn(address,uint) public;
@@ -52,7 +53,7 @@ contract GemJoin is DSNote {
     }
     function exit(address guy, uint wad) public note {
         vat.slip(ilk, bytes32(msg.sender), -mul(ONE, wad));
-        require(gem.transferFrom(this, guy, wad));
+        require(gem.transfer(guy, wad));
     }
 }
 
