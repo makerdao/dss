@@ -11,6 +11,9 @@ whitepaper.
 - Global settlement needs realising from current prototype
 - Reward Dai. Similarly, prototype exists.
 
+## Additional Documentation
+
+`dss` is also documented in the [wiki](https://github.com/makerdao/dss/wiki) and in [DEVELOPING.md](https://github.com/makerdao/dss/blob/master/DEVELOPING.md)
 
 ## Design Considerations
 
