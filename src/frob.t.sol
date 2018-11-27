@@ -40,8 +40,9 @@ contract FrobTest is DSTest {
     GemJoin gemA;
 
     function try_frob(bytes32 ilk, int ink, int art) public returns(bool) {
-        bytes4 sig = bytes4(keccak256("frob(bytes32,int256,int256)"));
-        return address(pit).call(sig, ilk, ink, art);
+        bytes4 sig = bytes4(keccak256("frob(bytes32,bytes32,int256,int256)"));
+        bytes32 self = bytes32(address(this));
+        return address(pit).call(sig, self, ilk, ink, art);
     }
 
     function ray(uint wad) internal pure returns (uint) {

@@ -81,19 +81,24 @@ contract Pit is DSNote {
 
     // --- CDP Owner Interface ---
     function frob(bytes32 ilk, int dink, int dart) public {
-        VatLike(vat).tune(ilk, bytes32(msg.sender), bytes32(msg.sender),
-                          bytes32(msg.sender), dink, dart);
+        frob(bytes32(msg.sender), ilk, dink, dart);
+    }
+    function frob(bytes32 urn, bytes32 ilk, int dink, int dart) public {
+        VatLike(vat).tune(ilk, urn, urn, urn, dink, dart);
 
-        (uint take, uint rate, uint Ink, uint Art) = vat.ilks(ilk); take; Ink;
-        (uint ink,  uint art) = vat.urns(ilk, bytes32(msg.sender));
+        (uint _, uint rate, uint Ink, uint Art) = vat.ilks(ilk); _;
+        (uint ink,  uint art) = vat.urns(ilk, urn);
+
         bool calm = mul(Art, rate) <= mul(ilks[ilk].line, ONE)
-                    &&  vat.debt() <= mul(Line, ONE);
-        bool safe = mul(ink, ilks[ilk].spot) >= mul(art, rate);
-
+                     && vat.debt() <= mul(Line, ONE);
+        // okay: ( calm | cool ) & ( cool & firm | safe )
+        require((calm || dart <= 0)
+                && (dart <= 0 && dink >= 0
+                    || mul(ink, ilks[ilk].spot) >= mul(art, rate)));
+        require(msg.sender == address(urn));
         require(live == 1);
         require(rate != 0);
-        require((calm || dart <= 0) && (dart <= 0 && dink >= 0 || safe));
 
-        emit Frob(ilk, bytes32(msg.sender), ink, art, dink, dart, Ink, Art);
+        emit Frob(ilk, urn, ink, art, dink, dart, Ink, Art);
     }
 }
