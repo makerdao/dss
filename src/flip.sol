@@ -105,7 +105,7 @@ contract Flipper is DSNote {
         bids[id].gal = gal;
         bids[id].tab = tab;
 
-        gem.move(msg.sender, this, lot);
+        gem.move(msg.sender, address(this), lot);
 
         emit Kick(id, lot, bid, gal, bids[id].end, bids[id].urn, bids[id].tab);
     }
@@ -115,7 +115,7 @@ contract Flipper is DSNote {
         bids[id].end = add(uint48(now), tau);
     }
     function tend(uint id, uint lot, uint bid) public note {
-        require(bids[id].guy != 0);
+        require(bids[id].guy != address(0));
         require(bids[id].tic > now || bids[id].tic == 0);
         require(bids[id].end > now);
 
@@ -132,7 +132,7 @@ contract Flipper is DSNote {
         bids[id].tic = add(uint48(now), ttl);
     }
     function dent(uint id, uint lot, uint bid) public note {
-        require(bids[id].guy != 0);
+        require(bids[id].guy != address(0));
         require(bids[id].tic > now || bids[id].tic == 0);
         require(bids[id].end > now);
 
@@ -150,7 +150,7 @@ contract Flipper is DSNote {
     }
     function deal(uint id) public note {
         require(bids[id].tic != 0 && (bids[id].tic < now || bids[id].end < now));
-        gem.push(bytes32(bids[id].guy), bids[id].lot);
+        gem.push(bytes32(bytes20(bids[id].guy)), bids[id].lot);
         delete bids[id];
     }
 }

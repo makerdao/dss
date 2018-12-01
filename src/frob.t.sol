@@ -23,11 +23,11 @@ contract Hevm {
 contract TestVat is Vat {
     uint256 constant ONE = 10 ** 27;
     function mint(address guy, uint wad) public {
-        dai[bytes32(guy)] += wad * ONE;
+        dai[bytes32(bytes20(guy))] += wad * ONE;
         debt              += wad * ONE;
     }
-    function balanceOf(address guy) public returns (uint) {
-        return dai[bytes32(guy)] / ONE;
+    function balanceOf(address guy) public view returns (uint) {
+        return dai[bytes32(bytes20(guy))] / ONE;
     }
 }
 
@@ -39,10 +39,10 @@ contract FrobTest is DSTest {
 
     GemJoin gemA;
 
-    function try_frob(bytes32 ilk, int ink, int art) public returns(bool) {
-        bytes4 sig = bytes4(keccak256("frob(bytes32,bytes32,int256,int256)"));
-        bytes32 self = bytes32(address(this));
-        return address(pit).call(sig, self, ilk, ink, art);
+    function try_frob(bytes32 ilk, int ink, int art) public returns (bool ok) {
+        string memory sig = "frob(bytes32,bytes32,int256,int256)";
+        bytes32 self = bytes32(bytes20(address(this)));
+        (ok,) = address(pit).call(abi.encodeWithSignature(sig, self, ilk, ink, art));
     }
 
     function ray(uint wad) internal pure returns (uint) {
@@ -51,63 +51,63 @@ contract FrobTest is DSTest {
 
     function setUp() public {
         vat = new TestVat();
-        pit = new Pit(vat);
+        pit = new Pit(address(vat));
 
         gold = new DSToken("GEM");
         gold.mint(1000 ether);
 
         vat.init("gold");
-        gemA = new GemJoin(vat, "gold", gold);
+        gemA = new GemJoin(address(vat), "gold", address(gold));
 
         pit.file("gold", "spot", ray(1 ether));
         pit.file("gold", "line", 1000 ether);
         pit.file("Line", uint(1000 ether));
-        drip = new Drip(vat);
+        drip = new Drip(address(vat));
         drip.init("gold");
-        vat.rely(drip);
+        vat.rely(address(drip));
 
-        gold.approve(gemA);
-        gold.approve(vat);
+        gold.approve(address(gemA));
+        gold.approve(address(vat));
 
-        vat.rely(pit);
-        vat.rely(gemA);
+        vat.rely(address(pit));
+        vat.rely(address(gemA));
 
-        gemA.join(bytes32(address(this)), 1000 ether);
+        gemA.join(bytes32(bytes20(address(this))), 1000 ether);
     }
 
     function gem(bytes32 ilk, address urn) internal view returns (uint) {
-        return vat.gem(ilk, bytes32(urn)) / 10 ** 27;
+        return vat.gem(ilk, bytes32(bytes20(urn))) / 10 ** 27;
     }
     function ink(bytes32 ilk, address urn) internal view returns (uint) {
-        (uint ink_, uint art_) = vat.urns(ilk, bytes32(urn)); art_;
+        (uint ink_, uint art_) = vat.urns(ilk, bytes32(bytes20(urn))); art_;
         return ink_;
     }
     function art(bytes32 ilk, address urn) internal view returns (uint) {
-        (uint ink_, uint art_) = vat.urns(ilk, bytes32(urn)); ink_;
+        (uint ink_, uint art_) = vat.urns(ilk, bytes32(bytes20(urn))); ink_;
         return art_;
     }
 
 
     function test_join() public {
         gold.mint(500 ether);
-        assertEq(gold.balanceOf(this),       500 ether);
-        assertEq(gold.balanceOf(gemA),   1000 ether);
-        gemA.join(bytes32(address(this)), 500 ether);
-        assertEq(gold.balanceOf(this),         0 ether);
-        assertEq(gold.balanceOf(gemA),   1500 ether);
-        gemA.exit(this, 250 ether);
-        assertEq(gold.balanceOf(this),       250 ether);
-        assertEq(gold.balanceOf(gemA),   1250 ether);
+        assertEq(gold.balanceOf(address(this)),    500 ether);
+        assertEq(gold.balanceOf(address(gemA)),   1000 ether);
+        gemA.join(bytes32(bytes20(address(this))), 500 ether);
+        assertEq(gold.balanceOf(address(this)),      0 ether);
+        assertEq(gold.balanceOf(address(gemA)),   1500 ether);
+        gemA.exit(address(this),                   250 ether);
+        assertEq(gold.balanceOf(address(this)),    250 ether);
+        assertEq(gold.balanceOf(address(gemA)),   1250 ether);
     }
     function test_lock() public {
-        assertEq(ink("gold", this),    0 ether);
-        assertEq(gem("gold", this), 1000 ether);
+        assertEq(ink("gold", address(this)),    0 ether);
+        assertEq(gem("gold", address(this)), 1000 ether);
         pit.frob("gold", 6 ether, 0);
-        assertEq(ink("gold", this),   6 ether);
-        assertEq(gem("gold", this), 994 ether);
+        assertEq(ink("gold", address(this)),   6 ether);
+        assertEq(gem("gold", address(this)), 994 ether);
         pit.frob("gold", -6 ether, 0);
-        assertEq(ink("gold", this),    0 ether);
-        assertEq(gem("gold", this), 1000 ether);
+        assertEq(ink("gold", address(this)),    0 ether);
+        assertEq(gem("gold", address(this)), 1000 ether);
     }
     function test_calm() public {
         // calm means that the debt ceiling is not exceeded
@@ -173,48 +173,50 @@ contract JoinTest is DSTest {
         vat = new TestVat();
         vat.init("eth");
 
-        ethA = new ETHJoin(vat, "eth");
-        vat.rely(ethA);
+        ethA = new ETHJoin(address(vat), "eth");
+        vat.rely(address(ethA));
 
         dai  = new DSToken("Dai");
-        daiA = new DaiJoin(vat, dai);
-        vat.rely(daiA);
-        dai.setOwner(daiA);
+        daiA = new DaiJoin(address(vat), address(dai));
+        vat.rely(address(daiA));
+        dai.setOwner(address(daiA));
 
-        me = bytes32(address(this));
+        me = bytes32(bytes20(address(this)));
     }
     function () external payable {}
     function test_eth_join() public {
-        ethA.join.value(10 ether)(bytes32(address(this)));
+        ethA.join.value(10 ether)(bytes32(bytes20(address(this))));
         assertEq(vat.gem("eth", me), rad(10 ether));
     }
     function test_eth_exit() public {
-        ethA.join.value(50 ether)(bytes32(address(this)));
-        ethA.exit(this, 10 ether);
+        ethA.join.value(50 ether)(bytes32(bytes20(address(this))));
+        ethA.exit(address(this), 10 ether);
         assertEq(vat.gem("eth", me), rad(40 ether));
     }
     function rad(uint wad) internal pure returns (uint) {
         return wad * 10 ** 27;
     }
     function test_dai_exit() public {
-        vat.mint(address(me), 100 ether);
-        daiA.exit(this, 60 ether);
-        assertEq(dai.balanceOf(address(me)), 60 ether);
-        assertEq(vat.dai(me),            rad(40 ether));
+        vat.mint(address(this), 100 ether);
+        daiA.exit(address(this), 60 ether);
+        assertEq(dai.balanceOf(address(this)), 60 ether);
+        assertEq(vat.dai(me),              rad(40 ether));
     }
     function test_dai_exit_join() public {
-        vat.mint(address(me), 100 ether);
-        daiA.exit(this, 60 ether);
-        dai.approve(daiA, uint(-1));
-        daiA.join(bytes32(address(this)), 30 ether);
-        assertEq(dai.balanceOf(address(me)), 30 ether);
-        assertEq(vat.dai(me),            rad(70 ether));
+        vat.mint(address(this), 100 ether);
+        daiA.exit(address(this), 60 ether);
+        dai.approve(address(daiA), uint(-1));
+        daiA.join(bytes32(bytes20(address(this))), 30 ether);
+        assertEq(dai.balanceOf(address(this)),     30 ether);
+        assertEq(vat.dai(me),                  rad(70 ether));
     }
     function test_fallback_reverts() public {
-        assertTrue(!address(ethA).call("invalid calldata"));
+        (bool ok,) = address(ethA).call("invalid calldata");
+        assertTrue(!ok);
     }
     function test_nonzero_fallback_reverts() public {
-        assertTrue(!address(ethA).call.value(10)("invalid calldata"));
+        (bool ok,) = address(ethA).call.value(10)("invalid calldata");
+        assertTrue(!ok);
     }
 }
 
@@ -238,9 +240,9 @@ contract BiteTest is DSTest {
 
     DSToken gov;
 
-    function try_frob(bytes32 ilk, int ink, int art) public returns(bool) {
-        bytes4 sig = bytes4(keccak256("frob(bytes32,int256,int256)"));
-        return address(vat).call(sig, ilk, ink, art);
+    function try_frob(bytes32 ilk, int ink, int art) public returns (bool ok) {
+        string memory sig = "frob(bytes32,int256,int256)";
+        (ok,) = address(vat).call(abi.encodeWithSignature(sig, ilk, ink, art));
     }
 
     function ray(uint wad) internal pure returns (uint) {
@@ -248,14 +250,14 @@ contract BiteTest is DSTest {
     }
 
     function gem(bytes32 ilk, address urn) internal view returns (uint) {
-        return vat.gem(ilk, bytes32(urn)) / 10 ** 27;
+        return vat.gem(ilk, bytes32(bytes20(urn))) / 10 ** 27;
     }
     function ink(bytes32 ilk, address urn) internal view returns (uint) {
-        (uint ink_, uint art_) = vat.urns(ilk, bytes32(urn)); art_;
+        (uint ink_, uint art_) = vat.urns(ilk, bytes32(bytes20(urn))); art_;
         return ink_;
     }
     function art(bytes32 ilk, address urn) internal view returns (uint) {
-        (uint ink_, uint art_) = vat.urns(ilk, bytes32(urn)); ink_;
+        (uint ink_, uint art_) = vat.urns(ilk, bytes32(bytes20(urn))); ink_;
         return art_;
     }
 
@@ -267,60 +269,60 @@ contract BiteTest is DSTest {
         gov.mint(100 ether);
 
         vat = new TestVat();
-        pit = new Pit(vat);
-        vat.rely(pit);
+        pit = new Pit(address(vat));
+        vat.rely(address(pit));
 
-        daiM = new DaiMove(vat);
-        vat.rely(daiM);
+        daiM = new DaiMove(address(vat));
+        vat.rely(address(daiM));
 
-        flap = new Flapper(daiM, gov);
-        flop = new Flopper(daiM, gov);
-        gov.setOwner(flop);
+        flap = new Flapper(address(daiM), address(gov));
+        flop = new Flopper(address(daiM), address(gov));
+        gov.setOwner(address(flop));
 
         vow = new Vow();
         vow.file("vat",  address(vat));
         vow.file("flap", address(flap));
         vow.file("flop", address(flop));
-        flop.rely(vow);
+        flop.rely(address(vow));
 
-        drip = new Drip(vat);
+        drip = new Drip(address(vat));
         drip.init("gold");
-        drip.file("vow", bytes32(address(vow)));
-        vat.rely(drip);
+        drip.file("vow", bytes32(bytes20(address(vow))));
+        vat.rely(address(drip));
 
-        cat = new Cat(vat);
-        cat.file("pit", pit);
-        cat.file("vow", vow);
-        vat.rely(cat);
-        vow.rely(cat);
+        cat = new Cat(address(vat));
+        cat.file("pit", address(pit));
+        cat.file("vow", address(vow));
+        vat.rely(address(cat));
+        vow.rely(address(cat));
 
         gold = new DSToken("GEM");
         gold.mint(1000 ether);
 
         vat.init("gold");
-        gemA = new GemJoin(vat, "gold", gold);
-        vat.rely(gemA);
-        gold.approve(gemA);
-        gemA.join(bytes32(address(this)), 1000 ether);
+        gemA = new GemJoin(address(vat), "gold", address(gold));
+        vat.rely(address(gemA));
+        gold.approve(address(gemA));
+        gemA.join(bytes32(bytes20(address(this))), 1000 ether);
 
-        gemM = new GemMove(vat, "gold");
-        vat.rely(gemM);
+        gemM = new GemMove(address(vat), "gold");
+        vat.rely(address(gemM));
 
         pit.file("gold", "spot", ray(1 ether));
         pit.file("gold", "line", 1000 ether);
         pit.file("Line", uint(1000 ether));
-        flip = new Flipper(daiM, gemM);
-        cat.file("gold", "flip", flip);
+        flip = new Flipper(address(daiM), address(gemM));
+        cat.file("gold", "flip", address(flip));
         cat.file("gold", "chop", ray(1 ether));
 
-        vat.rely(flip);
-        vat.rely(flap);
-        vat.rely(flop);
+        vat.rely(address(flip));
+        vat.rely(address(flap));
+        vat.rely(address(flop));
 
-        daiM.hope(flip);
-        daiM.hope(flop);
-        gold.approve(vat);
-        gov.approve(flap);
+        daiM.hope(address(flip));
+        daiM.hope(address(flop));
+        gold.approve(address(vat));
+        gov.approve(address(flap));
     }
     function test_happy_bite() public {
         // spot = tag / (par . mat)
@@ -331,36 +333,36 @@ contract BiteTest is DSTest {
         // tag=4, mat=2
         pit.file("gold", 'spot', ray(2 ether));  // now unsafe
 
-        assertEq(ink("gold", this),  40 ether);
-        assertEq(art("gold", this), 100 ether);
+        assertEq(ink("gold", address(this)),  40 ether);
+        assertEq(art("gold", address(this)), 100 ether);
         assertEq(vow.Woe(), 0 ether);
-        assertEq(gem("gold", this), 960 ether);
-        uint id = cat.bite("gold", bytes32(address(this)));
-        assertEq(ink("gold", this), 0);
-        assertEq(art("gold", this), 0);
+        assertEq(gem("gold", address(this)), 960 ether);
+        uint id = cat.bite("gold", bytes32(bytes20(address(this))));
+        assertEq(ink("gold", address(this)), 0);
+        assertEq(art("gold", address(this)), 0);
         assertEq(vow.sin(uint48(now)),      100 ether);
-        assertEq(gem("gold", this), 960 ether);
+        assertEq(gem("gold", address(this)), 960 ether);
 
         cat.file("gold", "lump", uint(100 ether));
         uint auction = cat.flip(id, 100 ether);  // flip all the tab
 
-        assertEq(vat.balanceOf(vow),   0 ether);
+        assertEq(vat.balanceOf(address(vow)),   0 ether);
         flip.tend(auction, 40 ether,   1 ether);
-        assertEq(vat.balanceOf(vow),   1 ether);
+        assertEq(vat.balanceOf(address(vow)),   1 ether);
         flip.tend(auction, 40 ether, 100 ether);
-        assertEq(vat.balanceOf(vow), 100 ether);
+        assertEq(vat.balanceOf(address(vow)), 100 ether);
 
-        assertEq(vat.balanceOf(this),       0 ether);
-        assertEq(gem("gold", this), 960 ether);
-        vat.mint(this, 100 ether);  // magic up some dai for bidding
+        assertEq(vat.balanceOf(address(this)),       0 ether);
+        assertEq(gem("gold", address(this)), 960 ether);
+        vat.mint(address(this), 100 ether);  // magic up some dai for bidding
         flip.dent(auction, 38 ether,  100 ether);
-        assertEq(vat.balanceOf(this), 100 ether);
-        assertEq(vat.balanceOf(vow),  100 ether);
-        assertEq(gem("gold", this), 962 ether);
-        assertEq(gem("gold", this), 962 ether);
+        assertEq(vat.balanceOf(address(this)), 100 ether);
+        assertEq(vat.balanceOf(address(vow)),  100 ether);
+        assertEq(gem("gold", address(this)), 962 ether);
+        assertEq(gem("gold", address(this)), 962 ether);
 
         assertEq(vow.sin(uint48(now)),       100 ether);
-        assertEq(vat.balanceOf(vow), 100 ether);
+        assertEq(vat.balanceOf(address(vow)), 100 ether);
     }
 
     function test_floppy_bite() public {
@@ -369,7 +371,7 @@ contract BiteTest is DSTest {
         pit.file("gold", 'spot', ray(2 ether));  // now unsafe
 
         assertEq(vow.sin(uint48(now)),   0 ether);
-        cat.bite("gold", bytes32(address(this)));
+        cat.bite("gold", bytes32(bytes20(address(this))));
         assertEq(vow.sin(uint48(now)), 100 ether);
 
         assertEq(vow.Sin(), 100 ether);
@@ -389,29 +391,29 @@ contract BiteTest is DSTest {
         assertEq(vow.Joy(),  10 ether);
         assertEq(vow.Ash(),  10 ether);
 
-        assertEq(gov.balanceOf(this),  100 ether);
+        assertEq(gov.balanceOf(address(this)),  100 ether);
         hevm.warp(4 hours);
         flop.deal(f1);
-        assertEq(gov.balanceOf(this), 1100 ether);
+        assertEq(gov.balanceOf(address(this)), 1100 ether);
     }
 
     function test_flappy_bite() public {
         // get some surplus
-        vat.mint(vow, 100 ether);
-        assertEq(vat.balanceOf(vow),  100 ether);
-        assertEq(gov.balanceOf(this), 100 ether);
+        vat.mint(address(vow), 100 ether);
+        assertEq(vat.balanceOf(address(vow)),  100 ether);
+        assertEq(gov.balanceOf(address(this)), 100 ether);
 
         vow.file("bump", uint(100 ether));
         assertEq(vow.Awe(), 0 ether);
         uint id = vow.flap();
 
-        assertEq(vat.balanceOf(this),   0 ether);
-        assertEq(gov.balanceOf(this), 100 ether);
+        assertEq(vat.balanceOf(address(this)),   0 ether);
+        assertEq(gov.balanceOf(address(this)), 100 ether);
         flap.tend(id, 100 ether, 10 ether);
         hevm.warp(4 hours);
         flap.deal(id);
-        assertEq(vat.balanceOf(this),   100 ether);
-        assertEq(gov.balanceOf(this),    90 ether);
+        assertEq(vat.balanceOf(address(this)),   100 ether);
+        assertEq(gov.balanceOf(address(this)),    90 ether);
     }
 }
 

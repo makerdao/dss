@@ -14,8 +14,8 @@ contract Guy {
     Flapper fuss;
     constructor(Flapper fuss_) public {
         fuss = fuss_;
-        DSToken(fuss.dai()).approve(fuss);
-        DSToken(fuss.gem()).approve(fuss);
+        DSToken(address(fuss.dai())).approve(address(fuss));
+        DSToken(address(fuss.gem())).approve(address(fuss));
     }
     function tend(uint id, uint lot, uint bid) public {
         fuss.tend(id, lot, bid);
@@ -24,16 +24,16 @@ contract Guy {
         fuss.deal(id);
     }
     function try_tend(uint id, uint lot, uint bid)
-        public returns (bool)
+        public returns (bool ok)
     {
-        bytes4 sig = bytes4(keccak256("tend(uint256,uint256,uint256)"));
-        return address(fuss).call(sig, id, lot, bid);
+        string memory sig = "tend(uint256,uint256,uint256)";
+        (ok,) = address(fuss).call(abi.encodeWithSignature(sig, id, lot, bid));
     }
     function try_deal(uint id)
-        public returns (bool)
+        public returns (bool ok)
     {
-        bytes4 sig = bytes4(keccak256("deal(uint256)"));
-        return address(fuss).call(sig, id);
+        string memory sig = "deal(uint256)";
+        (ok,) = address(fuss).call(abi.encodeWithSignature(sig, id));
     }
 }
 
@@ -42,7 +42,7 @@ contract Gal {}
 contract VatLike is DSToken('') {
     uint constant ONE = 10 ** 27;
     function move(bytes32 src, bytes32 dst, int wad) public {
-        move(address(src), address(dst), uint(wad) / ONE);
+        move(address(bytes20(src)), address(bytes20(dst)), uint(wad) / ONE);
     }
 }
 
@@ -53,9 +53,9 @@ contract FlapTest is DSTest {
     VatLike dai;
     DSToken gem;
 
-    Guy  ali;
-    Guy  bob;
-    Gal  gal;
+    address ali;
+    address bob;
+    address gal;
 
     function setUp() public {
         hevm = Hevm(0x7109709ECfa91a80626fF3989D68f67F5b1DD12D);
@@ -64,14 +64,14 @@ contract FlapTest is DSTest {
         dai = new VatLike();
         gem = new DSToken('');
 
-        fuss = new Flapper(dai, gem);
+        fuss = new Flapper(address(dai), address(gem));
 
-        ali = new Guy(fuss);
-        bob = new Guy(fuss);
-        gal = new Gal();
+        ali = address(new Guy(fuss));
+        bob = address(new Guy(fuss));
+        gal = address(new Gal());
 
-        dai.approve(fuss);
-        gem.approve(fuss);
+        dai.approve(address(fuss));
+        gem.approve(address(fuss));
 
         dai.mint(1000 ether);
         gem.mint(1000 ether);
@@ -80,14 +80,14 @@ contract FlapTest is DSTest {
         gem.push(bob, 200 ether);
     }
     function test_kick() public {
-        assertEq(dai.balanceOf(this), 1000 ether);
-        assertEq(dai.balanceOf(fuss),    0 ether);
+        assertEq(dai.balanceOf(address(this)), 1000 ether);
+        assertEq(dai.balanceOf(address(fuss)),    0 ether);
         fuss.kick({ lot: 100 ether
                   , gal: gal
                   , bid: 0
                   });
-        assertEq(dai.balanceOf(this),  900 ether);
-        assertEq(dai.balanceOf(fuss),  100 ether);
+        assertEq(dai.balanceOf(address(this)),  900 ether);
+        assertEq(dai.balanceOf(address(fuss)),  100 ether);
     }
     function test_tend() public {
         uint id = fuss.kick({ lot: 100 ether
@@ -95,15 +95,15 @@ contract FlapTest is DSTest {
                             , bid: 0
                             });
         // lot taken from creator
-        assertEq(dai.balanceOf(this), 900 ether);
+        assertEq(dai.balanceOf(address(this)), 900 ether);
 
-        ali.tend(id, 100 ether, 1 ether);
+        Guy(ali).tend(id, 100 ether, 1 ether);
         // bid taken from bidder
         assertEq(gem.balanceOf(ali), 199 ether);
         // gal receives payment
         assertEq(gem.balanceOf(gal),   1 ether);
 
-        bob.tend(id, 100 ether, 2 ether);
+        Guy(bob).tend(id, 100 ether, 2 ether);
         // bid taken from bidder
         assertEq(gem.balanceOf(bob), 198 ether);
         // prev bidder refunded
@@ -112,9 +112,9 @@ contract FlapTest is DSTest {
         assertEq(gem.balanceOf(gal),   2 ether);
 
         hevm.warp(5 weeks);
-        bob.deal(id);
+        Guy(bob).deal(id);
         // bob gets the winnings
-        assertEq(dai.balanceOf(fuss),  0 ether);
+        assertEq(dai.balanceOf(address(fuss)),  0 ether);
         assertEq(dai.balanceOf(bob), 100 ether);
     }
     function test_beg() public {
@@ -122,10 +122,10 @@ contract FlapTest is DSTest {
                             , gal: gal
                             , bid: 0
                             });
-        assertTrue( ali.try_tend(id, 100 ether, 1.00 ether));
-        assertTrue(!bob.try_tend(id, 100 ether, 1.01 ether));
+        assertTrue( Guy(ali).try_tend(id, 100 ether, 1.00 ether));
+        assertTrue(!Guy(bob).try_tend(id, 100 ether, 1.01 ether));
         // high bidder is subject to beg
-        assertTrue(!ali.try_tend(id, 100 ether, 1.01 ether));
-        assertTrue( bob.try_tend(id, 100 ether, 1.07 ether));
+        assertTrue(!Guy(ali).try_tend(id, 100 ether, 1.01 ether));
+        assertTrue( Guy(bob).try_tend(id, 100 ether, 1.07 ether));
     }
 }

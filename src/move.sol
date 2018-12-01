@@ -40,10 +40,10 @@ contract GemMove {
     function nope(address guy) public { can[msg.sender][guy] = 0; }
     function move(address src, address dst, uint wad) public {
         require(src == msg.sender || can[src][msg.sender] == 1);
-        vat.flux(ilk, bytes32(src), bytes32(dst), mul(ONE, wad));
+        vat.flux(ilk, bytes32(bytes20(src)), bytes32(bytes20(dst)), mul(ONE, wad));
     }
     function push(bytes32 urn, uint wad) public {
-        vat.flux(ilk, bytes32(msg.sender), urn, mul(ONE,wad));
+        vat.flux(ilk, bytes32(bytes20(msg.sender)), urn, mul(ONE,wad));
     }
 }
 
@@ -63,6 +63,6 @@ contract DaiMove {
     function nope(address guy) public { can[msg.sender][guy] = 0; }
     function move(address src, address dst, uint wad) public {
         require(src == msg.sender || can[src][msg.sender] == 1);
-        vat.move(bytes32(src), bytes32(dst), mul(ONE, wad));
+        vat.move(bytes32(bytes20(src)), bytes32(bytes20(dst)), mul(ONE, wad));
     }
 }

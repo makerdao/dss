@@ -14,8 +14,8 @@ contract Guy {
     Flopper fuss;
     constructor(Flopper fuss_) public {
         fuss = fuss_;
-        DSToken(fuss.dai()).approve(fuss);
-        DSToken(fuss.gem()).approve(fuss);
+        DSToken(address(fuss.dai())).approve(address(fuss));
+        DSToken(address(fuss.gem())).approve(address(fuss));
     }
     function dent(uint id, uint lot, uint bid) public {
         fuss.dent(id, lot, bid);
@@ -24,16 +24,16 @@ contract Guy {
         fuss.deal(id);
     }
     function try_dent(uint id, uint lot, uint bid)
-        public returns (bool)
+        public returns (bool ok)
     {
-        bytes4 sig = bytes4(keccak256("dent(uint256,uint256,uint256)"));
-        return address(fuss).call(sig, id, lot, bid);
+        string memory sig = "dent(uint256,uint256,uint256)";
+        (ok,) = address(fuss).call(abi.encodeWithSignature(sig, id, lot, bid));
     }
     function try_deal(uint id)
-        public returns (bool)
+        public returns (bool ok)
     {
-        bytes4 sig = bytes4(keccak256("deal(uint256)"));
-        return address(fuss).call(sig, id);
+        string memory sig = "deal(uint256)";
+        (ok,) = address(fuss).call(abi.encodeWithSignature(sig, id));
     }
 }
 
@@ -42,7 +42,7 @@ contract Gal {}
 contract VatLike is DSToken('') {
     uint constant ONE = 10 ** 27;
     function move(bytes32 src, bytes32 dst, int wad) public {
-        move(address(src), address(dst), uint(wad) / ONE);
+        move(address(bytes20(src)), address(bytes20(dst)), uint(wad) / ONE);
     }
 }
 
@@ -53,9 +53,9 @@ contract FlopTest is DSTest {
     VatLike dai;
     DSToken gem;
 
-    Guy  ali;
-    Guy  bob;
-    Gal  gal;
+    address ali;
+    address bob;
+    address gal;
 
     function kiss(uint) public pure { }  // arbitrary callback
 
@@ -66,14 +66,14 @@ contract FlopTest is DSTest {
         dai = new VatLike();
         gem = new DSToken('');
 
-        fuss = new Flopper(dai, gem);
+        fuss = new Flopper(address(dai), address(gem));
 
-        ali = new Guy(fuss);
-        bob = new Guy(fuss);
-        gal = new Gal();
+        ali = address(new Guy(fuss));
+        bob = address(new Guy(fuss));
+        gal = address(new Gal());
 
-        dai.approve(fuss);
-        gem.approve(fuss);
+        dai.approve(address(fuss));
+        gem.approve(address(fuss));
 
         dai.mint(1000 ether);
 
@@ -81,15 +81,15 @@ contract FlopTest is DSTest {
         dai.push(bob, 200 ether);
     }
     function test_kick() public {
-        assertEq(dai.balanceOf(this), 600 ether);
-        assertEq(gem.balanceOf(this),   0 ether);
+        assertEq(dai.balanceOf(address(this)), 600 ether);
+        assertEq(gem.balanceOf(address(this)),   0 ether);
         fuss.kick({ lot: uint(-1)   // or whatever high starting value
                   , gal: gal
                   , bid: 0
                   });
         // no value transferred
-        assertEq(dai.balanceOf(this), 600 ether);
-        assertEq(gem.balanceOf(this),   0 ether);
+        assertEq(dai.balanceOf(address(this)), 600 ether);
+        assertEq(gem.balanceOf(address(this)),   0 ether);
     }
     function test_dent() public {
         uint id = fuss.kick({ lot: uint(-1)   // or whatever high starting value
@@ -97,13 +97,13 @@ contract FlopTest is DSTest {
                             , bid: 10 ether
                             });
 
-        ali.dent(id, 100 ether, 10 ether);
+        Guy(ali).dent(id, 100 ether, 10 ether);
         // bid taken from bidder
         assertEq(dai.balanceOf(ali), 190 ether);
         // gal receives payment
         assertEq(dai.balanceOf(gal),  10 ether);
 
-        bob.dent(id, 80 ether, 10 ether);
+        Guy(bob).dent(id, 80 ether, 10 ether);
         // bid taken from bidder
         assertEq(dai.balanceOf(bob), 190 ether);
         // prev bidder refunded
@@ -113,8 +113,8 @@ contract FlopTest is DSTest {
 
         hevm.warp(5 weeks);
         assertEq(gem.totalSupply(),  0 ether);
-        gem.setOwner(fuss);
-        bob.deal(id);
+        gem.setOwner(address(fuss));
+        Guy(bob).deal(id);
         // gems minted on demand
         assertEq(gem.totalSupply(), 80 ether);
         // bob gets the winnings

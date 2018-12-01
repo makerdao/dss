@@ -35,8 +35,8 @@ contract DripTest is DSTest {
         hevm.warp(0);
 
         vat  = new Vat();
-        drip = new Drip(vat);
-        vat.rely(drip);
+        drip = new Drip(address(vat));
+        vat.rely(address(drip));
         vat.init("i");
         vat.tune("i", "u", "v", "w", 0, 100 ether);
     }

@@ -90,11 +90,11 @@ contract Vow is DSNote {
 
     // Total deficit
     function Awe() public view returns (uint) {
-        return uint(VatLike(vat).sin(bytes32(address(this)))) / ONE;
+        return uint(VatLike(vat).sin(bytes32(bytes20(address(this))))) / ONE;
     }
     // Total surplus
     function Joy() public view returns (uint) {
-        return uint(VatLike(vat).dai(bytes32(address(this)))) / ONE;
+        return uint(VatLike(vat).dai(bytes32(bytes20(address(this))))) / ONE;
     }
     // Unqueued, pre-auction debt
     function Woe() public view returns (uint) {
@@ -117,13 +117,13 @@ contract Vow is DSNote {
     function heal(uint wad) public note {
         require(wad <= Joy() && wad <= Woe());
         require(int(mul(wad, ONE)) >= 0);
-        VatLike(vat).heal(bytes32(address(this)), bytes32(address(this)), int(mul(wad, ONE)));
+        VatLike(vat).heal(bytes32(bytes20(address(this))), bytes32(bytes20(address(this))), int(mul(wad, ONE)));
     }
     function kiss(uint wad) public note {
         require(wad <= Ash && wad <= Joy());
         Ash = sub(Ash, wad);
         require(int(mul(wad, ONE)) >= 0);
-        VatLike(vat).heal(bytes32(address(this)), bytes32(address(this)), int(mul(wad, ONE)));
+        VatLike(vat).heal(bytes32(bytes20(address(this))), bytes32(bytes20(address(this))), int(mul(wad, ONE)));
     }
 
     // Debt auction
@@ -131,7 +131,7 @@ contract Vow is DSNote {
         require(Woe() >= sump);
         require(Joy() == 0);
         Ash = add(Ash, sump);
-        return Fusspot(row).kick(this, uint(-1), sump);
+        return Fusspot(row).kick(address(this), uint(-1), sump);
     }
     // Surplus auction
     function flap() public returns (uint id) {

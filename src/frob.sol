@@ -81,7 +81,7 @@ contract Pit is DSNote {
 
     // --- CDP Owner Interface ---
     function frob(bytes32 ilk, int dink, int dart) public {
-        frob(bytes32(msg.sender), ilk, dink, dart);
+        frob(bytes32(bytes20(msg.sender)), ilk, dink, dart);
     }
     function frob(bytes32 urn, bytes32 ilk, int dink, int dart) public {
         VatLike(vat).tune(ilk, urn, urn, urn, dink, dart);
@@ -95,7 +95,7 @@ contract Pit is DSNote {
         require((calm || dart <= 0)
                 && (dart <= 0 && dink >= 0
                     || mul(ink, ilks[ilk].spot) >= mul(art, rate)));
-        require(msg.sender == address(urn));
+        require(msg.sender == address(bytes20(urn)));
         require(live == 1);
         require(rate != 0);
 

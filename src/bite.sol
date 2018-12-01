@@ -128,7 +128,7 @@ contract Cat is DSNote {
 
         require(rmul(ink, spot) < tab);  // !safe
 
-        vat.grab(ilk, urn, bytes32(address(this)), bytes32(address(vow)), -int(ink), -int(art));
+        vat.grab(ilk, urn, bytes32(bytes20(address(this))), bytes32(bytes20(address(vow))), -int(ink), -int(art));
         vow.fess(tab);
 
         flips[nflip] = Flip(ilk, urn, ink, tab);
@@ -153,7 +153,7 @@ contract Cat is DSNote {
 
         Hopeful(Flippy(i.flip).gem()).hope(i.flip);
         id = Flippy(i.flip).kick({ urn: f.urn
-                                 , gal: vow
+                                 , gal: address(vow)
                                  , tab: rmul(wad, i.chop)
                                  , lot: ink
                                  , bid: 0

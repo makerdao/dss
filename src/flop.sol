@@ -104,7 +104,7 @@ contract Flopper is DSNote {
         emit Kick(id, lot, bid, gal, bids[id].end);
     }
     function dent(uint id, uint lot, uint bid) public note {
-        require(bids[id].guy != 0);
+        require(bids[id].guy != address(0));
         require(bids[id].tic > now || bids[id].tic == 0);
         require(bids[id].end > now);
 
