@@ -15,7 +15,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-pragma solidity ^0.4.24;
+pragma solidity >=0.5.0;
 
 contract VatLike {
     function move(bytes32,bytes32,int) public;
