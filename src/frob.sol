@@ -16,13 +16,24 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 pragma solidity >=0.5.0;
+pragma experimental ABIEncoderV2;
 
 import "ds-note/note.sol";
 
 contract VatLike {
+    struct Ilk {
+        uint256 take;  // ray
+        uint256 rate;  // ray
+        uint256 Ink;   // wad
+        uint256 Art;   // wad
+    }
+    struct Urn {
+        uint256 ink;   // wad
+        uint256 art;   // wad
+    }
     function debt() public view returns (uint);
-    function ilks(bytes32) public view returns (uint,uint,uint,uint);
-    function urns(bytes32,bytes32) public view returns (uint,uint);
+    function ilks(bytes32) public view returns (Ilk memory);
+    function urns(bytes32,bytes32) public view returns (Urn memory);
     function tune(bytes32,bytes32,bytes32,bytes32,int,int) public;
 }
 
@@ -86,19 +97,20 @@ contract Pit is DSNote {
     function frob(bytes32 urn, bytes32 ilk, int dink, int dart) public {
         VatLike(vat).tune(ilk, urn, urn, urn, dink, dart);
 
-        (uint _, uint rate, uint Ink, uint Art) = vat.ilks(ilk); _;
-        (uint ink,  uint art) = vat.urns(ilk, urn);
+        VatLike.Ilk memory i = vat.ilks(ilk);
+        VatLike.Urn memory u = vat.urns(ilk, urn);
 
-        bool calm = mul(Art, rate) <= mul(ilks[ilk].line, ONE)
-                     && vat.debt() <= mul(Line, ONE);
-        // okay: ( calm | cool ) & ( cool & firm | safe )
-        require((calm || dart <= 0)
-                && (dart <= 0 && dink >= 0
-                    || mul(ink, ilks[ilk].spot) >= mul(art, rate)));
+        bool calm = mul(i.Art, i.rate) <= mul(ilks[ilk].line, ONE)
+                         && vat.debt() <= mul(Line, ONE);
+        bool cool = dart <= 0;
+        bool firm = dink >= 0;
+        bool safe = mul(u.ink, ilks[ilk].spot) >= mul(u.art, i.rate);
+
+        require((calm || cool) && (cool && firm || safe));
         require(msg.sender == address(bytes20(urn)));
+        require(i.rate != 0);
         require(live == 1);
-        require(rate != 0);
 
-        emit Frob(ilk, urn, ink, art, dink, dart, Ink, Art);
+        emit Frob(ilk, urn, u.ink, u.art, dink, dart, i.Ink, i.Art);
     }
 }

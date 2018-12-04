@@ -16,6 +16,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 pragma solidity >=0.5.0;
+pragma experimental ABIEncoderV2;
 
 import "ds-note/note.sol";
 
@@ -31,8 +32,18 @@ contract Hopeful {
 }
 
 contract VatLike {
-    function ilks(bytes32) public view returns (uint,uint,uint,uint);
-    function urns(bytes32,bytes32) public view returns (uint,uint);
+    struct Ilk {
+        uint256 take;  // ray
+        uint256 rate;  // ray
+        uint256 Ink;   // wad
+        uint256 Art;   // wad
+    }
+    struct Urn {
+        uint256 ink;   // wad
+        uint256 art;   // wad
+    }
+    function ilks(bytes32) public view returns (Ilk memory);
+    function urns(bytes32,bytes32) public view returns (Urn memory);
     function grab(bytes32,bytes32,bytes32,bytes32,int,int) public;
 }
 
@@ -121,19 +132,19 @@ contract Cat is DSNote {
     // --- CDP Liquidation ---
     function bite(bytes32 ilk, bytes32 urn) public returns (uint) {
         require(live == 1);
-        (uint take, uint rate, uint Ink, uint Art) = vat.ilks(ilk); Art; Ink; take;
+        VatLike.Ilk memory i = vat.ilks(ilk);
+        VatLike.Urn memory u = vat.urns(ilk, urn);
         (uint spot, uint line) = pit.ilks(ilk); line;
-        (uint ink , uint art)  = vat.urns(ilk, urn);
-        uint tab = rmul(art, rate);
+        uint tab = rmul(u.art, i.rate);
 
-        require(rmul(ink, spot) < tab);  // !safe
+        require(rmul(u.ink, spot) < tab);  // !safe
 
-        vat.grab(ilk, urn, bytes32(bytes20(address(this))), bytes32(bytes20(address(vow))), -int(ink), -int(art));
+        vat.grab(ilk, urn, bytes32(bytes20(address(this))), bytes32(bytes20(address(vow))), -int(u.ink), -int(u.art));
         vow.fess(tab);
 
-        flips[nflip] = Flip(ilk, urn, ink, tab);
+        flips[nflip] = Flip(ilk, urn, u.ink, tab);
 
-        emit Bite(ilk, urn, ink, art, tab, nflip, Ink, Art);
+        emit Bite(ilk, urn, u.ink, u.art, tab, nflip, i.Ink, i.Art);
 
         return nflip++;
     }
