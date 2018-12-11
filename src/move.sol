@@ -62,7 +62,10 @@ contract DaiMove {
     function hope(address guy) public { can[msg.sender][guy] = 1; }
     function nope(address guy) public { can[msg.sender][guy] = 0; }
     function move(address src, address dst, uint wad) public {
-        require(src == msg.sender || can[src][msg.sender] == 1);
-        vat.move(bytes32(bytes20(src)), bytes32(bytes20(dst)), mul(ONE, wad));
+        move(bytes32(bytes20(src)), bytes32(bytes20(dst)), wad);
+    }
+    function move(bytes32 src, bytes32 dst, uint wad) public {
+        require(address(bytes20(src)) == msg.sender || can[address(bytes20(src))][msg.sender] == 1);
+        vat.move(src, dst, mul(ONE, wad));
     }
 }
