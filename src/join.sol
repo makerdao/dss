@@ -51,8 +51,9 @@ contract GemJoin is DSNote {
         vat.slip(ilk, urn, mul(ONE, wad));
         require(gem.transferFrom(msg.sender, address(this), wad));
     }
-    function exit(address guy, uint wad) public note {
-        vat.slip(ilk, bytes32(bytes20(msg.sender)), -mul(ONE, wad));
+    function exit(bytes32 urn, address guy, uint wad) public note {
+        require(bytes20(urn) == bytes20(msg.sender));
+        vat.slip(ilk, urn, -mul(ONE, wad));
         require(gem.transfer(guy, wad));
     }
 }
@@ -73,8 +74,9 @@ contract ETHJoin is DSNote {
     function join(bytes32 urn) public payable note {
         vat.slip(ilk, urn, mul(ONE, msg.value));
     }
-    function exit(address payable guy, uint wad) public note {
-        vat.slip(ilk, bytes32(bytes20(msg.sender)), -mul(ONE, wad));
+    function exit(bytes32 urn, address payable guy, uint wad) public note {
+        require(bytes20(urn) == bytes20(msg.sender));
+        vat.slip(ilk, urn, -mul(ONE, wad));
         guy.transfer(wad);
     }
 }
@@ -96,8 +98,9 @@ contract DaiJoin is DSNote {
         vat.move(bytes32(bytes20(address(this))), urn, mul(ONE, wad));
         dai.burn(msg.sender, wad);
     }
-    function exit(address guy, uint wad) public note {
-        vat.move(bytes32(bytes20(msg.sender)), bytes32(bytes20(address(this))), mul(ONE, wad));
+    function exit(bytes32 urn, address guy, uint wad) public note {
+        require(bytes20(urn) == bytes20(msg.sender));
+        vat.move(urn, bytes32(bytes20(address(this))), mul(ONE, wad));
         dai.mint(guy, wad);
     }
 }
