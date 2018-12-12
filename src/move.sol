@@ -38,12 +38,13 @@ contract GemMove {
     mapping(address => mapping (address => uint)) public can;
     function hope(address guy) public { can[msg.sender][guy] = 1; }
     function nope(address guy) public { can[msg.sender][guy] = 0; }
-    function move(address src, address dst, uint wad) public {
-        require(src == msg.sender || can[src][msg.sender] == 1);
-        vat.flux(ilk, bytes32(bytes20(src)), bytes32(bytes20(dst)), mul(ONE, wad));
+    function move(bytes32 src, bytes32 dst, uint wad) public {
+        require(bytes20(src) == bytes20(msg.sender) || can[address(bytes20(src))][msg.sender] == 1);
+        vat.flux(ilk, src, dst, mul(ONE, wad));
     }
     function push(bytes32 urn, uint wad) public {
-        vat.flux(ilk, bytes32(bytes20(msg.sender)), urn, mul(ONE,wad));
+        bytes32 guy = bytes32(bytes20(msg.sender));
+        vat.flux(ilk, guy, urn, mul(ONE,wad));
     }
 }
 
@@ -61,8 +62,8 @@ contract DaiMove {
     mapping(address => mapping (address => uint)) public can;
     function hope(address guy) public { can[msg.sender][guy] = 1; }
     function nope(address guy) public { can[msg.sender][guy] = 0; }
-    function move(address src, address dst, uint wad) public {
-        require(src == msg.sender || can[src][msg.sender] == 1);
-        vat.move(bytes32(bytes20(src)), bytes32(bytes20(dst)), mul(ONE, wad));
+    function move(bytes32 src, bytes32 dst, uint wad) public {
+        require(bytes20(src) == bytes20(msg.sender) || can[address(bytes20(src))][msg.sender] == 1);
+        vat.move(src, dst, mul(ONE, wad));
     }
 }
