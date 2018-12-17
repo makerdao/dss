@@ -42,7 +42,7 @@ contract FrobTest is DSTest {
     function try_frob(bytes32 ilk, int ink, int art) public returns (bool ok) {
         string memory sig = "frob(bytes32,bytes32,int256,int256)";
         bytes32 self = bytes32(bytes20(address(this)));
-        (ok,) = address(pit).call(abi.encodeWithSignature(sig, self, ilk, ink, art));
+        (ok,) = address(pit).call(abi.encodeWithSignature(sig, ilk, self, ink, art));
     }
 
     function ray(uint wad) internal pure returns (uint) {

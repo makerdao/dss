@@ -92,9 +92,9 @@ contract Pit is DSNote {
 
     // --- CDP Owner Interface ---
     function frob(bytes32 ilk, int dink, int dart) public {
-        frob(bytes32(bytes20(msg.sender)), ilk, dink, dart);
+        frob(ilk, bytes32(bytes20(msg.sender)), dink, dart);
     }
-    function frob(bytes32 urn, bytes32 ilk, int dink, int dart) public {
+    function frob(bytes32 ilk, bytes32 urn, int dink, int dart) public {
         VatLike(vat).tune(ilk, urn, urn, urn, dink, dart);
 
         VatLike.Ilk memory i = vat.ilks(ilk);
