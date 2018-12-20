@@ -31,6 +31,33 @@ contract TestVat is Vat {
     }
 }
 
+contract Guy {
+    function try_call(address addr, bytes calldata data) external returns (bool) {
+        bytes memory _data = data;
+        assembly {
+            let ok := call(gas, addr, 0, add(_data, 0x20), mload(_data), 0, 0)
+            let free := mload(0x40)
+            mstore(free, ok)
+            mstore(0x40, add(free, 32))
+            revert(free, 32)
+        }
+    }
+    function can_frob(address pit, bytes32 ilk, bytes32 u, bytes32 v, bytes32 w, int dink, int dart) public returns (bool) {
+        string memory sig = "frob(bytes32,bytes32,bytes32,bytes32,int256,int256)";
+        bytes memory data = abi.encodeWithSignature(sig, ilk, u, v, w, dink, dart);
+
+        bytes memory can_call = abi.encodeWithSignature("try_call(address,bytes)", pit, data);
+        (bool ok, bytes memory success) = address(this).call(can_call);
+
+        ok = abi.decode(success, (bool));
+        if (ok) return true;
+    }
+    function frob(address pit, bytes32 ilk, bytes32 u, bytes32 v, bytes32 w, int dink, int dart) public returns (bool) {
+        Pit(pit).frob(ilk, u, v, w, dink, dart);
+    }
+}
+
+
 contract FrobTest is DSTest {
     TestVat vat;
     Pit     pit;
@@ -160,6 +187,65 @@ contract FrobTest is DSTest {
         pit.file("gold", 'spot', ray(0.4 ether));  // now unsafe
         // debt can increase if end state is safe
         assertTrue( this.try_frob("gold",  5 ether, 1 ether));
+    }
+
+    function b32(address addr) internal pure returns (bytes32) {
+        return bytes32(bytes20(addr));
+    }
+    function rad(uint wad) internal pure returns (uint) {
+        return wad * 10 ** 27;
+    }
+    function test_alt_callers() public {
+        Guy ali = new Guy();
+        Guy bob = new Guy();
+        Guy che = new Guy();
+
+        bytes32 a = b32(address(ali));
+        bytes32 b = b32(address(bob));
+        bytes32 c = b32(address(che));
+
+        vat.slip("gold", a, int(rad(20 ether)));
+        vat.slip("gold", b, int(rad(20 ether)));
+        vat.slip("gold", c, int(rad(20 ether)));
+
+        ali.frob(address(pit), "gold", a, a, a, 10 ether, 5 ether);
+
+        // anyone can lock
+        assertTrue( ali.can_frob(address(pit), "gold", a, a, a,  1 ether,  0 ether));
+        assertTrue( bob.can_frob(address(pit), "gold", a, b, b,  1 ether,  0 ether));
+        assertTrue( che.can_frob(address(pit), "gold", a, c, c,  1 ether,  0 ether));
+        // but only with their own gems
+        assertTrue(!ali.can_frob(address(pit), "gold", a, b, a,  1 ether,  0 ether));
+        assertTrue(!bob.can_frob(address(pit), "gold", a, c, b,  1 ether,  0 ether));
+        assertTrue(!che.can_frob(address(pit), "gold", a, a, c,  1 ether,  0 ether));
+
+        // only the lad can free
+        assertTrue( ali.can_frob(address(pit), "gold", a, a, a, -1 ether,  0 ether));
+        assertTrue(!bob.can_frob(address(pit), "gold", a, b, b, -1 ether,  0 ether));
+        assertTrue(!che.can_frob(address(pit), "gold", a, c, c, -1 ether,  0 ether));
+        // the lad can free to anywhere
+        assertTrue( ali.can_frob(address(pit), "gold", a, b, a, -1 ether,  0 ether));
+        assertTrue( ali.can_frob(address(pit), "gold", a, c, a, -1 ether,  0 ether));
+
+        // only the lad can draw
+        assertTrue( ali.can_frob(address(pit), "gold", a, a, a,  0 ether,  1 ether));
+        assertTrue(!bob.can_frob(address(pit), "gold", a, b, b,  0 ether,  1 ether));
+        assertTrue(!che.can_frob(address(pit), "gold", a, c, c,  0 ether,  1 ether));
+        // the lad can draw to anywhere
+        assertTrue( ali.can_frob(address(pit), "gold", a, a, b,  0 ether,  1 ether));
+        assertTrue( ali.can_frob(address(pit), "gold", a, a, c,  0 ether,  1 ether));
+
+        vat.move(a, b, int(rad(1 ether)));
+        vat.move(a, c, int(rad(1 ether)));
+
+        // anyone can wipe
+        assertTrue( ali.can_frob(address(pit), "gold", a, a, a,  0 ether, -1 ether));
+        assertTrue( bob.can_frob(address(pit), "gold", a, b, b,  0 ether, -1 ether));
+        assertTrue( che.can_frob(address(pit), "gold", a, c, c,  0 ether, -1 ether));
+        // but only with their own dai
+        assertTrue(!ali.can_frob(address(pit), "gold", a, a, b,  0 ether, -1 ether));
+        assertTrue(!bob.can_frob(address(pit), "gold", a, b, c,  0 ether, -1 ether));
+        assertTrue(!che.can_frob(address(pit), "gold", a, c, a,  0 ether, -1 ether));
     }
 }
 

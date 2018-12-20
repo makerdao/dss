@@ -92,22 +92,28 @@ contract Pit is DSNote {
 
     // --- CDP Owner Interface ---
     function frob(bytes32 ilk, int dink, int dart) public {
-        frob(ilk, bytes32(bytes20(msg.sender)), dink, dart);
+        bytes32 guy = bytes32(bytes20(msg.sender));
+        frob(ilk, guy, guy, guy, dink, dart);
     }
     function frob(bytes32 ilk, bytes32 urn, int dink, int dart) public {
-        VatLike(vat).tune(ilk, urn, urn, urn, dink, dart);
+        frob(ilk, urn, urn, urn, dink, dart);
+    }
+    function frob(bytes32 ilk, bytes32 urn, bytes32 gem, bytes32 dai, int dink, int dart) public {
+        VatLike(vat).tune(ilk, urn, gem, dai, dink, dart);
 
         VatLike.Ilk memory i = vat.ilks(ilk);
         VatLike.Urn memory u = vat.urns(ilk, urn);
 
-        bool calm = mul(i.Art, i.rate) <= mul(ilks[ilk].line, ONE)
-                         && vat.debt() <= mul(Line, ONE);
-        bool cool = dart <= 0;
-        bool firm = dink >= 0;
+        bool calm = mul(i.Art, i.rate) <= mul(ilks[ilk].line, ONE) &&
+                            vat.debt() <= mul(Line, ONE);
         bool safe = mul(u.ink, ilks[ilk].spot) >= mul(u.art, i.rate);
 
-        require((calm || cool) && (cool && firm || safe));
-        require(msg.sender == address(bytes20(urn)));
+        require((calm || dart <= 0) && (dart <= 0 && dink >= 0 || safe));
+
+        require(msg.sender == address(bytes20(urn)) || dart <= 0 && dink >= 0);
+        require(msg.sender == address(bytes20(gem)) || dink < 0);
+        require(msg.sender == address(bytes20(dai)) || dart > 0);
+
         require(i.rate != 0);
         require(live == 1);
 
