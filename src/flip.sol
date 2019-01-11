@@ -65,17 +65,6 @@ contract Flipper is DSNote {
     uint48  public   tau = 2 days;   // 2 days total auction length
     uint256 public kicks = 0;
 
-    // --- Events ---
-    event Kick(
-      uint256 indexed id,
-      uint256 lot,
-      uint256 bid,
-      address gal,
-      uint48  end,
-      bytes32 indexed urn,
-      uint256 tab
-    );
-
     // --- Init ---
     constructor(address dai_, address gem_) public {
         dai = DaiLike(dai_);
@@ -99,7 +88,7 @@ contract Flipper is DSNote {
 
     // --- Auction ---
     function kick(bytes32 urn, address gal, uint tab, uint lot, uint bid)
-        public returns (uint id)
+        public note returns (uint id)
     {
         require(kicks < uint(-1));
         id = ++kicks;
@@ -113,8 +102,6 @@ contract Flipper is DSNote {
         bids[id].tab = tab;
 
         gem.move(b32(msg.sender), b32(address(this)), lot);
-
-        emit Kick(id, lot, bid, gal, bids[id].end, bids[id].urn, bids[id].tab);
     }
     function tick(uint id) public note {
         require(bids[id].end < now);

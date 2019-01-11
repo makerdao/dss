@@ -91,9 +91,12 @@ contract Cat is DSNote {
       uint256 ink,
       uint256 art,
       uint256 tab,
-      uint256 flip,
-      uint256 iInk,
-      uint256 iArt
+      uint256 flip
+    );
+
+    event FlipKick(
+      uint256 nflip,
+      uint256 bid
     );
 
     // --- Init ---
@@ -144,7 +147,7 @@ contract Cat is DSNote {
 
         flips[nflip] = Flip(ilk, urn, u.ink, tab);
 
-        emit Bite(ilk, urn, u.ink, u.art, tab, nflip, i.Ink, i.Art);
+        emit Bite(ilk, urn, u.ink, u.art, tab, nflip);
 
         return nflip++;
     }
@@ -169,6 +172,7 @@ contract Cat is DSNote {
                                  , lot: ink
                                  , bid: 0
                                  });
+        emit FlipKick(n, id);
         Hopeful(Flippy(i.flip).gem()).nope(i.flip);
     }
 }
