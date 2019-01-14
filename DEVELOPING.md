@@ -18,20 +18,34 @@ previous iteration of Dai was called Single Collateral Dai (SCD), or
 
 Dai has three different numerical units: `wad`, `ray` and `rad`
 
-- `wad`: fixed point decimal with 18 decimals (for basic quantities)
+- `wad`: fixed point decimal with 18 decimals (for basic quantities, e.g. balances)
 - `ray`: fixed point decimal with 27 decimals (for precise quantites, e.g. ratios)
-- `rad`: any number multiplied by a `ray`, using integer muliplication
+- `rad`: fixed point decimal with 45 decimals (result of integer multiplication with a `wad` and a `ray`)
 
 `wad` and `ray` units will be familiar from SCD. `rad` is a new unit and
-exists to prevent precision loss in the core CDP engine. Instead of
-using fixed point multiplication (e.g. `rmul`), integer multiplication is used.
-
-Generally, `wad` should be used additively and `ray` should be used
-multiplicatively. It usually doesn't make sense to multiply a wad by a
-wad.
+exists to prevent precision loss in the core CDP engine.
 
 The base of `ray` is `ONE = 10 ** 27`.
 
+A good explanation of fixed point arithmetic can be found at [Wikipedia](https://en.wikipedia.org/wiki/Fixed-point_arithmetic).
+
+## Multiplication
+
+Generally, `wad` should be used additively and `ray` should be used
+multiplicatively. It usually doesn't make sense to multiply a `wad` by a
+`wad` (or a `rad` by a `rad`).
+
+Two multiplaction operators are used in `dss`:
+
+- `mul`: standard integer multiplcation. No loss of precision.
+- `rmul`: used for multiplications involving `ray`'s. Precision is lost.
+
+They can only be used sensibly with the following combination of units:
+
+- `mul(wad, ray) -> rad`
+- `rmul(wad, ray) -> wad`
+- `rmul(ray, ray) -> ray`
+- `rmul(rad, ray) -> rad`
 
 ## Code style
 
