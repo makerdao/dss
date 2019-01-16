@@ -101,7 +101,7 @@ contract Flipper is DSNote {
         bids[id].gal = gal;
         bids[id].tab = tab;
 
-        gem.move(b32(msg.sender), b32(address(this)), lot);
+        gem.move(b32(msg.sender), b32(address(this)), uint(mul(lot, ONE)));
     }
     function tick(uint id) public note {
         require(bids[id].end < now);
@@ -118,8 +118,8 @@ contract Flipper is DSNote {
         require(bid >  bids[id].bid);
         require(mul(bid, ONE) >= mul(beg, bids[id].bid) || bid == bids[id].tab);
 
-        dai.move(b32(msg.sender), b32(bids[id].guy), bids[id].bid);
-        dai.move(b32(msg.sender), b32(bids[id].gal), bid - bids[id].bid);
+        dai.move(b32(msg.sender), b32(bids[id].guy), uint(mul(bids[id].bid, ONE)));
+        dai.move(b32(msg.sender), b32(bids[id].gal), uint(mul(bid - bids[id].bid, ONE)));
 
         bids[id].guy = msg.sender;
         bids[id].bid = bid;
@@ -135,8 +135,8 @@ contract Flipper is DSNote {
         require(lot < bids[id].lot);
         require(mul(beg, lot) <= mul(bids[id].lot, ONE));
 
-        dai.move(b32(msg.sender), b32(bids[id].guy), bid);
-        gem.push(bids[id].urn, bids[id].lot - lot);
+        dai.move(b32(msg.sender), b32(bids[id].guy), uint(mul(bid, ONE)));
+        gem.push(bids[id].urn, uint(mul(bids[id].lot - lot, ONE)));
 
         bids[id].guy = msg.sender;
         bids[id].lot = lot;
@@ -144,7 +144,7 @@ contract Flipper is DSNote {
     }
     function deal(uint id) public note {
         require(bids[id].tic != 0 && (bids[id].tic < now || bids[id].end < now));
-        gem.push(b32(bids[id].guy), bids[id].lot);
+        gem.push(b32(bids[id].guy), uint(mul(bids[id].lot, ONE)));
         delete bids[id];
     }
 }

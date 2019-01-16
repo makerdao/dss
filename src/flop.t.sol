@@ -41,8 +41,17 @@ contract Gal {}
 
 contract VatLike is DSToken('') {
     uint constant ONE = 10 ** 27;
-    function move(bytes32 src, bytes32 dst, uint wad) public {
-        move(address(bytes20(src)), address(bytes20(dst)), wad);
+    function move(bytes32 src, bytes32 dst, uint rad) public {
+        move(address(bytes20(src)), address(bytes20(dst)), rad);
+    }
+    function mint(uint wad) public {
+        super.mint(wad * ONE);
+    }
+    function balanceOf(address guy) public view returns (uint wad) {
+        wad = super.balanceOf(guy) / ONE;
+    }
+    function push(address guy, uint wad) public {
+        super.push(guy, wad * ONE);
     }
 }
 

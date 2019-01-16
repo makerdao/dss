@@ -51,14 +51,16 @@ contract Guy {
     }
 }
 
-contract Dai is DSToken('Dai') {
-    function move(bytes32 src, bytes32 dst, uint wad) public {
-        move(address(bytes20(src)), address(bytes20(dst)), wad);
+contract VatLike is DSToken('') {
+    uint constant ONE = 10 ** 27;
+    function move(bytes32 src, bytes32 dst, uint rad) public {
+        move(address(bytes20(src)), address(bytes20(dst)), rad);
     }
-}
-contract Gem is DSToken('Gem') {
-    function move(bytes32 src, bytes32 dst, uint wad) public {
-        move(address(bytes20(src)), address(bytes20(dst)), wad);
+    function mint(address guy, uint wad) public {
+        super.mint(guy, wad * ONE);
+    }
+    function balanceOf(address guy) public view returns (uint wad) {
+        wad = super.balanceOf(guy) / ONE;
     }
     function push(bytes32 guy, uint wad) public {
         push(address(bytes20(guy)), wad);
@@ -67,14 +69,13 @@ contract Gem is DSToken('Gem') {
 
 contract Gal {}
 
-
 contract FlipTest is DSTest {
     Hevm hevm;
 
     Flipper flip;
 
-    Dai  dai;
-    Gem  gem;
+    VatLike  dai;
+    VatLike  gem;
 
     address ali;
     address bob;
@@ -85,8 +86,8 @@ contract FlipTest is DSTest {
         hevm = Hevm(0x7109709ECfa91a80626fF3989D68f67F5b1DD12D);
         hevm.warp(1 hours);
 
-        dai = new Dai();
-        gem = new Gem();
+        dai = new VatLike();
+        gem = new VatLike();
 
         flip = new Flipper(address(dai), address(gem));
 

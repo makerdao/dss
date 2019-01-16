@@ -102,7 +102,7 @@ contract Flapper is DSNote {
         bids[id].end = add(uint48(now), tau);
         bids[id].gal = gal;
 
-        dai.move(b32(msg.sender), b32(address(this)), lot);
+        dai.move(b32(msg.sender), b32(address(this)), uint(mul(lot, ONE)));
 
         emit Kick(id, lot, bid, gal, bids[id].end);
     }
@@ -125,7 +125,7 @@ contract Flapper is DSNote {
     function deal(uint id) public note {
         require(bids[id].tic < now && bids[id].tic != 0 ||
                 bids[id].end < now);
-        dai.move(b32(address(this)), b32(bids[id].guy), bids[id].lot);
+        dai.move(b32(address(this)), b32(bids[id].guy), uint(mul(bids[id].lot, ONE)));
         delete bids[id];
     }
 }

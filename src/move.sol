@@ -29,22 +29,18 @@ contract GemMove {
         vat = VatLike(vat_);
         ilk = ilk_;
     }
-    uint constant ONE = 10 ** 27;
-    function mul(uint x, uint y) internal pure returns (int z) {
-        z = int(x * y);
-        require(int(z) >= 0);
-        require(y == 0 || uint(z) / y == x);
-    }
     mapping(address => mapping (address => uint)) public can;
     function hope(address guy) public { can[msg.sender][guy] = 1; }
     function nope(address guy) public { can[msg.sender][guy] = 0; }
-    function move(bytes32 src, bytes32 dst, uint wad) public {
+    function move(bytes32 src, bytes32 dst, uint rad) public {
         require(bytes20(src) == bytes20(msg.sender) || can[address(bytes20(src))][msg.sender] == 1);
-        vat.flux(ilk, src, dst, mul(ONE, wad));
+        require(int(rad) >= 0);
+        vat.flux(ilk, src, dst, int(rad));
     }
-    function push(bytes32 urn, uint wad) public {
+    function push(bytes32 urn, uint rad) public {
+        require(int(rad) >= 0);
         bytes32 guy = bytes32(bytes20(msg.sender));
-        vat.flux(ilk, guy, urn, mul(ONE,wad));
+        vat.flux(ilk, guy, urn, int(rad));
     }
 }
 
@@ -53,17 +49,12 @@ contract DaiMove {
     constructor(address vat_) public {
         vat = VatLike(vat_);
     }
-    uint constant ONE = 10 ** 27;
-    function mul(uint x, uint y) internal pure returns (int z) {
-        z = int(x * y);
-        require(int(z) >= 0);
-        require(y == 0 || uint(z) / y == x);
-    }
     mapping(address => mapping (address => uint)) public can;
     function hope(address guy) public { can[msg.sender][guy] = 1; }
     function nope(address guy) public { can[msg.sender][guy] = 0; }
-    function move(bytes32 src, bytes32 dst, uint wad) public {
+    function move(bytes32 src, bytes32 dst, uint rad) public {
         require(bytes20(src) == bytes20(msg.sender) || can[address(bytes20(src))][msg.sender] == 1);
-        vat.move(src, dst, mul(ONE, wad));
+        require(int(rad) >= 0);
+        vat.move(src, dst, int(rad));
     }
 }
