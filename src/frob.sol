@@ -59,12 +59,8 @@ contract Pit is DSNote {
     event Frob(
       bytes32 indexed ilk,
       bytes32 indexed urn,
-      uint256 ink,
-      uint256 art,
       int256  dink,
-      int256  dart,
-      uint256 iInk,
-      uint256 iArt
+      int256  dart
     );
 
     // --- Init ---
@@ -117,6 +113,6 @@ contract Pit is DSNote {
         require(i.rate != 0);
         require(live == 1);
 
-        emit Frob(ilk, urn, u.ink, u.art, dink, dart, i.Ink, i.Art);
+        emit Frob(ilk, urn, dink, dart);
     }
 }
