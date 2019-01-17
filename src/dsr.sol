@@ -15,7 +15,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-pragma solidity ^0.4.24;
+pragma solidity >=0.5.0;
 
 import "ds-note/note.sol";
 
@@ -125,6 +125,10 @@ contract Pot is DSNote {
         z = z / ONE;
     }
 
+    function b32(address a) internal pure returns (bytes32) {
+        return bytes32(bytes20(a));
+    }
+
     // --- Administration ---
     function file(bytes32 what, uint256 data) public note auth {
         if (what == "dsr") dsr = data;
@@ -139,15 +143,15 @@ contract Pot is DSNote {
         int chi_ = sub(rmul(rpow(dsr, now - rho, ONE), chi), chi);
         chi = add(chi, chi_);
         rho  = uint48(now);
-        vat.heal(vow, bytes32(address(this)), -mul(Pie, chi_));
+        vat.heal(vow, b32(address(this)), -mul(Pie, chi_));
     }
 
     // --- Savings Dai Management ---
     function save(int wad) public note {
-        bytes32 guy = bytes32(msg.sender);
+        bytes32 guy = b32(msg.sender);
         pie[guy] = add(pie[guy], wad);
         Pie      = add(Pie,      wad);
-        vat.move(guy, bytes32(address(this)), mul(chi, wad));
+        vat.move(guy, b32(address(this)), mul(chi, wad));
     }
     function move(bytes32 src, bytes32 dst, int wad) public auth {
         pie[src] = sub(pie[src], wad);

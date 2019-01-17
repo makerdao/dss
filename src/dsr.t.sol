@@ -1,4 +1,4 @@
-pragma solidity ^0.4.24;
+pragma solidity >=0.5.0;
 
 import "ds-test/test.sol";
 import "dss/tune.sol";
@@ -24,15 +24,19 @@ contract DSRTest is DSTest {
         return rad_ / 10 ** 27;
     }
 
+    function b32(address a) internal pure returns (bytes32) {
+        return bytes32(bytes20(a));
+    }
+
     function setUp() public {
         hevm = Hevm(0x7109709ECfa91a80626fF3989D68f67F5b1DD12D);
         hevm.warp(0);
 
         vat = new Vat();
-        pot = new Pot(vat);
-        vat.rely(pot);
-        self = bytes32(address(this));
-        potb = bytes32(address(pot));
+        pot = new Pot(address(vat));
+        vat.rely(address(pot));
+        self = b32(address(this));
+        potb = b32(address(pot));
 
         pot.file("vow", "vow");
 
