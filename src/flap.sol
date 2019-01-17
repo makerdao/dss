@@ -61,11 +61,10 @@ contract Flapper is DSNote {
 
     // --- Events ---
     event Kick(
-      uint256 indexed id,
+      uint256 id,
       uint256 lot,
       uint256 bid,
-      address gal,
-      uint48  end
+      address indexed gal
     );
 
     // --- Init ---
@@ -104,7 +103,7 @@ contract Flapper is DSNote {
 
         dai.move(b32(msg.sender), b32(address(this)), lot);
 
-        emit Kick(id, lot, bid, gal, bids[id].end);
+        emit Kick(id, lot, bid, gal);
     }
     function tend(uint id, uint lot, uint bid) public note {
         require(bids[id].guy != address(0));
