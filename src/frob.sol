@@ -52,7 +52,8 @@ contract Pit is DSNote {
     mapping (bytes32 => Ilk) public ilks;
 
     uint256 public live;  // Access Flag
-    uint256 public Line;  // Debt Ceiling  [wad]
+    uint256 public Line;  // Debt Ceiling    [wad]
+    uint256 public dust;  // Debt dust limit [wad]
     VatLike public  vat;  // CDP Engine
 
     // --- Events ---
@@ -80,6 +81,7 @@ contract Pit is DSNote {
     // --- Administration ---
     function file(bytes32 what, uint data) public note auth {
         if (what == "Line") Line = data;
+        if (what == "dust") dust = data;
     }
     function file(bytes32 ilk, bytes32 what, uint data) public note auth {
         if (what == "spot") ilks[ilk].spot = data;
@@ -99,6 +101,8 @@ contract Pit is DSNote {
 
         VatLike.Ilk memory i = vat.ilks(ilk);
         VatLike.Urn memory u = vat.urns(ilk, urn);
+
+        require(mul(u.art, i.rate) / ONE >= dust || u.art == 0);
 
         bool calm = mul(i.Art, i.rate) <= mul(ilks[ilk].line, ONE) &&
                             vat.debt() <= mul(Line, ONE);
