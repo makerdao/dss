@@ -42,7 +42,7 @@ contract Pit is DSNote {
     mapping (address => uint) public wards;
     function rely(address guy) public note auth { wards[guy] = 1; }
     function deny(address guy) public note auth { wards[guy] = 0; }
-    modifier auth { require(wards[msg.sender] == 1); _; }
+    modifier auth { require(wards[msg.sender] == 1, "unauthorized"); _; }
 
     // --- Data ---
     struct Ilk {
@@ -104,11 +104,11 @@ contract Pit is DSNote {
                             vat.debt() <= mul(Line, ONE);
         bool safe = mul(u.ink, ilks[ilk].spot) >= mul(u.art, i.rate);
 
-        require((calm || dart <= 0) && (dart <= 0 && dink >= 0 || safe));
+        require((calm || dart <= 0) && (dart <= 0 && dink >= 0 || safe), "not calm or not safe");
 
-        require(msg.sender == address(bytes20(urn)) || dart <= 0 && dink >= 0);
-        require(msg.sender == address(bytes20(gem)) || dink < 0);
-        require(msg.sender == address(bytes20(dai)) || dart > 0);
+        require(msg.sender == address(bytes20(urn)) || dart <= 0 && dink >= 0, "not your urn");
+        require(msg.sender == address(bytes20(gem)) || dink < 0, "must lock your own gems");
+        require(msg.sender == address(bytes20(dai)) || dart > 0, "must wipe your own dai");
 
         require(i.rate != 0);
         require(live == 1);
