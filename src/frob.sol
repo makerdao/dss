@@ -87,13 +87,6 @@ contract Pit is DSNote {
     }
 
     // --- CDP Owner Interface ---
-    function frob(bytes32 ilk, int dink, int dart) public {
-        bytes32 guy = bytes32(bytes20(msg.sender));
-        frob(ilk, guy, guy, guy, dink, dart);
-    }
-    function frob(bytes32 ilk, bytes32 urn, int dink, int dart) public {
-        frob(ilk, urn, urn, urn, dink, dart);
-    }
     function frob(bytes32 ilk, bytes32 urn, bytes32 gem, bytes32 dai, int dink, int dart) public {
         VatLike(vat).tune(ilk, urn, gem, dai, dink, dart);
 
