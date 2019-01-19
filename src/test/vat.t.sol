@@ -5,7 +5,6 @@ import "ds-test/test.sol";
 import "ds-token/token.sol";
 
 import {Vat} from '../vat.sol';
-import {Pit} from '../pit.sol';
 import {Cat} from '../cat.sol';
 import {Vow} from '../vow.sol';
 import {Jug} from '../jug.sol';
@@ -30,10 +29,6 @@ contract TestVat is Vat {
     function balanceOf(address guy) public view returns (uint) {
         return dai[bytes32(bytes20(guy))] / ONE;
     }
-}
-
-contract TestPit is Pit {
-    constructor(address vat) Pit(vat) public {}
     function frob(bytes32 ilk, int dink, int dart) public {
         bytes32 guy = bytes32(bytes20(msg.sender));
         frob(ilk, guy, guy, guy, dink, dart);
@@ -51,34 +46,33 @@ contract Guy {
             revert(free, 32)
         }
     }
-    function can_frob(address pit, bytes32 ilk, bytes32 u, bytes32 v, bytes32 w, int dink, int dart) public returns (bool) {
+    function can_frob(address vat, bytes32 ilk, bytes32 u, bytes32 v, bytes32 w, int dink, int dart) public returns (bool) {
         string memory sig = "frob(bytes32,bytes32,bytes32,bytes32,int256,int256)";
         bytes memory data = abi.encodeWithSignature(sig, ilk, u, v, w, dink, dart);
 
-        bytes memory can_call = abi.encodeWithSignature("try_call(address,bytes)", pit, data);
+        bytes memory can_call = abi.encodeWithSignature("try_call(address,bytes)", vat, data);
         (bool ok, bytes memory success) = address(this).call(can_call);
 
         ok = abi.decode(success, (bool));
         if (ok) return true;
     }
-    function frob(address pit, bytes32 ilk, bytes32 u, bytes32 v, bytes32 w, int dink, int dart) public returns (bool) {
-        Pit(pit).frob(ilk, u, v, w, dink, dart);
+    function frob(address vat, bytes32 ilk, bytes32 u, bytes32 v, bytes32 w, int dink, int dart) public returns (bool) {
+        Vat(vat).frob(ilk, u, v, w, dink, dart);
     }
 }
 
 
 contract FrobTest is DSTest {
     TestVat vat;
-    TestPit pit;
     DSToken gold;
-    Jug     drip;
+    Jug     jug;
 
     GemJoin gemA;
 
     function try_frob(bytes32 ilk, int ink, int art) public returns (bool ok) {
         string memory sig = "frob(bytes32,bytes32,bytes32,bytes32,int256,int256)";
         bytes32 self = bytes32(bytes20(address(this)));
-        (ok,) = address(pit).call(abi.encodeWithSignature(sig, ilk, self, self, self, ink, art));
+        (ok,) = address(vat).call(abi.encodeWithSignature(sig, ilk, self, self, self, ink, art));
     }
 
     function ray(uint wad) internal pure returns (uint) {
@@ -87,7 +81,6 @@ contract FrobTest is DSTest {
 
     function setUp() public {
         vat = new TestVat();
-        pit = new TestPit(address(vat));
 
         gold = new DSToken("GEM");
         gold.mint(1000 ether);
@@ -95,17 +88,17 @@ contract FrobTest is DSTest {
         vat.init("gold");
         gemA = new GemJoin(address(vat), "gold", address(gold));
 
-        pit.file("gold", "spot", ray(1 ether));
-        pit.file("gold", "line", 1000 ether);
-        pit.file("Line", uint(1000 ether));
-        drip = new Jug(address(vat));
-        drip.init("gold");
-        vat.rely(address(drip));
+        vat.file("gold", "spot", ray(1 ether));
+        vat.file("gold", "line", 1000 ether);
+        vat.file("Line", uint(1000 ether));
+        jug = new Jug(address(vat));
+        jug.init("gold");
+        vat.rely(address(jug));
 
         gold.approve(address(gemA));
         gold.approve(address(vat));
 
-        vat.rely(address(pit));
+        vat.rely(address(vat));
         vat.rely(address(gemA));
 
         gemA.join(bytes32(bytes20(address(this))), 1000 ether);
@@ -142,17 +135,17 @@ contract FrobTest is DSTest {
     function test_lock() public {
         assertEq(ink("gold", address(this)),    0 ether);
         assertEq(gem("gold", address(this)), 1000 ether);
-        pit.frob("gold", 6 ether, 0);
+        vat.frob("gold", 6 ether, 0);
         assertEq(ink("gold", address(this)),   6 ether);
         assertEq(gem("gold", address(this)), 994 ether);
-        pit.frob("gold", -6 ether, 0);
+        vat.frob("gold", -6 ether, 0);
         assertEq(ink("gold", address(this)),    0 ether);
         assertEq(gem("gold", address(this)), 1000 ether);
     }
     function test_calm() public {
         // calm means that the debt ceiling is not exceeded
         // it's ok to increase debt as long as you remain calm
-        pit.file("gold", 'line', 10 ether);
+        vat.file("gold", 'line', 10 ether);
         assertTrue( try_frob("gold", 10 ether, 9 ether));
         // only if under debt ceiling
         assertTrue(!try_frob("gold",  0 ether, 2 ether));
@@ -160,24 +153,24 @@ contract FrobTest is DSTest {
     function test_cool() public {
         // cool means that the debt has decreased
         // it's ok to be over the debt ceiling as long as you're cool
-        pit.file("gold", 'line', 10 ether);
+        vat.file("gold", 'line', 10 ether);
         assertTrue(try_frob("gold", 10 ether,  8 ether));
-        pit.file("gold", 'line', 5 ether);
+        vat.file("gold", 'line', 5 ether);
         // can decrease debt when over ceiling
         assertTrue(try_frob("gold",  0 ether, -1 ether));
     }
     function test_safe() public {
         // safe means that the cdp is not risky
         // you can't frob a cdp into unsafe
-        pit.frob("gold", 10 ether, 5 ether);                // safe draw
+        vat.frob("gold", 10 ether, 5 ether);                // safe draw
         assertTrue(!try_frob("gold", 0 ether, 6 ether));  // unsafe draw
     }
     function test_nice() public {
         // nice means that the collateral has increased or the debt has
         // decreased. remaining unsafe is ok as long as you're nice
 
-        pit.frob("gold", 10 ether, 10 ether);
-        pit.file("gold", 'spot', ray(0.5 ether));  // now unsafe
+        vat.frob("gold", 10 ether, 10 ether);
+        vat.file("gold", 'spot', ray(0.5 ether));  // now unsafe
 
         // debt can't increase if unsafe
         assertTrue(!try_frob("gold",  0 ether,  1 ether));
@@ -196,7 +189,7 @@ contract FrobTest is DSTest {
 
         // ink can decrease if end state is safe
         assertTrue( this.try_frob("gold", -1 ether, -4 ether));
-        pit.file("gold", 'spot', ray(0.4 ether));  // now unsafe
+        vat.file("gold", 'spot', ray(0.4 ether));  // now unsafe
         // debt can increase if end state is safe
         assertTrue( this.try_frob("gold",  5 ether, 1 ether));
     }
@@ -220,44 +213,44 @@ contract FrobTest is DSTest {
         vat.slip("gold", b, int(rad(20 ether)));
         vat.slip("gold", c, int(rad(20 ether)));
 
-        ali.frob(address(pit), "gold", a, a, a, 10 ether, 5 ether);
+        ali.frob(address(vat), "gold", a, a, a, 10 ether, 5 ether);
 
         // anyone can lock
-        assertTrue( ali.can_frob(address(pit), "gold", a, a, a,  1 ether,  0 ether));
-        assertTrue( bob.can_frob(address(pit), "gold", a, b, b,  1 ether,  0 ether));
-        assertTrue( che.can_frob(address(pit), "gold", a, c, c,  1 ether,  0 ether));
+        assertTrue( ali.can_frob(address(vat), "gold", a, a, a,  1 ether,  0 ether));
+        assertTrue( bob.can_frob(address(vat), "gold", a, b, b,  1 ether,  0 ether));
+        assertTrue( che.can_frob(address(vat), "gold", a, c, c,  1 ether,  0 ether));
         // but only with their own gems
-        assertTrue(!ali.can_frob(address(pit), "gold", a, b, a,  1 ether,  0 ether));
-        assertTrue(!bob.can_frob(address(pit), "gold", a, c, b,  1 ether,  0 ether));
-        assertTrue(!che.can_frob(address(pit), "gold", a, a, c,  1 ether,  0 ether));
+        assertTrue(!ali.can_frob(address(vat), "gold", a, b, a,  1 ether,  0 ether));
+        assertTrue(!bob.can_frob(address(vat), "gold", a, c, b,  1 ether,  0 ether));
+        assertTrue(!che.can_frob(address(vat), "gold", a, a, c,  1 ether,  0 ether));
 
         // only the lad can free
-        assertTrue( ali.can_frob(address(pit), "gold", a, a, a, -1 ether,  0 ether));
-        assertTrue(!bob.can_frob(address(pit), "gold", a, b, b, -1 ether,  0 ether));
-        assertTrue(!che.can_frob(address(pit), "gold", a, c, c, -1 ether,  0 ether));
+        assertTrue( ali.can_frob(address(vat), "gold", a, a, a, -1 ether,  0 ether));
+        assertTrue(!bob.can_frob(address(vat), "gold", a, b, b, -1 ether,  0 ether));
+        assertTrue(!che.can_frob(address(vat), "gold", a, c, c, -1 ether,  0 ether));
         // the lad can free to anywhere
-        assertTrue( ali.can_frob(address(pit), "gold", a, b, a, -1 ether,  0 ether));
-        assertTrue( ali.can_frob(address(pit), "gold", a, c, a, -1 ether,  0 ether));
+        assertTrue( ali.can_frob(address(vat), "gold", a, b, a, -1 ether,  0 ether));
+        assertTrue( ali.can_frob(address(vat), "gold", a, c, a, -1 ether,  0 ether));
 
         // only the lad can draw
-        assertTrue( ali.can_frob(address(pit), "gold", a, a, a,  0 ether,  1 ether));
-        assertTrue(!bob.can_frob(address(pit), "gold", a, b, b,  0 ether,  1 ether));
-        assertTrue(!che.can_frob(address(pit), "gold", a, c, c,  0 ether,  1 ether));
+        assertTrue( ali.can_frob(address(vat), "gold", a, a, a,  0 ether,  1 ether));
+        assertTrue(!bob.can_frob(address(vat), "gold", a, b, b,  0 ether,  1 ether));
+        assertTrue(!che.can_frob(address(vat), "gold", a, c, c,  0 ether,  1 ether));
         // the lad can draw to anywhere
-        assertTrue( ali.can_frob(address(pit), "gold", a, a, b,  0 ether,  1 ether));
-        assertTrue( ali.can_frob(address(pit), "gold", a, a, c,  0 ether,  1 ether));
+        assertTrue( ali.can_frob(address(vat), "gold", a, a, b,  0 ether,  1 ether));
+        assertTrue( ali.can_frob(address(vat), "gold", a, a, c,  0 ether,  1 ether));
 
         vat.move(a, b, int(rad(1 ether)));
         vat.move(a, c, int(rad(1 ether)));
 
         // anyone can wipe
-        assertTrue( ali.can_frob(address(pit), "gold", a, a, a,  0 ether, -1 ether));
-        assertTrue( bob.can_frob(address(pit), "gold", a, b, b,  0 ether, -1 ether));
-        assertTrue( che.can_frob(address(pit), "gold", a, c, c,  0 ether, -1 ether));
+        assertTrue( ali.can_frob(address(vat), "gold", a, a, a,  0 ether, -1 ether));
+        assertTrue( bob.can_frob(address(vat), "gold", a, b, b,  0 ether, -1 ether));
+        assertTrue( che.can_frob(address(vat), "gold", a, c, c,  0 ether, -1 ether));
         // but only with their own dai
-        assertTrue(!ali.can_frob(address(pit), "gold", a, a, b,  0 ether, -1 ether));
-        assertTrue(!bob.can_frob(address(pit), "gold", a, b, c,  0 ether, -1 ether));
-        assertTrue(!che.can_frob(address(pit), "gold", a, c, a,  0 ether, -1 ether));
+        assertTrue(!ali.can_frob(address(vat), "gold", a, a, b,  0 ether, -1 ether));
+        assertTrue(!bob.can_frob(address(vat), "gold", a, b, c,  0 ether, -1 ether));
+        assertTrue(!che.can_frob(address(vat), "gold", a, c, a,  0 ether, -1 ether));
     }
 }
 
@@ -326,11 +319,10 @@ contract BiteTest is DSTest {
     Hevm hevm;
 
     TestVat vat;
-    TestPit pit;
     Vow     vow;
     Cat     cat;
     DSToken gold;
-    Jug     drip;
+    Jug     jug;
 
     GemJoin gemA;
     GemMove gemM;
@@ -345,7 +337,7 @@ contract BiteTest is DSTest {
     function try_frob(bytes32 ilk, int ink, int art) public returns (bool ok) {
         string memory sig = "frob(bytes32,bytes32,bytes32,bytes32,int256,int256)";
         bytes32 self = bytes32(bytes20(address(this)));
-        (ok,) = address(pit).call(abi.encodeWithSignature(sig, ilk, self, self, self, ink, art));
+        (ok,) = address(vat).call(abi.encodeWithSignature(sig, ilk, self, self, self, ink, art));
     }
 
     function ray(uint wad) internal pure returns (uint) {
@@ -372,8 +364,7 @@ contract BiteTest is DSTest {
         gov.mint(100 ether);
 
         vat = new TestVat();
-        pit = new TestPit(address(vat));
-        vat.rely(address(pit));
+        vat = vat;
 
         daiM = new DaiMove(address(vat));
         vat.rely(address(daiM));
@@ -388,13 +379,12 @@ contract BiteTest is DSTest {
         vow.file("flop", address(flop));
         flop.rely(address(vow));
 
-        drip = new Jug(address(vat));
-        drip.init("gold");
-        drip.file("vow", bytes32(bytes20(address(vow))));
-        vat.rely(address(drip));
+        jug = new Jug(address(vat));
+        jug.init("gold");
+        jug.file("vow", bytes32(bytes20(address(vow))));
+        vat.rely(address(jug));
 
         cat = new Cat(address(vat));
-        cat.file("pit", address(pit));
         cat.file("vow", address(vow));
         vat.rely(address(cat));
         vow.rely(address(cat));
@@ -411,9 +401,9 @@ contract BiteTest is DSTest {
         gemM = new GemMove(address(vat), "gold");
         vat.rely(address(gemM));
 
-        pit.file("gold", "spot", ray(1 ether));
-        pit.file("gold", "line", 1000 ether);
-        pit.file("Line", uint(1000 ether));
+        vat.file("gold", "spot", ray(1 ether));
+        vat.file("gold", "line", 1000 ether);
+        vat.file("Line", uint(1000 ether));
         flip = new Flipper(address(daiM), address(gemM));
         cat.file("gold", "flip", address(flip));
         cat.file("gold", "chop", ray(1 ether));
@@ -430,11 +420,11 @@ contract BiteTest is DSTest {
     function test_happy_bite() public {
         // spot = tag / (par . mat)
         // tag=5, mat=2
-        pit.file("gold", 'spot', ray(2.5 ether));
-        pit.frob("gold",  40 ether, 100 ether);
+        vat.file("gold", 'spot', ray(2.5 ether));
+        vat.frob("gold",  40 ether, 100 ether);
 
         // tag=4, mat=2
-        pit.file("gold", 'spot', ray(2 ether));  // now unsafe
+        vat.file("gold", 'spot', ray(2 ether));  // now unsafe
 
         assertEq(ink("gold", address(this)),  40 ether);
         assertEq(art("gold", address(this)), 100 ether);
@@ -469,9 +459,9 @@ contract BiteTest is DSTest {
     }
 
     function test_floppy_bite() public {
-        pit.file("gold", 'spot', ray(2.5 ether));
-        pit.frob("gold",  40 ether, 100 ether);
-        pit.file("gold", 'spot', ray(2 ether));  // now unsafe
+        vat.file("gold", 'spot', ray(2.5 ether));
+        vat.frob("gold",  40 ether, 100 ether);
+        vat.file("gold", 'spot', ray(2 ether));  // now unsafe
 
         assertEq(vow.sin(uint48(now)),   0 ether);
         cat.bite("gold", bytes32(bytes20(address(this))));
@@ -520,6 +510,11 @@ contract BiteTest is DSTest {
     }
 }
 
+contract VatLike {
+    function ilks(bytes32) public view returns (Vat.Ilk memory);
+    function urns(bytes32,bytes32) public view returns (Vat.Urn memory);
+}
+
 contract FoldTest is DSTest {
     Vat vat;
 
@@ -530,25 +525,36 @@ contract FoldTest is DSTest {
         return wad * 10 ** 27;
     }
     function tab(bytes32 ilk, bytes32 urn) internal view returns (uint) {
-        (uint ink,  uint art)  = vat.urns(ilk, urn); ink;
-        (uint rate, uint Art)  = vat.ilks(ilk); Art;
-        return art * rate;
+        Vat.Urn memory u = VatLike(address(vat)).urns(ilk, urn);
+        Vat.Ilk memory i = VatLike(address(vat)).ilks(ilk);
+        return u.art * i.rate;
     }
     function jam(bytes32 ilk, bytes32 urn) internal view returns (uint) {
-        (uint ink, uint art)  = vat.urns(ilk, urn); art;
-        return ink;
+        Vat.Urn memory u = VatLike(address(vat)).urns(ilk, urn);
+        return u.ink;
     }
 
     function setUp() public {
         vat = new Vat();
         vat.init("gold");
+        vat.file("Line", 100 ether);
+        vat.file("gold", "line", 100 ether);
+    }
+    function draw(bytes32 ilk, uint dai) internal {
+        vat.file("Line", rad(dai));
+        vat.file(ilk, "line", rad(dai));
+        vat.file(ilk, "spot", 10 ** 27 * 10000 ether);
+        bytes32 self = bytes32(bytes20(address(this)));
+        vat.slip(ilk, self,  10 ** 27 * 1 ether);
+        vat.frob(ilk, self, self, self, int(1 ether), int(dai));
     }
     function test_fold() public {
-        vat.tune("gold", "bob", "bob", "bob", 0, 1 ether);
+        bytes32 self = bytes32(bytes20(address(this)));
+        draw("gold", 1 ether);
 
-        assertEq(tab("gold", "bob"), rad(1.00 ether));
+        assertEq(tab("gold", self), rad(1.00 ether));
         vat.fold("gold", "ali",  int(ray(0.05 ether)));
-        assertEq(tab("gold", "bob"), rad(1.05 ether));
+        assertEq(tab("gold", self), rad(1.05 ether));
         assertEq(vat.dai("ali"),     rad(0.05 ether));
     }
 }

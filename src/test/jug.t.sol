@@ -1,13 +1,19 @@
 pragma solidity >=0.5.0;
+pragma experimental ABIEncoderV2;
 
 import "ds-test/test.sol";
 
-import "../jug.sol";
-import "../vat.sol";
+import {Jug} from "../jug.sol";
+import {Vat} from "../vat.sol";
 
 
 contract Hevm {
     function warp(uint256) public;
+}
+
+contract VatLike {
+    function ilks(bytes32) public view returns (Vat.Ilk memory);
+    function urns(bytes32,bytes32) public view returns (Vat.Urn memory);
 }
 
 contract JugTest is DSTest {
@@ -26,8 +32,8 @@ contract JugTest is DSTest {
         return uint(rho_);
     }
     function rate(bytes32 ilk) internal view returns (uint) {
-        (uint r, uint A) = vat.ilks(ilk); A;
-        return r;
+        Vat.Ilk memory i = VatLike(address(vat)).ilks(ilk);
+        return i.rate;
     }
 
     function setUp() public {
@@ -38,16 +44,26 @@ contract JugTest is DSTest {
         drip = new Jug(address(vat));
         vat.rely(address(drip));
         vat.init("i");
-        vat.tune("i", "u", "v", "w", 0, 100 ether);
+
+        draw("i", 100 ether);
     }
+    function draw(bytes32 ilk, uint dai) internal {
+        vat.file("Line", rad(dai));
+        vat.file(ilk, "line", rad(dai));
+        vat.file(ilk, "spot", 10 ** 27 * 10000 ether);
+        bytes32 self = bytes32(bytes20(address(this)));
+        vat.slip(ilk, self,  10 ** 27 * 1 ether);
+        vat.frob(ilk, self, self, self, int(1 ether), int(dai));
+    }
+
     function test_drip_setup() public {
         assertEq(uint(now), 0);
         hevm.warp(1);
         assertEq(uint(now), 1);
         hevm.warp(2);
         assertEq(uint(now), 2);
-        (uint r, uint A) = vat.ilks("i"); r;
-        assertEq(A, 100 ether);
+        Vat.Ilk memory i = VatLike(address(vat)).ilks("i");
+        assertEq(i.Art, 100 ether);
     }
     function test_drip_updates_rho() public {
         drip.init("i");
@@ -125,7 +141,7 @@ contract JugTest is DSTest {
     }
     function test_drip_repo() public {
         vat.init("j");
-        vat.tune("j", "u", "v", "w", 0, 100 ether);
+        draw("j", 100 ether);
 
         drip.init("i");
         drip.init("j");

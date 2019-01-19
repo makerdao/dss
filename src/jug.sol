@@ -5,8 +5,8 @@ import "ds-note/note.sol";
 
 contract VatLike {
     struct Ilk {
-        uint256 rate;  // ray
         uint256 Art;   // wad
+        uint256 rate;  // ray
     }
     function ilks(bytes32) public returns (Ilk memory);
     function fold(bytes32,bytes32,int) public;
