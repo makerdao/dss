@@ -71,8 +71,10 @@ contract Vow is DSNote {
         z = x - y;
         require(z <= x);
     }
-    function mul(uint x, uint y) internal pure returns (uint z) {
-        require(y == 0 || (z = x * y) / y == x);
+    function mul(uint x, uint y) internal pure returns (int z) {
+        z = int(x * y);
+        require(int(z) >= 0);
+        require(y == 0 || uint(z) / y == x);
     }
 
     // --- Administration ---
@@ -116,14 +118,12 @@ contract Vow is DSNote {
     // Debt settlement
     function heal(uint wad) public note {
         require(wad <= Joy() && wad <= Woe());
-        require(int(mul(wad, ONE)) >= 0);
-        VatLike(vat).heal(bytes32(bytes20(address(this))), bytes32(bytes20(address(this))), int(mul(wad, ONE)));
+        VatLike(vat).heal(bytes32(bytes20(address(this))), bytes32(bytes20(address(this))), mul(wad, ONE));
     }
     function kiss(uint wad) public note {
         require(wad <= Ash && wad <= Joy());
         Ash = sub(Ash, wad);
-        require(int(mul(wad, ONE)) >= 0);
-        VatLike(vat).heal(bytes32(bytes20(address(this))), bytes32(bytes20(address(this))), int(mul(wad, ONE)));
+        VatLike(vat).heal(bytes32(bytes20(address(this))), bytes32(bytes20(address(this))), mul(wad, ONE));
     }
 
     // Debt auction
