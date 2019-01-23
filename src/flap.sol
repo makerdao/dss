@@ -78,10 +78,8 @@ contract Flapper is DSNote {
         z = x + y;
         require(z >= x);
     }
-    function mul(uint x, uint y) internal pure returns (int z) {
-        z = int(x * y);
-        require(int(z) >= 0);
-        require(y == 0 || uint(z) / y == x);
+    function mul(uint x, uint y) internal pure returns (uint z) {
+        require(y == 0 || (z = x * y) / y == x);
     }
 
     function b32(address a) internal pure returns (bytes32) {
