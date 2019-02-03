@@ -20,6 +20,7 @@ pragma solidity >=0.5.0;
 
 import "ds-test/test.sol";
 import "ds-token/token.sol";
+import "ds-value/value.sol";
 
 import {Vat}  from '../vat.sol';
 import {Cat}  from '../cat.sol';
@@ -29,6 +30,27 @@ import {Flapper} from '../flap.sol';
 import {Flopper} from '../flop.sol';
 import {GemJoin} from '../join.sol';
 import {End}  from '../end.sol';
+
+contract Hevm {
+    function warp(uint256) public;
+}
+
+contract PipLike {
+    function read() public returns (bytes32);
+    function poke(bytes32 val) public;
+}
+
+contract TestSpot {
+    struct Ilk {
+        address pip;
+        uint256 mat;
+    }
+    mapping (bytes32 => Ilk) public ilks;
+
+    function file(bytes32 ilk, address pip_) public {
+        ilks[ilk].pip = pip_;
+    }
+}
 
 contract Usr {
     Vat public vat;
@@ -73,12 +95,17 @@ contract Usr {
 }
 
 contract EndTest is DSTest {
+    Hevm hevm;
+
     Vat   vat;
     End   end;
     Vow   vow;
     Cat   cat;
 
     DSToken gold;
+
+    PipLike pip;
+    TestSpot spot;
 
     GemJoin gemA;
 
@@ -119,6 +146,9 @@ contract EndTest is DSTest {
     }
 
     function setUp() public {
+        hevm = Hevm(0x7109709ECfa91a80626fF3989D68f67F5b1DD12D);
+        hevm.warp(0);
+
         vat = new Vat();
         DSToken gov = new DSToken('GOV');
 
@@ -135,6 +165,10 @@ contract EndTest is DSTest {
 
         gold = new DSToken("GEM");
         gold.mint(20 ether);
+
+        pip = PipLike(address(new DSValue()));
+        spot = new TestSpot();
+        spot.file("gold", address(pip));
 
         vat.init("gold");
         gemA = new GemJoin(address(vat), "gold", address(gold));
@@ -159,6 +193,8 @@ contract EndTest is DSTest {
         end.file("vat", address(vat));
         end.file("cat", address(cat));
         end.file("vow", address(vow));
+        end.file("spot", address(spot));
+        end.file("wait", 1 hours);
         vat.rely(address(end));
         vow.rely(address(end));
         cat.rely(address(end));
@@ -190,11 +226,10 @@ contract EndTest is DSTest {
         assertEq(vat.debt(), rad(15 ether));
         assertEq(vat.vice(), 0);
 
-        // tag and fix computation
-        uint tag = RAY / 5;
-        uint fix = RAY / 5;
+        // collateral price is 2
+        pip.poke(bytes32(RAY / 5));
         end.cage();
-        end.cage("gold", tag, fix);
+        end.cage("gold");
         end.skim("gold", urn1);
 
         // local checks:
@@ -212,9 +247,14 @@ contract EndTest is DSTest {
         assertEq(gem("gold", urn1), 7 ether);
         ali.exit(address(this), 7 ether);
 
+        hevm.warp(1 hours);
+        end.thaw();
+        end.flow("gold");
+        assertTrue(end.fixs("gold") != 0);
+
         // dai redemption
         ali.hope(address(end));
-        ali.shop(rad(15 ether));
+        ali.shop(15 ether);
 
         // global checks:
         assertEq(vat.debt(), 0);
@@ -246,21 +286,19 @@ contract EndTest is DSTest {
         address urn2 = address(bob);
         gemA.join(urn2, 1 ether);
         bob.frob("gold", urn2, urn2, urn2, 1 ether, 3 ether);
-        // this urn has 0 gem, 1 ink, 3 tab, 3 dai
+        // bob's urn has 0 gem, 1 ink, 3 tab, 3 dai
 
         // global checks:
         assertEq(vat.debt(), rad(18 ether));
         assertEq(vat.vice(), 0);
 
-        // tag and fix computation
-        // CDP holders settled at price of 2
-        uint tag = RAY / 2;
-        // DAI holders get ~0.944
-        uint fix = (17 * RAY) / 36;
+        // collateral price is 2
+        pip.poke(bytes32(RAY / 2));
         end.cage();
-        end.cage("gold", tag, fix);
+        end.cage("gold");
         end.skim("gold", urn1);
-        end.skim("gold", urn2);
+        // undercollateralised CDP is bailed
+        end.bail("gold", urn2);
 
         // local checks
         assertEq(art("gold", urn1), 0);
@@ -279,9 +317,14 @@ contract EndTest is DSTest {
         assertEq(gem("gold", urn1), 2.5 ether);
         ali.exit(address(this), 2.5 ether);
 
+        hevm.warp(1 hours);
+        end.thaw();
+        end.flow("gold");
+        assertTrue(end.fixs("gold") != 0);
+
         // first dai redemption
         ali.hope(address(end));
-        ali.shop(rad(15 ether));
+        ali.shop(15 ether);
 
         // global checks:
         assertEq(vat.debt(), rad(3 ether));
@@ -292,12 +335,13 @@ contract EndTest is DSTest {
 
         // local checks:
         assertEq(dai(urn1), 0);
+        uint256 fix = end.fixs("gold");
         assertEq(gem("gold", urn1), rmul(fix, 15 ether));
         ali.exit(address(this), rmul(fix, 15 ether));
 
         // second dai redemption
         bob.hope(address(end));
-        bob.shop(rad(3 ether));
+        bob.shop(3 ether);
 
         // global checks:
         assertEq(vat.debt(), 0);
@@ -314,90 +358,6 @@ contract EndTest is DSTest {
         // some dust remains in the End because of rounding:
         assertEq(gem("gold", address(end)), 1);
         assertEq(gold.balanceOf(address(gemA)), 1);
-    }
-
-    function test_cage_undercollateralised_dai_parity_debt() public {
-        Usr ali = new Usr(vat, end, gemA);
-        Usr bob = new Usr(vat, end, gemA);
-
-        // make a CDP:
-        address urn1 = address(ali);
-        gemA.join(urn1, 10 ether);
-        ali.frob("gold", urn1, urn1, urn1, 10 ether, 15 ether);
-        // this urn has 0 gem, 10 ink, 15 tab, 15 dai
-
-        // make a second CDP:
-        address urn2 = address(bob);
-        gemA.join(urn2, 1 ether);
-        bob.frob("gold", urn2, urn2, urn2, 1 ether, 3 ether);
-        // this urn has 0 gem, 1 ink, 3 tab, 3 dai
-
-        // global checks:
-        assertEq(vat.debt(), rad(18 ether));
-        assertEq(vat.vice(), 0);
-
-        // tag and fix computation
-        // CDP holders settled at price of 1.875
-        uint tag = 533333333333333333358631380;
-        // DAI holders get 1.0
-        uint fix = RAY / 2;
-        end.cage();
-        end.cage("gold", tag, fix);
-        end.skim("gold", urn1);
-        end.skim("gold", urn2);
-
-        // local checks
-        assertEq(art("gold", urn1), 0);
-        assertEq(ink("gold", urn1), 2 ether);
-        assertEq(art("gold", urn2), 0);
-        assertEq(ink("gold", urn2), 0);
-        assertEq(vat.sin(address(end)), rad(18 ether));
-
-        // global checks
-        assertEq(vat.debt(), rad(18 ether));
-        assertEq(vat.vice(), rad(18 ether));
-
-        // CDP closing
-        ali.free("gold");
-        assertEq(ink("gold", urn1), 0);
-        assertEq(gem("gold", urn1), 2 ether);
-        ali.exit(address(this), 2 ether);
-
-        // first dai redemption
-        ali.hope(address(end));
-        ali.shop(rad(15 ether));
-
-        // global checks:
-        assertEq(vat.debt(), rad(3 ether));
-        assertEq(vat.vice(), rad(3 ether));
-
-        ali.pack("gold");
-        ali.cash("gold");
-
-        // local checks:
-        assertEq(dai(urn1), 0);
-        assertEq(gem("gold", urn1), rmul(fix, 15 ether));
-        ali.exit(address(this), rmul(fix, 15 ether));
-
-        // second dai redemption
-        bob.hope(address(end));
-        bob.shop(rad(3 ether));
-
-        // global checks:
-        assertEq(vat.debt(), 0);
-        assertEq(vat.vice(), 0);
-
-        bob.pack("gold");
-        bob.cash("gold");
-
-        // local checks:
-        assertEq(dai(urn2), 0);
-        assertEq(gem("gold", urn2), rmul(fix, 3 ether));
-        bob.exit(address(this), rmul(fix, 3 ether));
-
-        assertEq(gem("gold", address(end)), 0);
-        // some dust remains in the adapter because of rounding:
-        assertTrue(gold.balanceOf(address(gemA)) < 2);
     }
 
     function test_cage_skip() public {
@@ -420,11 +380,10 @@ contract EndTest is DSTest {
         flip.tend(auction, 10 ether, rad(1 ether)); // bid 1 dai
         assertEq(dai(urn1), 14 ether);
 
-        // tag and fix computation
-        uint tag = RAY / 5;
-        uint fix = RAY / 5;
+        // collateral price is 2
+        pip.poke(bytes32(RAY / 5));
         end.cage();
-        end.cage("gold", tag, fix);
+        end.cage("gold");
 
         end.skip("gold", auction);
         assertEq(dai(address(this)), 1 ether);       // bid refunded
@@ -451,9 +410,14 @@ contract EndTest is DSTest {
         assertEq(gem("gold", urn1), 7 ether);
         ali.exit(address(this), 7 ether);
 
+        hevm.warp(1 hours);
+        end.thaw();
+        end.flow("gold");
+        assertTrue(end.fixs("gold") != 0);
+
         // dai redemption
         ali.hope(address(end));
-        ali.shop(rad(15 ether));
+        ali.shop(15 ether);
 
         // global checks:
         // no need for vent

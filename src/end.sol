@@ -35,6 +35,7 @@ contract VatLike {
     function dai(address) public view returns (uint);
     function ilks(bytes32 ilk) public returns (Ilk memory);
     function urns(bytes32 ilk, address urn) public returns (Urn memory);
+    function debt() public returns (uint);
     function move(address src, address dst, uint256 rad) public;
     function flux(bytes32 ilk, address src, address dst, uint256 rad) public;
     function tune(bytes32 i, address u, address v, address w, int256 dink, int256 dart) public;
@@ -54,8 +55,7 @@ contract CatLike {
 }
 contract VowLike {
     function Joy() public view returns (uint);
-    function Woe() public view returns (uint);
-    function Ash() public view returns (uint);
+    function Awe() public view returns (uint);
     function heal(uint256 rad) public;
     function kiss(uint256 rad) public;
     function cage() public;
@@ -76,6 +76,18 @@ contract Flippy {
     function yank(uint id) public;
 }
 
+contract PipLike {
+    function read() public view returns (bytes32);
+}
+
+contract Spotty {
+    struct Ilk {
+        address pip;
+        uint256 mat;
+    }
+    function ilks(bytes32) public view returns (Ilk memory);
+}
+
 contract End {
     // --- Auth ---
     mapping (address => uint) public wards;
@@ -87,11 +99,19 @@ contract End {
     VatLike  public vat;
     CatLike  public cat;
     VowLike  public vow;
+
+    Spotty   public spot;
+
     uint256  public live;
+    uint256  public wait;
+    uint256  public when;
+    uint256  public debt;
 
     mapping (address => uint256)                      public dai;
     mapping (bytes32 => uint256)                      public tags;
+    mapping (bytes32 => uint256)                      public gaps;
     mapping (bytes32 => uint256)                      public fixs;
+    mapping (bytes32 => uint256)                      public arts;
     mapping (bytes32 => mapping (address => uint256)) public bags;
 
     // --- Init ---
@@ -115,30 +135,38 @@ contract End {
     function rmul(uint x, uint y) internal pure returns (uint z) {
         z = mul(x, y) / RAY;
     }
+    function rdiv(uint x, uint y) internal pure returns (uint z) {
+        z = mul(x, RAY) / y;
+    }
     function min(uint x, uint y) internal pure returns (uint z) {
         if (x > y) { z = y; } else { z = x; }
     }
 
     // --- Administration ---
     function file(bytes32 what, address data) public auth {
-        if (what == "vat") vat = VatLike(data);
-        if (what == "cat") cat = CatLike(data);
-        if (what == "vow") vow = VowLike(data);
+        if (what == "vat")  vat = VatLike(data);
+        if (what == "cat")  cat = CatLike(data);
+        if (what == "vow")  vow = VowLike(data);
+        if (what == "spot") spot = Spotty(data);
+    }
+    function file(bytes32 what, uint256 data) public auth {
+        if (what == "wait") wait = data;
     }
 
     // --- Settlement ---
     function cage() public auth {
         require(live == 1);
         live = 0;
+        when = now;
         vat.cage();
         cat.cage();
         vow.cage();
     }
 
-    function cage(bytes32 ilk, uint256 tag, uint256 fix) public auth {
+    function cage(bytes32 ilk) public {
         require(live == 0);
-        tags[ilk] = tag;
-        fixs[ilk] = fix;
+        require(tags[ilk] == 0);
+        tags[ilk] = uint(PipLike(spot.ilks(ilk).pip).read());
         Flippy(cat.ilks(ilk).flip).cage();
     }
 
@@ -160,9 +188,28 @@ contract End {
         VatLike.Ilk memory i = vat.ilks(ilk);
         VatLike.Urn memory u = vat.urns(ilk, urn);
 
-        uint war = min(u.ink, rmul(rmul(u.art, i.rate), tags[ilk]));
+        uint war = rmul(rmul(u.art, i.rate), tags[ilk]);
+        // redundant check:
+        require(u.ink >= war);
+        arts[ilk] = add(arts[ilk], u.art);
 
         vat.grab(ilk, urn, address(this), address(this), -int(war), -int(u.art));
+    }
+
+    function bail(bytes32 ilk, address urn) public {
+        require(tags[ilk] != 0);
+
+        VatLike.Ilk memory i = vat.ilks(ilk);
+        VatLike.Urn memory u = vat.urns(ilk, urn);
+
+        uint war = rmul(rmul(u.art, i.rate), tags[ilk]);
+
+        // redundant check:
+        require(u.ink < war);
+        arts[ilk] = add(arts[ilk], u.art);
+        gaps[ilk] = add(gaps[ilk], sub(war, u.ink));
+
+        vat.grab(ilk, urn, address(this), address(this), -int(u.ink), -int(u.art));
     }
 
     function free(bytes32 ilk) public {
@@ -171,20 +218,38 @@ contract End {
         vat.grab(ilk, msg.sender, msg.sender, msg.sender, -int(u.ink), 0);
     }
 
-    function shop(uint256 rad) public {
-        vat.move(msg.sender, address(this), rad);
-        vat.heal(rad);
-        dai[msg.sender] = add(dai[msg.sender], rad);
+    function thaw() public {
+        require(now >= when + wait);
+        require(debt == 0);
+        // an awkward kind of healing?
+        vow.cage();
+        debt = vat.debt();
+    }
+
+    function flow(bytes32 ilk) public {
+        require(debt != 0);
+        require(fixs[ilk] == 0);
+
+        VatLike.Ilk memory i = vat.ilks(ilk);
+        uint256 wad = rmul(rmul(add(i.Art, arts[ilk]), i.rate), tags[ilk]);
+        fixs[ilk] = rdiv(mul(sub(wad, gaps[ilk]), RAY), debt);
+    }
+
+    function shop(uint256 wad) public {
+        require(debt != 0);
+        vat.move(msg.sender, address(this), mul(wad, RAY));
+        vat.heal(mul(wad, RAY));
+        dai[msg.sender] = add(dai[msg.sender], wad);
     }
 
     function pack(bytes32 ilk) public {
         require(bags[ilk][msg.sender] == 0);
-        bags[ilk][msg.sender] = add(bags[ilk][msg.sender], dai[msg.sender]);
+        bags[ilk][msg.sender] = dai[msg.sender];
     }
 
     function cash(bytes32 ilk) public {
-        uint gems = mul(bags[ilk][msg.sender], fixs[ilk]) / 10 ** 54;
-        vat.flux(ilk, address(this), msg.sender, gems);
+        require(fixs[ilk] != 0);
+        vat.flux(ilk, address(this), msg.sender, rmul(bags[ilk][msg.sender], fixs[ilk]));
         bags[ilk][msg.sender]  = 0;
         dai[msg.sender]        = 0;
     }
