@@ -4,13 +4,13 @@ pragma experimental ABIEncoderV2;
 import "ds-test/test.sol";
 import "ds-token/token.sol";
 
-import {Vat} from './vat.sol';
-import {Pit} from './pit.sol';
-import {Cat} from './cat.sol';
-import {Vow} from './vow.sol';
-import {Jug} from './jug.sol';
-import {GemJoin, ETHJoin, DaiJoin} from './join.sol';
-import {GemMove, DaiMove} from './move.sol';
+import {Vat} from '../vat.sol';
+import {Pit} from '../pit.sol';
+import {Cat} from '../cat.sol';
+import {Vow} from '../vow.sol';
+import {Jug} from '../jug.sol';
+import {GemJoin, ETHJoin, DaiJoin} from '../join.sol';
+import {GemMove, DaiMove} from '../move.sol';
 
 import {Flipper} from './flip.t.sol';
 import {Flopper} from './flop.t.sol';

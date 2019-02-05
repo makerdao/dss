@@ -3,7 +3,7 @@ pragma solidity >=0.5.0;
 import "ds-test/test.sol";
 import "ds-token/token.sol";
 
-import "./flop.sol";
+import "../flop.sol";
 
 
 contract Hevm {

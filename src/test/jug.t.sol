@@ -2,8 +2,8 @@ pragma solidity >=0.5.0;
 
 import "ds-test/test.sol";
 
-import "./jug.sol";
-import "./vat.sol";
+import "../jug.sol";
+import "../vat.sol";
 
 
 contract Hevm {
