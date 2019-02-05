@@ -1,4 +1,4 @@
-/// frob.sol -- Dai CDP user interface
+/// pit.sol -- Dai CDP user interface
 
 // Copyright (C) 2018 Rain <rainbreak@riseup.net>
 //

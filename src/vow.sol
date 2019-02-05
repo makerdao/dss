@@ -1,4 +1,4 @@
-/// heal.sol -- Dai settlement module
+/// vow.sol -- Dai settlement module
 
 // Copyright (C) 2018 Rain <rainbreak@riseup.net>
 //

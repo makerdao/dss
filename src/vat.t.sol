@@ -4,11 +4,11 @@ pragma experimental ABIEncoderV2;
 import "ds-test/test.sol";
 import "ds-token/token.sol";
 
-import {Vat} from './tune.sol';
-import {Pit} from './frob.sol';
-import {Cat} from './bite.sol';
-import {Vow} from './heal.sol';
-import {Drip} from './drip.sol';
+import {Vat} from './vat.sol';
+import {Pit} from './pit.sol';
+import {Cat} from './cat.sol';
+import {Vow} from './vow.sol';
+import {Jug} from './jug.sol';
 import {GemJoin, ETHJoin, DaiJoin} from './join.sol';
 import {GemMove, DaiMove} from './move.sol';
 
@@ -71,7 +71,7 @@ contract FrobTest is DSTest {
     TestVat vat;
     TestPit pit;
     DSToken gold;
-    Drip    drip;
+    Jug     drip;
 
     GemJoin gemA;
 
@@ -98,7 +98,7 @@ contract FrobTest is DSTest {
         pit.file("gold", "spot", ray(1 ether));
         pit.file("gold", "line", 1000 ether);
         pit.file("Line", uint(1000 ether));
-        drip = new Drip(address(vat));
+        drip = new Jug(address(vat));
         drip.init("gold");
         vat.rely(address(drip));
 
@@ -327,7 +327,7 @@ contract BiteTest is DSTest {
     Vow     vow;
     Cat     cat;
     DSToken gold;
-    Drip    drip;
+    Jug     drip;
 
     GemJoin gemA;
     GemMove gemM;
@@ -385,7 +385,7 @@ contract BiteTest is DSTest {
         vow.file("flop", address(flop));
         flop.rely(address(vow));
 
-        drip = new Drip(address(vat));
+        drip = new Jug(address(vat));
         drip.init("gold");
         drip.file("vow", bytes32(bytes20(address(vow))));
         vat.rely(address(drip));

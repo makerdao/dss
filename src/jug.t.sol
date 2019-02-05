@@ -2,17 +2,17 @@ pragma solidity >=0.5.0;
 
 import "ds-test/test.sol";
 
-import "./drip.sol";
-import "./tune.sol";
+import "./jug.sol";
+import "./vat.sol";
 
 
 contract Hevm {
     function warp(uint256) public;
 }
 
-contract DripTest is DSTest {
+contract JugTest is DSTest {
     Hevm hevm;
-    Drip drip;
+    Jug drip;
     Vat  vat;
 
     function rad(uint wad_) internal pure returns (uint) {
@@ -35,7 +35,7 @@ contract DripTest is DSTest {
         hevm.warp(0);
 
         vat  = new Vat();
-        drip = new Drip(address(vat));
+        drip = new Jug(address(vat));
         vat.rely(address(drip));
         vat.init("i");
         vat.tune("i", "u", "v", "w", 0, 100 ether);

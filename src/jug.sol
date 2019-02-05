@@ -7,7 +7,7 @@ contract VatLike {
     function fold(bytes32,bytes32,int) public;
 }
 
-contract Drip is DSNote {
+contract Jug is DSNote {
     // --- Auth ---
     mapping (address => uint) public wards;
     function rely(address guy) public note auth { wards[guy] = 1; }

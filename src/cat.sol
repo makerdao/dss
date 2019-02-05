@@ -1,4 +1,4 @@
-/// bite.sol -- Dai liquidation module
+/// cat.sol -- Dai liquidation module
 
 // Copyright (C) 2018 Rain <rainbreak@riseup.net>
 //

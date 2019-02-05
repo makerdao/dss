@@ -1,4 +1,4 @@
-/// tune.sol -- Dai CDP database
+/// vat.sol -- Dai CDP database
 
 // Copyright (C) 2018 Rain <rainbreak@riseup.net>
 //

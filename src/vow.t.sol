@@ -4,9 +4,9 @@ import "ds-test/test.sol";
 
 import {Flopper as Flop} from './flop.t.sol';
 import {Flapper as Flap} from './flap.t.sol';
-import {TestVat  as Vat} from './frob.t.sol';
+import {TestVat  as Vat} from './vat.t.sol';
 import {DaiMove} from './move.sol';
-import {Vow}     from './heal.sol';
+import {Vow}     from './vow.sol';
 
 contract Hevm {
     function warp(uint256) public;
