@@ -1,7 +1,7 @@
 pragma solidity >=0.5.0;
 
 import "ds-test/test.sol";
-import "dss/tune.sol";
+import "dss/vat.sol";
 import './dsr.sol';
 
 contract Hevm {
