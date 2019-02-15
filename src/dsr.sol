@@ -147,8 +147,8 @@ contract Pot is DSNote {
     }
 
     // --- Savings Dai Management ---
-    function save(int wad) public note {
-        bytes32 guy = b32(msg.sender);
+    function save(bytes32 guy, int wad) public note {
+        require(bytes20(guy) == bytes20(msg.sender));
         pie[guy] = add(pie[guy], wad);
         Pie      = add(Pie,      wad);
         vat.move(guy, b32(address(this)), mul(chi, wad));
