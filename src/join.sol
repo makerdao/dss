@@ -22,6 +22,9 @@ import "ds-note/note.sol";
 contract GemLike {
     function transfer(address,uint) public returns (bool);
     function transferFrom(address,address,uint) public returns (bool);
+}
+
+contract DSToken {
     function mint(address,uint) public;
     function burn(address,uint) public;
 }
@@ -31,6 +34,25 @@ contract VatLike {
     function move(bytes32,bytes32,int) public;
     function flux(bytes32,bytes32,bytes32,int) public;
 }
+
+/*
+    Here we provide *adapters* to connect the Vat to arbitrary external
+    token implementations, creating a bounded context for the Vat. The
+    adapters here are provided as working examples:
+
+      - `GemJoin`: For well behaved ERC20 tokens, with simple transfer
+                   semantics.
+
+      - `ETHJoin`: For native Ether.
+
+      - `DaiJoin`: For connecting internal Dai balances to an external
+                   `DSToken` implementation.
+
+    In practice, adapter implementations will be varied and specific to
+    individual collateral types, accounting for different transfer
+    semantics and token standards.
+
+*/
 
 contract GemJoin is DSNote {
     VatLike public vat;
@@ -83,10 +105,10 @@ contract ETHJoin is DSNote {
 
 contract DaiJoin is DSNote {
     VatLike public vat;
-    GemLike public dai;
+    DSToken public dai;
     constructor(address vat_, address dai_) public {
         vat = VatLike(vat_);
-        dai = GemLike(dai_);
+        dai = DSToken(dai_);
     }
     uint constant ONE = 10 ** 27;
     function mul(uint x, uint y) internal pure returns (int z) {
