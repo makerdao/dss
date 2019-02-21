@@ -24,7 +24,7 @@ contract GemLike {
     function transferFrom(address,address,uint) public returns (bool);
 }
 
-contract DSToken {
+contract DSTokenLike {
     function mint(address,uint) public;
     function burn(address,uint) public;
 }
@@ -105,10 +105,10 @@ contract ETHJoin is DSNote {
 
 contract DaiJoin is DSNote {
     VatLike public vat;
-    DSToken public dai;
+    DSTokenLike public dai;
     constructor(address vat_, address dai_) public {
         vat = VatLike(vat_);
-        dai = DSToken(dai_);
+        dai = DSTokenLike(dai_);
     }
     uint constant ONE = 10 ** 27;
     function mul(uint x, uint y) internal pure returns (int z) {
