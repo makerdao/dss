@@ -30,6 +30,7 @@ contract Vat {
         uint256 rate;  // Accumulated Rates         [ray]
         uint256 spot;  // Price with Safety Margin  [ray]
         uint256 line;  // Debt Ceiling              [rad]
+        uint256 dust;  // Urn Debt Floor            [rad]
     }
     struct Urn {
         uint256 ink;   // Locked Collateral  [wad]
@@ -110,6 +111,7 @@ contract Vat {
     function file(bytes32 ilk, bytes32 what, uint data) public note auth {
         if (what == "spot") ilks[ilk].spot = data;
         if (what == "line") ilks[ilk].line = data;
+        if (what == "dust") ilks[ilk].dust = data;
     }
 
     // --- Fungibility ---
@@ -150,8 +152,9 @@ contract Vat {
         require(msg.sender == address(bytes20(v)) || !firm);
         require(msg.sender == address(bytes20(w)) || !cool);
 
-        require(live == 1);
+        require(mul(urn.art, ilk.rate) >= ilk.dust || urn.art == 0);
         require(ilk.rate != 0);
+        require(live == 1);
     }
     function grab(bytes32 i, bytes32 u, bytes32 v, bytes32 w, int dink, int dart) public note auth {
         Urn storage urn = urns[i][u];

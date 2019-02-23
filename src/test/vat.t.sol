@@ -252,6 +252,15 @@ contract FrobTest is DSTest {
         assertTrue(!bob.can_frob(address(vat), "gold", a, b, c,  0 ether, -1 ether));
         assertTrue(!che.can_frob(address(vat), "gold", a, c, a,  0 ether, -1 ether));
     }
+
+    function test_dust() public {
+        assertTrue( try_frob("gold", 9 ether,  1 ether));
+        vat.file("gold", "dust", rad(5 ether));
+        assertTrue(!try_frob("gold", 5 ether,  2 ether));
+        assertTrue( try_frob("gold", 0 ether,  5 ether));
+        assertTrue(!try_frob("gold", 0 ether, -5 ether));
+        assertTrue( try_frob("gold", 0 ether, -6 ether));
+    }
 }
 
 contract JoinTest is DSTest {
