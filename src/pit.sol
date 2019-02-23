@@ -22,9 +22,7 @@ import "ds-note/note.sol";
 
 contract VatLike {
     struct Ilk {
-        uint256 take;  // ray
         uint256 rate;  // ray
-        uint256 Ink;   // wad
         uint256 Art;   // wad
     }
     struct Urn {

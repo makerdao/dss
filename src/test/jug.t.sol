@@ -26,7 +26,7 @@ contract JugTest is DSTest {
         return uint(rho_);
     }
     function rate(bytes32 ilk) internal view returns (uint) {
-        (uint t, uint r, uint I, uint A) = vat.ilks(ilk); t; A; I;
+        (uint r, uint A) = vat.ilks(ilk); A;
         return r;
     }
 
@@ -46,7 +46,7 @@ contract JugTest is DSTest {
         assertEq(uint(now), 1);
         hevm.warp(2);
         assertEq(uint(now), 2);
-        (uint t, uint r, uint I, uint A) = vat.ilks("i"); t; r; I;
+        (uint r, uint A) = vat.ilks("i"); r;
         assertEq(A, 100 ether);
     }
     function test_drip_updates_rho() public {

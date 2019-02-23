@@ -1,9 +1,14 @@
 pragma solidity >=0.5.0;
+pragma experimental ABIEncoderV2;
 
 import "ds-note/note.sol";
 
 contract VatLike {
-    function ilks(bytes32) public returns (uint,uint,uint,uint);
+    struct Ilk {
+        uint256 rate;  // ray
+        uint256 Art;   // wad
+    }
+    function ilks(bytes32) public returns (Ilk memory);
     function fold(bytes32,bytes32,int) public;
 }
 
@@ -90,10 +95,9 @@ contract Jug is DSNote {
 
     // --- Stability Fee Collection ---
     function drip(bytes32 ilk) public note {
-        Ilk storage i = ilks[ilk];
-        require(now >= i.rho);
-        (uint take, uint rate, uint Ink, uint Art) = vat.ilks(ilk); Art; Ink; take;
-        vat.fold(ilk, vow, diff(rmul(rpow(add(repo, i.tax), now - i.rho, ONE), rate), rate));
-        i.rho = uint48(now);
+        require(now >= ilks[ilk].rho);
+        VatLike.Ilk memory i = vat.ilks(ilk);
+        vat.fold(ilk, vow, diff(rmul(rpow(add(repo, ilks[ilk].tax), now - ilks[ilk].rho, ONE), i.rate), i.rate));
+        ilks[ilk].rho = uint48(now);
     }
 }

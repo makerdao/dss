@@ -63,19 +63,15 @@ contract GemJoin is DSNote {
         ilk = ilk_;
         gem = GemLike(gem_);
     }
-    uint constant ONE = 10 ** 27;
-    function mul(uint x, uint y) internal pure returns (int z) {
-        z = int(x * y);
-        require(int(z) >= 0);
-        require(y == 0 || uint(z) / y == x);
-    }
     function join(bytes32 urn, uint wad) public note {
-        vat.slip(ilk, urn, mul(ONE, wad));
+        require(int(wad) >= 0);
+        vat.slip(ilk, urn, int(wad));
         require(gem.transferFrom(msg.sender, address(this), wad));
     }
     function exit(bytes32 urn, address guy, uint wad) public note {
         require(bytes20(urn) == bytes20(msg.sender));
-        vat.slip(ilk, urn, -mul(ONE, wad));
+        require(int(wad) >= 0);
+        vat.slip(ilk, urn, -int(wad));
         require(gem.transfer(guy, wad));
     }
 }
@@ -87,18 +83,14 @@ contract ETHJoin is DSNote {
         vat = VatLike(vat_);
         ilk = ilk_;
     }
-    uint constant ONE = 10 ** 27;
-    function mul(uint x, uint y) internal pure returns (int z) {
-        z = int(x * y);
-        require(int(z) >= 0);
-        require(y == 0 || uint(z) / y == x);
-    }
     function join(bytes32 urn) public payable note {
-        vat.slip(ilk, urn, mul(ONE, msg.value));
+        require(int(msg.value) >= 0);
+        vat.slip(ilk, urn, int(msg.value));
     }
     function exit(bytes32 urn, address payable guy, uint wad) public note {
         require(bytes20(urn) == bytes20(msg.sender));
-        vat.slip(ilk, urn, -mul(ONE, wad));
+        require(int(wad) >= 0);
+        vat.slip(ilk, urn, -int(wad));
         guy.transfer(wad);
     }
 }

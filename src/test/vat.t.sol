@@ -112,7 +112,7 @@ contract FrobTest is DSTest {
     }
 
     function gem(bytes32 ilk, address urn) internal view returns (uint) {
-        return vat.gem(ilk, bytes32(bytes20(urn))) / 10 ** 27;
+        return vat.gem(ilk, bytes32(bytes20(urn)));
     }
     function ink(bytes32 ilk, address urn) internal view returns (uint) {
         (uint ink_, uint art_) = vat.urns(ilk, bytes32(bytes20(urn))); art_;
@@ -123,7 +123,10 @@ contract FrobTest is DSTest {
         return art_;
     }
 
-
+    function test_setup() public {
+        assertEq(gold.balanceOf(address(gemA)), 1000 ether);
+        assertEq(gem("gold",    address(this)), 1000 ether);
+    }
     function test_join() public {
         bytes32 urn = bytes32(bytes20(address(this)));
         gold.mint(500 ether);
@@ -282,13 +285,13 @@ contract JoinTest is DSTest {
     function () external payable {}
     function test_eth_join() public {
         ethA.join.value(10 ether)(bytes32(bytes20(address(this))));
-        assertEq(vat.gem("eth", me), rad(10 ether));
+        assertEq(vat.gem("eth", me), 10 ether);
     }
     function test_eth_exit() public {
         bytes32 urn = bytes32(bytes20(address(this)));
         ethA.join.value(50 ether)(urn);
         ethA.exit(urn, address(this), 10 ether);
-        assertEq(vat.gem("eth", me), rad(40 ether));
+        assertEq(vat.gem("eth", me), 40 ether);
     }
     function rad(uint wad) internal pure returns (uint) {
         return wad * 10 ** 27;
@@ -350,7 +353,7 @@ contract BiteTest is DSTest {
     }
 
     function gem(bytes32 ilk, address urn) internal view returns (uint) {
-        return vat.gem(ilk, bytes32(bytes20(urn))) / 10 ** 27;
+        return vat.gem(ilk, bytes32(bytes20(urn)));
     }
     function ink(bytes32 ilk, address urn) internal view returns (uint) {
         (uint ink_, uint art_) = vat.urns(ilk, bytes32(bytes20(urn))); art_;
@@ -527,14 +530,13 @@ contract FoldTest is DSTest {
         return wad * 10 ** 27;
     }
     function tab(bytes32 ilk, bytes32 urn) internal view returns (uint) {
-        (uint ink, uint art)  = vat.urns(ilk, urn); ink;
-        (uint take, uint rate, uint Ink, uint Art) = vat.ilks(ilk); Art; Ink; take;
+        (uint ink,  uint art)  = vat.urns(ilk, urn); ink;
+        (uint rate, uint Art)  = vat.ilks(ilk); Art;
         return art * rate;
     }
     function jam(bytes32 ilk, bytes32 urn) internal view returns (uint) {
         (uint ink, uint art)  = vat.urns(ilk, urn); art;
-        (uint take, uint rate, uint Ink, uint Art) = vat.ilks(ilk); Art; Ink; rate;
-        return ink * take;
+        return ink;
     }
 
     function setUp() public {
@@ -548,32 +550,5 @@ contract FoldTest is DSTest {
         vat.fold("gold", "ali",  int(ray(0.05 ether)));
         assertEq(tab("gold", "bob"), rad(1.05 ether));
         assertEq(vat.dai("ali"),     rad(0.05 ether));
-    }
-    function test_toll_down() public {
-        vat.slip("gold", "bob", int(rad(1 ether)));
-        vat.slip("gold", "cat", int(rad(2 ether)));
-        vat.tune("gold", "bob", "bob", "bob", 1 ether, 0);
-        vat.tune("gold", "cat", "cat", "cat", 2 ether, 0);
-
-        assertEq(jam("gold", "bob"),     rad(1.00 ether));
-        assertEq(jam("gold", "cat"),     rad(2.00 ether));
-        vat.toll("gold", "ali",     -int(ray(0.05 ether)));
-        assertEq(jam("gold", "bob"),     rad(0.95 ether));
-        assertEq(jam("gold", "cat"),     rad(1.90 ether));
-        assertEq(vat.gem("gold", "ali"), rad(0.15 ether));
-    }
-    function test_toll_up() public {
-        vat.slip("gold", "ali", int(rad(1 ether)));
-        vat.slip("gold", "bob", int(rad(1 ether)));
-        vat.slip("gold", "cat", int(rad(2 ether)));
-        vat.tune("gold", "bob", "bob", "bob", 1 ether, 0);
-        vat.tune("gold", "cat", "cat", "cat", 2 ether, 0);
-
-        assertEq(jam("gold", "bob"),     rad(1.00 ether));
-        assertEq(jam("gold", "cat"),     rad(2.00 ether));
-        vat.toll("gold", "ali",      int(ray(0.05 ether)));
-        assertEq(jam("gold", "bob"),     rad(1.05 ether));
-        assertEq(jam("gold", "cat"),     rad(2.10 ether));
-        assertEq(vat.gem("gold", "ali"), rad(0.85 ether));
     }
 }
