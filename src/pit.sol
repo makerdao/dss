@@ -53,14 +53,6 @@ contract Pit is DSNote {
     uint256 public Line;  // Debt Ceiling  [wad]
     VatLike public  vat;  // CDP Engine
 
-    // --- Events ---
-    event Frob(
-      bytes32 indexed ilk,
-      bytes32 indexed urn,
-      int256  dink,
-      int256  dart
-    );
-
     // --- Init ---
     constructor(address vat_) public {
         wards[msg.sender] = 1;
@@ -85,7 +77,7 @@ contract Pit is DSNote {
     }
 
     // --- CDP Owner Interface ---
-    function frob(bytes32 ilk, bytes32 urn, bytes32 gem, bytes32 dai, int dink, int dart) public {
+    function frob(bytes32 ilk, bytes32 urn, bytes32 gem, bytes32 dai, int dink, int dart) public note {
         VatLike(vat).tune(ilk, urn, gem, dai, dink, dart);
 
         VatLike.Ilk memory i = vat.ilks(ilk);
@@ -103,7 +95,5 @@ contract Pit is DSNote {
 
         require(i.rate != 0);
         require(live == 1);
-
-        emit Frob(ilk, urn, dink, dart);
     }
 }
