@@ -35,6 +35,10 @@ contract JugTest is DSTest {
         Vat.Ilk memory i = VatLike(address(vat)).ilks(ilk);
         return i.rate;
     }
+    function line(bytes32 ilk) internal view returns (uint) {
+        Vat.Ilk memory i = VatLike(address(vat)).ilks(ilk);
+        return i.line;
+    }
 
     function setUp() public {
         hevm = Hevm(0x7109709ECfa91a80626fF3989D68f67F5b1DD12D);
@@ -48,8 +52,8 @@ contract JugTest is DSTest {
         draw("i", 100 ether);
     }
     function draw(bytes32 ilk, uint dai) internal {
-        vat.file("Line", rad(dai));
-        vat.file(ilk, "line", rad(dai));
+        vat.file("Line", vat.Line() + rad(dai));
+        vat.file(ilk, "line", line(ilk) + rad(dai));
         vat.file(ilk, "spot", 10 ** 27 * 10000 ether);
         bytes32 self = bytes32(bytes20(address(this)));
         vat.slip(ilk, self,  10 ** 27 * 1 ether);

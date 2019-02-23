@@ -29,7 +29,7 @@ contract Vat {
         uint256 Art;   // Total Normalised Debt     [wad]
         uint256 rate;  // Accumulated Rates         [ray]
         uint256 spot;  // Price with Safety Margin  [ray]
-        uint256 line;  // Debt Ceiling              [wad]
+        uint256 line;  // Debt Ceiling              [rad]
     }
     struct Urn {
         uint256 ink;   // Locked Collateral  [wad]
@@ -74,7 +74,6 @@ contract Vat {
     }
 
     // --- Math ---
-    uint256 constant ONE = 10 ** 27;
     function add(uint x, int y) internal pure returns (uint z) {
       assembly {
         z := add(x, y)
@@ -142,7 +141,7 @@ contract Vat {
         bool cool = dart <= 0;
         bool firm = dink >= 0;
         bool nice = cool && firm;
-        bool calm = mul(ilk.Art, ilk.rate) <= mul(ilk.line, ONE) && debt <= mul(Line, ONE);
+        bool calm = mul(ilk.Art, ilk.rate) <= ilk.line && debt <= Line;
         bool safe = mul(urn.ink, ilk.spot) >= mul(urn.art, ilk.rate);
 
         require((calm || cool) && (nice || safe));

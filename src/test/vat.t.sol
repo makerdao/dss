@@ -88,9 +88,9 @@ contract FrobTest is DSTest {
         vat.init("gold");
         gemA = new GemJoin(address(vat), "gold", address(gold));
 
-        vat.file("gold", "spot", ray(1 ether));
-        vat.file("gold", "line", 1000 ether);
-        vat.file("Line", uint(1000 ether));
+        vat.file("gold", "spot",    ray(1 ether));
+        vat.file("gold", "line", rad(1000 ether));
+        vat.file("Line",         rad(1000 ether));
         jug = new Jug(address(vat));
         jug.init("gold");
         vat.rely(address(jug));
@@ -145,7 +145,7 @@ contract FrobTest is DSTest {
     function test_calm() public {
         // calm means that the debt ceiling is not exceeded
         // it's ok to increase debt as long as you remain calm
-        vat.file("gold", 'line', 10 ether);
+        vat.file("gold", 'line', rad(10 ether));
         assertTrue( try_frob("gold", 10 ether, 9 ether));
         // only if under debt ceiling
         assertTrue(!try_frob("gold",  0 ether, 2 ether));
@@ -153,9 +153,9 @@ contract FrobTest is DSTest {
     function test_cool() public {
         // cool means that the debt has decreased
         // it's ok to be over the debt ceiling as long as you're cool
-        vat.file("gold", 'line', 10 ether);
+        vat.file("gold", 'line', rad(10 ether));
         assertTrue(try_frob("gold", 10 ether,  8 ether));
-        vat.file("gold", 'line', 5 ether);
+        vat.file("gold", 'line', rad(5 ether));
         // can decrease debt when over ceiling
         assertTrue(try_frob("gold",  0 ether, -1 ether));
     }
@@ -343,6 +343,9 @@ contract BiteTest is DSTest {
     function ray(uint wad) internal pure returns (uint) {
         return wad * 10 ** 9;
     }
+    function rad(uint wad) internal pure returns (uint) {
+        return wad * 10 ** 27;
+    }
 
     function gem(bytes32 ilk, address urn) internal view returns (uint) {
         return vat.gem(ilk, bytes32(bytes20(urn)));
@@ -402,8 +405,8 @@ contract BiteTest is DSTest {
         vat.rely(address(gemM));
 
         vat.file("gold", "spot", ray(1 ether));
-        vat.file("gold", "line", 1000 ether);
-        vat.file("Line", uint(1000 ether));
+        vat.file("gold", "line", rad(1000 ether));
+        vat.file("Line",         rad(1000 ether));
         flip = new Flipper(address(daiM), address(gemM));
         cat.file("gold", "flip", address(flip));
         cat.file("gold", "chop", ray(1 ether));
@@ -537,8 +540,8 @@ contract FoldTest is DSTest {
     function setUp() public {
         vat = new Vat();
         vat.init("gold");
-        vat.file("Line", 100 ether);
-        vat.file("gold", "line", 100 ether);
+        vat.file("Line", rad(100 ether));
+        vat.file("gold", "line", rad(100 ether));
     }
     function draw(bytes32 ilk, uint dai) internal {
         vat.file("Line", rad(dai));
