@@ -50,22 +50,22 @@ contract Vat {
 
     // --- Logs ---
     event Note(
-        bytes4   indexed  sig,
-        bytes32  indexed  foo,
-        bytes32  indexed  bar,
-        bytes32  indexed  too,
-        bytes             fax
+        bytes4   indexed  hash,
+        bytes32  indexed  arg1,
+        bytes32  indexed  arg2,
+        bytes32  indexed  arg3,
+        bytes             data
     ) anonymous;
     modifier note {
-        bytes32 foo;
-        bytes32 bar;
-        bytes32 too;
+        bytes32 arg1;
+        bytes32 arg2;
+        bytes32 arg3;
         assembly {
-            foo := calldataload(4)
-            bar := calldataload(36)
-            too := calldataload(68)
+            arg1 := calldataload(4)
+            arg2 := calldataload(36)
+            arg3 := calldataload(68)
         }
-        emit Note(msg.sig, foo, bar, too, msg.data); _;
+        emit Note(msg.sig, arg1, arg2, arg3, msg.data); _;
     }
 
     // --- Init ---
