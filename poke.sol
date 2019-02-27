@@ -2,7 +2,7 @@ pragma solidity >=0.5.0;
 
 import "ds-math/math.sol";
 
-contract PitLike {
+contract VatLike {
     function file(bytes32, bytes32, uint) public;
 }
 
@@ -11,7 +11,7 @@ contract PipLike {
 }
 
 contract Spotter is DSMath {
-    PitLike public pit;
+    VatLike public vat;
     mapping (bytes32 => Ilk) public ilks;
     uint256 public par = RAY; // ref per dai
 
@@ -26,9 +26,9 @@ contract Spotter is DSMath {
     modifier auth { require(wards[msg.sender] == 1); _; }
 
     // --- Init ---
-    constructor(address pit_) public {
+    constructor(address vat_) public {
         wards[msg.sender] = 1;
-        pit = PitLike(pit_);
+        vat = VatLike(vat_);
     }
 
     // --- Administration ---
@@ -48,7 +48,7 @@ contract Spotter is DSMath {
     function poke(bytes32 ilk) public {
         (bytes32 val, bool zzz) = ilks[ilk].pip.peek();
         if (zzz) {
-            pit.file(ilk, "spot", rdiv(rdiv(mul(uint(val), 10 ** 9), par), ilks[ilk].mat));
+            vat.file(ilk, "spot", rdiv(rdiv(mul(uint(val), 10 ** 9), par), ilks[ilk].mat));
         }
     }
 }
