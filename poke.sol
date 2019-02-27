@@ -20,6 +20,12 @@ contract Spotter is DSMath {
         uint256 mat;
     }
 
+    event Poke(
+      bytes32 ilk,
+      bytes32 val,
+      uint256 spot
+    );
+
     mapping (address => uint) public wards;
     function rely(address guy) public auth { wards[guy] = 1;  }
     function deny(address guy) public auth { wards[guy] = 0; }
@@ -48,7 +54,9 @@ contract Spotter is DSMath {
     function poke(bytes32 ilk) public {
         (bytes32 val, bool zzz) = ilks[ilk].pip.peek();
         if (zzz) {
-            vat.file(ilk, "spot", rdiv(rdiv(mul(uint(val), 10 ** 9), par), ilks[ilk].mat));
+            uint256 spot = rdiv(rdiv(mul(uint(val), 10 ** 9), par), ilks[ilk].mat);
+            vat.file(ilk, "spot", spot);
+            emit Poke(ilk, val, spot);
         }
     }
 }
