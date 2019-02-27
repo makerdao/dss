@@ -59,8 +59,21 @@ contract Usr {
         ok = abi.decode(success, (bool));
         if (ok) return true;
     }
-    function frob(bytes32 ilk, bytes32 u, bytes32 v, bytes32 w, int dink, int dart) public returns (bool) {
+    function can_fork(bytes32 ilk, bytes32 src, bytes32 dst, int dink, int dart) public returns (bool) {
+        string memory sig = "fork(bytes32,bytes32,bytes32,int256,int256)";
+        bytes memory data = abi.encodeWithSignature(sig, ilk, src, dst, dink, dart);
+
+        bytes memory can_call = abi.encodeWithSignature("try_call(address,bytes)", vat, data);
+        (bool ok, bytes memory success) = address(this).call(can_call);
+
+        ok = abi.decode(success, (bool));
+        if (ok) return true;
+    }
+    function frob(bytes32 ilk, bytes32 u, bytes32 v, bytes32 w, int dink, int dart) public {
         vat.frob(ilk, u, v, w, dink, dart);
+    }
+    function fork(bytes32 ilk, bytes32 src, bytes32 dst, int dink, int dart) public {
+        vat.fork(ilk, src, dst, dink, dart);
     }
     function hope(address usr) public {
         vat.hope(usr);

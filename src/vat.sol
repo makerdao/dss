@@ -27,7 +27,7 @@ contract Vat {
     mapping(address => mapping (address => uint)) public can;
     function hope(address guy) public { can[msg.sender][guy] = 1; }
     function nope(address guy) public { can[msg.sender][guy] = 0; }
-    function will(bytes32 bit, address usr) internal view returns (bool) {
+    function wish(bytes32 bit, address usr) internal view returns (bool) {
         return address(bytes20(bit)) == usr || can[address(bytes20(bit))][usr] == 1;
     }
 
@@ -134,7 +134,7 @@ contract Vat {
         dai[dst] = add(dai[dst], rad);
     }
 
-    // --- CDP ---
+    // --- CDP Manipulation ---
     function frob(bytes32 i, bytes32 u, bytes32 v, bytes32 w, int dink, int dart) public note {
         Urn storage urn = urns[i][u];
         Ilk storage ilk = ilks[i];
@@ -151,18 +151,41 @@ contract Vat {
         bool firm = dink >= 0;
         bool nice = cool && firm;
         bool calm = mul(ilk.Art, ilk.rate) <= ilk.line && debt <= Line;
-        bool safe = mul(urn.ink, ilk.spot) >= mul(urn.art, ilk.rate);
+        bool safe = mul(urn.art, ilk.rate) <= mul(urn.ink, ilk.spot);
 
         require((calm || cool) && (nice || safe));
 
-        require(will(u, msg.sender) ||  nice);
-        require(will(v, msg.sender) || !firm);
-        require(will(w, msg.sender) || !cool);
+        require(wish(u, msg.sender) ||  nice);
+        require(wish(v, msg.sender) || !firm);
+        require(wish(w, msg.sender) || !cool);
 
         require(mul(urn.art, ilk.rate) >= ilk.dust || urn.art == 0);
         require(ilk.rate != 0);
         require(live == 1);
     }
+    // --- CDP Fungibility ---
+    function fork(bytes32 ilk, bytes32 src, bytes32 dst, int dink, int dart) public note {
+        Urn storage u = urns[ilk][src];
+        Urn storage v = urns[ilk][dst];
+        Ilk storage i = ilks[ilk];
+
+        u.ink = sub(u.ink, dink);
+        u.art = sub(u.art, dart);
+        v.ink = add(v.ink, dink);
+        v.art = add(v.art, dart);
+
+        // both sides consent
+        require(wish(src, msg.sender) && wish(dst, msg.sender));
+
+        // both sides safe
+        require(mul(u.art, i.rate) <= mul(u.ink, i.spot));
+        require(mul(v.art, i.rate) <= mul(v.ink, i.spot));
+
+        // both sides non-dusty
+        require(mul(u.art, i.rate) >= i.dust || u.art == 0);
+        require(mul(v.art, i.rate) >= i.dust || v.art == 0);
+    }
+    // --- CDP Confiscation ---
     function grab(bytes32 i, bytes32 u, bytes32 v, bytes32 w, int dink, int dart) public note auth {
         Urn storage urn = urns[i][u];
         Ilk storage ilk = ilks[i];
