@@ -52,6 +52,11 @@ contract VatLike {
     individual collateral types, accounting for different transfer
     semantics and token standards.
 
+    Adapters need to implement two basic methods:
+
+      - `join`: enter collateral into the system
+      - `exit`: remove collateral from the system
+
 */
 
 contract GemJoin is DSNote {
