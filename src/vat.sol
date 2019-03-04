@@ -24,6 +24,13 @@ contract Vat {
     function deny(address guy) public note auth { wards[guy] = 0; }
     modifier auth { require(wards[msg.sender] == 1); _; }
 
+    mapping(address => mapping (address => uint)) public can;
+    function hope(address guy) public { can[msg.sender][guy] = 1; }
+    function nope(address guy) public { can[msg.sender][guy] = 0; }
+    function will(bytes32 bit, address usr) internal view returns (bool) {
+        return address(bytes20(bit)) == usr || can[address(bytes20(bit))][usr] == 1;
+    }
+
     // --- Data ---
     struct Ilk {
         uint256 Art;   // Total Normalised Debt     [wad]
@@ -148,9 +155,9 @@ contract Vat {
 
         require((calm || cool) && (nice || safe));
 
-        require(msg.sender == address(bytes20(u)) ||  nice);
-        require(msg.sender == address(bytes20(v)) || !firm);
-        require(msg.sender == address(bytes20(w)) || !cool);
+        require(will(u, msg.sender) ||  nice);
+        require(will(v, msg.sender) || !firm);
+        require(will(w, msg.sender) || !cool);
 
         require(mul(urn.art, ilk.rate) >= ilk.dust || urn.art == 0);
         require(ilk.rate != 0);

@@ -62,6 +62,9 @@ contract Usr {
     function frob(bytes32 ilk, bytes32 u, bytes32 v, bytes32 w, int dink, int dart) public returns (bool) {
         vat.frob(ilk, u, v, w, dink, dart);
     }
+    function hope(address usr) public {
+        vat.hope(usr);
+    }
 }
 
 
@@ -254,6 +257,34 @@ contract FrobTest is DSTest {
         assertTrue(!ali.can_frob("gold", a, a, b,  0 ether, -1 ether));
         assertTrue(!bob.can_frob("gold", a, b, c,  0 ether, -1 ether));
         assertTrue(!che.can_frob("gold", a, c, a,  0 ether, -1 ether));
+    }
+
+    function test_hope() public {
+        Usr ali = new Usr(vat);
+        Usr bob = new Usr(vat);
+        Usr che = new Usr(vat);
+
+        bytes32 a = b32(address(ali));
+        bytes32 b = b32(address(bob));
+        bytes32 c = b32(address(che));
+
+        vat.slip("gold", a, int(rad(20 ether)));
+        vat.slip("gold", b, int(rad(20 ether)));
+        vat.slip("gold", c, int(rad(20 ether)));
+
+        ali.frob("gold", a, a, a, 10 ether, 5 ether);
+
+        // only owner can do risky actions
+        assertTrue( ali.can_frob("gold", a, a, a,  0 ether,  1 ether));
+        assertTrue(!bob.can_frob("gold", a, b, b,  0 ether,  1 ether));
+        assertTrue(!che.can_frob("gold", a, c, c,  0 ether,  1 ether));
+
+        ali.hope(address(bob));
+
+        // unless they hope another user
+        assertTrue( ali.can_frob("gold", a, a, a,  0 ether,  1 ether));
+        assertTrue( bob.can_frob("gold", a, b, b,  0 ether,  1 ether));
+        assertTrue(!che.can_frob("gold", a, c, c,  0 ether,  1 ether));
     }
 
     function test_dust() public {
