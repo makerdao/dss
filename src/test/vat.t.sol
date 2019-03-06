@@ -1,5 +1,4 @@
 pragma solidity >=0.5.0;
-pragma experimental ABIEncoderV2;
 
 import "ds-test/test.sol";
 import "ds-token/token.sol";
@@ -35,7 +34,11 @@ contract TestVat is Vat {
     }
 }
 
-contract Guy {
+contract Usr {
+    Vat public vat;
+    constructor(Vat vat_) public {
+        vat = vat_;
+    }
     function try_call(address addr, bytes calldata data) external returns (bool) {
         bytes memory _data = data;
         assembly {
@@ -46,7 +49,7 @@ contract Guy {
             revert(free, 32)
         }
     }
-    function can_frob(address vat, bytes32 ilk, bytes32 u, bytes32 v, bytes32 w, int dink, int dart) public returns (bool) {
+    function can_frob(bytes32 ilk, bytes32 u, bytes32 v, bytes32 w, int dink, int dart) public returns (bool) {
         string memory sig = "frob(bytes32,bytes32,bytes32,bytes32,int256,int256)";
         bytes memory data = abi.encodeWithSignature(sig, ilk, u, v, w, dink, dart);
 
@@ -56,8 +59,8 @@ contract Guy {
         ok = abi.decode(success, (bool));
         if (ok) return true;
     }
-    function frob(address vat, bytes32 ilk, bytes32 u, bytes32 v, bytes32 w, int dink, int dart) public returns (bool) {
-        Vat(vat).frob(ilk, u, v, w, dink, dart);
+    function frob(bytes32 ilk, bytes32 u, bytes32 v, bytes32 w, int dink, int dart) public returns (bool) {
+        vat.frob(ilk, u, v, w, dink, dart);
     }
 }
 
@@ -201,9 +204,9 @@ contract FrobTest is DSTest {
         return wad * 10 ** 27;
     }
     function test_alt_callers() public {
-        Guy ali = new Guy();
-        Guy bob = new Guy();
-        Guy che = new Guy();
+        Usr ali = new Usr(vat);
+        Usr bob = new Usr(vat);
+        Usr che = new Usr(vat);
 
         bytes32 a = b32(address(ali));
         bytes32 b = b32(address(bob));
@@ -213,44 +216,44 @@ contract FrobTest is DSTest {
         vat.slip("gold", b, int(rad(20 ether)));
         vat.slip("gold", c, int(rad(20 ether)));
 
-        ali.frob(address(vat), "gold", a, a, a, 10 ether, 5 ether);
+        ali.frob("gold", a, a, a, 10 ether, 5 ether);
 
         // anyone can lock
-        assertTrue( ali.can_frob(address(vat), "gold", a, a, a,  1 ether,  0 ether));
-        assertTrue( bob.can_frob(address(vat), "gold", a, b, b,  1 ether,  0 ether));
-        assertTrue( che.can_frob(address(vat), "gold", a, c, c,  1 ether,  0 ether));
+        assertTrue( ali.can_frob("gold", a, a, a,  1 ether,  0 ether));
+        assertTrue( bob.can_frob("gold", a, b, b,  1 ether,  0 ether));
+        assertTrue( che.can_frob("gold", a, c, c,  1 ether,  0 ether));
         // but only with their own gems
-        assertTrue(!ali.can_frob(address(vat), "gold", a, b, a,  1 ether,  0 ether));
-        assertTrue(!bob.can_frob(address(vat), "gold", a, c, b,  1 ether,  0 ether));
-        assertTrue(!che.can_frob(address(vat), "gold", a, a, c,  1 ether,  0 ether));
+        assertTrue(!ali.can_frob("gold", a, b, a,  1 ether,  0 ether));
+        assertTrue(!bob.can_frob("gold", a, c, b,  1 ether,  0 ether));
+        assertTrue(!che.can_frob("gold", a, a, c,  1 ether,  0 ether));
 
         // only the lad can free
-        assertTrue( ali.can_frob(address(vat), "gold", a, a, a, -1 ether,  0 ether));
-        assertTrue(!bob.can_frob(address(vat), "gold", a, b, b, -1 ether,  0 ether));
-        assertTrue(!che.can_frob(address(vat), "gold", a, c, c, -1 ether,  0 ether));
+        assertTrue( ali.can_frob("gold", a, a, a, -1 ether,  0 ether));
+        assertTrue(!bob.can_frob("gold", a, b, b, -1 ether,  0 ether));
+        assertTrue(!che.can_frob("gold", a, c, c, -1 ether,  0 ether));
         // the lad can free to anywhere
-        assertTrue( ali.can_frob(address(vat), "gold", a, b, a, -1 ether,  0 ether));
-        assertTrue( ali.can_frob(address(vat), "gold", a, c, a, -1 ether,  0 ether));
+        assertTrue( ali.can_frob("gold", a, b, a, -1 ether,  0 ether));
+        assertTrue( ali.can_frob("gold", a, c, a, -1 ether,  0 ether));
 
         // only the lad can draw
-        assertTrue( ali.can_frob(address(vat), "gold", a, a, a,  0 ether,  1 ether));
-        assertTrue(!bob.can_frob(address(vat), "gold", a, b, b,  0 ether,  1 ether));
-        assertTrue(!che.can_frob(address(vat), "gold", a, c, c,  0 ether,  1 ether));
+        assertTrue( ali.can_frob("gold", a, a, a,  0 ether,  1 ether));
+        assertTrue(!bob.can_frob("gold", a, b, b,  0 ether,  1 ether));
+        assertTrue(!che.can_frob("gold", a, c, c,  0 ether,  1 ether));
         // the lad can draw to anywhere
-        assertTrue( ali.can_frob(address(vat), "gold", a, a, b,  0 ether,  1 ether));
-        assertTrue( ali.can_frob(address(vat), "gold", a, a, c,  0 ether,  1 ether));
+        assertTrue( ali.can_frob("gold", a, a, b,  0 ether,  1 ether));
+        assertTrue( ali.can_frob("gold", a, a, c,  0 ether,  1 ether));
 
         vat.move(a, b, int(rad(1 ether)));
         vat.move(a, c, int(rad(1 ether)));
 
         // anyone can wipe
-        assertTrue( ali.can_frob(address(vat), "gold", a, a, a,  0 ether, -1 ether));
-        assertTrue( bob.can_frob(address(vat), "gold", a, b, b,  0 ether, -1 ether));
-        assertTrue( che.can_frob(address(vat), "gold", a, c, c,  0 ether, -1 ether));
+        assertTrue( ali.can_frob("gold", a, a, a,  0 ether, -1 ether));
+        assertTrue( bob.can_frob("gold", a, b, b,  0 ether, -1 ether));
+        assertTrue( che.can_frob("gold", a, c, c,  0 ether, -1 ether));
         // but only with their own dai
-        assertTrue(!ali.can_frob(address(vat), "gold", a, a, b,  0 ether, -1 ether));
-        assertTrue(!bob.can_frob(address(vat), "gold", a, b, c,  0 ether, -1 ether));
-        assertTrue(!che.can_frob(address(vat), "gold", a, c, a,  0 ether, -1 ether));
+        assertTrue(!ali.can_frob("gold", a, a, b,  0 ether, -1 ether));
+        assertTrue(!bob.can_frob("gold", a, b, c,  0 ether, -1 ether));
+        assertTrue(!che.can_frob("gold", a, c, a,  0 ether, -1 ether));
     }
 
     function test_dust() public {
@@ -522,11 +525,6 @@ contract BiteTest is DSTest {
     }
 }
 
-contract VatLike {
-    function ilks(bytes32) public view returns (Vat.Ilk memory);
-    function urns(bytes32,bytes32) public view returns (Vat.Urn memory);
-}
-
 contract FoldTest is DSTest {
     Vat vat;
 
@@ -537,13 +535,14 @@ contract FoldTest is DSTest {
         return wad * 10 ** 27;
     }
     function tab(bytes32 ilk, bytes32 urn) internal view returns (uint) {
-        Vat.Urn memory u = VatLike(address(vat)).urns(ilk, urn);
-        Vat.Ilk memory i = VatLike(address(vat)).ilks(ilk);
-        return u.art * i.rate;
+        (uint ink_, uint art_) = vat.urns(ilk, bytes32(bytes20(urn))); ink_;
+        (uint Art_, uint rate, uint spot, uint line, uint dust) = vat.ilks(ilk);
+        Art_; spot; line; dust;
+        return art_ * rate;
     }
     function jam(bytes32 ilk, bytes32 urn) internal view returns (uint) {
-        Vat.Urn memory u = VatLike(address(vat)).urns(ilk, urn);
-        return u.ink;
+        (uint ink_, uint art_) = vat.urns(ilk, bytes32(bytes20(urn))); art_;
+        return ink_;
     }
 
     function setUp() public {
