@@ -23,12 +23,6 @@ import "ds-note/note.sol";
 contract Flippy {
     function kick(bytes32 urn, address gal, uint tab, uint lot, uint bid)
         public returns (uint);
-    function gem() public returns (address);
-}
-
-contract Hopeful {
-    function hope(address) public;
-    function nope(address) public;
 }
 
 contract VatLike {
@@ -45,6 +39,7 @@ contract VatLike {
     function ilks(bytes32) public view returns (Ilk memory);
     function urns(bytes32,bytes32) public view returns (Urn memory);
     function grab(bytes32,bytes32,bytes32,bytes32,int,int) public;
+    function hope(address) public;
 }
 
 contract VowLike {
@@ -123,7 +118,7 @@ contract Cat is DSNote {
         if (what == "lump") ilks[ilk].lump = data;
     }
     function file(bytes32 ilk, bytes32 what, address flip) public note auth {
-        if (what == "flip") ilks[ilk].flip = flip;
+        if (what == "flip") ilks[ilk].flip = flip; vat.hope(flip);
     }
 
     // --- CDP Liquidation ---
@@ -158,7 +153,6 @@ contract Cat is DSNote {
         f.tab -= wad;
         f.ink -= ink;
 
-        Hopeful(Flippy(i.flip).gem()).hope(i.flip);
         id = Flippy(i.flip).kick({ urn: f.urn
                                  , gal: address(vow)
                                  , tab: rmul(wad, i.chop)
@@ -166,6 +160,5 @@ contract Cat is DSNote {
                                  , bid: 0
                                  });
         emit FlipKick(n, id);
-        Hopeful(Flippy(i.flip).gem()).nope(i.flip);
     }
 }

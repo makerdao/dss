@@ -32,7 +32,7 @@ contract DSTokenLike {
 contract VatLike {
     function slip(bytes32,bytes32,int) public;
     function move(bytes32,bytes32,uint) public;
-    function flux(bytes32,bytes32,bytes32,int) public;
+    function flux(bytes32,bytes32,bytes32,uint) public;
 }
 
 /*

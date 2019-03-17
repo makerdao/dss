@@ -3,6 +3,7 @@ pragma solidity >=0.5.0;
 import "ds-test/test.sol";
 import {DSToken} from "ds-token/token.sol";
 
+import {Vat}     from "../vat.sol";
 import {Flipper} from "../flip.sol";
 
 contract Hevm {
@@ -13,8 +14,9 @@ contract Guy {
     Flipper flip;
     constructor(Flipper flip_) public {
         flip = flip_;
-        DSToken(address(flip.dai())).approve(address(flip));
-        DSToken(address(flip.gem())).approve(address(flip));
+    }
+    function hope(address usr) public {
+        Vat(address(flip.vat())).hope(usr);
     }
     function tend(uint id, uint lot, uint bid) public {
         flip.tend(id, lot, bid);
@@ -51,57 +53,62 @@ contract Guy {
     }
 }
 
-contract Dai is DSToken('Dai') {
-    uint constant ONE = 10 ** 27;
-    function move(bytes32 src, bytes32 dst, uint rad) public {
-        move(address(bytes20(src)), address(bytes20(dst)), rad / ONE);
-    }
-}
-contract Gem is DSToken('Gem') {
-    function move(bytes32 src, bytes32 dst, uint wad) public {
-        move(address(bytes20(src)), address(bytes20(dst)), wad);
-    }
-    function push(bytes32 guy, uint wad) public {
-        push(address(bytes20(guy)), wad);
-    }
-}
 
 contract Gal {}
 
+contract Vat_ is Vat {
+    function mint(address usr, uint wad) public {
+        dai[bytes32(bytes20(usr))] += 1.00E27 * wad;
+    }
+    function dai_balance(address usr) public view returns (uint) {
+        return dai[bytes32(bytes20(usr))] / 1.00E27;
+    }
+    bytes32 ilk;
+    function set_ilk(bytes32 ilk_) public {
+        ilk = ilk_;
+    }
+    function gem_balance(address usr) public view returns (uint) {
+        return gem[ilk][bytes32(bytes20(usr))];
+    }
+}
 
 contract FlipTest is DSTest {
     Hevm hevm;
 
+    Vat_    vat;
     Flipper flip;
-
-    Dai  dai;
-    Gem  gem;
 
     address ali;
     address bob;
     address gal;
     bytes32 urn = bytes32(bytes20(address(0xacab)));
 
+    function b32(address a) internal pure returns (bytes32) {
+        return bytes32(bytes20(a));
+    }
+
     function setUp() public {
         hevm = Hevm(0x7109709ECfa91a80626fF3989D68f67F5b1DD12D);
         hevm.warp(1 hours);
 
-        dai = new Dai();
-        gem = new Gem();
+        vat = new Vat_();
 
-        flip = new Flipper(address(dai), address(gem));
+        vat.init("gems");
+        vat.set_ilk("gems");
+
+        flip = new Flipper(address(vat), "gems");
 
         ali = address(new Guy(flip));
         bob = address(new Guy(flip));
         gal = address(new Gal());
 
-        dai.approve(address(flip));
-        gem.approve(address(flip));
+        Guy(ali).hope(address(flip));
+        Guy(bob).hope(address(flip));
+        vat.hope(address(flip));
 
-        gem.mint(address(this), 1000 ether);
-
-        dai.mint(ali, 200 ether);
-        dai.mint(bob, 200 ether);
+        vat.slip("gems", bytes32(bytes20(address(this))), 1000 ether);
+        vat.mint(ali, 200 ether);
+        vat.mint(bob, 200 ether);
     }
     function test_kick() public {
         flip.kick({ lot: 100 ether
@@ -125,22 +132,22 @@ contract FlipTest is DSTest {
 
         Guy(ali).tend(id, 100 ether, 1 ether);
         // bid taken from bidder
-        assertEq(dai.balanceOf(ali),   199 ether);
+        assertEq(vat.dai_balance(ali),   199 ether);
         // gal receives payment
-        assertEq(dai.balanceOf(gal),     1 ether);
+        assertEq(vat.dai_balance(gal),     1 ether);
 
         Guy(bob).tend(id, 100 ether, 2 ether);
         // bid taken from bidder
-        assertEq(dai.balanceOf(bob), 198 ether);
+        assertEq(vat.dai_balance(bob), 198 ether);
         // prev bidder refunded
-        assertEq(dai.balanceOf(ali), 200 ether);
+        assertEq(vat.dai_balance(ali), 200 ether);
         // gal receives excess
-        assertEq(dai.balanceOf(gal),   2 ether);
+        assertEq(vat.dai_balance(gal),   2 ether);
 
         hevm.warp(5 hours);
         Guy(bob).deal(id);
         // bob gets the winnings
-        assertEq(gem.balanceOf(bob), 100 ether);
+        assertEq(vat.gem_balance(bob), 100 ether);
     }
     function test_tend_later() public {
         uint id = flip.kick({ lot: 100 ether
@@ -153,9 +160,9 @@ contract FlipTest is DSTest {
 
         Guy(ali).tend(id, 100 ether, 1 ether);
         // bid taken from bidder
-        assertEq(dai.balanceOf(ali), 199 ether);
+        assertEq(vat.dai_balance(ali), 199 ether);
         // gal receives payment
-        assertEq(dai.balanceOf(gal),   1 ether);
+        assertEq(vat.dai_balance(gal),   1 ether);
     }
     function test_dent() public {
         uint id = flip.kick({ lot: 100 ether
@@ -169,9 +176,9 @@ contract FlipTest is DSTest {
 
         Guy(ali).dent(id,  95 ether, 50 ether);
         // plop the gems
-        assertEq(gem.balanceOf(address(0xacab)), 5 ether);
-        assertEq(dai.balanceOf(ali),  150 ether);
-        assertEq(dai.balanceOf(bob),  200 ether);
+        assertEq(vat.gem_balance(address(0xacab)), 5 ether);
+        assertEq(vat.dai_balance(ali),  150 ether);
+        assertEq(vat.dai_balance(bob),  200 ether);
     }
     function test_beg() public {
         uint id = flip.kick({ lot: 100 ether

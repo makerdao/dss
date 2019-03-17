@@ -19,12 +19,9 @@ pragma solidity >=0.5.0;
 
 import "ds-note/note.sol";
 
-contract DaiLike {
+contract VatLike {
     function move(bytes32,bytes32,uint) public;
-}
-contract GemLike {
-    function move(bytes32,bytes32,uint) public;
-    function push(bytes32,uint) public;
+    function flux(bytes32,bytes32,bytes32,uint) public;
 }
 
 /*
@@ -56,8 +53,8 @@ contract Flipper is DSNote {
 
     mapping (uint => Bid) public bids;
 
-    DaiLike public   dai;
-    GemLike public   gem;
+    VatLike public   vat;
+    bytes32 public   ilk;
 
     uint256 constant ONE = 1.00E27;
     uint256 public   beg = 1.05E27;  // 5% minimum bid increase
@@ -76,9 +73,9 @@ contract Flipper is DSNote {
     );
 
     // --- Init ---
-    constructor(address dai_, address gem_) public {
-        dai = DaiLike(dai_);
-        gem = GemLike(gem_);
+    constructor(address vat_, bytes32 ilk_) public {
+        vat = VatLike(vat_);
+        ilk = ilk_;
     }
 
     // --- Math ---
@@ -107,7 +104,7 @@ contract Flipper is DSNote {
         bids[id].gal = gal;
         bids[id].tab = tab;
 
-        gem.move(b32(msg.sender), b32(address(this)), lot);
+        vat.flux(ilk, b32(msg.sender), b32(address(this)), lot);
 
         emit Kick(id, lot, bid, tab, urn, gal);
     }
@@ -126,8 +123,8 @@ contract Flipper is DSNote {
         require(bid >  bids[id].bid);
         require(mul(bid, ONE) >= mul(beg, bids[id].bid) || bid == bids[id].tab);
 
-        dai.move(b32(msg.sender), b32(bids[id].guy), mul(ONE, bids[id].bid));
-        dai.move(b32(msg.sender), b32(bids[id].gal), mul(ONE, bid - bids[id].bid));
+        vat.move(b32(msg.sender), b32(bids[id].guy), mul(ONE, bids[id].bid));
+        vat.move(b32(msg.sender), b32(bids[id].gal), mul(ONE, bid - bids[id].bid));
 
         bids[id].guy = msg.sender;
         bids[id].bid = bid;
@@ -143,8 +140,8 @@ contract Flipper is DSNote {
         require(lot < bids[id].lot);
         require(mul(beg, lot) <= mul(bids[id].lot, ONE));
 
-        dai.move(b32(msg.sender), b32(bids[id].guy), mul(ONE, bid));
-        gem.push(bids[id].urn, bids[id].lot - lot);
+        vat.move(b32(msg.sender), b32(bids[id].guy), mul(ONE, bid));
+        vat.flux(ilk, b32(address(this)), bids[id].urn, bids[id].lot - lot);
 
         bids[id].guy = msg.sender;
         bids[id].lot = lot;
@@ -152,7 +149,7 @@ contract Flipper is DSNote {
     }
     function deal(uint id) public note {
         require(bids[id].tic != 0 && (bids[id].tic < now || bids[id].end < now));
-        gem.push(b32(bids[id].guy), bids[id].lot);
+        vat.flux(ilk, b32(address(this)), b32(bids[id].guy), bids[id].lot);
         delete bids[id];
     }
 }

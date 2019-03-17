@@ -8,7 +8,6 @@ import {Cat} from '../cat.sol';
 import {Vow} from '../vow.sol';
 import {Jug} from '../jug.sol';
 import {GemJoin, ETHJoin, DaiJoin} from '../join.sol';
-import {GemMove} from '../move.sol';
 
 import {Flipper} from './flip.t.sol';
 import {Flopper} from './flop.t.sol';
@@ -383,7 +382,6 @@ contract BiteTest is DSTest {
     Jug     jug;
 
     GemJoin gemA;
-    GemMove gemM;
 
     Flipper flip;
     Flopper flop;
@@ -455,13 +453,10 @@ contract BiteTest is DSTest {
         gold.approve(address(gemA));
         gemA.join(bytes32(bytes20(address(this))), 1000 ether);
 
-        gemM = new GemMove(address(vat), "gold");
-        vat.rely(address(gemM));
-
         vat.file("gold", "spot", ray(1 ether));
         vat.file("gold", "line", rad(1000 ether));
         vat.file("Line",         rad(1000 ether));
-        flip = new Flipper(address(vat), address(gemM));
+        flip = new Flipper(address(vat), "gold");
         cat.file("gold", "flip", address(flip));
         cat.file("gold", "chop", ray(1 ether));
 

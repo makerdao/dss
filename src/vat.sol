@@ -131,9 +131,10 @@ contract Vat {
     function slip(bytes32 ilk, bytes32 usr, int256 rad) public note auth {
         gem[ilk][usr] = add(gem[ilk][usr], rad);
     }
-    function flux(bytes32 ilk, bytes32 src, bytes32 dst, int256 rad) public note auth {
-        gem[ilk][src] = sub(gem[ilk][src], rad);
-        gem[ilk][dst] = add(gem[ilk][dst], rad);
+    function flux(bytes32 ilk, bytes32 src, bytes32 dst, uint256 wad) public note {
+        require(wish(src, msg.sender));
+        gem[ilk][src] = sub(gem[ilk][src], wad);
+        gem[ilk][dst] = add(gem[ilk][dst], wad);
     }
     function move(bytes32 src, bytes32 dst, uint256 rad) public note {
         require(wish(src, msg.sender));
