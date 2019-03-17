@@ -8,7 +8,7 @@ import {Cat} from '../cat.sol';
 import {Vow} from '../vow.sol';
 import {Jug} from '../jug.sol';
 import {GemJoin, ETHJoin, DaiJoin} from '../join.sol';
-import {GemMove, DaiMove} from '../move.sol';
+import {GemMove} from '../move.sol';
 
 import {Flipper} from './flip.t.sol';
 import {Flopper} from './flop.t.sol';
@@ -259,8 +259,8 @@ contract FrobTest is DSTest {
         assertTrue( ali.can_frob("gold", a, a, b,  0 ether,  1 ether));
         assertTrue( ali.can_frob("gold", a, a, c,  0 ether,  1 ether));
 
-        vat.move(a, b, int(rad(1 ether)));
-        vat.move(a, c, int(rad(1 ether)));
+        vat.mint(address(bob), 1 ether);
+        vat.mint(address(che), 1 ether);
 
         // anyone can wipe
         assertTrue( ali.can_frob("gold", a, a, a,  0 ether, -1 ether));
@@ -348,6 +348,7 @@ contract JoinTest is DSTest {
     function test_dai_exit() public {
         bytes32 urn = bytes32(bytes20(address(this)));
         vat.mint(address(this), 100 ether);
+        vat.hope(address(daiA));
         daiA.exit(urn, address(this), 60 ether);
         assertEq(dai.balanceOf(address(this)), 60 ether);
         assertEq(vat.dai(me),              rad(40 ether));
@@ -355,6 +356,7 @@ contract JoinTest is DSTest {
     function test_dai_exit_join() public {
         bytes32 urn = bytes32(bytes20(address(this)));
         vat.mint(address(this), 100 ether);
+        vat.hope(address(daiA));
         daiA.exit(urn, address(this), 60 ether);
         dai.approve(address(daiA), uint(-1));
         daiA.join(urn, 30 ether);
@@ -382,7 +384,6 @@ contract BiteTest is DSTest {
 
     GemJoin gemA;
     GemMove gemM;
-    DaiMove daiM;
 
     Flipper flip;
     Flopper flop;
@@ -425,11 +426,8 @@ contract BiteTest is DSTest {
         vat = new TestVat();
         vat = vat;
 
-        daiM = new DaiMove(address(vat));
-        vat.rely(address(daiM));
-
-        flap = new Flapper(address(daiM), address(gov));
-        flop = new Flopper(address(daiM), address(gov));
+        flap = new Flapper(address(vat), address(gov));
+        flop = new Flopper(address(vat), address(gov));
         gov.setOwner(address(flop));
 
         vow = new Vow();
@@ -463,7 +461,7 @@ contract BiteTest is DSTest {
         vat.file("gold", "spot", ray(1 ether));
         vat.file("gold", "line", rad(1000 ether));
         vat.file("Line",         rad(1000 ether));
-        flip = new Flipper(address(daiM), address(gemM));
+        flip = new Flipper(address(vat), address(gemM));
         cat.file("gold", "flip", address(flip));
         cat.file("gold", "chop", ray(1 ether));
 
@@ -471,8 +469,8 @@ contract BiteTest is DSTest {
         vat.rely(address(flap));
         vat.rely(address(flop));
 
-        daiM.hope(address(flip));
-        daiM.hope(address(flop));
+        vat.hope(address(flip));
+        vat.hope(address(flop));
         gold.approve(address(vat));
         gov.approve(address(flap));
     }

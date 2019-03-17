@@ -75,15 +75,11 @@ contract Flapper is DSNote {
 
     // --- Math ---
     function add(uint48 x, uint48 y) internal pure returns (uint48 z) {
-        z = x + y;
-        require(z >= x);
+        require((z = x + y) >= x);
     }
-    function mul(uint x, uint y) internal pure returns (int z) {
-        z = int(x * y);
-        require(int(z) >= 0);
-        require(y == 0 || uint(z) / y == x);
+    function mul(uint x, uint y) internal pure returns (uint z) {
+        require(y == 0 || (z = x * y) / y == x);
     }
-
     function b32(address a) internal pure returns (bytes32) {
         return bytes32(bytes20(a));
     }
@@ -101,7 +97,7 @@ contract Flapper is DSNote {
         bids[id].end = add(uint48(now), tau);
         bids[id].gal = gal;
 
-        dai.move(b32(msg.sender), b32(address(this)), lot);
+        dai.move(b32(msg.sender), b32(address(this)), mul(ONE, lot));
 
         emit Kick(id, lot, bid, gal);
     }
@@ -124,7 +120,7 @@ contract Flapper is DSNote {
     function deal(uint id) public note {
         require(bids[id].tic < now && bids[id].tic != 0 ||
                 bids[id].end < now);
-        dai.move(b32(address(this)), b32(bids[id].guy), bids[id].lot);
+        dai.move(b32(address(this)), b32(bids[id].guy), mul(ONE, bids[id].lot));
         delete bids[id];
     }
 }

@@ -82,15 +82,11 @@ contract Flopper is DSNote {
 
     // --- Math ---
     function add(uint48 x, uint48 y) internal pure returns (uint48 z) {
-        z = x + y;
-        require(z >= x);
+        require((z = x + y) >= x);
     }
-    function mul(uint x, uint y) internal pure returns (int z) {
-        z = int(x * y);
-        require(int(z) >= 0);
-        require(y == 0 || uint(z) / y == x);
+    function mul(uint x, uint y) internal pure returns (uint z) {
+        require(y == 0 || (z = x * y) / y == x);
     }
-
     function b32(address a) internal pure returns (bytes32) {
         return bytes32(bytes20(a));
     }
@@ -117,7 +113,7 @@ contract Flopper is DSNote {
         require(lot <  bids[id].lot);
         require(uint(mul(beg, lot)) / ONE <= bids[id].lot);  // div as lot can be huge
 
-        dai.move(b32(msg.sender), b32(bids[id].guy), bid);
+        dai.move(b32(msg.sender), b32(bids[id].guy), mul(ONE, bid));
 
         bids[id].guy = msg.sender;
         bids[id].lot = lot;

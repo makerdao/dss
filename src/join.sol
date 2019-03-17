@@ -31,7 +31,7 @@ contract DSTokenLike {
 
 contract VatLike {
     function slip(bytes32,bytes32,int) public;
-    function move(bytes32,bytes32,int) public;
+    function move(bytes32,bytes32,uint) public;
     function flux(bytes32,bytes32,bytes32,int) public;
 }
 
@@ -108,10 +108,8 @@ contract DaiJoin is DSNote {
         dai = DSTokenLike(dai_);
     }
     uint constant ONE = 10 ** 27;
-    function mul(uint x, uint y) internal pure returns (int z) {
-        z = int(x * y);
-        require(int(z) >= 0);
-        require(y == 0 || uint(z) / y == x);
+    function mul(uint x, uint y) internal pure returns (uint z) {
+        require(y == 0 || (z = x * y) / y == x);
     }
     function join(bytes32 urn, uint wad) public note {
         vat.move(bytes32(bytes20(address(this))), urn, mul(ONE, wad));

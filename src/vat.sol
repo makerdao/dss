@@ -103,6 +103,12 @@ contract Vat {
         if iszero(eq(y, 0)) { if iszero(eq(sdiv(z, y), x)) { revert(0, 0) } }
       }
     }
+    function add(uint x, uint y) internal pure returns (uint z) {
+        require((z = x + y) >= x);
+    }
+    function sub(uint x, uint y) internal pure returns (uint z) {
+        require((z = x - y) <= x);
+    }
     function mul(uint x, uint y) internal pure returns (uint z) {
         require(y == 0 || (z = x * y) / y == x);
     }
@@ -129,7 +135,8 @@ contract Vat {
         gem[ilk][src] = sub(gem[ilk][src], rad);
         gem[ilk][dst] = add(gem[ilk][dst], rad);
     }
-    function move(bytes32 src, bytes32 dst, int256 rad) public note auth {
+    function move(bytes32 src, bytes32 dst, uint256 rad) public note {
+        require(wish(src, msg.sender));
         dai[src] = sub(dai[src], rad);
         dai[dst] = add(dai[dst], rad);
     }

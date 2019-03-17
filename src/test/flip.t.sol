@@ -52,8 +52,9 @@ contract Guy {
 }
 
 contract Dai is DSToken('Dai') {
-    function move(bytes32 src, bytes32 dst, uint wad) public {
-        move(address(bytes20(src)), address(bytes20(dst)), wad);
+    uint constant ONE = 10 ** 27;
+    function move(bytes32 src, bytes32 dst, uint rad) public {
+        move(address(bytes20(src)), address(bytes20(dst)), rad / ONE);
     }
 }
 contract Gem is DSToken('Gem') {

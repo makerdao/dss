@@ -5,7 +5,6 @@ import "ds-test/test.sol";
 import {Flopper as Flop} from './flop.t.sol';
 import {Flapper as Flap} from './flap.t.sol';
 import {TestVat  as Vat} from './vat.t.sol';
-import {DaiMove} from '../move.sol';
 import {Vow}     from '../vow.sol';
 
 contract Hevm {
@@ -28,8 +27,6 @@ contract VowTest is DSTest {
     Flap flap;
     Gem  gov;
 
-    DaiMove daiM;
-
     function setUp() public {
         hevm = Hevm(0x7109709ECfa91a80626fF3989D68f67F5b1DD12D);
         hevm.warp(0);
@@ -38,12 +35,10 @@ contract VowTest is DSTest {
         vow = new Vow();
         vat.rely(address(vow));
         gov  = new Gem();
-        daiM = new DaiMove(address(vat));
 
-        flop = new Flop(address(daiM), address(gov));
-        flap = new Flap(address(daiM), address(gov));
-        daiM.hope(address(flop));
-        vat.rely(address(daiM));
+        flop = new Flop(address(vat), address(gov));
+        flap = new Flap(address(vat), address(gov));
+        vat.hope(address(flop));
         vat.rely(address(flop));
         vat.rely(address(flap));
         flop.rely(address(vow));
