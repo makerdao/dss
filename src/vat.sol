@@ -89,13 +89,6 @@ contract Vat {
         if slt(y, 0) { if iszero(lt(z, x)) { revert(0, 0) } }
       }
     }
-    function sub(uint x, int y) internal pure returns (uint z) {
-      assembly {
-        z := sub(x, y)
-        if slt(y, 0) { if iszero(gt(z, x)) { revert(0, 0) } }
-        if sgt(y, 0) { if iszero(lt(z, x)) { revert(0, 0) } }
-      }
-    }
     function mul(uint x, int y) internal pure returns (int z) {
       assembly {
         z := mul(x, y)
@@ -126,12 +119,12 @@ contract Vat {
         gem[ilk][guy] = add(gem[ilk][guy], rad);
     }
     function flux(bytes32 ilk, bytes32 src, bytes32 dst, int256 rad) public note auth {
-        gem[ilk][src] = sub(gem[ilk][src], rad);
-        gem[ilk][dst] = add(gem[ilk][dst], rad);
+        gem[ilk][src] = add(gem[ilk][src], -rad);
+        gem[ilk][dst] = add(gem[ilk][dst],  rad);
     }
     function move(bytes32 src, bytes32 dst, int256 rad) public note auth {
-        dai[src] = sub(dai[src], rad);
-        dai[dst] = add(dai[dst], rad);
+        dai[src] = add(dai[src], -rad);
+        dai[dst] = add(dai[dst],  rad);
     }
 
     // --- CDP Manipulation ---
@@ -143,7 +136,7 @@ contract Vat {
         urn.art = add(urn.art, dart);
         ilk.Art = add(ilk.Art, dart);
 
-        gem[i][v] = sub(gem[i][v], dink);
+        gem[i][v] = add(gem[i][v], -dink);
         dai[w]    = add(dai[w], mul(ilk.rate, dart));
         debt      = add(debt,   mul(ilk.rate, dart));
 
@@ -169,10 +162,10 @@ contract Vat {
         Urn storage v = urns[ilk][dst];
         Ilk storage i = ilks[ilk];
 
-        u.ink = sub(u.ink, dink);
-        u.art = sub(u.art, dart);
-        v.ink = add(v.ink, dink);
-        v.art = add(v.art, dart);
+        u.ink = add(u.ink, -dink);
+        u.art = add(u.art, -dart);
+        v.ink = add(v.ink,  dink);
+        v.art = add(v.art,  dart);
 
         // both sides consent
         require(wish(src, msg.sender) && wish(dst, msg.sender));
@@ -194,17 +187,17 @@ contract Vat {
         urn.art = add(urn.art, dart);
         ilk.Art = add(ilk.Art, dart);
 
-        gem[i][v] = sub(gem[i][v], dink);
-        sin[w]    = sub(sin[w], mul(ilk.rate, dart));
-        vice      = sub(vice,   mul(ilk.rate, dart));
+        gem[i][v] = add(gem[i][v], -dink);
+        sin[w]    = add(sin[w], -mul(ilk.rate, dart));
+        vice      = add(vice,   -mul(ilk.rate, dart));
     }
 
     // --- Settlement ---
     function heal(bytes32 u, bytes32 v, int rad) public note auth {
-        sin[u] = sub(sin[u], rad);
-        dai[v] = sub(dai[v], rad);
-        vice   = sub(vice,   rad);
-        debt   = sub(debt,   rad);
+        sin[u] = add(sin[u], -rad);
+        dai[v] = add(dai[v], -rad);
+        vice   = add(vice,   -rad);
+        debt   = add(debt,   -rad);
     }
 
     // --- Rates ---
