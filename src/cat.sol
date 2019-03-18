@@ -54,8 +54,8 @@ contract VowLike {
 contract Cat is DSNote {
     // --- Auth ---
     mapping (address => uint) public wards;
-    function rely(address guy) public note auth { wards[guy] = 1; }
-    function deny(address guy) public note auth { wards[guy] = 0; }
+    function rely(address usr) public note auth { wards[usr] = 1; }
+    function deny(address usr) public note auth { wards[usr] = 0; }
     modifier auth { require(wards[msg.sender] == 1); _; }
 
     // --- Data ---

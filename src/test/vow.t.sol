@@ -14,8 +14,8 @@ contract Hevm {
 
 contract Gem {
     mapping (address => uint256) public balanceOf;
-    function mint(address guy, uint wad) public {
-        balanceOf[guy] += wad;
+    function mint(address usr, uint wad) public {
+        balanceOf[usr] += wad;
     }
 }
 

@@ -21,16 +21,16 @@ contract Hevm {
 
 contract TestVat is Vat {
     uint256 constant ONE = 10 ** 27;
-    function mint(address guy, uint wad) public {
-        dai[bytes32(bytes20(guy))] += wad * ONE;
+    function mint(address usr, uint wad) public {
+        dai[bytes32(bytes20(usr))] += wad * ONE;
         debt += wad * ONE;
     }
-    function balanceOf(address guy) public view returns (uint) {
-        return dai[bytes32(bytes20(guy))] / ONE;
+    function balanceOf(address usr) public view returns (uint) {
+        return dai[bytes32(bytes20(usr))] / ONE;
     }
     function frob(bytes32 ilk, int dink, int dart) public {
-        bytes32 guy = bytes32(bytes20(msg.sender));
-        frob(ilk, guy, guy, guy, dink, dart);
+        bytes32 usr = bytes32(bytes20(msg.sender));
+        frob(ilk, usr, usr, usr, dink, dart);
     }
 }
 

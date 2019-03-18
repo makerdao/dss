@@ -20,13 +20,13 @@ pragma solidity >=0.5.0;
 contract Vat {
     // --- Auth ---
     mapping (address => uint) public wards;
-    function rely(address guy) public note auth { wards[guy] = 1; }
-    function deny(address guy) public note auth { wards[guy] = 0; }
+    function rely(address usr) public note auth { wards[usr] = 1; }
+    function deny(address usr) public note auth { wards[usr] = 0; }
     modifier auth { require(wards[msg.sender] == 1); _; }
 
     mapping(address => mapping (address => uint)) public can;
-    function hope(address guy) public { can[msg.sender][guy] = 1; }
-    function nope(address guy) public { can[msg.sender][guy] = 0; }
+    function hope(address usr) public { can[msg.sender][usr] = 1; }
+    function nope(address usr) public { can[msg.sender][usr] = 0; }
     function wish(bytes32 bit, address usr) internal view returns (bool) {
         return address(bytes20(bit)) == usr || can[address(bytes20(bit))][usr] == 1;
     }
@@ -122,8 +122,8 @@ contract Vat {
     }
 
     // --- Fungibility ---
-    function slip(bytes32 ilk, bytes32 guy, int256 rad) public note auth {
-        gem[ilk][guy] = add(gem[ilk][guy], rad);
+    function slip(bytes32 ilk, bytes32 usr, int256 rad) public note auth {
+        gem[ilk][usr] = add(gem[ilk][usr], rad);
     }
     function flux(bytes32 ilk, bytes32 src, bytes32 dst, int256 rad) public note auth {
         gem[ilk][src] = sub(gem[ilk][src], rad);
