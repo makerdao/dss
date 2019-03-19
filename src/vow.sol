@@ -49,27 +49,23 @@ contract Vow is DSNote {
     address public row;  // flopper
 
     mapping (uint48 => uint256) public sin; // debt queue
-    uint256 public Sin;   // queued debt
-    uint256 public Ash;   // on-auction debt
+    uint256 public Sin;   // queued debt          [rad]
+    uint256 public Ash;   // on-auction debt      [rad]
 
-    uint256 public wait;  // flop delay
-    uint256 public sump;  // flop fixed lot size
-    uint256 public bump;  // flap fixed lot size
-    uint256 public hump;  // surplus buffer
+    uint256 public wait;  // flop delay           [rad]
+    uint256 public sump;  // flop fixed lot size  [rad]
+    uint256 public bump;  // flap fixed lot size  [rad]
+    uint256 public hump;  // surplus buffer       [rad]
 
     // --- Init ---
     constructor() public { wards[msg.sender] = 1; }
 
     // --- Math ---
-    uint256 constant ONE = 10 ** 27;
-
     function add(uint x, uint y) internal pure returns (uint z) {
-        z = x + y;
-        require(z >= x);
+        require((z = x + y) >= x);
     }
     function sub(uint x, uint y) internal pure returns (uint z) {
-        z = x - y;
-        require(z <= x);
+        require((z = x - y) <= x);
     }
     function mul(uint x, uint y) internal pure returns (uint z) {
         require(y == 0 || (z = x * y) / y == x);
@@ -90,11 +86,11 @@ contract Vow is DSNote {
 
     // Total deficit
     function Awe() public view returns (uint) {
-        return uint(VatLike(vat).sin(bytes32(bytes20(address(this))))) / ONE;
+        return uint(VatLike(vat).sin(bytes32(bytes20(address(this)))));
     }
     // Total surplus
     function Joy() public view returns (uint) {
-        return uint(VatLike(vat).dai(bytes32(bytes20(address(this))))) / ONE;
+        return uint(VatLike(vat).dai(bytes32(bytes20(address(this)))));
     }
     // Unqueued, pre-auction debt
     function Woe() public view returns (uint) {
@@ -114,16 +110,18 @@ contract Vow is DSNote {
     }
 
     // Debt settlement
-    function heal(uint wad) public note {
-        require(wad <= Joy() && wad <= Woe());
-        require(int(mul(wad, ONE)) >= 0);
-        VatLike(vat).heal(bytes32(bytes20(address(this))), bytes32(bytes20(address(this))), int(mul(wad, ONE)));
+    function heal(uint rad) public note {
+        require(rad <= Joy() && rad <= Woe());
+        require(int(rad) >= 0);
+        bytes32 here = bytes32(bytes20(address(this)));
+        VatLike(vat).heal(here, here, int(rad));
     }
-    function kiss(uint wad) public note {
-        require(wad <= Ash && wad <= Joy());
-        Ash = sub(Ash, wad);
-        require(int(mul(wad, ONE)) >= 0);
-        VatLike(vat).heal(bytes32(bytes20(address(this))), bytes32(bytes20(address(this))), int(mul(wad, ONE)));
+    function kiss(uint rad) public note {
+        require(rad <= Ash && rad <= Joy());
+        Ash = sub(Ash, rad);
+        require(int(rad) >= 0);
+        bytes32 here = bytes32(bytes20(address(this)));
+        VatLike(vat).heal(here, here, int(rad));
     }
 
     // Debt auction

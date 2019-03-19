@@ -123,8 +123,8 @@ contract Flipper is DSNote {
         require(bid >  bids[id].bid);
         require(mul(bid, ONE) >= mul(beg, bids[id].bid) || bid == bids[id].tab);
 
-        vat.move(b32(msg.sender), b32(bids[id].guy), mul(ONE, bids[id].bid));
-        vat.move(b32(msg.sender), b32(bids[id].gal), mul(ONE, bid - bids[id].bid));
+        vat.move(b32(msg.sender), b32(bids[id].guy), bids[id].bid);
+        vat.move(b32(msg.sender), b32(bids[id].gal), bid - bids[id].bid);
 
         bids[id].guy = msg.sender;
         bids[id].bid = bid;
@@ -140,7 +140,7 @@ contract Flipper is DSNote {
         require(lot < bids[id].lot);
         require(mul(beg, lot) <= mul(bids[id].lot, ONE));
 
-        vat.move(b32(msg.sender), b32(bids[id].guy), mul(ONE, bid));
+        vat.move(b32(msg.sender), b32(bids[id].guy), bid);
         vat.flux(ilk, b32(address(this)), bids[id].urn, bids[id].lot - lot);
 
         bids[id].guy = msg.sender;

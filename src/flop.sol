@@ -113,7 +113,7 @@ contract Flopper is DSNote {
         require(lot <  bids[id].lot);
         require(uint(mul(beg, lot)) / ONE <= bids[id].lot);  // div as lot can be huge
 
-        dai.move(b32(msg.sender), b32(bids[id].guy), mul(ONE, bid));
+        dai.move(b32(msg.sender), b32(bids[id].guy), bid);
 
         bids[id].guy = msg.sender;
         bids[id].lot = lot;

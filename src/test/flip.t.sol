@@ -58,10 +58,10 @@ contract Gal {}
 
 contract Vat_ is Vat {
     function mint(address usr, uint wad) public {
-        dai[bytes32(bytes20(usr))] += 1.00E27 * wad;
+        dai[bytes32(bytes20(usr))] += wad;
     }
     function dai_balance(address usr) public view returns (uint) {
-        return dai[bytes32(bytes20(usr))] / 1.00E27;
+        return dai[bytes32(bytes20(usr))];
     }
     bytes32 ilk;
     function set_ilk(bytes32 ilk_) public {
