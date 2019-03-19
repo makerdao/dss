@@ -20,8 +20,8 @@ pragma solidity >=0.5.0;
 import "ds-note/note.sol";
 
 contract VatLike {
-    function move(bytes32,bytes32,uint) public;
-    function flux(bytes32,bytes32,bytes32,uint) public;
+    function move(address,address,uint) public;
+    function flux(bytes32,address,address,uint) public;
 }
 
 /*
@@ -46,7 +46,7 @@ contract Flipper is DSNote {
         address guy;  // high bidder
         uint48  tic;  // expiry time
         uint48  end;
-        bytes32 urn;
+        address urn;
         address gal;
         uint256 tab;
     }
@@ -68,7 +68,7 @@ contract Flipper is DSNote {
       uint256 lot,
       uint256 bid,
       uint256 tab,
-      bytes32 indexed urn,
+      address indexed urn,
       address indexed gal
     );
 
@@ -85,12 +85,9 @@ contract Flipper is DSNote {
     function mul(uint x, uint y) internal pure returns (uint z) {
         require(y == 0 || (z = x * y) / y == x);
     }
-    function b32(address a) internal pure returns (bytes32) {
-        return bytes32(bytes20(a));
-    }
 
     // --- Auction ---
-    function kick(bytes32 urn, address gal, uint tab, uint lot, uint bid)
+    function kick(address urn, address gal, uint tab, uint lot, uint bid)
         public note returns (uint id)
     {
         require(kicks < uint(-1));
@@ -104,7 +101,7 @@ contract Flipper is DSNote {
         bids[id].gal = gal;
         bids[id].tab = tab;
 
-        vat.flux(ilk, b32(msg.sender), b32(address(this)), lot);
+        vat.flux(ilk, msg.sender, address(this), lot);
 
         emit Kick(id, lot, bid, tab, urn, gal);
     }
@@ -123,8 +120,8 @@ contract Flipper is DSNote {
         require(bid >  bids[id].bid);
         require(mul(bid, ONE) >= mul(beg, bids[id].bid) || bid == bids[id].tab);
 
-        vat.move(b32(msg.sender), b32(bids[id].guy), bids[id].bid);
-        vat.move(b32(msg.sender), b32(bids[id].gal), bid - bids[id].bid);
+        vat.move(msg.sender, bids[id].guy, bids[id].bid);
+        vat.move(msg.sender, bids[id].gal, bid - bids[id].bid);
 
         bids[id].guy = msg.sender;
         bids[id].bid = bid;
@@ -140,8 +137,8 @@ contract Flipper is DSNote {
         require(lot < bids[id].lot);
         require(mul(beg, lot) <= mul(bids[id].lot, ONE));
 
-        vat.move(b32(msg.sender), b32(bids[id].guy), bid);
-        vat.flux(ilk, b32(address(this)), bids[id].urn, bids[id].lot - lot);
+        vat.move(msg.sender, bids[id].guy, bid);
+        vat.flux(ilk, address(this), bids[id].urn, bids[id].lot - lot);
 
         bids[id].guy = msg.sender;
         bids[id].lot = lot;
@@ -149,7 +146,7 @@ contract Flipper is DSNote {
     }
     function deal(uint id) public note {
         require(bids[id].tic != 0 && (bids[id].tic < now || bids[id].end < now));
-        vat.flux(ilk, b32(address(this)), b32(bids[id].guy), bids[id].lot);
+        vat.flux(ilk, address(this), bids[id].guy, bids[id].lot);
         delete bids[id];
     }
 }

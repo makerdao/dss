@@ -20,8 +20,8 @@ contract Usr {
             revert(free, 32)
         }
     }
-    function can_frob(bytes32 ilk, bytes32 u, bytes32 v, bytes32 w, int dink, int dart) public returns (bool) {
-        string memory sig = "frob(bytes32,bytes32,bytes32,bytes32,int256,int256)";
+    function can_frob(bytes32 ilk, address u, address v, address w, int dink, int dart) public returns (bool) {
+        string memory sig = "frob(bytes32,address,address,address,int256,int256)";
         bytes memory data = abi.encodeWithSignature(sig, ilk, u, v, w, dink, dart);
 
         bytes memory can_call = abi.encodeWithSignature("try_call(address,bytes)", vat, data);
@@ -30,8 +30,8 @@ contract Usr {
         ok = abi.decode(success, (bool));
         if (ok) return true;
     }
-    function can_fork(bytes32 ilk, bytes32 src, bytes32 dst, int dink, int dart) public returns (bool) {
-        string memory sig = "fork(bytes32,bytes32,bytes32,int256,int256)";
+    function can_fork(bytes32 ilk, address src, address dst, int dink, int dart) public returns (bool) {
+        string memory sig = "fork(bytes32,address,address,int256,int256)";
         bytes memory data = abi.encodeWithSignature(sig, ilk, src, dst, dink, dart);
 
         bytes memory can_call = abi.encodeWithSignature("try_call(address,bytes)", vat, data);
@@ -40,10 +40,10 @@ contract Usr {
         ok = abi.decode(success, (bool));
         if (ok) return true;
     }
-    function frob(bytes32 ilk, bytes32 u, bytes32 v, bytes32 w, int dink, int dart) public {
+    function frob(bytes32 ilk, address u, address v, address w, int dink, int dart) public {
         vat.frob(ilk, u, v, w, dink, dart);
     }
-    function fork(bytes32 ilk, bytes32 src, bytes32 dst, int dink, int dart) public {
+    function fork(bytes32 ilk, address src, address dst, int dink, int dart) public {
         vat.fork(ilk, src, dst, dink, dart);
     }
     function hope(address usr) public {
@@ -56,12 +56,9 @@ contract ForkTest is DSTest {
     Vat vat;
     Usr ali;
     Usr bob;
-    bytes32 a;
-    bytes32 b;
+    address a;
+    address b;
 
-    function b32(address addr) internal pure returns (bytes32) {
-        return bytes32(bytes20(addr));
-    }
     function ray(uint wad) internal pure returns (uint) {
         return wad * 10 ** 9;
     }
@@ -73,8 +70,8 @@ contract ForkTest is DSTest {
         vat = new Vat();
         ali = new Usr(vat);
         bob = new Usr(vat);
-        a = b32(address(ali));
-        b = b32(address(bob));
+        a = address(ali);
+        b = address(bob);
 
         vat.init("gems");
         vat.file("gems", "spot", ray(0.5  ether));

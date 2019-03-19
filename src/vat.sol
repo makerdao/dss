@@ -27,8 +27,8 @@ contract Vat {
     mapping(address => mapping (address => uint)) public can;
     function hope(address usr) public { can[msg.sender][usr] = 1; }
     function nope(address usr) public { can[msg.sender][usr] = 0; }
-    function wish(bytes32 bit, address usr) internal view returns (bool) {
-        return address(bytes20(bit)) == usr || can[address(bytes20(bit))][usr] == 1;
+    function wish(address bit, address usr) internal view returns (bool) {
+        return bit == usr || can[bit][usr] == 1;
     }
 
     // --- Data ---
@@ -45,10 +45,10 @@ contract Vat {
     }
 
     mapping (bytes32 => Ilk)                       public ilks;
-    mapping (bytes32 => mapping (bytes32 => Urn )) public urns;
-    mapping (bytes32 => mapping (bytes32 => uint)) public gem;  // [wad]
-    mapping (bytes32 => uint256)                   public dai;  // [rad]
-    mapping (bytes32 => uint256)                   public sin;  // [rad]
+    mapping (bytes32 => mapping (address => Urn )) public urns;
+    mapping (bytes32 => mapping (address => uint)) public gem;  // [wad]
+    mapping (address => uint256)                   public dai;  // [rad]
+    mapping (address => uint256)                   public sin;  // [rad]
 
     uint256 public debt;  // Total Dai Issued    [rad]
     uint256 public vice;  // Total Unbacked Dai  [rad]
@@ -128,22 +128,22 @@ contract Vat {
     }
 
     // --- Fungibility ---
-    function slip(bytes32 ilk, bytes32 usr, int256 wad) public note auth {
+    function slip(bytes32 ilk, address usr, int256 wad) public note auth {
         gem[ilk][usr] = add(gem[ilk][usr], wad);
     }
-    function flux(bytes32 ilk, bytes32 src, bytes32 dst, uint256 wad) public note {
+    function flux(bytes32 ilk, address src, address dst, uint256 wad) public note {
         require(wish(src, msg.sender));
         gem[ilk][src] = sub(gem[ilk][src], wad);
         gem[ilk][dst] = add(gem[ilk][dst], wad);
     }
-    function move(bytes32 src, bytes32 dst, uint256 rad) public note {
+    function move(address src, address dst, uint256 rad) public note {
         require(wish(src, msg.sender));
         dai[src] = sub(dai[src], rad);
         dai[dst] = add(dai[dst], rad);
     }
 
     // --- CDP Manipulation ---
-    function frob(bytes32 i, bytes32 u, bytes32 v, bytes32 w, int dink, int dart) public note {
+    function frob(bytes32 i, address u, address v, address w, int dink, int dart) public note {
         Urn storage urn = urns[i][u];
         Ilk storage ilk = ilks[i];
 
@@ -172,7 +172,7 @@ contract Vat {
         require(live == 1);
     }
     // --- CDP Fungibility ---
-    function fork(bytes32 ilk, bytes32 src, bytes32 dst, int dink, int dart) public note {
+    function fork(bytes32 ilk, address src, address dst, int dink, int dart) public note {
         Urn storage u = urns[ilk][src];
         Urn storage v = urns[ilk][dst];
         Ilk storage i = ilks[ilk];
@@ -194,7 +194,7 @@ contract Vat {
         require(mul(v.art, i.rate) >= i.dust || v.art == 0);
     }
     // --- CDP Confiscation ---
-    function grab(bytes32 i, bytes32 u, bytes32 v, bytes32 w, int dink, int dart) public note auth {
+    function grab(bytes32 i, address u, address v, address w, int dink, int dart) public note auth {
         Urn storage urn = urns[i][u];
         Ilk storage ilk = ilks[i];
 
@@ -208,7 +208,7 @@ contract Vat {
     }
 
     // --- Settlement ---
-    function heal(bytes32 u, bytes32 v, int rad) public note auth {
+    function heal(address u, address v, int rad) public note auth {
         sin[u] = sub(sin[u], rad);
         dai[v] = sub(dai[v], rad);
         vice   = sub(vice,   rad);
@@ -216,7 +216,7 @@ contract Vat {
     }
 
     // --- Rates ---
-    function fold(bytes32 i, bytes32 u, int rate) public note auth {
+    function fold(bytes32 i, address u, int rate) public note auth {
         Ilk storage ilk = ilks[i];
         ilk.rate = add(ilk.rate, rate);
         int rad  = mul(ilk.Art, rate);

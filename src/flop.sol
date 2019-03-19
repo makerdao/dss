@@ -20,7 +20,7 @@ pragma solidity >=0.5.0;
 import "ds-note/note.sol";
 
 contract DaiLike {
-    function move(bytes32,bytes32,uint) public;
+    function move(address,address,uint) public;
 }
 contract GemLike {
     function mint(address,uint) public;
@@ -87,9 +87,6 @@ contract Flopper is DSNote {
     function mul(uint x, uint y) internal pure returns (uint z) {
         require(y == 0 || (z = x * y) / y == x);
     }
-    function b32(address a) internal pure returns (bytes32) {
-        return bytes32(bytes20(a));
-    }
 
     // --- Auction ---
     function kick(address gal, uint lot, uint bid) public auth returns (uint id) {
@@ -113,7 +110,7 @@ contract Flopper is DSNote {
         require(lot <  bids[id].lot);
         require(uint(mul(beg, lot)) / ONE <= bids[id].lot);  // div as lot can be huge
 
-        dai.move(b32(msg.sender), b32(bids[id].guy), bid);
+        dai.move(msg.sender, bids[id].guy, bid);
 
         bids[id].guy = msg.sender;
         bids[id].lot = lot;

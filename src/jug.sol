@@ -9,7 +9,7 @@ contract VatLike {
         uint256 rate;  // ray
     }
     function ilks(bytes32) public returns (Ilk memory);
-    function fold(bytes32,bytes32,int) public;
+    function fold(bytes32,address,int) public;
 }
 
 contract Jug is DSNote {
@@ -27,7 +27,7 @@ contract Jug is DSNote {
 
     mapping (bytes32 => Ilk) public ilks;
     VatLike                  public vat;
-    bytes32                  public vow;
+    address                  public vow;
     uint256                  public base;
 
     // --- Init ---
@@ -88,7 +88,7 @@ contract Jug is DSNote {
     function file(bytes32 what, uint data) public note auth {
         if (what == "base") base = data;
     }
-    function file(bytes32 what, bytes32 data) public note auth {
+    function file(bytes32 what, address data) public note auth {
         if (what == "vow") vow = data;
     }
 

@@ -58,17 +58,17 @@ contract Gal {}
 
 contract Vat_ is Vat {
     function mint(address usr, uint wad) public {
-        dai[bytes32(bytes20(usr))] += wad;
+        dai[usr] += wad;
     }
     function dai_balance(address usr) public view returns (uint) {
-        return dai[bytes32(bytes20(usr))];
+        return dai[usr];
     }
     bytes32 ilk;
     function set_ilk(bytes32 ilk_) public {
         ilk = ilk_;
     }
     function gem_balance(address usr) public view returns (uint) {
-        return gem[ilk][bytes32(bytes20(usr))];
+        return gem[ilk][usr];
     }
 }
 
@@ -81,11 +81,7 @@ contract FlipTest is DSTest {
     address ali;
     address bob;
     address gal;
-    bytes32 urn = bytes32(bytes20(address(0xacab)));
-
-    function b32(address a) internal pure returns (bytes32) {
-        return bytes32(bytes20(a));
-    }
+    address urn = address(0xacab);
 
     function setUp() public {
         hevm = Hevm(0x7109709ECfa91a80626fF3989D68f67F5b1DD12D);
@@ -106,7 +102,7 @@ contract FlipTest is DSTest {
         Guy(bob).hope(address(flip));
         vat.hope(address(flip));
 
-        vat.slip("gems", bytes32(bytes20(address(this))), 1000 ether);
+        vat.slip("gems", address(this), 1000 ether);
         vat.mint(ali, 200 ether);
         vat.mint(bob, 200 ether);
     }

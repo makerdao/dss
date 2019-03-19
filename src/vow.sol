@@ -30,9 +30,9 @@ contract Hopeful {
 }
 
 contract VatLike {
-    function dai (bytes32) public view returns (uint);
-    function sin (bytes32) public view returns (uint);
-    function heal(bytes32,bytes32,int) public;
+    function dai (address) public view returns (uint);
+    function sin (address) public view returns (uint);
+    function heal(address,address,int) public;
 }
 
 contract Vow is DSNote {
@@ -86,11 +86,11 @@ contract Vow is DSNote {
 
     // Total deficit
     function Awe() public view returns (uint) {
-        return uint(VatLike(vat).sin(bytes32(bytes20(address(this)))));
+        return uint(VatLike(vat).sin(address(this)));
     }
     // Total surplus
     function Joy() public view returns (uint) {
-        return uint(VatLike(vat).dai(bytes32(bytes20(address(this)))));
+        return uint(VatLike(vat).dai(address(this)));
     }
     // Unqueued, pre-auction debt
     function Woe() public view returns (uint) {
@@ -113,15 +113,13 @@ contract Vow is DSNote {
     function heal(uint rad) public note {
         require(rad <= Joy() && rad <= Woe());
         require(int(rad) >= 0);
-        bytes32 here = bytes32(bytes20(address(this)));
-        VatLike(vat).heal(here, here, int(rad));
+        VatLike(vat).heal(address(this), address(this), int(rad));
     }
     function kiss(uint rad) public note {
         require(rad <= Ash && rad <= Joy());
         Ash = sub(Ash, rad);
         require(int(rad) >= 0);
-        bytes32 here = bytes32(bytes20(address(this)));
-        VatLike(vat).heal(here, here, int(rad));
+        VatLike(vat).heal(address(this), address(this), int(rad));
     }
 
     // Debt auction

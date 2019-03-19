@@ -21,7 +21,7 @@ pragma experimental ABIEncoderV2;
 import "ds-note/note.sol";
 
 contract Flippy {
-    function kick(bytes32 urn, address gal, uint tab, uint lot, uint bid)
+    function kick(address urn, address gal, uint tab, uint lot, uint bid)
         public returns (uint);
 }
 
@@ -37,8 +37,8 @@ contract VatLike {
         uint256 art;   // wad
     }
     function ilks(bytes32) public view returns (Ilk memory);
-    function urns(bytes32,bytes32) public view returns (Urn memory);
-    function grab(bytes32,bytes32,bytes32,bytes32,int,int) public;
+    function urns(bytes32,address) public view returns (Urn memory);
+    function grab(bytes32,address,address,address,int,int) public;
     function hope(address) public;
 }
 
@@ -61,7 +61,7 @@ contract Cat is DSNote {
     }
     struct Flip {
         bytes32 ilk;  // Collateral Type
-        bytes32 urn;  // CDP Identifier
+        address urn;  // CDP Identifier
         uint256 ink;  // Collateral Quantity [wad]
         uint256 tab;  // Debt Outstanding    [rad]
     }
@@ -77,7 +77,7 @@ contract Cat is DSNote {
     // --- Events ---
     event Bite(
       bytes32 indexed ilk,
-      bytes32 indexed urn,
+      address indexed urn,
       uint256 ink,
       uint256 art,
       uint256 tab,
@@ -122,7 +122,7 @@ contract Cat is DSNote {
     }
 
     // --- CDP Liquidation ---
-    function bite(bytes32 ilk, bytes32 urn) public returns (uint) {
+    function bite(bytes32 ilk, address urn) public returns (uint) {
         require(live == 1);
         VatLike.Ilk memory i = vat.ilks(ilk);
         VatLike.Urn memory u = vat.urns(ilk, urn);
@@ -131,7 +131,7 @@ contract Cat is DSNote {
 
         require(mul(u.ink, i.spot) < tab);  // !safe
 
-        vat.grab(ilk, urn, bytes32(bytes20(address(this))), bytes32(bytes20(address(vow))), -int(u.ink), -int(u.art));
+        vat.grab(ilk, urn, address(this), address(vow), -int(u.ink), -int(u.art));
         vow.fess(tab);
 
         flips[nflip] = Flip(ilk, urn, u.ink, tab);

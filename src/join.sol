@@ -30,9 +30,9 @@ contract DSTokenLike {
 }
 
 contract VatLike {
-    function slip(bytes32,bytes32,int) public;
-    function move(bytes32,bytes32,uint) public;
-    function flux(bytes32,bytes32,bytes32,uint) public;
+    function slip(bytes32,address,int) public;
+    function move(address,address,uint) public;
+    function flux(bytes32,address,address,uint) public;
 }
 
 /*
@@ -68,13 +68,13 @@ contract GemJoin is DSNote {
         ilk = ilk_;
         gem = GemLike(gem_);
     }
-    function join(bytes32 urn, uint wad) public note {
+    function join(address urn, uint wad) public note {
         require(int(wad) >= 0);
         vat.slip(ilk, urn, int(wad));
         require(gem.transferFrom(msg.sender, address(this), wad));
     }
-    function exit(bytes32 urn, address usr, uint wad) public note {
-        require(bytes20(urn) == bytes20(msg.sender));
+    function exit(address urn, address usr, uint wad) public note {
+        require(urn == msg.sender);
         require(int(wad) >= 0);
         vat.slip(ilk, urn, -int(wad));
         require(gem.transfer(usr, wad));
@@ -88,12 +88,12 @@ contract ETHJoin is DSNote {
         vat = VatLike(vat_);
         ilk = ilk_;
     }
-    function join(bytes32 urn) public payable note {
+    function join(address urn) public payable note {
         require(int(msg.value) >= 0);
         vat.slip(ilk, urn, int(msg.value));
     }
-    function exit(bytes32 urn, address payable usr, uint wad) public note {
-        require(bytes20(urn) == bytes20(msg.sender));
+    function exit(address urn, address payable usr, uint wad) public note {
+        require(urn == msg.sender);
         require(int(wad) >= 0);
         vat.slip(ilk, urn, -int(wad));
         usr.transfer(wad);
@@ -111,13 +111,13 @@ contract DaiJoin is DSNote {
     function mul(uint x, uint y) internal pure returns (uint z) {
         require(y == 0 || (z = x * y) / y == x);
     }
-    function join(bytes32 urn, uint wad) public note {
-        vat.move(bytes32(bytes20(address(this))), urn, mul(ONE, wad));
+    function join(address urn, uint wad) public note {
+        vat.move(address(this), urn, mul(ONE, wad));
         dai.burn(msg.sender, wad);
     }
-    function exit(bytes32 urn, address usr, uint wad) public note {
-        require(bytes20(urn) == bytes20(msg.sender));
-        vat.move(urn, bytes32(bytes20(address(this))), mul(ONE, wad));
+    function exit(address urn, address usr, uint wad) public note {
+        require(urn == msg.sender);
+        vat.move(urn, address(this), mul(ONE, wad));
         dai.mint(usr, wad);
     }
 }
