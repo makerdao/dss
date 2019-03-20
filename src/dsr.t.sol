@@ -41,6 +41,7 @@ contract DSRTest is DSTest {
         pot.file("vow", "vow");
 
         vat.heal(self, self, -int(rad(100 ether)));
+        vat.hope(address(pot));
     }
     function test_save_0d() public {
         assertEq(vat.dai(self), rad(100 ether));

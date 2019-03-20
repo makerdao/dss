@@ -39,7 +39,7 @@ import "ds-note/note.sol";
 */
 
 contract VatLike {
-    function move(bytes32,bytes32,int256) public;
+    function move(bytes32,bytes32,uint256) public;
     function heal(bytes32,bytes32,int256) public;
 }
 
@@ -151,7 +151,11 @@ contract Pot is DSNote {
         require(bytes20(guy) == bytes20(msg.sender));
         pie[guy] = add(pie[guy], wad);
         Pie      = add(Pie,      wad);
-        vat.move(guy, b32(address(this)), mul(chi, wad));
+        if (wad >= 0) {
+          vat.move(guy, b32(address(this)), uint(mul(chi, wad)));
+        } else {
+          vat.move(b32(address(this)), guy, uint(-mul(chi, wad)));
+        }
     }
     function move(bytes32 src, bytes32 dst, int wad) public auth {
         pie[src] = sub(pie[src], wad);
