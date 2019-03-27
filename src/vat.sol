@@ -83,25 +83,19 @@ contract Vat {
 
     // --- Math ---
     function add(uint x, int y) internal pure returns (uint z) {
-      assembly {
-        z := add(x, y)
-        if sgt(y, 0) { if iszero(gt(z, x)) { revert(0, 0) } }
-        if slt(y, 0) { if iszero(lt(z, x)) { revert(0, 0) } }
-      }
+        z = x + uint(y);
+        require(y >= 0 || z <= x);
+        require(y <= 0 || z >= x);
     }
     function sub(uint x, int y) internal pure returns (uint z) {
-      assembly {
-        z := sub(x, y)
-        if slt(y, 0) { if iszero(gt(z, x)) { revert(0, 0) } }
-        if sgt(y, 0) { if iszero(lt(z, x)) { revert(0, 0) } }
-      }
+        z = x - uint(y);
+        require(y <= 0 || z <= x);
+        require(y >= 0 || z >= x);
     }
     function mul(uint x, int y) internal pure returns (int z) {
-      assembly {
-        z := mul(x, y)
-        if slt(x, 0) { revert(0, 0) }
-        if iszero(eq(y, 0)) { if iszero(eq(sdiv(z, y), x)) { revert(0, 0) } }
-      }
+        z = int(x) * y;
+        require(int(x) >= 0);
+        require(y == 0 || z / y == int(x));
     }
     function add(uint x, uint y) internal pure returns (uint z) {
         require((z = x + y) >= x);
