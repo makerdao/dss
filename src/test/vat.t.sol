@@ -146,7 +146,7 @@ contract FrobTest is DSTest {
         gemA.join(urn,                             500 ether);
         assertEq(gold.balanceOf(address(this)),      0 ether);
         assertEq(gold.balanceOf(address(gemA)),   1500 ether);
-        gemA.exit(urn, address(this),              250 ether);
+        gemA.exit(urn,                             250 ether);
         assertEq(gold.balanceOf(address(this)),    250 ether);
         assertEq(gold.balanceOf(address(gemA)),   1250 ether);
     }
@@ -333,9 +333,9 @@ contract JoinTest is DSTest {
         assertEq(vat.gem("eth", me), 10 ether);
     }
     function test_eth_exit() public {
-        address urn = address(this);
+        address payable urn = address(this);
         ethA.join.value(50 ether)(urn);
-        ethA.exit(urn, address(this), 10 ether);
+        ethA.exit(urn, 10 ether);
         assertEq(vat.gem("eth", me), 40 ether);
     }
     function rad(uint wad) internal pure returns (uint) {
@@ -345,7 +345,7 @@ contract JoinTest is DSTest {
         address urn = address(this);
         vat.mint(address(this), 100 ether);
         vat.hope(address(daiA));
-        daiA.exit(urn, address(this), 60 ether);
+        daiA.exit(urn, 60 ether);
         assertEq(dai.balanceOf(address(this)), 60 ether);
         assertEq(vat.dai(me),              rad(40 ether));
     }
@@ -353,7 +353,7 @@ contract JoinTest is DSTest {
         address urn = address(this);
         vat.mint(address(this), 100 ether);
         vat.hope(address(daiA));
-        daiA.exit(urn, address(this), 60 ether);
+        daiA.exit(urn, 60 ether);
         dai.approve(address(daiA), uint(-1));
         daiA.join(urn, 30 ether);
         assertEq(dai.balanceOf(address(this)),     30 ether);

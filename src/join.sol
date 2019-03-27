@@ -73,8 +73,8 @@ contract GemJoin is DSNote {
         vat.slip(ilk, urn, int(wad));
         require(gem.transferFrom(msg.sender, address(this), wad));
     }
-    function exit(address urn, address usr, uint wad) public note {
-        require(urn == msg.sender);
+    function exit(address usr, uint wad) public note {
+        address urn = msg.sender;
         require(int(wad) >= 0);
         vat.slip(ilk, urn, -int(wad));
         require(gem.transfer(usr, wad));
@@ -92,8 +92,8 @@ contract ETHJoin is DSNote {
         require(int(msg.value) >= 0);
         vat.slip(ilk, urn, int(msg.value));
     }
-    function exit(address urn, address payable usr, uint wad) public note {
-        require(urn == msg.sender);
+    function exit(address payable usr, uint wad) public note {
+        address urn = msg.sender;
         require(int(wad) >= 0);
         vat.slip(ilk, urn, -int(wad));
         usr.transfer(wad);
@@ -115,8 +115,8 @@ contract DaiJoin is DSNote {
         vat.move(address(this), urn, mul(ONE, wad));
         dai.burn(msg.sender, wad);
     }
-    function exit(address urn, address usr, uint wad) public note {
-        require(urn == msg.sender);
+    function exit(address usr, uint wad) public note {
+        address urn = msg.sender;
         vat.move(urn, address(this), mul(ONE, wad));
         dai.mint(usr, wad);
     }
