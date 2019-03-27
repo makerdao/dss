@@ -128,8 +128,8 @@ contract Vat {
     }
 
     // --- Fungibility ---
-    function slip(bytes32 ilk, bytes32 usr, int256 rad) public note auth {
-        gem[ilk][usr] = add(gem[ilk][usr], rad);
+    function slip(bytes32 ilk, bytes32 usr, int256 wad) public note auth {
+        gem[ilk][usr] = add(gem[ilk][usr], wad);
     }
     function flux(bytes32 ilk, bytes32 src, bytes32 dst, uint256 wad) public note {
         require(wish(src, msg.sender));
