@@ -50,6 +50,8 @@ contract Vat {
     mapping (address => uint256)                   public dai;  // [rad]
     mapping (address => uint256)                   public sin;  // [rad]
 
+    bytes32 public slab;  // Maker Art IPFS Hash
+    bytes32 public rest; //   First 32+8 bytes
     uint256 public debt;  // Total Dai Issued    [rad]
     uint256 public vice;  // Total Unbacked Dai  [rad]
     uint256 public Line;  // Total Debt Ceiling  [wad]
@@ -76,7 +78,9 @@ contract Vat {
     }
 
     // --- Init ---
-    constructor() public {
+    constructor(bytes32 slab_, bytes32 rest_) public {
+        slab = slab_;
+        rest = rest_;
         wards[msg.sender] = 1;
         live = 1;
     }
