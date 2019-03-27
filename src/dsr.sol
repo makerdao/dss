@@ -39,8 +39,8 @@ import "ds-note/note.sol";
 */
 
 contract VatLike {
-    function move(bytes32,bytes32,uint256) public;
-    function heal(bytes32,bytes32,int256) public;
+    function move(address,address,uint256) public;
+    function heal(address,address,int256) public;
 }
 
 contract Pot is DSNote {
@@ -51,14 +51,14 @@ contract Pot is DSNote {
     modifier auth { require(wards[msg.sender] == 1); _; }
 
     // --- Data ---
-    mapping (bytes32 => uint256) public pie;  // user Savings Dai
+    mapping (address => uint256) public pie;  // user Savings Dai
 
     uint256 public Pie;  // total Savings Dai
     uint256 public dsr;  // The Dai Savings Rate
     uint256 public chi;  // The Rate Accumulator
 
     VatLike public vat;  // CDP engine
-    bytes32 public vow;  // Debt engine
+    address public vow;  // Debt engine
     uint48  public rho;  // Time of last drip
 
     // --- Init ---
@@ -125,16 +125,12 @@ contract Pot is DSNote {
         z = z / ONE;
     }
 
-    function b32(address a) internal pure returns (bytes32) {
-        return bytes32(bytes20(a));
-    }
-
     // --- Administration ---
     function file(bytes32 what, uint256 data) public note auth {
         if (what == "dsr") dsr = data;
     }
-    function file(bytes32 what, bytes32 data) public note auth {
-        if (what == "vow") vow = data;
+    function file(bytes32 what, address addr) public note auth {
+        if (what == "vow") vow = addr;
     }
 
     // --- Savings Rate Accumulation ---
@@ -143,21 +139,21 @@ contract Pot is DSNote {
         int chi_ = sub(rmul(rpow(dsr, now - rho, ONE), chi), chi);
         chi = add(chi, chi_);
         rho  = uint48(now);
-        vat.heal(vow, b32(address(this)), -mul(Pie, chi_));
+        vat.heal(address(vow), address(this), -mul(Pie, chi_));
     }
 
     // --- Savings Dai Management ---
-    function save(bytes32 guy, int wad) public note {
-        require(bytes20(guy) == bytes20(msg.sender));
+    function save(address guy, int wad) public note {
+        require(guy == msg.sender); // TODO: Review guy param
         pie[guy] = add(pie[guy], wad);
         Pie      = add(Pie,      wad);
         if (wad >= 0) {
-          vat.move(guy, b32(address(this)), uint(mul(chi, wad)));
+          vat.move(guy, address(this), uint(mul(chi, wad)));
         } else {
-          vat.move(b32(address(this)), guy, uint(-mul(chi, wad)));
+          vat.move(address(this), guy, uint(-mul(chi, wad)));
         }
     }
-    function move(bytes32 src, bytes32 dst, int wad) public auth {
+    function move(address src, address dst, int wad) public auth {
         pie[src] = sub(pie[src], wad);
         pie[dst] = add(pie[dst], wad);
     }

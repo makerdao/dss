@@ -14,18 +14,15 @@ contract DSRTest is DSTest {
     Vat vat;
     Pot pot;
 
-    bytes32 self;
-    bytes32 potb;
+    address vow;
+    address self;
+    address potb;
 
     function rad(uint wad_) internal pure returns (uint) {
         return wad_ * 10 ** 27;
     }
     function wad(uint rad_) internal pure returns (uint) {
         return rad_ / 10 ** 27;
-    }
-
-    function b32(address a) internal pure returns (bytes32) {
-        return bytes32(bytes20(a));
     }
 
     function setUp() public {
@@ -35,10 +32,11 @@ contract DSRTest is DSTest {
         vat = new Vat();
         pot = new Pot(address(vat));
         vat.rely(address(pot));
-        self = b32(address(this));
-        potb = b32(address(pot));
+        self = address(this);
+        potb = address(pot);
 
-        pot.file("vow", "vow");
+        vow = address(bytes20("vow"));
+        pot.file("vow", vow);
 
         vat.heal(self, self, -int(rad(100 ether)));
         vat.hope(address(pot));
@@ -71,7 +69,7 @@ contract DSRTest is DSTest {
         pot.file("dsr", uint(1000001103127689513476993127));  // 10% / day
         hevm.warp(2 days);
         pot.drip();
-        assertEq(wad(vat.sin("vow")), 15.5 ether);
+        assertEq(wad(vat.sin(vow)), 15.5 ether);
         assertEq(wad(vat.dai(potb)), 115.5 ether);
         assertEq(pot.Pie(),          100   ether);
         assertEq(pot.chi() / 10 ** 9, 1.155 ether);
@@ -92,13 +90,8 @@ contract DSRTest is DSTest {
         assertEq(wad(vat.dai(self)), 110.25 ether);
         assertEq(pot.Pie(),            0.00 ether);
     }
-    function test_save_owned_guy() public {
-        bytes32 guy = bytes32(uint(address(this)) * 2 ** (12 * 8) + uint96(1111));
-        vat.heal(guy, guy, -int(rad(100 ether)));
-        pot.save(guy, int(100 ether));
-    }
     function testFail_save_not_owned_guy() public {
-        bytes32 guy = b32(address(123));
+        address guy = address(123);
         vat.heal(guy, guy, -int(rad(100 ether)));
         pot.save(guy, int(100 ether));
     }
