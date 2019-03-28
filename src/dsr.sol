@@ -143,8 +143,8 @@ contract Pot is DSNote {
     }
 
     // --- Savings Dai Management ---
-    function save(address guy, int wad) public note {
-        require(guy == msg.sender); // TODO: Review guy param
+    function save(int wad) public note {
+        address guy = msg.sender;
         pie[guy] = add(pie[guy], wad);
         Pie      = add(Pie,      wad);
         if (wad >= 0) {
