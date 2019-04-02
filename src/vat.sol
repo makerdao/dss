@@ -56,23 +56,23 @@ contract Vat {
     uint256 public live;  // Access Flag
 
     // --- Logs ---
-    event Note(
-        bytes4   indexed  hash,
-        bytes32  indexed  arg1,
-        bytes32  indexed  arg2,
-        bytes32  indexed  arg3,
-        bytes             data
-    ) anonymous;
     modifier note {
-        bytes32 arg1;
-        bytes32 arg2;
-        bytes32 arg3;
+        _;
         assembly {
-            arg1 := calldataload(4)
-            arg2 := calldataload(36)
-            arg3 := calldataload(68)
+            // log an 'anonymous' event with a constant 6 words of calldata
+            // and four indexed topics: the selector and the first three args
+            let mark := msize                      // end of memory ensures zero
+            mstore(0x40, add(mark, 288))           // update free memory pointer
+            mstore(mark, 0x20)                     // bytes type data offset
+            mstore(add(mark, 0x20), 224)           // bytes size (padded)
+            calldatacopy(add(mark, 0x40), 0, 224)  // bytes payload
+            log4(mark, 288,                        // calldata
+                 shr(224, calldataload(0)),        // msg.sig
+                 calldataload(4),                  // arg1
+                 calldataload(36),                 // arg2
+                 calldataload(68)                  // arg3
+                )
         }
-        emit Note(msg.sig, arg1, arg2, arg3, msg.data); _;
     }
 
     // --- Init ---
