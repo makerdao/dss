@@ -17,7 +17,7 @@
 
 pragma solidity >=0.5.0;
 
-import "ds-note/note.sol";
+import "./lib.sol";
 
 contract DaiLike {
     function move(address,address,uint) public;

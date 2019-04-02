@@ -1,7 +1,7 @@
 pragma solidity >=0.5.0;
 
-import "ds-test/test.sol";
-import "ds-token/token.sol";
+import {DSTest}  from "ds-test/test.sol";
+import {DSToken} from "ds-token/token.sol";
 
 import "../flop.sol";
 

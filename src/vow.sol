@@ -17,7 +17,7 @@
 
 pragma solidity >=0.5.0;
 
-import "ds-note/note.sol";
+import "./lib.sol";
 
 contract Fusspot {
     function kick(address gal, uint lot, uint bid) public returns (uint);
