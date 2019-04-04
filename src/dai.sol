@@ -17,10 +17,10 @@ pragma solidity >=0.4.24;
 
 contract Dai {
     // --- Auth ---
-    mapping (address => bool) public wards;
-    function rely(address guy) public auth { wards[guy] = true; }
-    function deny(address guy) public auth { wards[guy] = false; }
-    modifier auth { require(wards[msg.sender]); _; }
+    mapping (address => uint) public wards;
+    function rely(address guy) public auth { wards[guy] = 1; }
+    function deny(address guy) public auth { wards[guy] = 0; }
+    modifier auth { require(wards[msg.sender] == 1); _; }
 
     // --- ERC20 Data ---
     uint8   public decimals = 18;
@@ -50,7 +50,7 @@ contract Dai {
     );
 
     constructor(string memory symbol_, string memory name_, string memory version_, uint256 chainId_) public {
-        wards[msg.sender] = true;
+        wards[msg.sender] = 1;
         symbol = symbol_;
         name = name_;
         DOMAIN_SEPARATOR = keccak256(abi.encode(
