@@ -55,7 +55,7 @@ contract Dai {
         name = name_;
         DOMAIN_SEPARATOR = keccak256(abi.encode(
             keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"),
-            keccak256(bytes("Dai Semi-Automated Permit Office")),
+            keccak256("Dai Semi-Automated Permit Office"),
             keccak256(bytes(version_)),
             chainId_,
             address(this)

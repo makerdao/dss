@@ -112,7 +112,7 @@ contract DaiTest is DSTest {
     }
 
     function createToken() internal returns (Dai) {
-        return new Dai("$","TST", "1", 1);
+        return new Dai("#DAI", "Dai", "1", 1);
     }
 
     function testSetupPrecondition() public {
@@ -270,7 +270,7 @@ contract DaiTest is DSTest {
         assertEq(address(token), address(0xDB356e865AAaFa1e37764121EA9e801Af13eEb83));
     }
 
-    function test_record() public {
+    function test_permit() public {
         assertEq(token.nonces(cal),0);
         assertEq(token.allowance(cal, del),0);
         token.permit(cal, del, 0, 0, true, v, r, s);
