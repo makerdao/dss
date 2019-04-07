@@ -98,8 +98,8 @@ contract DaiTest is DSTest {
     address cal = 0x29C76e6aD8f28BB1004902578Fb108c507Be341b;
     address del = 0xdd2d5D3f7f1b35b7A0601D6A00DbB7D44Af58479;
     uint8 v = 28;
-    bytes32 r = 0xdcd513755b31011b12c376a5cc92c67c83a4876815c22ee280bcf2166df01c6d;
-    bytes32 s = 0x327b7393d981f5d9c609d756dcbd2f9d06109f3b7d6d2af2e60414e123ef55c3;
+    bytes32 r = 0x3a8e040d1cc1e40d4f72fb2056ec88c0cc5271d052bd117486b0837cb3561096;
+    bytes32 s = 0x608a6f1e750dd468ebdef8fd0149e2b5aabf3779365a50ca3924e2e1163dfd1d;
 
 
     function setUp() public {
@@ -270,7 +270,7 @@ contract DaiTest is DSTest {
         assertEq(address(token), address(0xDB356e865AAaFa1e37764121EA9e801Af13eEb83));
     }
 
-    function test_record() public {
+    function test_permit() public {
         assertEq(token.nonces(cal),0);
         assertEq(token.allowance(cal, del),0);
         token.permit(cal, del, 0, 0, true, v, r, s);
