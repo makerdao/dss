@@ -26,6 +26,7 @@ contract Dai {
     uint8   public decimals = 18;
     string  public name;
     string  public symbol;
+    string  public version;
     uint256 public totalSupply;
 
     mapping (address => uint)                      public balanceOf;
@@ -45,8 +46,8 @@ contract Dai {
 
     // --- EIP712 niceties ---
     bytes32 public DOMAIN_SEPARATOR;
-    bytes32 public permit_TYPEHASH = keccak256(
-        "Permit(address holder,address spender,uint256 nonce,uint256 deadline,bool allowed)"
+    bytes32 public constant PERMIT_TYPEHASH = keccak256(
+        "Permit(address holder,address spender,uint256 nonce,uint256 expiry,bool allowed)"
     );
 
     constructor(string memory symbol_, string memory name_, string memory version_, uint256 chainId_) public {
@@ -55,7 +56,7 @@ contract Dai {
         name = name_;
         DOMAIN_SEPARATOR = keccak256(abi.encode(
             keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"),
-            keccak256(bytes("Dai Semi-Automated Permit Office")),
+            keccak256("Dai Semi-Automated Permit Office"),
             keccak256(bytes(version_)),
             chainId_,
             address(this)
@@ -64,8 +65,7 @@ contract Dai {
 
     // --- Token ---
     function transfer(address dst, uint wad) public returns (bool) {
-        transferFrom(msg.sender, dst, wad);
-        return true;
+        return transferFrom(msg.sender, dst, wad);
     }
     function transferFrom(address src, address dst, uint wad)
         public returns (bool)
@@ -109,22 +109,22 @@ contract Dai {
     }
 
     // --- Approve by signature ---
-    function permit(address holder, address spender, uint256 nonce, uint256 deadline,
+    function permit(address holder, address spender, uint256 nonce, uint256 expiry,
                     bool allowed, uint8 v, bytes32 r, bytes32 s) public
     {
         bytes32 digest =
             keccak256(abi.encodePacked(
                 "\x19\x01",
                 DOMAIN_SEPARATOR,
-                keccak256(abi.encode(permit_TYPEHASH,
+                keccak256(abi.encode(PERMIT_TYPEHASH,
                                      holder,
                                      spender,
                                      nonce,
-                                     deadline,
+                                     expiry,
                                      allowed))
         ));
         require(holder == ecrecover(digest, v, r, s), "invalid permit");
-        require(deadline == 0 || deadline < now, "permit expied");
+        require(expiry == 0 || expiry < now, "permit expired");
         require(nonce == nonces[holder]++, "invalid nonce");
         uint wad = allowed ? uint(-1) : 0;
         allowance[holder][spender] = wad;
