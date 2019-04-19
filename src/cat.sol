@@ -122,17 +122,18 @@ contract Cat is DSNote {
     }
 
     // --- CDP Liquidation ---
+    // Mark a CDP for liquidation. ie confiscate an unsafe CDP
     function bite(bytes32 ilk, address urn) public returns (uint) {
         require(live == 1);
         VatLike.Ilk memory i = vat.ilks(ilk);
         VatLike.Urn memory u = vat.urns(ilk, urn);
 
-        uint tab = mul(u.art, i.rate);
+        uint tab = mul(u.art, i.rate); // calculate amount of DAI to be raised in the flip auction (rate is accumulated stability fees)
 
         require(mul(u.ink, i.spot) < tab);  // !safe
 
-        vat.grab(ilk, urn, address(this), address(vow), -int(u.ink), -int(u.art));
-        vow.fess(tab);
+        vat.grab(ilk, urn, address(this), address(vow), -int(u.ink), -int(u.art)); // confiscate the CDP - ie destroy it and give collateral to cat contract and debt to vow contract
+        vow.fess(tab);                                                             // add debt to the queue
 
         flips[nflip] = Flip(ilk, urn, u.ink, tab);
 
@@ -140,6 +141,7 @@ contract Cat is DSNote {
 
         return nflip++;
     }
+    // Initate a liquidation auction
     function flip(uint n, uint rad) public note returns (uint id) {
         require(live == 1);
         Flip storage f = flips[n];

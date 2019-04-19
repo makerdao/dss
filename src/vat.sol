@@ -35,8 +35,8 @@ contract Vat {
     struct Ilk {
         uint256 Art;   // Total Normalised Debt     [wad]
         uint256 rate;  // Accumulated Rates         [ray]
-        uint256 spot;  // Price with Safety Margin  [ray]
-        uint256 line;  // Debt Ceiling              [rad]
+        uint256 spot;  // Price with Safety Margin  [ray] maxium amount of Dai drawn per unit collateral
+        uint256 line;  // Debt Ceiling              [rad] maxium total dai drawn
         uint256 dust;  // Urn Debt Floor            [rad]
     }
     struct Urn {
@@ -122,14 +122,17 @@ contract Vat {
     }
 
     // --- Fungibility ---
+    // add a type of gem to an address
     function slip(bytes32 ilk, address usr, int256 wad) public note auth {
         gem[ilk][usr] = add(gem[ilk][usr], wad);
     }
+    // transfer (a particular type of) gems between addresses
     function flux(bytes32 ilk, address src, address dst, uint256 wad) public note {
         require(wish(src, msg.sender));
         gem[ilk][src] = sub(gem[ilk][src], wad);
         gem[ilk][dst] = add(gem[ilk][dst], wad);
     }
+    // transfer dai between addresses
     function move(address src, address dst, uint256 rad) public note {
         require(wish(src, msg.sender));
         dai[src] = sub(dai[src], rad);
@@ -188,20 +191,24 @@ contract Vat {
         require(mul(v.art, i.rate) >= i.dust || v.art == 0);
     }
     // --- CDP Confiscation ---
-    function grab(bytes32 i, address u, address v, address w, int dink, int dart) public note auth {
+    function grab(bytes32 i, address u, address v, address w, int dink, int dart) public note auth { // grab is only called on Cat.bite where dink and dart are negative
         Urn storage urn = urns[i][u];
         Ilk storage ilk = ilks[i];
 
+        // Subtract collateral and dai from the CDP
         urn.ink = add(urn.ink, dink);
         urn.art = add(urn.art, dart);
         ilk.Art = add(ilk.Art, dart);
 
+        // Add the CDP's collateral (gems) to the v's free gems. When this is called by Cat.bite, v is the cat contract
         gem[i][v] = sub(gem[i][v], dink);
+        // Add the debt to the total debt (vice) and to w's debt (sin). When this is called by Cat.bite, w is the vow contract
         sin[w]    = sub(sin[w], mul(ilk.rate, dart));
         vice      = sub(vice,   mul(ilk.rate, dart));
     }
 
     // --- Settlement ---
+    // destroy debt and dai
     function heal(address u, address v, int rad) public note auth {
         sin[u] = sub(sin[u], rad);
         dai[v] = sub(dai[v], rad);
@@ -212,7 +219,7 @@ contract Vat {
     // --- Rates ---
     function fold(bytes32 i, address u, int rate) public note auth {
         Ilk storage ilk = ilks[i];
-        ilk.rate = add(ilk.rate, rate);
+        ilk.rate = add(ilk.rate, rate); // rate is accumulated stabilty fee?
         int rad  = mul(ilk.Art, rate);
         dai[u]   = add(dai[u], rad);
         debt     = add(debt,   rad);

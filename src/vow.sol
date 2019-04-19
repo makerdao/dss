@@ -84,11 +84,11 @@ contract Vow is DSNote {
         if (what == "vat")  vat = addr;
     }
 
-    // Total deficit
+    // Total deficit - sin owned by this contract?
     function Awe() public view returns (uint) {
         return uint(VatLike(vat).sin(address(this)));
     }
-    // Total surplus
+    // Total surplus - dai owned by this contract
     function Joy() public view returns (uint) {
         return uint(VatLike(vat).dai(address(this)));
     }
@@ -113,28 +113,32 @@ contract Vow is DSNote {
     function heal(uint rad) public note {
         require(rad <= Joy() && rad <= Woe());
         require(int(rad) >= 0);
-        VatLike(vat).heal(address(this), address(this), int(rad));
+        VatLike(vat).heal(address(this), address(this), int(rad)); // subtract 'rad' amount of dai and sin from Vow, eg reduce Joy and Awe, eg anihilate dai with debt
     }
     function kiss(uint rad) public note {
         require(rad <= Ash && rad <= Joy());
-        Ash = sub(Ash, rad);
+        Ash = sub(Ash, rad); // Ash - total on-auction debt
         require(int(rad) >= 0);
-        VatLike(vat).heal(address(this), address(this), int(rad));
+        VatLike(vat).heal(address(this), address(this), int(rad)); // subtract 'rad' amount of dai and sin from vat
     }
 
-    // Debt auction
+    // Debt auction - sell minted MKR for DAI
     function flop() public returns (uint id) {
+        // only allowed if the total DAI owned by this contract (Joy) is 0, and there is enough (de-queued) debt to auction off
         require(Woe() >= sump);
         require(Joy() == 0);
-        Ash = add(Ash, sump);
-        return Fusspot(row).kick(address(this), uint(-1), sump);
+        Ash = add(Ash, sump); // sump is the fixed lot size of an auction, Ash is total on-auction debt
+        // row is flopper
+        return Fusspot(row).kick(address(this), uint(-1), sump); // create the auction
     }
-    // Surplus auction
+    // Surplus auction - sell DAI for MKR to be burned
     function flap() public returns (uint id) {
-        require(Joy() >= add(add(Awe(), bump), hump));
+        // only allow if dai owned by this contract is > total deficit
+        require(Joy() >= add(add(Awe(), bump), hump)); // Awe is total deficit, bump is fixed lot size, hump is a 'buffer' amount
         require(Woe() == 0);
-        Hopeful(Fusspot(cow).dai()).hope(cow);
-        id = Fusspot(cow).kick(address(0), bump, 0);
+        // cow is flapper
+        Hopeful(Fusspot(cow).dai()).hope(cow); // authentication?
+        id = Fusspot(cow).kick(address(0), bump, 0); // create the auction
         Hopeful(Fusspot(cow).dai()).nope(cow);
     }
 }
