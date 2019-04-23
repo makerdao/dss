@@ -124,7 +124,7 @@ contract Dai {
                                      allowed))
         ));
         require(holder == ecrecover(digest, v, r, s), "invalid permit");
-        require(expiry == 0 || expiry < now, "permit expired");
+        require(expiry == 0 || now <= expiry, "permit expired");
         require(nonce == nonces[holder]++, "invalid nonce");
         uint wad = allowed ? uint(-1) : 0;
         allowance[holder][spender] = wad;
