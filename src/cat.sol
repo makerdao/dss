@@ -85,8 +85,8 @@ contract Cat is DSNote {
     );
 
     event FlipKick(
-      uint256 nflip,
-      uint256 bid
+      uint256 indexed nflip,
+      uint256 nbid
     );
 
     // --- Init ---
