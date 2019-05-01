@@ -7,7 +7,7 @@ import {Vat} from '../vat.sol';
 import {Cat} from '../cat.sol';
 import {Vow} from '../vow.sol';
 import {Jug} from '../jug.sol';
-import {GemJoin, ETHJoin, DaiJoin} from '../join.sol';
+import {GemJoin, DaiJoin} from '../join.sol';
 
 import {Flipper} from './flip.t.sol';
 import {Flopper} from './flop.t.sol';
@@ -308,7 +308,6 @@ contract FrobTest is DSTest {
 
 contract JoinTest is DSTest {
     TestVat vat;
-    ETHJoin ethA;
     DaiJoin daiA;
     DSToken dai;
     address me;
@@ -317,26 +316,12 @@ contract JoinTest is DSTest {
         vat = new TestVat();
         vat.init("eth");
 
-        ethA = new ETHJoin(address(vat), "eth");
-        vat.rely(address(ethA));
-
         dai  = new DSToken("Dai");
         daiA = new DaiJoin(address(vat), address(dai));
         vat.rely(address(daiA));
         dai.setOwner(address(daiA));
 
         me = address(this);
-    }
-    function () external payable {}
-    function test_eth_join() public {
-        ethA.join.value(10 ether)(address(this));
-        assertEq(vat.gem("eth", me), 10 ether);
-    }
-    function test_eth_exit() public {
-        address payable urn = address(this);
-        ethA.join.value(50 ether)(urn);
-        ethA.exit(urn, 10 ether);
-        assertEq(vat.gem("eth", me), 40 ether);
     }
     function rad(uint wad) internal pure returns (uint) {
         return wad * 10 ** 27;
@@ -358,14 +343,6 @@ contract JoinTest is DSTest {
         daiA.join(urn, 30 ether);
         assertEq(dai.balanceOf(address(this)),     30 ether);
         assertEq(vat.dai(me),                  rad(70 ether));
-    }
-    function test_fallback_reverts() public {
-        (bool ok,) = address(ethA).call("invalid calldata");
-        assertTrue(!ok);
-    }
-    function test_nonzero_fallback_reverts() public {
-        (bool ok,) = address(ethA).call.value(10)("invalid calldata");
-        assertTrue(!ok);
     }
 }
 

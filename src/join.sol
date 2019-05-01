@@ -43,8 +43,6 @@ contract VatLike {
       - `GemJoin`: For well behaved ERC20 tokens, with simple transfer
                    semantics.
 
-      - `ETHJoin`: For native Ether.
-
       - `DaiJoin`: For connecting internal Dai balances to an external
                    `DSToken` implementation.
 
@@ -78,25 +76,6 @@ contract GemJoin is DSNote {
         require(int(wad) >= 0);
         vat.slip(ilk, urn, -int(wad));
         require(gem.transfer(usr, wad));
-    }
-}
-
-contract ETHJoin is DSNote {
-    VatLike public vat;
-    bytes32 public ilk;
-    constructor(address vat_, bytes32 ilk_) public {
-        vat = VatLike(vat_);
-        ilk = ilk_;
-    }
-    function join(address urn) public payable note {
-        require(int(msg.value) >= 0);
-        vat.slip(ilk, urn, int(msg.value));
-    }
-    function exit(address payable usr, uint wad) public note {
-        address urn = msg.sender;
-        require(int(wad) >= 0);
-        vat.slip(ilk, urn, -int(wad));
-        usr.transfer(wad);
     }
 }
 
