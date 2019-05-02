@@ -21,6 +21,8 @@ import "./lib.sol";
 
 contract Auction {
     function kick(address gal, uint lot, uint bid) public returns (uint);
+    function cage(uint) public;
+    function cage() public;
 }
 
 contract VatLike {
@@ -143,5 +145,13 @@ contract Vow is DSNote {
         live = 0;
         VatLike(vat).heal(min(Joy(), Woe()));
         VatLike(vat).move(address(this), msg.sender, min(Joy(), rmul(hump, dump)));
+    }
+
+    function cage() public note auth {
+        live = 0;
+        flapper.cage(vat.dai(address(flapper)));
+        flopper.cage();
+        vat.heal(min(Joy(), Awe()));
+        vat.move(address(this), msg.sender, Joy());
     }
 }

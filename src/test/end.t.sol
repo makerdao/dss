@@ -163,6 +163,8 @@ contract EndTest is DSTest {
         vow.rely(address(end));
         cat.rely(address(end));
         flip.rely(address(end));
+        flap.rely(address(vow));
+        flop.rely(address(vow));
     }
 
     function test_cage_basic() public {

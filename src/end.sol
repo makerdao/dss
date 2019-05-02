@@ -59,6 +59,7 @@ contract VowLike {
     function heal(uint256 rad) public;
     function kiss(uint256 rad) public;
     function cage(uint256 dump) public;
+    function cage() public;
 }
 contract Flippy {
     struct Bid {
@@ -149,7 +150,7 @@ contract End {
         live = 0;
         vat.cage();
         cat.cage();
-        vow.cage(dump);
+        vow.cage();
     }
 
     function cage(bytes32 ilk, uint256 tag, uint256 fix) public auth {
