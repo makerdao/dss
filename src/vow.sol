@@ -19,20 +19,16 @@ pragma solidity >=0.5.0;
 
 import "./lib.sol";
 
-contract Fusspot {
+contract Auction {
     function kick(address gal, uint lot, uint bid) public returns (uint);
-    function dai() public returns (address);
-}
-
-contract Hopeful {
-    function hope(address) public;
-    function nope(address) public;
 }
 
 contract VatLike {
     function dai (address) public view returns (uint);
     function sin (address) public view returns (uint);
-    function heal(uint) public;
+    function heal(uint256) public;
+    function hope(address) public;
+    function nope(address) public;
 }
 
 contract Vow is DSNote {
@@ -42,11 +38,10 @@ contract Vow is DSNote {
     function deny(address usr) public note auth { wards[usr] = 0; }
     modifier auth { require(wards[msg.sender] == 1); _; }
 
-
     // --- Data ---
-    address public vat;
-    address public cow;  // flapper
-    address public row;  // flopper
+    VatLike public vat;
+    Auction public flapper;
+    Auction public flopper;
 
     mapping (uint48 => uint256) public sin; // debt queue
     uint256 public Sin;   // queued debt          [rad]
@@ -58,7 +53,13 @@ contract Vow is DSNote {
     uint256 public hump;  // surplus buffer       [rad]
 
     // --- Init ---
-    constructor() public { wards[msg.sender] = 1; }
+    constructor(address vat_, address flapper_, address flopper_) public {
+        wards[msg.sender] = 1;
+        vat     = VatLike(vat_);
+        flapper = Auction(flapper_);
+        flopper = Auction(flopper_);
+        vat.hope(flapper_);
+    }
 
     // --- Math ---
     function add(uint x, uint y) internal pure returns (uint z) {
@@ -66,9 +67,6 @@ contract Vow is DSNote {
     }
     function sub(uint x, uint y) internal pure returns (uint z) {
         require((z = x - y) <= x);
-    }
-    function mul(uint x, uint y) internal pure returns (uint z) {
-        require(y == 0 || (z = x * y) / y == x);
     }
 
     // --- Administration ---
@@ -78,19 +76,14 @@ contract Vow is DSNote {
         if (what == "sump") sump = data;
         if (what == "hump") hump = data;
     }
-    function file(bytes32 what, address addr) public note auth {
-        if (what == "flap") cow = addr;
-        if (what == "flop") row = addr;
-        if (what == "vat")  vat = addr;
-    }
 
     // Total deficit
     function Awe() public view returns (uint) {
-        return uint(VatLike(vat).sin(address(this)));
+        return vat.sin(address(this));
     }
     // Total surplus
     function Joy() public view returns (uint) {
-        return uint(VatLike(vat).dai(address(this)));
+        return vat.dai(address(this));
     }
     // Unqueued, pre-auction debt
     function Woe() public view returns (uint) {
@@ -112,12 +105,12 @@ contract Vow is DSNote {
     // Debt settlement
     function heal(uint rad) public note {
         require(rad <= Joy() && rad <= Woe());
-        VatLike(vat).heal(rad);
+        vat.heal(rad);
     }
     function kiss(uint rad) public note {
         require(rad <= Ash && rad <= Joy());
         Ash = sub(Ash, rad);
-        VatLike(vat).heal(rad);
+        vat.heal(rad);
     }
 
     // Debt auction
@@ -125,14 +118,12 @@ contract Vow is DSNote {
         require(Woe() >= sump);
         require(Joy() == 0);
         Ash = add(Ash, sump);
-        return Fusspot(row).kick(address(this), uint(-1), sump);
+        id = flopper.kick(address(this), uint(-1), sump);
     }
     // Surplus auction
     function flap() public returns (uint id) {
         require(Joy() >= add(add(Awe(), bump), hump));
         require(Woe() == 0);
-        Hopeful(Fusspot(cow).dai()).hope(cow);
-        id = Fusspot(cow).kick(address(0), bump, 0);
-        Hopeful(Fusspot(cow).dai()).nope(cow);
+        id = flapper.kick(address(0), bump, 0);
     }
 }

@@ -425,10 +425,7 @@ contract BiteTest is DSTest {
         flop = new Flopper(address(vat), address(gov));
         gov.setOwner(address(flop));
 
-        vow = new Vow();
-        vow.file("vat",  address(vat));
-        vow.file("flap", address(flap));
-        vow.file("flop", address(flop));
+        vow = new Vow(address(vat), address(flap), address(flop));
         flop.rely(address(vow));
 
         jug = new Jug(address(vat));

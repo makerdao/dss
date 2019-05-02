@@ -32,22 +32,18 @@ contract VowTest is DSTest {
         hevm.warp(0);
 
         vat = new Vat();
-        vow = new Vow();
-        vat.rely(address(vow));
-        gov  = new Gem();
 
+        gov  = new Gem();
         flop = new Flop(address(vat), address(gov));
         flap = new Flap(address(vat), address(gov));
-        vat.hope(address(flop));
-        vat.rely(address(flop));
-        vat.rely(address(flap));
+
+        vow = new Vow(address(vat), address(flap), address(flop));
         flop.rely(address(vow));
 
-        vow.file("vat",  address(vat));
-        vow.file("flop", address(flop));
-        vow.file("flap", address(flap));
         vow.file("bump", rad(100 ether));
         vow.file("sump", rad(100 ether));
+
+        vat.hope(address(flop));
     }
 
     function try_flog(uint48 era) internal returns (bool ok) {
@@ -139,7 +135,7 @@ contract VowTest is DSTest {
 
         assertTrue(!try_flap() );
     }
-    function test_no_flap_pending_kiss() public {
+    function test_no_flap_pending_heal() public {
         flog(100 ether);
         uint id = vow.flop();
 
