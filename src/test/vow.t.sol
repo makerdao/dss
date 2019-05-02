@@ -75,7 +75,7 @@ contract VowTest is DSTest {
     function suck(address who, uint wad) internal {
         vow.fess(rad(wad));
         vat.init('');
-        vat.heal(address(vow), who, -int(rad(wad)));
+        vat.suck(address(vow), who, rad(wad));
     }
     function flog(uint wad) internal {
         suck(address(0), wad);  // suck dai into the zero address

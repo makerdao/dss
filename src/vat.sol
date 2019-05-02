@@ -202,11 +202,18 @@ contract Vat {
     }
 
     // --- Settlement ---
-    function heal(address u, address v, int rad) public note auth {
+    function heal(uint rad) public note {
+        address u = msg.sender;
         sin[u] = sub(sin[u], rad);
-        dai[v] = sub(dai[v], rad);
+        dai[u] = sub(dai[u], rad);
         vice   = sub(vice,   rad);
         debt   = sub(debt,   rad);
+    }
+    function suck(address u, address v, uint rad) public note auth {
+        sin[u] = add(sin[u], rad);
+        dai[v] = add(dai[v], rad);
+        vice   = add(vice,   rad);
+        debt   = add(debt,   rad);
     }
 
     // --- Rates ---

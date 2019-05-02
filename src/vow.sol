@@ -32,7 +32,7 @@ contract Hopeful {
 contract VatLike {
     function dai (address) public view returns (uint);
     function sin (address) public view returns (uint);
-    function heal(address,address,int) public;
+    function heal(uint) public;
 }
 
 contract Vow is DSNote {
@@ -112,14 +112,12 @@ contract Vow is DSNote {
     // Debt settlement
     function heal(uint rad) public note {
         require(rad <= Joy() && rad <= Woe());
-        require(int(rad) >= 0);
-        VatLike(vat).heal(address(this), address(this), int(rad));
+        VatLike(vat).heal(rad);
     }
     function kiss(uint rad) public note {
         require(rad <= Ash && rad <= Joy());
         Ash = sub(Ash, rad);
-        require(int(rad) >= 0);
-        VatLike(vat).heal(address(this), address(this), int(rad));
+        VatLike(vat).heal(rad);
     }
 
     // Debt auction
