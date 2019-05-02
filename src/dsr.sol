@@ -72,48 +72,48 @@ contract Pot is DSNote {
     // --- Math ---
     uint256 constant ONE = 10 ** 27;
     function rpow(uint x, uint n, uint base) internal pure returns (uint z) {
-      assembly {
-        switch x case 0 {switch n case 0 {z := base} default {z := 0}}
-        default {
-          switch mod(n, 2) case 0 { z := base } default { z := x }
-          let half := div(base, 2)  // for rounding.
-          for { n := div(n, 2) } n { n := div(n,2) } {
-            let xx := mul(x, x)
-            if iszero(eq(div(xx, x), x)) { revert(0,0) }
-            let xxRound := add(xx, half)
-            if lt(xxRound, xx) { revert(0,0) }
-            x := div(xxRound, base)
-            if mod(n,2) {
-              let zx := mul(z, x)
-              if and(iszero(iszero(x)), iszero(eq(div(zx, x), z))) { revert(0,0) }
-              let zxRound := add(zx, half)
-              if lt(zxRound, zx) { revert(0,0) }
-              z := div(zxRound, base)
+        assembly {
+            switch x case 0 {switch n case 0 {z := base} default {z := 0}}
+            default {
+                switch mod(n, 2) case 0 { z := base } default { z := x }
+                let half := div(base, 2)  // for rounding.
+                for { n := div(n, 2) } n { n := div(n,2) } {
+                    let xx := mul(x, x)
+                    if iszero(eq(div(xx, x), x)) { revert(0,0) }
+                    let xxRound := add(xx, half)
+                    if lt(xxRound, xx) { revert(0,0) }
+                    x := div(xxRound, base)
+                    if mod(n,2) {
+                        let zx := mul(z, x)
+                        if and(iszero(iszero(x)), iszero(eq(div(zx, x), z))) { revert(0,0) }
+                        let zxRound := add(zx, half)
+                        if lt(zxRound, zx) { revert(0,0) }
+                        z := div(zxRound, base)
+                    }
+                }
             }
-          }
         }
-      }
     }
     function add(uint x, int y) internal pure returns (uint z) {
-      assembly {
-        z := add(x, y)
-        if sgt(y, 0) { if iszero(gt(z, x)) { revert(0, 0) } }
-        if slt(y, 0) { if iszero(lt(z, x)) { revert(0, 0) } }
-      }
+        assembly {
+            z := add(x, y)
+            if sgt(y, 0) { if iszero(gt(z, x)) { revert(0, 0) } }
+            if slt(y, 0) { if iszero(lt(z, x)) { revert(0, 0) } }
+        }
     }
     function sub(uint x, int y) internal pure returns (uint z) {
-      assembly {
-        z := sub(x, y)
-        if slt(y, 0) { if iszero(gt(z, x)) { revert(0, 0) } }
-        if sgt(y, 0) { if iszero(lt(z, x)) { revert(0, 0) } }
-      }
+        assembly {
+            z := sub(x, y)
+            if slt(y, 0) { if iszero(gt(z, x)) { revert(0, 0) } }
+            if sgt(y, 0) { if iszero(lt(z, x)) { revert(0, 0) } }
+        }
     }
     function mul(uint x, int y) internal pure returns (int z) {
-      assembly {
-        z := mul(x, y)
-        if slt(x, 0) { revert(0, 0) }
-        if iszero(eq(y, 0)) { if iszero(eq(sdiv(z, y), x)) { revert(0, 0) } }
-      }
+        assembly {
+            z := mul(x, y)
+            if slt(x, 0) { revert(0, 0) }
+            if iszero(eq(y, 0)) { if iszero(eq(sdiv(z, y), x)) { revert(0, 0) } }
+        }
     }
     function sub(uint x, uint y) internal pure returns (int z) {
         z = int(x) - int(y);
@@ -148,9 +148,9 @@ contract Pot is DSNote {
         pie[guy] = add(pie[guy], wad);
         Pie      = add(Pie,      wad);
         if (wad >= 0) {
-          vat.move(guy, address(this), uint(mul(chi, wad)));
+            vat.move(guy, address(this), uint(mul(chi, wad)));
         } else {
-          vat.move(address(this), guy, uint(-mul(chi, wad)));
+            vat.move(address(this), guy, uint(-mul(chi, wad)));
         }
     }
     function move(address src, address dst, int wad) public auth {
