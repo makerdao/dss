@@ -171,7 +171,7 @@ contract EndTest is DSTest {
         assertEq(end.live(), 1);
         assertEq(vat.live(), 1);
         assertEq(cat.live(), 1);
-        end.cage(0);
+        end.cage();
         assertEq(end.live(), 0);
         assertEq(vat.live(), 0);
         assertEq(cat.live(), 0);
@@ -191,10 +191,9 @@ contract EndTest is DSTest {
         assertEq(vat.vice(), 0);
 
         // tag and fix computation
-        uint hump = 0;
         uint tag = RAY / 5;
         uint fix = RAY / 5;
-        end.cage(hump);
+        end.cage();
         end.cage("gold", tag, fix);
         end.skim("gold", urn1);
 
@@ -254,12 +253,11 @@ contract EndTest is DSTest {
         assertEq(vat.vice(), 0);
 
         // tag and fix computation
-        uint hump = 0;
         // CDP holders settled at price of 2
         uint tag = RAY / 2;
         // DAI holders get ~0.944
         uint fix = (17 * RAY) / 36;
-        end.cage(hump);
+        end.cage();
         end.cage("gold", tag, fix);
         end.skim("gold", urn1);
         end.skim("gold", urn2);
@@ -339,12 +337,11 @@ contract EndTest is DSTest {
         assertEq(vat.vice(), 0);
 
         // tag and fix computation
-        uint hump = 0;
         // CDP holders settled at price of 1.875
         uint tag = 533333333333333333358631380;
         // DAI holders get 1.0
         uint fix = RAY / 2;
-        end.cage(hump);
+        end.cage();
         end.cage("gold", tag, fix);
         end.skim("gold", urn1);
         end.skim("gold", urn2);
@@ -424,10 +421,9 @@ contract EndTest is DSTest {
         assertEq(dai(urn1), 14 ether);
 
         // tag and fix computation
-        uint hump = 0;
         uint tag = RAY / 5;
         uint fix = RAY / 5;
-        end.cage(hump);
+        end.cage();
         end.cage("gold", tag, fix);
 
         end.skip("gold", auction);

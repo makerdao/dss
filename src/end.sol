@@ -58,7 +58,6 @@ contract VowLike {
     function Ash() public view returns (uint);
     function heal(uint256 rad) public;
     function kiss(uint256 rad) public;
-    function cage(uint256 dump) public;
     function cage() public;
 }
 contract Flippy {
@@ -145,7 +144,7 @@ contract End {
     }
 
     // --- Settlement ---
-    function cage(uint256 dump) public auth {
+    function cage() public auth {
         require(live == 1);
         live = 0;
         vat.cage();
