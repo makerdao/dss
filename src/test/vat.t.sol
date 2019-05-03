@@ -487,20 +487,19 @@ contract BiteTest is DSTest {
 
         assertEq(vat.balanceOf(address(vow)),    0 ether);
         flip.tend(auction, 40 ether,   rad(1 ether));
-        assertEq(vat.balanceOf(address(vow)),    1 ether);
         flip.tend(auction, 40 ether, rad(100 ether));
-        assertEq(vat.balanceOf(address(vow)),  100 ether);
 
         assertEq(vat.balanceOf(address(this)),   0 ether);
         assertEq(gem("gold", address(this)),   960 ether);
         vat.mint(address(this), 100 ether);  // magic up some dai for bidding
         flip.dent(auction, 38 ether,  rad(100 ether));
         assertEq(vat.balanceOf(address(this)), 100 ether);
-        assertEq(vat.balanceOf(address(vow)),  100 ether);
         assertEq(gem("gold", address(this)),   962 ether);
         assertEq(gem("gold", address(this)),   962 ether);
-
         assertEq(vow.sin(uint48(now)),     rad(100 ether));
+
+        hevm.warp(4 hours);
+        flip.deal(auction);
         assertEq(vat.balanceOf(address(vow)),  100 ether);
     }
 

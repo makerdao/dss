@@ -39,6 +39,12 @@ contract VatLike {
 */
 
 contract Flipper is DSNote {
+    // --- Auth ---
+    mapping (address => uint) public wards;
+    function rely(address guy) public note auth { wards[guy] = 1; }
+    function deny(address guy) public note auth { wards[guy] = 0; }
+    modifier auth { require(wards[msg.sender] == 1); _; }
+
     // --- Data ---
     struct Bid {
         uint256 bid;
@@ -61,6 +67,7 @@ contract Flipper is DSNote {
     uint48  public   ttl = 3 hours;  // 3 hours bid duration
     uint48  public   tau = 2 days;   // 2 days total auction length
     uint256 public kicks = 0;
+    uint256 public live;
 
     // --- Events ---
     event Kick(
@@ -76,6 +83,8 @@ contract Flipper is DSNote {
     constructor(address vat_, bytes32 ilk_) public {
         vat = VatLike(vat_);
         ilk = ilk_;
+        wards[msg.sender] = 1;
+        live = 1;
     }
 
     // --- Math ---
@@ -84,6 +93,10 @@ contract Flipper is DSNote {
     }
     function mul(uint x, uint y) internal pure returns (uint z) {
         require(y == 0 || (z = x * y) / y == x);
+    }
+    // --- Administration ---
+    function cage() public note auth {
+        live = 0;
     }
 
     // --- Auction ---
@@ -121,7 +134,7 @@ contract Flipper is DSNote {
         require(mul(bid, ONE) >= mul(beg, bids[id].bid) || bid == bids[id].tab);
 
         vat.move(msg.sender, bids[id].guy, bids[id].bid);
-        vat.move(msg.sender, bids[id].gal, bid - bids[id].bid);
+        vat.move(msg.sender, address(this), bid - bids[id].bid);
 
         bids[id].guy = msg.sender;
         bids[id].bid = bid;
@@ -145,8 +158,18 @@ contract Flipper is DSNote {
         bids[id].tic = add(uint48(now), ttl);
     }
     function deal(uint id) public note {
+        require(live == 1 || bids[id].bid == bids[id].tab);
         require(bids[id].tic != 0 && (bids[id].tic < now || bids[id].end < now));
+        vat.move(address(this), bids[id].gal, bids[id].bid);
         vat.flux(ilk, address(this), bids[id].guy, bids[id].lot);
+        delete bids[id];
+    }
+    function yank(uint id) public note auth {
+        require(live == 0);
+        require(bids[id].guy != address(0));
+        require(bids[id].bid < bids[id].tab);
+        vat.move(address(this), bids[id].guy, bids[id].bid);
+        vat.flux(ilk, address(this), msg.sender, bids[id].lot);
         delete bids[id];
     }
 }

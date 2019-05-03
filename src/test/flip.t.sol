@@ -51,6 +51,12 @@ contract Guy {
         string memory sig = "tick(uint256)";
         (ok,) = address(flip).call(abi.encodeWithSignature(sig, id));
     }
+    function try_yank(uint id)
+        public returns (bool ok)
+    {
+        string memory sig = "yank(uint256)";
+        (ok,) = address(flip).call(abi.encodeWithSignature(sig, id));
+    }
 }
 
 
@@ -129,8 +135,8 @@ contract FlipTest is DSTest {
         Guy(ali).tend(id, 100 ether, 1 ether);
         // bid taken from bidder
         assertEq(vat.dai_balance(ali),   199 ether);
-        // gal receives payment
-        assertEq(vat.dai_balance(gal),     1 ether);
+        // flip receives payment
+        assertEq(vat.dai_balance(address(flip)),     1 ether);
 
         Guy(bob).tend(id, 100 ether, 2 ether);
         // bid taken from bidder
@@ -138,12 +144,14 @@ contract FlipTest is DSTest {
         // prev bidder refunded
         assertEq(vat.dai_balance(ali), 200 ether);
         // gal receives excess
-        assertEq(vat.dai_balance(gal),   2 ether);
+        assertEq(vat.dai_balance(address(flip)),   2 ether);
 
         hevm.warp(5 hours);
         Guy(bob).deal(id);
         // bob gets the winnings
         assertEq(vat.gem_balance(bob), 100 ether);
+        // gal received payment
+        assertEq(vat.dai_balance(gal),   2 ether);
     }
     function test_tend_later() public {
         uint id = flip.kick({ lot: 100 ether
@@ -157,6 +165,11 @@ contract FlipTest is DSTest {
         Guy(ali).tend(id, 100 ether, 1 ether);
         // bid taken from bidder
         assertEq(vat.dai_balance(ali), 199 ether);
+
+        hevm.warp(10 hours);
+        Guy(ali).deal(id);
+        // ali gets the winnings
+        assertEq(vat.gem_balance(ali), 100 ether);
         // gal receives payment
         assertEq(vat.dai_balance(gal),   1 ether);
     }
@@ -257,5 +270,61 @@ contract FlipTest is DSTest {
         assertTrue(!Guy(ali).try_deal(id));
         assertTrue( Guy(ali).try_tick(id));
         assertTrue(!Guy(ali).try_deal(id));
+    }
+    function test_yank_tend() public {
+        uint id = flip.kick({ lot: 100 ether
+                            , tab: 50 ether
+                            , urn: urn
+                            , gal: gal
+                            , bid: 0
+                            });
+
+        Guy(ali).tend(id, 100 ether, 1 ether);
+        // bid taken from bidder
+        assertEq(vat.dai_balance(ali),   199 ether);
+        assertEq(vat.dai_balance(address(flip)), 1 ether);
+
+        flip.cage();
+        flip.yank(id);
+        // bid refunded to bidder
+        assertEq(vat.dai_balance(ali),   200 ether);
+        assertEq(vat.gem_balance(address(this)), 1000 ether);
+    }
+    function test_yank_dent() public {
+        uint id = flip.kick({ lot: 100 ether
+                            , tab: 50 ether
+                            , urn: urn
+                            , gal: gal
+                            , bid: 0
+                            });
+        Guy(ali).tend(id, 100 ether,  1 ether);
+        Guy(bob).tend(id, 100 ether, 50 ether);
+        Guy(ali).dent(id,  95 ether, 50 ether);
+
+        assertTrue(!Guy(ali).try_yank(id));
+    }
+    function test_yank_cage_deal() public {
+        uint id = flip.kick({ lot: 100 ether
+                            , tab: 50 ether
+                            , urn: urn
+                            , gal: gal
+                            , bid: 0
+                            });
+
+        Guy(ali).tend(id, 100 ether, 1 ether);
+        // bid taken from bidder
+        assertEq(vat.dai_balance(ali),   199 ether);
+        assertEq(vat.dai_balance(address(flip)), 1 ether);
+
+        flip.cage();
+
+        hevm.warp(5 hours);
+        // can't deal in deficit after cage
+        assertTrue(!Guy(ali).try_deal(id));
+
+        flip.yank(id);
+        // bid refunded to bidder
+        assertEq(vat.dai_balance(ali),   200 ether);
+        assertEq(vat.gem_balance(address(this)), 1000 ether);
     }
 }
