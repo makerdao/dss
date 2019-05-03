@@ -95,27 +95,30 @@ contract Pot is DSNote {
         }
     }
     function add(uint x, int y) internal pure returns (uint z) {
-        assembly {
-            z := add(x, y)
-            if sgt(y, 0) { if iszero(gt(z, x)) { revert(0, 0) } }
-            if slt(y, 0) { if iszero(lt(z, x)) { revert(0, 0) } }
-        }
+        z = x + uint(y);
+        require(y >= 0 || z <= x);
+        require(y <= 0 || z >= x);
     }
     function sub(uint x, int y) internal pure returns (uint z) {
-        assembly {
-            z := sub(x, y)
-            if slt(y, 0) { if iszero(gt(z, x)) { revert(0, 0) } }
-            if sgt(y, 0) { if iszero(lt(z, x)) { revert(0, 0) } }
-        }
+        z = x - uint(y);
+        require(y <= 0 || z <= x);
+        require(y >= 0 || z >= x);
     }
     function mul(uint x, int y) internal pure returns (int z) {
-        assembly {
-            z := mul(x, y)
-            if slt(x, 0) { revert(0, 0) }
-            if iszero(eq(y, 0)) { if iszero(eq(sdiv(z, y), x)) { revert(0, 0) } }
-        }
+        z = int(x) * y;
+        require(int(x) >= 0);
+        require(y == 0 || z / y == int(x));
     }
-    function sub(uint x, uint y) internal pure returns (int z) {
+    function add(uint x, uint y) internal pure returns (uint z) {
+        require((z = x + y) >= x);
+    }
+    function sub(uint x, uint y) internal pure returns (uint z) {
+        require((z = x - y) <= x);
+    }
+    function mul(uint x, uint y) internal pure returns (uint z) {
+        require(y == 0 || (z = x * y) / y == x);
+    }
+    function subi(uint x, uint y) internal pure returns (int z) {
         z = int(x) - int(y);
         require(int(x) >= 0 && int(y) >= 0);
     }
@@ -136,23 +139,25 @@ contract Pot is DSNote {
     // --- Savings Rate Accumulation ---
     function drip() public note {
         require(now >= rho);
-        int chi_ = sub(rmul(rpow(dsr, now - rho, ONE), chi), chi);
+        int chi_ = subi(rmul(rpow(dsr, now - rho, ONE), chi), chi);
         chi = add(chi, chi_);
         rho  = uint48(now);
         vat.heal(address(vow), address(this), -mul(Pie, chi_));
     }
 
     // --- Savings Dai Management ---
-    function save(int wad) public note {
-        address guy = msg.sender;
-        pie[guy] = add(pie[guy], wad);
-        Pie      = add(Pie,      wad);
-        if (wad >= 0) {
-            vat.move(guy, address(this), uint(mul(chi, wad)));
-        } else {
-            vat.move(address(this), guy, uint(-mul(chi, wad)));
-        }
+    function join(uint wad) public note {
+        pie[msg.sender] = add(pie[msg.sender], wad);
+        Pie             = add(Pie,             wad);
+        vat.move(msg.sender, address(this), mul(chi, wad));
     }
+
+    function exit(uint wad) public note {
+        pie[msg.sender] = sub(pie[msg.sender], wad);
+        Pie             = sub(Pie,             wad);
+        vat.move(address(this), msg.sender, mul(chi, wad));
+    }
+
     function move(address src, address dst, int wad) public auth {
         pie[src] = sub(pie[src], wad);
         pie[dst] = add(pie[dst], wad);
