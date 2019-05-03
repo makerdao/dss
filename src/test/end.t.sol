@@ -61,8 +61,8 @@ contract Usr {
     function free(bytes32 ilk) public {
         end.free(ilk);
     }
-    function shop(uint256 wad) public {
-        end.shop(wad);
+    function shop(uint256 rad) public {
+        end.shop(rad);
     }
     function pack(bytes32 ilk) public {
         end.pack(ilk);
@@ -214,7 +214,7 @@ contract EndTest is DSTest {
 
         // dai redemption
         ali.hope(address(end));
-        ali.shop(15 ether);
+        ali.shop(rad(15 ether));
 
         // global checks:
         assertEq(vat.debt(), 0);
@@ -281,7 +281,7 @@ contract EndTest is DSTest {
 
         // first dai redemption
         ali.hope(address(end));
-        ali.shop(15 ether);
+        ali.shop(rad(15 ether));
 
         // global checks:
         assertEq(vat.debt(), rad(3 ether));
@@ -297,7 +297,7 @@ contract EndTest is DSTest {
 
         // second dai redemption
         bob.hope(address(end));
-        bob.shop(3 ether);
+        bob.shop(rad(3 ether));
 
         // global checks:
         assertEq(vat.debt(), 0);
@@ -365,7 +365,7 @@ contract EndTest is DSTest {
 
         // first dai redemption
         ali.hope(address(end));
-        ali.shop(15 ether);
+        ali.shop(rad(15 ether));
 
         // global checks:
         assertEq(vat.debt(), rad(3 ether));
@@ -381,7 +381,7 @@ contract EndTest is DSTest {
 
         // second dai redemption
         bob.hope(address(end));
-        bob.shop(3 ether);
+        bob.shop(rad(3 ether));
 
         // global checks:
         assertEq(vat.debt(), 0);
@@ -453,7 +453,7 @@ contract EndTest is DSTest {
 
         // dai redemption
         ali.hope(address(end));
-        ali.shop(15 ether);
+        ali.shop(rad(15 ether));
 
         // global checks:
         // no need for vent

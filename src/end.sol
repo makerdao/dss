@@ -47,7 +47,7 @@ contract CatLike {
     struct Ilk {
         address flip;  // Liquidator
         uint256 chop;  // Liquidation Penalty   [ray]
-        uint256 lump;  // Liquidation Quantity  [wad]
+        uint256 lump;  // Liquidation Quantity  [rad]
     }
     function ilks(bytes32) public returns (Ilk memory);
     function cage() public;
@@ -77,7 +77,6 @@ contract Flippy {
 }
 
 contract End {
-
     // --- Auth ---
     mapping (address => uint) public wards;
     function rely(address guy) public auth { wards[guy] = 1; }
@@ -101,11 +100,6 @@ contract End {
         live = 1;
     }
 
-    // --- Helpers ---
-    // function b32(address a) internal pure returns (bytes32 b) {
-    //     b = bytes32(bytes20(a));
-    // }
-
     // --- Math ---
     function add(uint x, uint y) internal pure returns (uint z) {
         z = x + y;
@@ -115,24 +109,13 @@ contract End {
         require((z = x - y) <= x);
     }
     function mul(uint x, uint y) internal pure returns (uint z) {
-        z = x * y;
-        require(y == 0 || z / y == x);
+        require(y == 0 || (z = x * y) / y == x);
     }
-
     uint constant RAY = 10 ** 27;
     function rmul(uint x, uint y) internal pure returns (uint z) {
-        z = x * y;
-        require(y == 0 || z / y == x);
-        z = z / RAY;
-    }
-    function u2i(uint x) internal pure returns (int y) {
-        y = int(x);
-        require(y >= 0);
+        z = mul(x, y) / RAY;
     }
     function min(uint x, uint y) internal pure returns (uint z) {
-        if (x > y) { z = y; } else { z = x; }
-    }
-    function min(int x, int y) internal pure returns (int z) {
         if (x > y) { z = y; } else { z = x; }
     }
 
@@ -188,10 +171,10 @@ contract End {
         vat.grab(ilk, msg.sender, msg.sender, msg.sender, -int(u.ink), 0);
     }
 
-    function shop(uint256 wad) public {
-        vat.move(msg.sender, address(this), mul(wad, RAY));
-        vat.heal(mul(wad, RAY));
-        dai[msg.sender] = add(dai[msg.sender], wad);
+    function shop(uint256 rad) public {
+        vat.move(msg.sender, address(this), rad);
+        vat.heal(rad);
+        dai[msg.sender] = add(dai[msg.sender], rad);
     }
 
     function pack(bytes32 ilk) public {
@@ -200,7 +183,8 @@ contract End {
     }
 
     function cash(bytes32 ilk) public {
-        vat.flux(ilk, address(this), msg.sender, rmul(bags[ilk][msg.sender], fixs[ilk]));
+        uint gems = mul(bags[ilk][msg.sender], fixs[ilk]) / 10 ** 54;
+        vat.flux(ilk, address(this), msg.sender, gems);
         bags[ilk][msg.sender]  = 0;
         dai[msg.sender]        = 0;
     }

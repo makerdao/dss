@@ -141,12 +141,6 @@ contract Vow is DSNote {
         id = flapper.kick(address(0), bump, 0);
     }
 
-    function cage(uint256 dump) public note auth {
-        live = 0;
-        VatLike(vat).heal(min(Joy(), Woe()));
-        VatLike(vat).move(address(this), msg.sender, min(Joy(), rmul(hump, dump)));
-    }
-
     function cage() public note auth {
         live = 0;
         flapper.cage(vat.dai(address(flapper)));
