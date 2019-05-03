@@ -94,44 +94,47 @@ contract Pot is DSNote {
             }
         }
     }
-    function add(uint x, int y) internal pure returns (uint z) {
-        z = x + uint(y);
-        require(y >= 0 || z <= x);
-        require(y <= 0 || z >= x);
-    }
-    function sub(uint x, int y) internal pure returns (uint z) {
-        z = x - uint(y);
-        require(y <= 0 || z <= x);
-        require(y >= 0 || z >= x);
-    }
-    function mul(uint x, int y) internal pure returns (int z) {
-        z = int(x) * y;
-        require(int(x) >= 0);
-        require(y == 0 || z / y == int(x));
-    }
-    function add(uint x, uint y) internal pure returns (uint z) {
-        require((z = x + y) >= x);
-    }
-    function sub(uint x, uint y) internal pure returns (uint z) {
-        require((z = x - y) <= x);
-    }
-    function mul(uint x, uint y) internal pure returns (uint z) {
-        require(y == 0 || (z = x * y) / y == x);
-    }
-    function subi(uint x, uint y) internal pure returns (int z) {
-        z = int(x) - int(y);
-        require(int(x) >= 0 && int(y) >= 0);
-    }
+
     function rmul(uint x, uint y) internal pure returns (uint z) {
         z = x * y;
         require(y == 0 || z / y == x);
         z = z / ONE;
     }
 
+    function add(uint x, int y) internal pure returns (uint z) {
+        z = x + uint(y);
+        require(y >= 0 || z <= x);
+        require(y <= 0 || z >= x);
+    }
+
+    function mul(uint x, int y) internal pure returns (int z) {
+        z = int(x) * y;
+        require(int(x) >= 0);
+        require(y == 0 || z / y == int(x));
+    }
+
+    function add(uint x, uint y) internal pure returns (uint z) {
+        require((z = x + y) >= x);
+    }
+
+    function sub(uint x, uint y) internal pure returns (uint z) {
+        require((z = x - y) <= x);
+    }
+
+    function mul(uint x, uint y) internal pure returns (uint z) {
+        require(y == 0 || (z = x * y) / y == x);
+    }
+
+    function diff(uint x, uint y) internal pure returns (int z) {
+        z = int(x) - int(y);
+        require(int(x) >= 0 && int(y) >= 0);
+    }
+
     // --- Administration ---
     function file(bytes32 what, uint256 data) public note auth {
         if (what == "dsr") dsr = data;
     }
+
     function file(bytes32 what, address addr) public note auth {
         if (what == "vow") vow = addr;
     }
@@ -139,7 +142,7 @@ contract Pot is DSNote {
     // --- Savings Rate Accumulation ---
     function drip() public note {
         require(now >= rho);
-        int chi_ = subi(rmul(rpow(dsr, now - rho, ONE), chi), chi);
+        int chi_ = diff(rmul(rpow(dsr, now - rho, ONE), chi), chi);
         chi = add(chi, chi_);
         rho  = uint48(now);
         vat.heal(address(vow), address(this), -mul(Pie, chi_));
@@ -156,10 +159,5 @@ contract Pot is DSNote {
         pie[msg.sender] = sub(pie[msg.sender], wad);
         Pie             = sub(Pie,             wad);
         vat.move(address(this), msg.sender, mul(chi, wad));
-    }
-
-    function move(address src, address dst, int wad) public auth {
-        pie[src] = sub(pie[src], wad);
-        pie[dst] = add(pie[dst], wad);
     }
 }
