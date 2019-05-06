@@ -476,14 +476,13 @@ contract BiteTest is DSTest {
         assertEq(art("gold", address(this)), 100 ether);
         assertEq(vow.Woe(), 0 ether);
         assertEq(gem("gold", address(this)), 960 ether);
-        uint id = cat.bite("gold", address(this));
+
+        cat.file("gold", "lump", rad(100 ether));
+        uint auction = cat.bite("gold", address(this));
         assertEq(ink("gold", address(this)), 0);
         assertEq(art("gold", address(this)), 0);
         assertEq(vow.sin(uint48(now)),   rad(100 ether));
         assertEq(gem("gold", address(this)), 960 ether);
-
-        cat.file("gold", "lump", rad(100 ether));
-        uint auction = cat.flip(id, rad(100 ether));  // flip all the tab
 
         assertEq(vat.balanceOf(address(vow)),    0 ether);
         flip.tend(auction, 40 ether,   rad(1 ether));
@@ -508,6 +507,7 @@ contract BiteTest is DSTest {
         vat.frob("gold",  40 ether, 100 ether);
         vat.file("gold", 'spot', ray(2 ether));  // now unsafe
 
+        cat.file("gold", "lump", rad(100 ether));
         assertEq(vow.sin(uint48(now)), rad(  0 ether));
         cat.bite("gold", address(this));
         assertEq(vow.sin(uint48(now)), rad(100 ether));

@@ -395,9 +395,8 @@ contract EndTest is DSTest {
 
         vat.file("gold", "spot", ray(1 ether));     // now unsafe
 
-        uint id = cat.bite("gold", urn1);           // CDP liquidated
-        assertEq(vat.vice(), rad(15 ether));        // now there is sin
-        uint auction = cat.flip(id, rad(15 ether)); // flip all the tab
+        uint auction = cat.bite("gold", urn1);  // CDP liquidated
+        assertEq(vat.vice(), rad(15 ether));    // now there is sin
         // get 1 dai from ali
         ali.move(address(ali), address(this), rad(1 ether));
         vat.hope(address(gold.flip));
