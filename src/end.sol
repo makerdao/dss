@@ -59,6 +59,7 @@ contract VowLike {
     function heal(uint256 rad) public;
     function kiss(uint256 rad) public;
     function cage() public;
+    function loot() public;
 }
 contract Flippy {
     struct Bid {
@@ -221,8 +222,8 @@ contract End {
     function thaw() public {
         require(now >= when + wait);
         require(debt == 0);
-        // an awkward kind of healing?
-        vow.cage();
+        require(vow.Joy() == 0);
+        require(vat.dai(address(this)) == 0);
         debt = vat.debt();
     }
 
@@ -255,6 +256,7 @@ contract End {
     }
 
     function vent(uint256 rad) public {
+        vow.loot();
         vat.heal(rad);
     }
 }
