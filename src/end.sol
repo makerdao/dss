@@ -82,7 +82,7 @@ contract PipLike {
 
 contract Spotty {
     struct Ilk {
-        address pip;
+        PipLike pip;
         uint256 mat;
     }
     function ilks(bytes32) public view returns (Ilk memory);
@@ -166,7 +166,7 @@ contract End {
     function cage(bytes32 ilk) public {
         require(live == 0);
         require(tags[ilk] == 0);
-        tags[ilk] = uint(PipLike(spot.ilks(ilk).pip).read());
+        tags[ilk] = uint(spot.ilks(ilk).pip.read());
         Flippy(cat.ilks(ilk).flip).cage();
     }
 
