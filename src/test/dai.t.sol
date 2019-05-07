@@ -287,19 +287,21 @@ contract DaiTest is DSTest {
 
     function testPermitWithExpiry() public {
       assertEq(now, 0);
-      bytes32 r = 0xb23715c2adca23ea6502e78015fb5d5b5ee693ef84be13ace7b09bced876bbad;
-      bytes32 s = 0x1c65ff8aefb3e52a25c0d7a7abe4923a398d9f1754a731b7591e4ed86ee226f2;
-      uint8 v = 27;
-      token.permit(cal, del, 0, 1, true, v, r, s);
+      bytes32 _r = 0xb23715c2adca23ea6502e78015fb5d5b5ee693ef84be13ace7b09bced876bbad;
+      bytes32 _s = 0x1c65ff8aefb3e52a25c0d7a7abe4923a398d9f1754a731b7591e4ed86ee226f2;
+      uint8 _v = 27;
+      token.permit(cal, del, 0, 1, true, _v, _r, _s);
+      assertEq(token.allowance(cal, del),uint(-1));
+      assertEq(token.nonces(cal),1);
     }
 
     function testFailPermitWithExpiry() public {
       hevm.warp(2);
       assertEq(now, 2);
-      bytes32 r = 0xb23715c2adca23ea6502e78015fb5d5b5ee693ef84be13ace7b09bced876bbad;
-      bytes32 s = 0x1c65ff8aefb3e52a25c0d7a7abe4923a398d9f1754a731b7591e4ed86ee226f2;
-      uint8 v = 27;
-      token.permit(cal, del, 0, 1, true, v, r, s);
+      bytes32 r_ = 0xb23715c2adca23ea6502e78015fb5d5b5ee693ef84be13ace7b09bced876bbad;
+      bytes32 s_ = 0x1c65ff8aefb3e52a25c0d7a7abe4923a398d9f1754a731b7591e4ed86ee226f2;
+      uint8 v_ = 27;
+      token.permit(cal, del, 0, 1, true, v_, r_, s_);
     }
 
     function testFailReplay() public {
