@@ -38,7 +38,7 @@ contract DSRTest is DSTest {
         vow = address(bytes20("vow"));
         pot.file("vow", vow);
 
-        vat.heal(self, self, -int(rad(100 ether)));
+        vat.suck(self, self, rad(100 ether));
         vat.hope(address(pot));
     }
     function test_save_0d() public {

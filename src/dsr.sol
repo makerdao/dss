@@ -40,7 +40,7 @@ import "ds-note/note.sol";
 
 contract VatLike {
     function move(address,address,uint256) public;
-    function heal(address,address,int256) public;
+    function suck(address,address,uint256) public;
 }
 
 contract Pot is DSNote {
@@ -101,18 +101,6 @@ contract Pot is DSNote {
         z = z / ONE;
     }
 
-    function add(uint x, int y) internal pure returns (uint z) {
-        z = x + uint(y);
-        require(y >= 0 || z <= x);
-        require(y <= 0 || z >= x);
-    }
-
-    function mul(uint x, int y) internal pure returns (int z) {
-        z = int(x) * y;
-        require(int(x) >= 0);
-        require(y == 0 || z / y == int(x));
-    }
-
     function add(uint x, uint y) internal pure returns (uint z) {
         require((z = x + y) >= x);
     }
@@ -125,14 +113,12 @@ contract Pot is DSNote {
         require(y == 0 || (z = x * y) / y == x);
     }
 
-    function diff(uint x, uint y) internal pure returns (int z) {
-        z = int(x) - int(y);
-        require(int(x) >= 0 && int(y) >= 0);
-    }
-
     // --- Administration ---
     function file(bytes32 what, uint256 data) public note auth {
-        if (what == "dsr") dsr = data;
+        if (what == "dsr") {
+            require(data >= ONE);
+            dsr = data;
+        }
     }
 
     function file(bytes32 what, address addr) public note auth {
@@ -142,10 +128,10 @@ contract Pot is DSNote {
     // --- Savings Rate Accumulation ---
     function drip() public note {
         require(now >= rho);
-        int chi_ = diff(rmul(rpow(dsr, now - rho, ONE), chi), chi);
+        uint chi_ = sub(rmul(rpow(dsr, now - rho, ONE), chi), chi);
         chi = add(chi, chi_);
         rho  = uint48(now);
-        vat.heal(address(vow), address(this), -mul(Pie, chi_));
+        vat.suck(address(vow), address(this), mul(Pie, chi_));
     }
 
     // --- Savings Dai Management ---
