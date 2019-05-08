@@ -449,4 +449,162 @@ contract EndTest is DSTest {
         assertEq(gem("gold", address(end)), 0);
         assertEq(gold.balanceOf(address(gemA)), 0);
     }
+
+    // -- Scenario where there is one well-collateralised CDP
+    // -- and there is a deficit in the Vow
+    function test_cage_collateralised_deficit() public {
+        Usr ali = new Usr(vat, end, gemA);
+
+        // make a CDP:
+        address urn1 = address(ali);
+        gemA.join(urn1, 10 ether);
+        ali.frob("gold", urn1, urn1, urn1, 10 ether, 15 ether);
+        // ali's urn has 0 gem, 10 ink, 15 tab, 15 dai
+        // suck 1 dai and give to ali
+        vat.suck(address(vow), address(ali), rad(1 ether));
+
+        // global checks:
+        assertEq(vat.debt(), rad(16 ether));
+        assertEq(vat.vice(), rad(1 ether));
+
+        // collateral price is 5
+        pip.poke(bytes32(5 * RAY));
+        end.cage();
+        end.cage("gold");
+        end.skim("gold", urn1);
+
+        // local checks:
+        assertEq(art("gold", urn1), 0);
+        assertEq(ink("gold", urn1), 7 ether);
+        assertEq(vat.sin(address(vow)), rad(16 ether));
+
+        // global checks:
+        assertEq(vat.debt(), rad(16 ether));
+        assertEq(vat.vice(), rad(16 ether));
+
+        // CDP closing
+        ali.free("gold");
+        assertEq(ink("gold", urn1), 0);
+        assertEq(gem("gold", urn1), 7 ether);
+        ali.exit(address(this), 7 ether);
+
+        hevm.warp(1 hours);
+        end.thaw();
+        end.flow("gold");
+        assertTrue(end.fixs("gold") != 0);
+
+        // dai redemption
+        ali.hope(address(end));
+        ali.shop(16 ether);
+
+        // global checks:
+        assertEq(vat.debt(), 0);
+        assertEq(vat.vice(), 0);
+
+        ali.pack("gold");
+        ali.cash("gold");
+
+        // local checks:
+        assertEq(dai(urn1), 0);
+        assertEq(gem("gold", urn1), 3 ether);
+        ali.exit(address(this), 3 ether);
+
+        assertEq(gem("gold", address(end)), 0);
+        assertEq(gold.balanceOf(address(gemA)), 0);
+    }
+
+    // -- Scenario where there is one well-collateralised CDP
+    // -- and one under-collateralised CDP and there is a
+    // -- surplus in the Vow
+    function test_cage_undercollateralised_surplus() public {
+        Usr ali = new Usr(vat, end, gemA);
+        Usr bob = new Usr(vat, end, gemA);
+
+        // make a CDP:
+        address urn1 = address(ali);
+        gemA.join(urn1, 10 ether);
+        ali.frob("gold", urn1, urn1, urn1, 10 ether, 15 ether);
+        // ali's urn has 0 gem, 10 ink, 15 tab, 15 dai
+        // alive gives one dai to the vow, creating surplus
+        ali.move(address(ali), address(vow), rad(1 ether));
+
+        // make a second CDP:
+        address urn2 = address(bob);
+        gemA.join(urn2, 1 ether);
+        bob.frob("gold", urn2, urn2, urn2, 1 ether, 3 ether);
+        // bob's urn has 0 gem, 1 ink, 3 tab, 3 dai
+
+        // global checks:
+        assertEq(vat.debt(), rad(18 ether));
+        assertEq(vat.vice(), 0);
+
+        // collateral price is 2
+        pip.poke(bytes32(2 * RAY));
+        end.cage();
+        end.cage("gold");
+        end.skim("gold", urn1);
+        // undercollateralised CDP is bailed
+        end.bail("gold", urn2);
+
+        // local checks
+        assertEq(art("gold", urn1), 0);
+        assertEq(ink("gold", urn1), 2.5 ether);
+        assertEq(art("gold", urn2), 0);
+        assertEq(ink("gold", urn2), 0);
+        assertEq(vat.sin(address(vow)), rad(18 ether));
+
+        // global checks
+        assertEq(vat.debt(), rad(18 ether));
+        assertEq(vat.vice(), rad(18 ether));
+
+        // CDP closing
+        ali.free("gold");
+        assertEq(ink("gold", urn1), 0);
+        assertEq(gem("gold", urn1), 2.5 ether);
+        ali.exit(address(this), 2.5 ether);
+
+        hevm.warp(1 hours);
+        // vent to absorb the surplus
+        vow.heal(rad(1 ether));
+        end.thaw();
+        end.flow("gold");
+        assertTrue(end.fixs("gold") != 0);
+
+        // first dai redemption
+        ali.hope(address(end));
+        ali.shop(14 ether);
+
+        // global checks:
+        assertEq(vat.debt(), rad(3 ether));
+        assertEq(vat.vice(), rad(3 ether));
+
+        ali.pack("gold");
+        ali.cash("gold");
+
+        // local checks:
+        assertEq(dai(urn1), 0);
+        uint256 fix = end.fixs("gold");
+        assertEq(gem("gold", urn1), rmul(fix, 14 ether));
+        ali.exit(address(this), rmul(fix, 14 ether));
+
+        // second dai redemption
+        bob.hope(address(end));
+        bob.shop(3 ether);
+
+        // global checks:
+        assertEq(vat.debt(), 0);
+        assertEq(vat.vice(), 0);
+
+        bob.pack("gold");
+        bob.cash("gold");
+
+        // local checks:
+        assertEq(dai(urn2), 0);
+        assertEq(gem("gold", urn2), rmul(fix, 3 ether));
+        bob.exit(address(this), rmul(fix, 3 ether));
+
+        // nothing left in the End
+        assertEq(gem("gold", address(end)), 0);
+        assertEq(gold.balanceOf(address(gemA)), 0);
+    }
 }
