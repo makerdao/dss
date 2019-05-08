@@ -148,11 +148,8 @@ contract Spotty {
     8. `shop(wad)`:
         - lock some dai in preparation for `cash`
 
-    9. `pack(ilk)`:
-        - prepare for `cash` of a specific ilk
-
-    10. `cash(ilk)`
-        - exchange dai for gems from a specific ilk
+    9. `cash(ilk, wad)`
+        - exchange some dai for gems from a specific ilk
 */
 
 contract End {
@@ -300,14 +297,10 @@ contract End {
         vow.heal(mul(wad, RAY));
         dai[msg.sender] = add(dai[msg.sender], wad);
     }
-    function pack(bytes32 ilk) public {
-        require(bags[ilk][msg.sender] == 0);
-        bags[ilk][msg.sender] = dai[msg.sender];
-    }
-    function cash(bytes32 ilk) public {
+    function cash(bytes32 ilk, uint wad) public {
         require(fixs[ilk] != 0);
-        vat.flux(ilk, address(this), msg.sender, rmul(bags[ilk][msg.sender], fixs[ilk]));
-        bags[ilk][msg.sender]  = 0;
-        dai[msg.sender] =  0;
+        vat.flux(ilk, address(this), msg.sender, rmul(wad, fixs[ilk]));
+        bags[ilk][msg.sender] = add(bags[ilk][msg.sender], wad);
+        require(bags[ilk][msg.sender] <= dai[msg.sender]);
     }
 }
