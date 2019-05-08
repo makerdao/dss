@@ -194,7 +194,7 @@ contract End {
         require(u.ink >= war);
         arts[ilk] = add(arts[ilk], u.art);
 
-        vat.grab(ilk, urn, address(this), address(this), -int(war), -int(u.art));
+        vat.grab(ilk, urn, address(this), address(vow), -int(war), -int(u.art));
     }
 
     function bail(bytes32 ilk, address urn) public {
@@ -210,20 +210,19 @@ contract End {
         arts[ilk] = add(arts[ilk], u.art);
         gaps[ilk] = add(gaps[ilk], sub(war, u.ink));
 
-        vat.grab(ilk, urn, address(this), address(this), -int(u.ink), -int(u.art));
+        vat.grab(ilk, urn, address(this), address(vow), -int(u.ink), -int(u.art));
     }
 
     function free(bytes32 ilk) public {
         VatLike.Urn memory u = vat.urns(ilk, msg.sender);
         require(u.art == 0);
-        vat.grab(ilk, msg.sender, msg.sender, msg.sender, -int(u.ink), 0);
+        vat.grab(ilk, msg.sender, msg.sender, address(vow), -int(u.ink), 0);
     }
 
     function thaw() public {
         require(now >= when + wait);
         require(debt == 0);
         require(vow.Joy() == 0);
-        require(vat.dai(address(this)) == 0);
         debt = vat.debt();
     }
 
@@ -238,8 +237,8 @@ contract End {
 
     function shop(uint256 wad) public {
         require(debt != 0);
-        vat.move(msg.sender, address(this), mul(wad, RAY));
-        vat.heal(mul(wad, RAY));
+        vat.move(msg.sender, address(vow), mul(wad, RAY));
+        vow.heal(mul(wad, RAY));
         dai[msg.sender] = add(dai[msg.sender], wad);
     }
 
@@ -253,10 +252,5 @@ contract End {
         vat.flux(ilk, address(this), msg.sender, rmul(bags[ilk][msg.sender], fixs[ilk]));
         bags[ilk][msg.sender]  = 0;
         dai[msg.sender]        = 0;
-    }
-
-    function vent(uint256 rad) public {
-        vow.loot();
-        vat.heal(rad);
     }
 }

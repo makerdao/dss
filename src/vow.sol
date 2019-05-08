@@ -147,7 +147,4 @@ contract Vow is DSNote {
         flopper.cage();
         vat.heal(min(Joy(), Awe()));
     }
-    function loot() public note auth {
-        vat.move(address(this), msg.sender, Joy());
-    }
 }

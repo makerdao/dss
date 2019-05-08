@@ -237,7 +237,7 @@ contract EndTest is DSTest {
         // local checks:
         assertEq(art("gold", urn1), 0);
         assertEq(ink("gold", urn1), 7 ether);
-        assertEq(vat.sin(address(end)), rad(15 ether));
+        assertEq(vat.sin(address(vow)), rad(15 ether));
 
         // global checks:
         assertEq(vat.debt(), rad(15 ether));
@@ -307,7 +307,7 @@ contract EndTest is DSTest {
         assertEq(ink("gold", urn1), 2.5 ether);
         assertEq(art("gold", urn2), 0);
         assertEq(ink("gold", urn2), 0);
-        assertEq(vat.sin(address(end)), rad(18 ether));
+        assertEq(vat.sin(address(vow)), rad(18 ether));
 
         // global checks
         assertEq(vat.debt(), rad(18 ether));
@@ -396,7 +396,7 @@ contract EndTest is DSTest {
         // local checks:
         assertEq(art("gold", urn1), 0);
         assertEq(ink("gold", urn1), 7 ether);
-        assertEq(vat.sin(address(end)), rad(15 ether));
+        assertEq(vat.sin(address(vow)), rad(30 ether));
 
         // balance the vow
         vow.flog(uint48(now));
