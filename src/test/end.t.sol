@@ -35,11 +35,6 @@ contract Hevm {
     function warp(uint256) public;
 }
 
-contract PipLike {
-    function read() public returns (bytes32);
-    function poke(bytes32 val) public;
-}
-
 contract TestSpot {
     struct Ilk {
         address pip;
@@ -55,12 +50,10 @@ contract TestSpot {
 contract Usr {
     Vat public vat;
     End public end;
-    GemJoin public gemA;
 
-    constructor(Vat vat_, End end_, GemJoin gemA_) public {
+    constructor(Vat vat_, End end_) public {
         vat  = vat_;
         end  = end_;
-        gemA = gemA_;
     }
     function frob(bytes32 ilk, address u, address v, address w, int dink, int dart) public {
         vat.frob(ilk, u, v, w, dink, dart);
@@ -74,10 +67,7 @@ contract Usr {
     function hope(address usr) public {
         vat.hope(usr);
     }
-    function join(address urn, uint wad) public {
-        gemA.join(urn, wad);
-    }
-    function exit(address usr, uint wad) public {
+    function exit(GemJoin gemA, address usr, uint wad) public {
         gemA.exit(usr, wad);
     }
     function free(bytes32 ilk) public {
@@ -102,14 +92,17 @@ contract EndTest is DSTest {
     Vow   vow;
     Cat   cat;
 
-    DSToken gold;
-
-    PipLike pip;
     TestSpot spot;
 
-    GemJoin gemA;
+    struct Ilk {
+        DSValue pip;
+        DSToken gem;
+        GemJoin gemA;
+        Flipper flip;
+    }
 
-    Flipper flip;
+    mapping (bytes32 => Ilk) ilks;
+
     Flapper flap;
     Flopper flop;
 
@@ -144,6 +137,50 @@ contract EndTest is DSTest {
         (uint ink_, uint art_) = vat.urns(ilk, urn); ink_;
         return art_;
     }
+    function Art(bytes32 ilk) internal view returns (uint) {
+        (uint Art_, uint rate_, uint spot_, uint line_, uint dust_) = vat.ilks(ilk);
+        rate_; spot_; line_; dust_;
+        return Art_;
+    }
+    function balanceOf(bytes32 ilk, address usr) internal view returns (uint) {
+        return ilks[ilk].gem.balanceOf(usr);
+    }
+
+    function init_collateral(bytes32 name) internal returns (Ilk memory) {
+        DSToken coin = new DSToken(name);
+        coin.mint(20 ether);
+
+        DSValue pip = new DSValue();
+        spot.file(name, address(pip));
+        // initial collateral price of 5
+        pip.poke(bytes32(5 * RAY));
+
+        vat.init(name);
+        GemJoin gemA = new GemJoin(address(vat), name, address(coin));
+
+        // 1 coin = 6 dai and liquidation ratio is 200%
+        vat.file(name, "spot",    ray(3 ether));
+        vat.file(name, "line", rad(1000 ether));
+
+        coin.approve(address(gemA));
+        coin.approve(address(vat));
+
+        vat.rely(address(gemA));
+
+        Flipper flip = new Flipper(address(vat), name);
+        vat.hope(address(flip));
+        flip.rely(address(end));
+        cat.file(name, "flip", address(flip));
+        cat.file(name, "chop", ray(1 ether));
+        cat.file(name, "lump", rad(15 ether));
+
+        ilks[name].pip = pip;
+        ilks[name].gem = coin;
+        ilks[name].gemA = gemA;
+        ilks[name].flip = flip;
+
+        return ilks[name];
+    }
 
     function setUp() public {
         hevm = Hevm(0x7109709ECfa91a80626fF3989D68f67F5b1DD12D);
@@ -163,33 +200,8 @@ contract EndTest is DSTest {
         vat.rely(address(cat));
         vow.rely(address(cat));
 
-        gold = new DSToken("GEM");
-        gold.mint(20 ether);
-
-        pip = PipLike(address(new DSValue()));
         spot = new TestSpot();
-        spot.file("gold", address(pip));
-        // initial collateral price of 5
-        pip.poke(bytes32(5 * RAY));
-
-        vat.init("gold");
-        gemA = new GemJoin(address(vat), "gold", address(gold));
-
-        // 1 gold = 6 dai and liquidation ratio is 200%
-        vat.file("gold", "spot",    ray(3 ether));
-        vat.file("gold", "line", rad(1000 ether));
         vat.file("Line",         rad(1000 ether));
-
-        gold.approve(address(gemA));
-        gold.approve(address(vat));
-
-        vat.rely(address(gemA));
-
-        flip = new Flipper(address(vat), "gold");
-        cat.file("gold", "flip", address(flip));
-        cat.file("gold", "chop", ray(1 ether));
-        cat.file("gold", "lump", rad(15 ether));
-        vat.hope(address(flip));
 
         end = new End();
         end.file("vat", address(vat));
@@ -200,7 +212,6 @@ contract EndTest is DSTest {
         vat.rely(address(end));
         vow.rely(address(end));
         cat.rely(address(end));
-        flip.rely(address(end));
         flap.rely(address(vow));
         flop.rely(address(vow));
     }
@@ -224,11 +235,13 @@ contract EndTest is DSTest {
     // -- Scenario where there is one well-collateralised CDP
     // -- and there is no Vow deficit or surplus
     function test_cage_collateralised() public {
-        Usr ali = new Usr(vat, end, gemA);
+        Ilk memory gold = init_collateral("gold");
+
+        Usr ali = new Usr(vat, end);
 
         // make a CDP:
         address urn1 = address(ali);
-        gemA.join(urn1, 10 ether);
+        gold.gemA.join(urn1, 10 ether);
         ali.frob("gold", urn1, urn1, urn1, 10 ether, 15 ether);
         // ali's urn has 0 gem, 10 ink, 15 tab, 15 dai
 
@@ -237,7 +250,7 @@ contract EndTest is DSTest {
         assertEq(vat.vice(), 0);
 
         // collateral price is 5
-        pip.poke(bytes32(5 * RAY));
+        gold.pip.poke(bytes32(5 * RAY));
         end.cage();
         end.cage("gold");
         end.skim("gold", urn1);
@@ -255,7 +268,7 @@ contract EndTest is DSTest {
         ali.free("gold");
         assertEq(ink("gold", urn1), 0);
         assertEq(gem("gold", urn1), 7 ether);
-        ali.exit(address(this), 7 ether);
+        ali.exit(gold.gemA, address(this), 7 ether);
 
         hevm.warp(1 hours);
         end.thaw();
@@ -276,27 +289,29 @@ contract EndTest is DSTest {
         // local checks:
         assertEq(dai(urn1), 0);
         assertEq(gem("gold", urn1), 3 ether);
-        ali.exit(address(this), 3 ether);
+        ali.exit(gold.gemA, address(this), 3 ether);
 
         assertEq(gem("gold", address(end)), 0);
-        assertEq(gold.balanceOf(address(gemA)), 0);
+        assertEq(balanceOf("gold", address(gold.gemA)), 0);
     }
 
     // -- Scenario where there is one well-collateralised and one
     // -- under-collateralised CDP, and no Vow deficit or surplus
     function test_cage_undercollateralised() public {
-        Usr ali = new Usr(vat, end, gemA);
-        Usr bob = new Usr(vat, end, gemA);
+        Ilk memory gold = init_collateral("gold");
+
+        Usr ali = new Usr(vat, end);
+        Usr bob = new Usr(vat, end);
 
         // make a CDP:
         address urn1 = address(ali);
-        gemA.join(urn1, 10 ether);
+        gold.gemA.join(urn1, 10 ether);
         ali.frob("gold", urn1, urn1, urn1, 10 ether, 15 ether);
         // ali's urn has 0 gem, 10 ink, 15 tab, 15 dai
 
         // make a second CDP:
         address urn2 = address(bob);
-        gemA.join(urn2, 1 ether);
+        gold.gemA.join(urn2, 1 ether);
         bob.frob("gold", urn2, urn2, urn2, 1 ether, 3 ether);
         // bob's urn has 0 gem, 1 ink, 3 tab, 3 dai
 
@@ -305,7 +320,7 @@ contract EndTest is DSTest {
         assertEq(vat.vice(), 0);
 
         // collateral price is 2
-        pip.poke(bytes32(2 * RAY));
+        gold.pip.poke(bytes32(2 * RAY));
         end.cage();
         end.cage("gold");
         end.skim("gold", urn1);
@@ -327,7 +342,7 @@ contract EndTest is DSTest {
         ali.free("gold");
         assertEq(ink("gold", urn1), 0);
         assertEq(gem("gold", urn1), 2.5 ether);
-        ali.exit(address(this), 2.5 ether);
+        ali.exit(gold.gemA, address(this), 2.5 ether);
 
         hevm.warp(1 hours);
         end.thaw();
@@ -349,7 +364,7 @@ contract EndTest is DSTest {
         assertEq(dai(urn1), 0);
         uint256 fix = end.fixs("gold");
         assertEq(gem("gold", urn1), rmul(fix, 15 ether));
-        ali.exit(address(this), rmul(fix, 15 ether));
+        ali.exit(gold.gemA, address(this), rmul(fix, 15 ether));
 
         // second dai redemption
         bob.hope(address(end));
@@ -365,21 +380,23 @@ contract EndTest is DSTest {
         // local checks:
         assertEq(dai(urn2), 0);
         assertEq(gem("gold", urn2), rmul(fix, 3 ether));
-        bob.exit(address(this), rmul(fix, 3 ether));
+        bob.exit(gold.gemA, address(this), rmul(fix, 3 ether));
 
         // some dust remains in the End because of rounding:
         assertEq(gem("gold", address(end)), 1);
-        assertEq(gold.balanceOf(address(gemA)), 1);
+        assertEq(balanceOf("gold", address(gold.gemA)), 1);
     }
 
     // -- Scenario where there is one collateralised CDP
     // -- undergoing auction at the time of cage
     function test_cage_skip() public {
-        Usr ali = new Usr(vat, end, gemA);
+        Ilk memory gold = init_collateral("gold");
+
+        Usr ali = new Usr(vat, end);
 
         // make a CDP:
         address urn1 = address(ali);
-        gemA.join(urn1, 10 ether);
+        gold.gemA.join(urn1, 10 ether);
         ali.frob("gold", urn1, urn1, urn1, 10 ether, 15 ether);
         // this urn has 0 gem, 10 ink, 15 tab, 15 dai
 
@@ -390,12 +407,12 @@ contract EndTest is DSTest {
         uint auction = cat.flip(id, rad(15 ether)); // flip all the tab
         // get 1 dai from ali
         ali.move(address(ali), address(this), rad(1 ether));
-        vat.hope(address(flip));
-        flip.tend(auction, 10 ether, rad(1 ether)); // bid 1 dai
+        vat.hope(address(gold.flip));
+        gold.flip.tend(auction, 10 ether, rad(1 ether)); // bid 1 dai
         assertEq(dai(urn1), 14 ether);
 
         // collateral price is 5
-        pip.poke(bytes32(5 * RAY));
+        gold.pip.poke(bytes32(5 * RAY));
         end.cage();
         end.cage("gold");
 
@@ -411,9 +428,7 @@ contract EndTest is DSTest {
         assertEq(vat.sin(address(vow)), rad(30 ether));
 
         // balance the vow
-        vow.flog(uint48(now));
         vow.heal(min(vow.Joy(), vow.Woe()));
-        vow.kiss(min(vow.Joy(), vow.Ash()));
         // global checks:
         assertEq(vat.debt(), rad(15 ether));
         assertEq(vat.vice(), rad(15 ether));
@@ -422,7 +437,7 @@ contract EndTest is DSTest {
         ali.free("gold");
         assertEq(ink("gold", urn1), 0);
         assertEq(gem("gold", urn1), 7 ether);
-        ali.exit(address(this), 7 ether);
+        ali.exit(gold.gemA, address(this), 7 ether);
 
         hevm.warp(1 hours);
         end.thaw();
@@ -434,7 +449,6 @@ contract EndTest is DSTest {
         ali.shop(15 ether);
 
         // global checks:
-        // no need for vent
         assertEq(vat.debt(), 0);
         assertEq(vat.vice(), 0);
 
@@ -444,20 +458,22 @@ contract EndTest is DSTest {
         // local checks:
         assertEq(dai(urn1), 0);
         assertEq(gem("gold", urn1), 3 ether);
-        ali.exit(address(this), 3 ether);
+        ali.exit(gold.gemA, address(this), 3 ether);
 
         assertEq(gem("gold", address(end)), 0);
-        assertEq(gold.balanceOf(address(gemA)), 0);
+        assertEq(balanceOf("gold", address(gold.gemA)), 0);
     }
 
     // -- Scenario where there is one well-collateralised CDP
     // -- and there is a deficit in the Vow
     function test_cage_collateralised_deficit() public {
-        Usr ali = new Usr(vat, end, gemA);
+        Ilk memory gold = init_collateral("gold");
+
+        Usr ali = new Usr(vat, end);
 
         // make a CDP:
         address urn1 = address(ali);
-        gemA.join(urn1, 10 ether);
+        gold.gemA.join(urn1, 10 ether);
         ali.frob("gold", urn1, urn1, urn1, 10 ether, 15 ether);
         // ali's urn has 0 gem, 10 ink, 15 tab, 15 dai
         // suck 1 dai and give to ali
@@ -468,7 +484,7 @@ contract EndTest is DSTest {
         assertEq(vat.vice(), rad(1 ether));
 
         // collateral price is 5
-        pip.poke(bytes32(5 * RAY));
+        gold.pip.poke(bytes32(5 * RAY));
         end.cage();
         end.cage("gold");
         end.skim("gold", urn1);
@@ -486,7 +502,7 @@ contract EndTest is DSTest {
         ali.free("gold");
         assertEq(ink("gold", urn1), 0);
         assertEq(gem("gold", urn1), 7 ether);
-        ali.exit(address(this), 7 ether);
+        ali.exit(gold.gemA, address(this), 7 ether);
 
         hevm.warp(1 hours);
         end.thaw();
@@ -507,22 +523,24 @@ contract EndTest is DSTest {
         // local checks:
         assertEq(dai(urn1), 0);
         assertEq(gem("gold", urn1), 3 ether);
-        ali.exit(address(this), 3 ether);
+        ali.exit(gold.gemA, address(this), 3 ether);
 
         assertEq(gem("gold", address(end)), 0);
-        assertEq(gold.balanceOf(address(gemA)), 0);
+        assertEq(balanceOf("gold", address(gold.gemA)), 0);
     }
 
     // -- Scenario where there is one well-collateralised CDP
     // -- and one under-collateralised CDP and there is a
     // -- surplus in the Vow
     function test_cage_undercollateralised_surplus() public {
-        Usr ali = new Usr(vat, end, gemA);
-        Usr bob = new Usr(vat, end, gemA);
+        Ilk memory gold = init_collateral("gold");
+
+        Usr ali = new Usr(vat, end);
+        Usr bob = new Usr(vat, end);
 
         // make a CDP:
         address urn1 = address(ali);
-        gemA.join(urn1, 10 ether);
+        gold.gemA.join(urn1, 10 ether);
         ali.frob("gold", urn1, urn1, urn1, 10 ether, 15 ether);
         // ali's urn has 0 gem, 10 ink, 15 tab, 15 dai
         // alive gives one dai to the vow, creating surplus
@@ -530,7 +548,7 @@ contract EndTest is DSTest {
 
         // make a second CDP:
         address urn2 = address(bob);
-        gemA.join(urn2, 1 ether);
+        gold.gemA.join(urn2, 1 ether);
         bob.frob("gold", urn2, urn2, urn2, 1 ether, 3 ether);
         // bob's urn has 0 gem, 1 ink, 3 tab, 3 dai
 
@@ -539,7 +557,7 @@ contract EndTest is DSTest {
         assertEq(vat.vice(), 0);
 
         // collateral price is 2
-        pip.poke(bytes32(2 * RAY));
+        gold.pip.poke(bytes32(2 * RAY));
         end.cage();
         end.cage("gold");
         end.skim("gold", urn1);
@@ -561,10 +579,10 @@ contract EndTest is DSTest {
         ali.free("gold");
         assertEq(ink("gold", urn1), 0);
         assertEq(gem("gold", urn1), 2.5 ether);
-        ali.exit(address(this), 2.5 ether);
+        ali.exit(gold.gemA, address(this), 2.5 ether);
 
         hevm.warp(1 hours);
-        // vent to absorb the surplus
+        // balance the vow
         vow.heal(rad(1 ether));
         end.thaw();
         end.flow("gold");
@@ -585,7 +603,7 @@ contract EndTest is DSTest {
         assertEq(dai(urn1), 0);
         uint256 fix = end.fixs("gold");
         assertEq(gem("gold", urn1), rmul(fix, 14 ether));
-        ali.exit(address(this), rmul(fix, 14 ether));
+        ali.exit(gold.gemA, address(this), rmul(fix, 14 ether));
 
         // second dai redemption
         bob.hope(address(end));
@@ -601,10 +619,93 @@ contract EndTest is DSTest {
         // local checks:
         assertEq(dai(urn2), 0);
         assertEq(gem("gold", urn2), rmul(fix, 3 ether));
-        bob.exit(address(this), rmul(fix, 3 ether));
+        bob.exit(gold.gemA, address(this), rmul(fix, 3 ether));
 
         // nothing left in the End
         assertEq(gem("gold", address(end)), 0);
-        assertEq(gold.balanceOf(address(gemA)), 0);
+        assertEq(balanceOf("gold", address(gold.gemA)), 0);
+    }
+
+    // -- Scenario where there is one well-collateralised and one
+    // -- under-collateralised CDP of different collateral types
+    // -- and no Vow deficit or surplus
+    function test_cage_net_undercollateralised_multiple_ilks() public {
+        Ilk memory gold = init_collateral("gold");
+        Ilk memory coal = init_collateral("coal");
+
+        Usr ali = new Usr(vat, end);
+        Usr bob = new Usr(vat, end);
+
+        // make a CDP:
+        address urn1 = address(ali);
+        gold.gemA.join(urn1, 10 ether);
+        ali.frob("gold", urn1, urn1, urn1, 10 ether, 15 ether);
+        // ali's urn has 0 gem, 10 ink, 15 tab
+
+        // make a second CDP:
+        address urn2 = address(bob);
+        coal.gemA.join(urn2, 1 ether);
+        vat.file("coal", "spot", ray(5 ether));
+        bob.frob("coal", urn2, urn2, urn2, 1 ether, 5 ether);
+        // bob's urn has 0 gem, 1 ink, 5 tab
+
+        gold.pip.poke(bytes32(2 * RAY));
+        // urn1 has 20 dai of ink and 15 dai of tab
+        coal.pip.poke(bytes32(2 * RAY));
+        // urn2 has 2 dai of ink and 5 dai of tab
+        end.cage();
+        end.cage("gold");
+        end.cage("coal");
+        end.skim("gold", urn1);  // well-collateralised
+        end.bail("coal", urn2);  // under-collateralised
+
+        hevm.warp(1 hours);
+        end.thaw();
+        end.flow("gold");
+        end.flow("coal");
+
+        ali.hope(address(end));
+        bob.hope(address(end));
+
+        assertEq(vat.debt(), rad(20 ether));
+        assertEq(vat.vice(), rad(20 ether));
+        assertEq(vow.Awe(),  rad(20 ether));
+
+        assertEq(end.arts("gold"), 15 ether);
+        assertEq(end.arts("coal"),  5 ether);
+
+        assertEq(end.gaps("gold"),  0.0 ether);
+        assertEq(end.gaps("coal"),  1.5 ether);
+
+        // there are 7.5 gold and 1 coal
+        // the gold is worth 15 dai and the coal is worth 2 dai
+        // the total collateral pool is worth 17 dai
+        // the total outstanding debt is 20 dai
+        // each dai should get (15/2)/20 gold and (2/2)/20 coal
+        assertEq(end.fixs("gold"), ray(0.375 ether));
+        assertEq(end.fixs("coal"), ray(0.050 ether));
+
+        assertEq(gem("gold", address(ali)), 0 ether);
+        ali.shop(1 ether);
+        ali.pack("gold");
+        ali.cash("gold");
+        assertEq(gem("gold", address(ali)), 0.375 ether);
+
+        bob.shop(1 ether);
+        bob.pack("coal");
+        bob.cash("coal");
+        assertEq(gem("coal", address(bob)), 0.05 ether);
+
+        assertEq(end.dai(address(ali)), 0 ether);
+        //todo: try and break it
+        ali.shop(1 ether);
+        ali.pack("gold");
+        ali.shop(1 ether);
+        ali.cash("gold");
+        ali.pack("coal");
+        ali.cash("coal");
+        assertEq(end.dai(address(ali)), 0 ether);
+        assertEq(gem("gold", address(ali)), 0.75 ether);
+        assertEq(gem("coal", address(ali)), 0.05 ether);
     }
 }

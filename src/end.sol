@@ -89,6 +89,72 @@ contract Spotty {
     function ilks(bytes32) public view returns (Ilk memory);
 }
 
+/*
+    This is the `End`, it coordinates Global Settlement. This is an
+    involved, stateful process that takes place over several steps:
+
+    First we freeze the system and lock the prices for each ilk:
+
+    1. `cage()`:
+        - freezes user entrypoints
+        - cancels flop/flap auctions
+        - starts cooldown period
+
+    2. `cage(ilk)`:
+       - set the cage price for each `ilk`, reading off the price feed
+       - lock the flip auction manager for each `ilk`
+
+    Process outstanding CDPs and auctions:
+
+    3. Process auctions
+       `skip(ilk, id)`:
+       - cancel individual flip auctions in the `tend` (forward) phase
+       - `dent` (reverse) phase auctions can continue with no issue
+
+    4. Process CDPs
+       a. `skim(ilk, urn)`:
+          - process overcollateralised CDPs
+          - cancels debt
+          - excess collateral remains
+          - backing collateral taken
+       b. `bail(ilk, urn)`:
+          - process undercollateralised CDPs
+          - cancels debt
+          - no remaining collateral
+          - backing collateral taken
+
+    Collateral may now be retrieved from processed CDPs:
+
+    5. `free(ilk)`:
+        - remove collateral from the caller's CDP
+        - owner can call as needed
+
+    After the processing period has elapsed, we enable calculation of
+    the final price for each collateral type:
+
+    6. `thaw()`:
+       - only callable after processing time period elapsed
+       - assumption that all undercollateralised CDPs are processed
+       - may also need to have processed extra CDPs to cover surplus in the vow
+
+    7. `flow(ilk)`:
+        - calculate the `fix` cash price for a given ilk
+        - adjusts the cage price in the case of deficit/surplus
+
+    At this point we have computed the final price for each collateral
+    type and users can now turn their dai into collateral. Each unit dai
+    can claim a fixed portfolio of collateral.
+
+    8. `shop(wad)`:
+        - lock some dai in preparation for `cash`
+
+    9. `pack(ilk)`:
+        - prepare for `cash` of a specific ilk
+
+    10. `cash(ilk)`
+        - exchange dai for gems from a specific ilk
+*/
+
 contract End {
     // --- Auth ---
     mapping (address => uint) public wards;
@@ -139,9 +205,6 @@ contract End {
     function rdiv(uint x, uint y) internal pure returns (uint z) {
         z = mul(x, RAY) / y;
     }
-    function min(uint x, uint y) internal pure returns (uint z) {
-        if (x > y) { z = y; } else { z = x; }
-    }
 
     // --- Administration ---
     function file(bytes32 what, address data) public auth {
@@ -190,13 +253,11 @@ contract End {
         VatLike.Urn memory u = vat.urns(ilk, urn);
 
         uint war = rmul(rmul(u.art, i.rate), tags[ilk]);
-        // redundant check:
-        require(u.ink >= war);
+        require(u.ink >= war);  // overcollateralised
         arts[ilk] = add(arts[ilk], u.art);
 
         vat.grab(ilk, urn, address(this), address(vow), -int(war), -int(u.art));
     }
-
     function bail(bytes32 ilk, address urn) public {
         require(tags[ilk] != 0);
 
@@ -204,9 +265,7 @@ contract End {
         VatLike.Urn memory u = vat.urns(ilk, urn);
 
         uint war = rmul(rmul(u.art, i.rate), tags[ilk]);
-
-        // redundant check:
-        require(u.ink < war);
+        require(u.ink < war);  // undercollateralised
         arts[ilk] = add(arts[ilk], u.art);
         gaps[ilk] = add(gaps[ilk], sub(war, u.ink));
 
@@ -216,6 +275,7 @@ contract End {
     function free(bytes32 ilk) public {
         VatLike.Urn memory u = vat.urns(ilk, msg.sender);
         require(u.art == 0);
+        require(int(u.ink) > 0);
         vat.grab(ilk, msg.sender, msg.sender, address(vow), -int(u.ink), 0);
     }
 
@@ -225,7 +285,6 @@ contract End {
         require(vow.Joy() == 0);
         debt = vat.debt();
     }
-
     function flow(bytes32 ilk) public {
         require(debt != 0);
         require(fixs[ilk] == 0);
@@ -241,16 +300,14 @@ contract End {
         vow.heal(mul(wad, RAY));
         dai[msg.sender] = add(dai[msg.sender], wad);
     }
-
     function pack(bytes32 ilk) public {
         require(bags[ilk][msg.sender] == 0);
         bags[ilk][msg.sender] = dai[msg.sender];
     }
-
     function cash(bytes32 ilk) public {
         require(fixs[ilk] != 0);
         vat.flux(ilk, address(this), msg.sender, rmul(bags[ilk][msg.sender], fixs[ilk]));
         bags[ilk][msg.sender]  = 0;
-        dai[msg.sender]        = 0;
+        dai[msg.sender] =  0;
     }
 }
