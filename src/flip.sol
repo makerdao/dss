@@ -94,10 +94,6 @@ contract Flipper is DSNote {
     function mul(uint x, uint y) internal pure returns (uint z) {
         require(y == 0 || (z = x * y) / y == x);
     }
-    // --- Administration ---
-    function cage() public note auth {
-        live = 0;
-    }
 
     // --- Auction ---
     function kick(address urn, address gal, uint tab, uint lot, uint bid)
@@ -134,7 +130,7 @@ contract Flipper is DSNote {
         require(mul(bid, ONE) >= mul(beg, bids[id].bid) || bid == bids[id].tab);
 
         vat.move(msg.sender, bids[id].guy, bids[id].bid);
-        vat.move(msg.sender, address(this), bid - bids[id].bid);
+        vat.move(msg.sender, bids[id].gal, bid - bids[id].bid);
 
         bids[id].guy = msg.sender;
         bids[id].bid = bid;
@@ -160,15 +156,17 @@ contract Flipper is DSNote {
     function deal(uint id) public note {
         require(live == 1 || bids[id].bid == bids[id].tab);
         require(bids[id].tic != 0 && (bids[id].tic < now || bids[id].end < now));
-        vat.move(address(this), bids[id].gal, bids[id].bid);
         vat.flux(ilk, address(this), bids[id].guy, bids[id].lot);
         delete bids[id];
+    }
+
+    function cage() public note auth {
+        live = 0;
     }
     function yank(uint id) public note auth {
         require(live == 0);
         require(bids[id].guy != address(0));
         require(bids[id].bid < bids[id].tab);
-        vat.move(address(this), bids[id].guy, bids[id].bid);
         vat.flux(ilk, address(this), msg.sender, bids[id].lot);
         delete bids[id];
     }

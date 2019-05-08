@@ -240,6 +240,7 @@ contract End {
 
         Flippy(flip).yank(id);
         vat.suck(address(vow), address(vow), bid.tab);
+        vat.suck(address(vow), bid.guy,      bid.bid);
         vat.grab(ilk, bid.urn, address(this), address(vow), int(bid.lot), int(bid.tab / i.rate));
     }
 
