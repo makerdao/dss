@@ -23,6 +23,7 @@ contract Auction {
     function kick(address gal, uint lot, uint bid) public returns (uint);
     function cage(uint) public;
     function cage() public;
+    function live() public returns (uint256);
 }
 
 contract VatLike {

@@ -209,10 +209,16 @@ contract EndTest is DSTest {
         assertEq(end.live(), 1);
         assertEq(vat.live(), 1);
         assertEq(cat.live(), 1);
+        assertEq(vow.live(), 1);
+        assertEq(vow.flopper().live(), 1);
+        assertEq(vow.flapper().live(), 1);
         end.cage();
         assertEq(end.live(), 0);
         assertEq(vat.live(), 0);
         assertEq(cat.live(), 0);
+        assertEq(vow.live(), 0);
+        assertEq(vow.flopper().live(), 0);
+        assertEq(vow.flapper().live(), 0);
     }
 
     function test_cage_collateralised() public {
