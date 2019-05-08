@@ -167,7 +167,7 @@ contract End {
     function cage(bytes32 ilk) public {
         require(live == 0);
         require(tags[ilk] == 0);
-        tags[ilk] = uint(spot.ilks(ilk).pip.read());
+        tags[ilk] = rdiv(RAY, uint(spot.ilks(ilk).pip.read()));
         Flippy(cat.ilks(ilk).flip).cage();
     }
 

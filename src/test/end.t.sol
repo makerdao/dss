@@ -169,6 +169,8 @@ contract EndTest is DSTest {
         pip = PipLike(address(new DSValue()));
         spot = new TestSpot();
         spot.file("gold", address(pip));
+        // initial collateral price of 5
+        pip.poke(bytes32(5 * RAY));
 
         vat.init("gold");
         gemA = new GemJoin(address(vat), "gold", address(gold));
@@ -226,8 +228,8 @@ contract EndTest is DSTest {
         assertEq(vat.debt(), rad(15 ether));
         assertEq(vat.vice(), 0);
 
-        // collateral price is 2
-        pip.poke(bytes32(RAY / 5));
+        // collateral price is 5
+        pip.poke(bytes32(5 * RAY));
         end.cage();
         end.cage("gold");
         end.skim("gold", urn1);
@@ -293,7 +295,7 @@ contract EndTest is DSTest {
         assertEq(vat.vice(), 0);
 
         // collateral price is 2
-        pip.poke(bytes32(RAY / 2));
+        pip.poke(bytes32(2 * RAY));
         end.cage();
         end.cage("gold");
         end.skim("gold", urn1);
@@ -380,8 +382,8 @@ contract EndTest is DSTest {
         flip.tend(auction, 10 ether, rad(1 ether)); // bid 1 dai
         assertEq(dai(urn1), 14 ether);
 
-        // collateral price is 2
-        pip.poke(bytes32(RAY / 5));
+        // collateral price is 5
+        pip.poke(bytes32(5 * RAY));
         end.cage();
         end.cage("gold");
 
