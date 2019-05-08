@@ -221,6 +221,8 @@ contract EndTest is DSTest {
         assertEq(vow.flapper().live(), 0);
     }
 
+    // -- Scenario where there is one well-collateralised CDP
+    // -- and there is no Vow deficit or surplus
     function test_cage_collateralised() public {
         Usr ali = new Usr(vat, end, gemA);
 
@@ -280,7 +282,9 @@ contract EndTest is DSTest {
         assertEq(gold.balanceOf(address(gemA)), 0);
     }
 
-    function test_cage_undercollateralised_cdp_parity() public {
+    // -- Scenario where there is one well-collateralised and one
+    // -- under-collateralised CDP, and no Vow deficit or surplus
+    function test_cage_undercollateralised() public {
         Usr ali = new Usr(vat, end, gemA);
         Usr bob = new Usr(vat, end, gemA);
 
@@ -368,6 +372,8 @@ contract EndTest is DSTest {
         assertEq(gold.balanceOf(address(gemA)), 1);
     }
 
+    // -- Scenario where there is one collateralised CDP
+    // -- undergoing auction at the time of cage
     function test_cage_skip() public {
         Usr ali = new Usr(vat, end, gemA);
 
