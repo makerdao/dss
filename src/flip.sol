@@ -168,6 +168,7 @@ contract Flipper is DSNote {
         require(bids[id].guy != address(0));
         require(bids[id].bid < bids[id].tab);
         vat.flux(ilk, address(this), msg.sender, bids[id].lot);
+        vat.move(msg.sender, bids[id].guy, bids[id].bid);
         delete bids[id];
     }
 }

@@ -37,6 +37,7 @@ contract VatLike {
     function urns(bytes32 ilk, address urn) public returns (Urn memory);
     function debt() public returns (uint);
     function move(address src, address dst, uint256 rad) public;
+    function hope(address) public;
     function flux(bytes32 ilk, address src, address dst, uint256 rad) public;
     function tune(bytes32 i, address u, address v, address w, int256 dink, int256 dart) public;
     function grab(bytes32 i, address u, address v, address w, int256 dink, int256 dart) public;
@@ -73,6 +74,7 @@ contract Flippy {
         uint256 tab;
     }
     function cage() public;
+    function live() public view returns (uint);
     function bids(uint id) public view returns (Bid memory);
     function yank(uint id) public;
 }
@@ -225,19 +227,22 @@ contract End {
         require(live == 0);
         require(tag[ilk] == 0);
         tag[ilk] = rdiv(RAY, uint(spot.ilks(ilk).pip.read()));
-        Flippy(cat.ilks(ilk).flip).cage();
     }
 
     function skip(bytes32 ilk, uint256 id) public {
         require(live == 0);
 
-        address flip = cat.ilks(ilk).flip;
-        VatLike.Ilk memory i   = vat.ilks(ilk);
+        Flippy flip = Flippy(cat.ilks(ilk).flip);
+        if (flip.live() == 1) flip.cage();
+
+        VatLike.Ilk memory i = vat.ilks(ilk);
         Flippy.Bid  memory bid = Flippy(flip).bids(id);
 
-        Flippy(flip).yank(id);
-        vat.suck(address(vow), address(vow), bid.tab);
-        vat.suck(address(vow), bid.guy,      bid.bid);
+        vat.suck(address(vow), address(vow),  bid.tab);
+        vat.suck(address(vow), address(this), bid.bid);
+        vat.hope(address(flip));
+        flip.yank(id);
+
         vat.grab(ilk, bid.urn, address(this), address(vow), int(bid.lot), int(bid.tab / i.rate));
     }
 

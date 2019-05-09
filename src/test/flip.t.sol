@@ -278,9 +278,11 @@ contract FlipTest is DSTest {
         assertEq(vat.dai_balance(gal),     1 ether);
 
         flip.cage();
+        vat.mint(address(this), 1 ether);
         flip.yank(id);
-        // bid is *not* refunded to bidder
-        assertEq(vat.dai_balance(ali),   199 ether);
+        // bid is refunded to bidder from caller
+        assertEq(vat.dai_balance(ali),            200 ether);
+        assertEq(vat.dai_balance(address(this)),    0 ether);
         // gems go to caller
         assertEq(vat.gem_balance(address(this)), 1000 ether);
     }
@@ -316,9 +318,11 @@ contract FlipTest is DSTest {
         // can't deal in deficit after cage
         assertTrue(!Guy(ali).try_deal(id));
 
+        vat.mint(address(this), 1 ether);
         flip.yank(id);
-        // bid is *not* refunded to bidder
-        assertEq(vat.dai_balance(ali),   199 ether);
+        // bid is refunded to bidder from caller
+        assertEq(vat.dai_balance(ali),            200 ether);
+        assertEq(vat.dai_balance(address(this)),    0 ether);
         // gems go to caller
         assertEq(vat.gem_balance(address(this)), 1000 ether);
     }
