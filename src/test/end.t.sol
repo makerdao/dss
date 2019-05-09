@@ -73,8 +73,8 @@ contract Usr {
     function free(bytes32 ilk) public {
         end.free(ilk);
     }
-    function shop(uint256 rad) public {
-        end.shop(rad);
+    function pack(uint256 rad) public {
+        end.pack(rad);
     }
     function cash(bytes32 ilk, uint wad) public {
         end.cash(ilk, wad);
@@ -274,7 +274,7 @@ contract EndTest is DSTest {
 
         // dai redemption
         ali.hope(address(end));
-        ali.shop(15 ether);
+        ali.pack(15 ether);
 
         // global checks:
         assertEq(vat.debt(), 0);
@@ -346,7 +346,7 @@ contract EndTest is DSTest {
 
         // first dai redemption
         ali.hope(address(end));
-        ali.shop(15 ether);
+        ali.pack(15 ether);
 
         // global checks:
         assertEq(vat.debt(), rad(3 ether));
@@ -362,7 +362,7 @@ contract EndTest is DSTest {
 
         // second dai redemption
         bob.hope(address(end));
-        bob.shop(3 ether);
+        bob.pack(3 ether);
 
         // global checks:
         assertEq(vat.debt(), 0);
@@ -439,7 +439,7 @@ contract EndTest is DSTest {
 
         // dai redemption
         ali.hope(address(end));
-        ali.shop(15 ether);
+        ali.pack(15 ether);
 
         // global checks:
         assertEq(vat.debt(), 0);
@@ -503,7 +503,7 @@ contract EndTest is DSTest {
 
         // dai redemption
         ali.hope(address(end));
-        ali.shop(16 ether);
+        ali.pack(16 ether);
 
         // global checks:
         assertEq(vat.debt(), 0);
@@ -580,7 +580,7 @@ contract EndTest is DSTest {
 
         // first dai redemption
         ali.hope(address(end));
-        ali.shop(14 ether);
+        ali.pack(14 ether);
 
         // global checks:
         assertEq(vat.debt(), rad(3 ether));
@@ -596,7 +596,7 @@ contract EndTest is DSTest {
 
         // second dai redemption
         bob.hope(address(end));
-        bob.shop(3 ether);
+        bob.pack(3 ether);
 
         // global checks:
         assertEq(vat.debt(), 0);
@@ -674,17 +674,17 @@ contract EndTest is DSTest {
         assertEq(end.fix("coal"), ray(0.050 ether));
 
         assertEq(gem("gold", address(ali)), 0 ether);
-        ali.shop(1 ether);
+        ali.pack(1 ether);
         ali.cash("gold", 1 ether);
         assertEq(gem("gold", address(ali)), 0.375 ether);
 
-        bob.shop(1 ether);
+        bob.pack(1 ether);
         bob.cash("coal", 1 ether);
         assertEq(gem("coal", address(bob)), 0.05 ether);
 
         ali.exit(gold.gemA, address(ali), 0.375 ether);
         bob.exit(coal.gemA, address(bob), 0.05  ether);
-        ali.shop(1 ether);
+        ali.pack(1 ether);
         ali.cash("gold", 1 ether);
         ali.cash("coal", 1 ether);
         assertEq(gem("gold", address(ali)), 0.375 ether);
@@ -693,11 +693,11 @@ contract EndTest is DSTest {
         ali.exit(gold.gemA, address(ali), 0.375 ether);
         ali.exit(coal.gemA, address(ali), 0.05  ether);
 
-        ali.shop(1 ether);
+        ali.pack(1 ether);
         ali.cash("gold", 1 ether);
         assertEq(end.out("gold", address(ali)), 3 ether);
         assertEq(end.out("coal", address(ali)), 1 ether);
-        ali.shop(1 ether);
+        ali.pack(1 ether);
         ali.cash("coal", 1 ether);
         assertEq(end.out("gold", address(ali)), 3 ether);
         assertEq(end.out("coal", address(ali)), 2 ether);

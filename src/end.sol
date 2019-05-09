@@ -310,7 +310,7 @@ contract End {
         fix[ilk] = rdiv(mul(sub(wad, gap[ilk]), RAY), debt);
     }
 
-    function shop(uint256 wad) public {
+    function pack(uint256 wad) public {
         require(debt != 0);
         vat.move(msg.sender, address(vow), mul(wad, RAY));
         vow.heal(mul(wad, RAY));
