@@ -51,6 +51,12 @@ contract Guy {
         string memory sig = "tick(uint256)";
         (ok,) = address(flip).call(abi.encodeWithSignature(sig, id));
     }
+    function try_yank(uint id)
+        public returns (bool ok)
+    {
+        string memory sig = "yank(uint256)";
+        (ok,) = address(flip).call(abi.encodeWithSignature(sig, id));
+    }
 }
 
 
@@ -257,5 +263,40 @@ contract FlipTest is DSTest {
         assertTrue(!Guy(ali).try_deal(id));
         assertTrue( Guy(ali).try_tick(id));
         assertTrue(!Guy(ali).try_deal(id));
+    }
+    function test_yank_tend() public {
+        uint id = flip.kick({ lot: 100 ether
+                            , tab: 50 ether
+                            , urn: urn
+                            , gal: gal
+                            , bid: 0
+                            });
+
+        Guy(ali).tend(id, 100 ether, 1 ether);
+        // bid taken from bidder
+        assertEq(vat.dai_balance(ali),   199 ether);
+        assertEq(vat.dai_balance(gal),     1 ether);
+
+        vat.mint(address(this), 1 ether);
+        flip.yank(id);
+        // bid is refunded to bidder from caller
+        assertEq(vat.dai_balance(ali),            200 ether);
+        assertEq(vat.dai_balance(address(this)),    0 ether);
+        // gems go to caller
+        assertEq(vat.gem_balance(address(this)), 1000 ether);
+    }
+    function test_yank_dent() public {
+        uint id = flip.kick({ lot: 100 ether
+                            , tab: 50 ether
+                            , urn: urn
+                            , gal: gal
+                            , bid: 0
+                            });
+        Guy(ali).tend(id, 100 ether,  1 ether);
+        Guy(bob).tend(id, 100 ether, 50 ether);
+        Guy(ali).dent(id,  95 ether, 50 ether);
+
+        // cannot yank in the dent phase
+        assertTrue(!Guy(ali).try_yank(id));
     }
 }

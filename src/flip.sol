@@ -39,6 +39,12 @@ contract VatLike {
 */
 
 contract Flipper is DSNote {
+    // --- Auth ---
+    mapping (address => uint) public wards;
+    function rely(address guy) public note auth { wards[guy] = 1; }
+    function deny(address guy) public note auth { wards[guy] = 0; }
+    modifier auth { require(wards[msg.sender] == 1); _; }
+
     // --- Data ---
     struct Bid {
         uint256 bid;
@@ -76,6 +82,7 @@ contract Flipper is DSNote {
     constructor(address vat_, bytes32 ilk_) public {
         vat = VatLike(vat_);
         ilk = ilk_;
+        wards[msg.sender] = 1;
     }
 
     // --- Math ---
@@ -147,6 +154,14 @@ contract Flipper is DSNote {
     function deal(uint id) public note {
         require(bids[id].tic != 0 && (bids[id].tic < now || bids[id].end < now));
         vat.flux(ilk, address(this), bids[id].guy, bids[id].lot);
+        delete bids[id];
+    }
+
+    function yank(uint id) public note auth {
+        require(bids[id].guy != address(0));
+        require(bids[id].bid < bids[id].tab);
+        vat.flux(ilk, address(this), msg.sender, bids[id].lot);
+        vat.move(msg.sender, bids[id].guy, bids[id].bid);
         delete bids[id];
     }
 }

@@ -21,6 +21,9 @@ import "./lib.sol";
 
 contract Auction {
     function kick(address gal, uint lot, uint bid) public returns (uint);
+    function cage(uint) public;
+    function cage() public;
+    function live() public returns (uint256);
 }
 
 contract VatLike {
@@ -29,6 +32,7 @@ contract VatLike {
     function heal(uint256) public;
     function hope(address) public;
     function nope(address) public;
+    function move(address,address,uint) public;
 }
 
 contract Vow is DSNote {
@@ -52,6 +56,8 @@ contract Vow is DSNote {
     uint256 public bump;  // flap fixed lot size  [rad]
     uint256 public hump;  // surplus buffer       [rad]
 
+    uint256 public live;
+
     // --- Init ---
     constructor(address vat_, address flapper_, address flopper_) public {
         wards[msg.sender] = 1;
@@ -59,6 +65,7 @@ contract Vow is DSNote {
         flapper = Auction(flapper_);
         flopper = Auction(flopper_);
         vat.hope(flapper_);
+        live = 1;
     }
 
     // --- Math ---
@@ -67,6 +74,14 @@ contract Vow is DSNote {
     }
     function sub(uint x, uint y) internal pure returns (uint z) {
         require((z = x - y) <= x);
+    }
+    uint constant ONE = 10 ** 27;
+    function rmul(uint x, uint y) internal pure returns (uint z) {
+        require(y == 0 || (z = x * y) / y == x);
+        z = z / ONE;
+    }
+    function min(uint x, uint y) internal pure returns (uint z) {
+        if (x > y) { z = y; } else { z = x; }
     }
 
     // --- Administration ---
@@ -125,5 +140,14 @@ contract Vow is DSNote {
         require(Joy() >= add(add(Awe(), bump), hump));
         require(Woe() == 0);
         id = flapper.kick(address(0), bump, 0);
+    }
+
+    function cage() public note auth {
+        live = 0;
+        Sin = 0;
+        Ash = 0;
+        flapper.cage(vat.dai(address(flapper)));
+        flopper.cage();
+        vat.heal(min(Joy(), Awe()));
     }
 }

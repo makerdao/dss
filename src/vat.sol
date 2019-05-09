@@ -120,6 +120,9 @@ contract Vat {
         if (what == "line") ilks[ilk].line = data;
         if (what == "dust") ilks[ilk].dust = data;
     }
+    function cage() public note auth {
+        live = 0;
+    }
 
     // --- Fungibility ---
     function slip(bytes32 ilk, address usr, int256 wad) public note auth {
@@ -218,6 +221,7 @@ contract Vat {
 
     // --- Rates ---
     function fold(bytes32 i, address u, int rate) public note auth {
+        require(live == 1);
         Ilk storage ilk = ilks[i];
         ilk.rate = add(ilk.rate, rate);
         int rad  = mul(ilk.Art, rate);
