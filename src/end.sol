@@ -86,7 +86,7 @@ contract Spotty {
     This is the `End`, it coordinates Global Settlement. This is an
     involved, stateful process that takes place over several steps.
 
-    First we freeze the system and lock the prices for each ilk:
+    First we freeze the system and lock the prices for each ilk.
 
     1. `cage()`:
         - freezes user entrypoints
@@ -106,7 +106,7 @@ contract Spotty {
          surplus / deficit
 
     We determine (a) by processing all under-collateralised CDPs with
-    `skim`:
+    `skim`.
 
     3. `skim(ilk, urn)`:
        - cancels CDP debt
@@ -144,7 +144,7 @@ contract Spotty {
         - owner can call as needed
 
     After the processing period has elapsed, we enable calculation of
-    the final price for each collateral type:
+    the final price for each collateral type.
 
     6. `thaw()`:
        - only callable after processing time period elapsed
@@ -195,7 +195,7 @@ contract End {
 
     mapping (bytes32 => uint256) public tag;  // cage price
     mapping (bytes32 => uint256) public gap;  // collateral shortfall
-    mapping (bytes32 => uint256) public art;  //
+    mapping (bytes32 => uint256) public art;  // total debt on cage
     mapping (bytes32 => uint256) public fix;  // final cash price
 
     mapping (address => uint256)                      public bag;
