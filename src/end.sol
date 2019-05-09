@@ -196,7 +196,7 @@ contract End {
 
     mapping (bytes32 => uint256) public tag;  // cage price
     mapping (bytes32 => uint256) public gap;  // collateral shortfall
-    mapping (bytes32 => uint256) public art;  // total debt on cage
+    mapping (bytes32 => uint256) public Art;  // total debt on cage
     mapping (bytes32 => uint256) public fix;  // final cash price
 
     mapping (address => uint256)                      public bag;
@@ -254,6 +254,7 @@ contract End {
     function cage(bytes32 ilk) public {
         require(live == 0);
         require(tag[ilk] == 0);
+        Art[ilk] = vat.ilks(ilk).Art;
         tag[ilk] = rdiv(RAY, uint(spot.ilks(ilk).pip.read()));
     }
 
@@ -269,10 +270,11 @@ contract End {
         vat.hope(address(flip));
         flip.yank(id);
 
-        int lot = int(bid.lot);
-        int art = int(bid.tab / i.rate);
-        require(lot >= 0 && art >= 0);
-        vat.grab(ilk, bid.urn, address(this), address(vow), lot, art);
+        uint lot = bid.lot;
+        uint art = bid.tab / i.rate;
+        Art[ilk] = add(Art[ilk], art);
+        require(int(lot) >= 0 && int(art) >= 0);
+        vat.grab(ilk, bid.urn, address(this), address(vow), int(lot), int(art));
     }
 
     function skim(bytes32 ilk, address urn) public {
@@ -283,7 +285,6 @@ contract End {
         uint owe = rmul(rmul(u.art, i.rate), tag[ilk]);
         uint wad = min(u.ink, owe);
         gap[ilk] = add(gap[ilk], sub(owe, wad));
-        art[ilk] = add(art[ilk], u.art);
 
         require(-int(wad) <= 0 && -int(u.art) <= 0);
         vat.grab(ilk, urn, address(this), address(vow), -int(wad), -int(u.art));
@@ -307,7 +308,7 @@ contract End {
         require(fix[ilk] == 0);
 
         VatLike.Ilk memory i = vat.ilks(ilk);
-        uint256 wad = rmul(rmul(add(i.Art, art[ilk]), i.rate), tag[ilk]);
+        uint256 wad = rmul(rmul(Art[ilk], i.rate), tag[ilk]);
         fix[ilk] = rdiv(mul(sub(wad, gap[ilk]), RAY), debt);
     }
 

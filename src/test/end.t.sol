@@ -659,8 +659,8 @@ contract EndTest is DSTest {
         assertEq(vat.vice(), rad(20 ether));
         assertEq(vow.Awe(),  rad(20 ether));
 
-        assertEq(end.art("gold"), 15 ether);
-        assertEq(end.art("coal"),  5 ether);
+        assertEq(end.Art("gold"), 15 ether);
+        assertEq(end.Art("coal"),  5 ether);
 
         assertEq(end.gap("gold"),  0.0 ether);
         assertEq(end.gap("coal"),  1.5 ether);
