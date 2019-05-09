@@ -115,10 +115,7 @@ contract Pot is DSNote {
 
     // --- Administration ---
     function file(bytes32 what, uint256 data) public note auth {
-        if (what == "dsr") {
-            require(data >= ONE);
-            dsr = data;
-        }
+        if (what == "dsr") dsr = data;
     }
 
     function file(bytes32 what, address addr) public note auth {
