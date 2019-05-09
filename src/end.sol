@@ -84,7 +84,7 @@ contract Spotty {
 
 /*
     This is the `End`, it coordinates Global Settlement. This is an
-    involved, stateful process that takes place over several steps.
+    involved, stateful process that takes place over nine steps.
 
     First we freeze the system and lock the prices for each ilk.
 
@@ -106,20 +106,21 @@ contract Spotty {
          surplus / deficit
 
     We determine (a) by processing all under-collateralised CDPs with
-    `skim`.
+    `skim`:
 
     3. `skim(ilk, urn)`:
        - cancels CDP debt
        - any excess collateral remains
        - backing collateral taken
 
-    We determine (b) and (c) by processing ongoing auctions. We need to
-    ensure that auctions will not receive any further dai income. In the
+    We determine (b) by processing ongoing auctions. We need to ensure
+    that auctions will not receive any further dai income. In the
     two-way auction model this occurs when all auctions are in the
-    reverse (`dent`) phase. There are two ways of ensuring this: a) set
-    the cooldown period to be at least as long as the longest auction
-    duration, which needs to be determined by the cage administrator,
-    and b) cancel all ongoing auctions and seize the collateral.
+    reverse (`dent`) phase. There are two ways of ensuring this:
+    a) set the cooldown period to be at least as long as the longest
+    auction duration, which needs to be determined by the cage
+    administrator, and b) cancel all ongoing auctions and seize the
+    collateral.
 
     Option (a) takes a fairly predictable time to occur but with altered
     auction dynamics due to the now varying price of dai, whereas option
@@ -127,13 +128,13 @@ contract Spotty {
     of more processing calls. Option (b) allows dai holders to retrieve
     their collateral faster.
 
-    4. a. Wait until all auctions have reached their end.
+    4. a. Wait until all auctions have reached their end; OR
 
        b. Cancel live auctions
           `skip(ilk, id)`:
            - cancel individual flip auctions in the `tend` (forward) phase
            - retrieves collateral and returns dai to bidder
-           - `dent` (reverse) phase auctions can continue with no issue
+           - `dent` (reverse) phase auctions can continue normally
 
 
     When a CDP has been processed and has no debt remaining, the
