@@ -270,7 +270,7 @@ contract EndTest is DSTest {
         hevm.warp(1 hours);
         end.thaw();
         end.flow("gold");
-        assertTrue(end.fixs("gold") != 0);
+        assertTrue(end.fix("gold") != 0);
 
         // dai redemption
         ali.hope(address(end));
@@ -343,7 +343,7 @@ contract EndTest is DSTest {
         hevm.warp(1 hours);
         end.thaw();
         end.flow("gold");
-        assertTrue(end.fixs("gold") != 0);
+        assertTrue(end.fix("gold") != 0);
 
         // first dai redemption
         ali.hope(address(end));
@@ -357,7 +357,7 @@ contract EndTest is DSTest {
 
         // local checks:
         assertEq(dai(urn1), 0);
-        uint256 fix = end.fixs("gold");
+        uint256 fix = end.fix("gold");
         assertEq(gem("gold", urn1), rmul(fix, 15 ether));
         ali.exit(gold.gemA, address(this), rmul(fix, 15 ether));
 
@@ -436,7 +436,7 @@ contract EndTest is DSTest {
         hevm.warp(1 hours);
         end.thaw();
         end.flow("gold");
-        assertTrue(end.fixs("gold") != 0);
+        assertTrue(end.fix("gold") != 0);
 
         // dai redemption
         ali.hope(address(end));
@@ -500,7 +500,7 @@ contract EndTest is DSTest {
         hevm.warp(1 hours);
         end.thaw();
         end.flow("gold");
-        assertTrue(end.fixs("gold") != 0);
+        assertTrue(end.fix("gold") != 0);
 
         // dai redemption
         ali.hope(address(end));
@@ -578,7 +578,7 @@ contract EndTest is DSTest {
         vow.heal(rad(1 ether));
         end.thaw();
         end.flow("gold");
-        assertTrue(end.fixs("gold") != 0);
+        assertTrue(end.fix("gold") != 0);
 
         // first dai redemption
         ali.hope(address(end));
@@ -592,7 +592,7 @@ contract EndTest is DSTest {
 
         // local checks:
         assertEq(dai(urn1), 0);
-        uint256 fix = end.fixs("gold");
+        uint256 fix = end.fix("gold");
         assertEq(gem("gold", urn1), rmul(fix, 14 ether));
         ali.exit(gold.gemA, address(this), rmul(fix, 14 ether));
 
@@ -661,19 +661,19 @@ contract EndTest is DSTest {
         assertEq(vat.vice(), rad(20 ether));
         assertEq(vow.Awe(),  rad(20 ether));
 
-        assertEq(end.arts("gold"), 15 ether);
-        assertEq(end.arts("coal"),  5 ether);
+        assertEq(end.art("gold"), 15 ether);
+        assertEq(end.art("coal"),  5 ether);
 
-        assertEq(end.gaps("gold"),  0.0 ether);
-        assertEq(end.gaps("coal"),  1.5 ether);
+        assertEq(end.gap("gold"),  0.0 ether);
+        assertEq(end.gap("coal"),  1.5 ether);
 
         // there are 7.5 gold and 1 coal
         // the gold is worth 15 dai and the coal is worth 2 dai
         // the total collateral pool is worth 17 dai
         // the total outstanding debt is 20 dai
         // each dai should get (15/2)/20 gold and (2/2)/20 coal
-        assertEq(end.fixs("gold"), ray(0.375 ether));
-        assertEq(end.fixs("coal"), ray(0.050 ether));
+        assertEq(end.fix("gold"), ray(0.375 ether));
+        assertEq(end.fix("coal"), ray(0.050 ether));
 
         assertEq(gem("gold", address(ali)), 0 ether);
         ali.shop(1 ether);

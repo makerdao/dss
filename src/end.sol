@@ -172,10 +172,10 @@ contract End {
     uint256  public debt;
 
     mapping (address => uint256)                      public dai;
-    mapping (bytes32 => uint256)                      public tags;
-    mapping (bytes32 => uint256)                      public gaps;
-    mapping (bytes32 => uint256)                      public fixs;
-    mapping (bytes32 => uint256)                      public arts;
+    mapping (bytes32 => uint256)                      public tag;
+    mapping (bytes32 => uint256)                      public gap;
+    mapping (bytes32 => uint256)                      public fix;
+    mapping (bytes32 => uint256)                      public art;
     mapping (bytes32 => mapping (address => uint256)) public bags;
 
     // --- Init ---
@@ -226,8 +226,8 @@ contract End {
 
     function cage(bytes32 ilk) public {
         require(live == 0);
-        require(tags[ilk] == 0);
-        tags[ilk] = rdiv(RAY, uint(spot.ilks(ilk).pip.read()));
+        require(tag[ilk] == 0);
+        tag[ilk] = rdiv(RAY, uint(spot.ilks(ilk).pip.read()));
         Flippy(cat.ilks(ilk).flip).cage();
     }
 
@@ -244,27 +244,27 @@ contract End {
     }
 
     function skim(bytes32 ilk, address urn) public {
-        require(tags[ilk] != 0);
+        require(tag[ilk] != 0);
 
         VatLike.Ilk memory i = vat.ilks(ilk);
         VatLike.Urn memory u = vat.urns(ilk, urn);
 
-        uint war = rmul(rmul(u.art, i.rate), tags[ilk]);
+        uint war = rmul(rmul(u.art, i.rate), tag[ilk]);
         require(u.ink >= war);  // overcollateralised
-        arts[ilk] = add(arts[ilk], u.art);
+        art[ilk] = add(art[ilk], u.art);
 
         vat.grab(ilk, urn, address(this), address(vow), -int(war), -int(u.art));
     }
     function bail(bytes32 ilk, address urn) public {
-        require(tags[ilk] != 0);
+        require(tag[ilk] != 0);
 
         VatLike.Ilk memory i = vat.ilks(ilk);
         VatLike.Urn memory u = vat.urns(ilk, urn);
 
-        uint war = rmul(rmul(u.art, i.rate), tags[ilk]);
+        uint war = rmul(rmul(u.art, i.rate), tag[ilk]);
         require(u.ink < war);  // undercollateralised
-        arts[ilk] = add(arts[ilk], u.art);
-        gaps[ilk] = add(gaps[ilk], sub(war, u.ink));
+        art[ilk] = add(art[ilk], u.art);
+        gap[ilk] = add(gap[ilk], sub(war, u.ink));
 
         vat.grab(ilk, urn, address(this), address(vow), -int(u.ink), -int(u.art));
     }
@@ -284,11 +284,11 @@ contract End {
     }
     function flow(bytes32 ilk) public {
         require(debt != 0);
-        require(fixs[ilk] == 0);
+        require(fix[ilk] == 0);
 
         VatLike.Ilk memory i = vat.ilks(ilk);
-        uint256 wad = rmul(rmul(add(i.Art, arts[ilk]), i.rate), tags[ilk]);
-        fixs[ilk] = rdiv(mul(sub(wad, gaps[ilk]), RAY), debt);
+        uint256 wad = rmul(rmul(add(i.Art, art[ilk]), i.rate), tag[ilk]);
+        fix[ilk] = rdiv(mul(sub(wad, gap[ilk]), RAY), debt);
     }
 
     function shop(uint256 wad) public {
@@ -298,8 +298,8 @@ contract End {
         dai[msg.sender] = add(dai[msg.sender], wad);
     }
     function cash(bytes32 ilk, uint wad) public {
-        require(fixs[ilk] != 0);
-        vat.flux(ilk, address(this), msg.sender, rmul(wad, fixs[ilk]));
+        require(fix[ilk] != 0);
+        vat.flux(ilk, address(this), msg.sender, rmul(wad, fix[ilk]));
         bags[ilk][msg.sender] = add(bags[ilk][msg.sender], wad);
         require(bags[ilk][msg.sender] <= dai[msg.sender]);
     }
