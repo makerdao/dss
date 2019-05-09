@@ -293,7 +293,7 @@ contract End {
     function free(bytes32 ilk) public {
         VatLike.Urn memory u = vat.urns(ilk, msg.sender);
         require(u.art == 0);
-        require(int(u.ink) > 0);
+        require(-int(u.ink) < 0);
         vat.grab(ilk, msg.sender, msg.sender, address(vow), -int(u.ink), 0);
     }
 
