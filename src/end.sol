@@ -112,16 +112,10 @@ contract Spotty {
        - `dent` (reverse) phase auctions can continue with no issue
 
     4. Process CDPs
-       a. `skim(ilk, urn)`:
-          - process overcollateralised CDPs
-          - cancels debt
-          - excess collateral remains
-          - backing collateral taken
-       b. `bail(ilk, urn)`:
-          - process undercollateralised CDPs
-          - cancels debt
-          - no remaining collateral
-          - backing collateral taken
+       `skim(ilk, urn)`:
+       - cancels debt
+       - any excess collateral remains
+       - backing collateral taken
 
     Collateral may now be retrieved from processed CDPs:
 
@@ -195,6 +189,9 @@ contract End {
     function mul(uint x, uint y) internal pure returns (uint z) {
         require(y == 0 || (z = x * y) / y == x);
     }
+    function min(uint x, uint y) internal pure returns (uint z) {
+        return x <= y ? x : y;
+    }
     uint constant RAY = 10 ** 27;
     function rmul(uint x, uint y) internal pure returns (uint z) {
         z = mul(x, y) / RAY;
@@ -246,28 +243,16 @@ contract End {
 
     function skim(bytes32 ilk, address urn) public {
         require(tag[ilk] != 0);
-
         VatLike.Ilk memory i = vat.ilks(ilk);
         VatLike.Urn memory u = vat.urns(ilk, urn);
 
-        uint war = rmul(rmul(u.art, i.rate), tag[ilk]);
-        require(u.ink >= war);  // overcollateralised
+        uint owe = rmul(rmul(u.art, i.rate), tag[ilk]);
+        uint wad = min(u.ink, owe);
+        gap[ilk] = add(gap[ilk], sub(owe, wad));
         art[ilk] = add(art[ilk], u.art);
 
-        vat.grab(ilk, urn, address(this), address(vow), -int(war), -int(u.art));
-    }
-    function bail(bytes32 ilk, address urn) public {
-        require(tag[ilk] != 0);
-
-        VatLike.Ilk memory i = vat.ilks(ilk);
-        VatLike.Urn memory u = vat.urns(ilk, urn);
-
-        uint war = rmul(rmul(u.art, i.rate), tag[ilk]);
-        require(u.ink < war);  // undercollateralised
-        art[ilk] = add(art[ilk], u.art);
-        gap[ilk] = add(gap[ilk], sub(war, u.ink));
-
-        vat.grab(ilk, urn, address(this), address(vow), -int(u.ink), -int(u.art));
+        require(int(wad) > 0);
+        vat.grab(ilk, urn, address(this), address(vow), -int(wad), -int(u.art));
     }
 
     function free(bytes32 ilk) public {

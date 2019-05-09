@@ -319,9 +319,8 @@ contract EndTest is DSTest {
         gold.pip.poke(bytes32(2 * RAY));
         end.cage();
         end.cage("gold");
-        end.skim("gold", urn1);
-        // undercollateralised CDP is bailed
-        end.bail("gold", urn2);
+        end.skim("gold", urn1);  // over-collateralised
+        end.skim("gold", urn2);  // under-collateralised
 
         // local checks
         assertEq(art("gold", urn1), 0);
@@ -552,9 +551,8 @@ contract EndTest is DSTest {
         gold.pip.poke(bytes32(2 * RAY));
         end.cage();
         end.cage("gold");
-        end.skim("gold", urn1);
-        // undercollateralised CDP is bailed
-        end.bail("gold", urn2);
+        end.skim("gold", urn1);  // over-collateralised
+        end.skim("gold", urn2);  // under-collateralised
 
         // local checks
         assertEq(art("gold", urn1), 0);
@@ -647,7 +645,7 @@ contract EndTest is DSTest {
         end.cage("gold");
         end.cage("coal");
         end.skim("gold", urn1);  // well-collateralised
-        end.bail("coal", urn2);  // under-collateralised
+        end.skim("coal", urn2);  // under-collateralised
 
         hevm.warp(1 hours);
         end.thaw();
