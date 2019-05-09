@@ -284,7 +284,7 @@ contract End {
         gap[ilk] = add(gap[ilk], sub(owe, wad));
         art[ilk] = add(art[ilk], u.art);
 
-        require(int(wad) > 0);
+        require(-int(wad) <= 0 && -int(u.art) <= 0);
         vat.grab(ilk, urn, address(this), address(vow), -int(wad), -int(u.art));
     }
 
