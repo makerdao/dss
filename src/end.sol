@@ -84,7 +84,7 @@ contract Spotty {
 
 /*
     This is the `End`, it coordinates Global Settlement. This is an
-    involved, stateful process that takes place over several steps:
+    involved, stateful process that takes place over several steps.
 
     First we freeze the system and lock the prices for each ilk:
 
@@ -95,22 +95,49 @@ contract Spotty {
 
     2. `cage(ilk)`:
        - set the cage price for each `ilk`, reading off the price feed
-       - lock the flip auction manager for each `ilk`
 
-    Process outstanding CDPs and auctions:
+    We must process some system state before it is possible to calculate
+    the final dai / collateral price. In particular, we need to determine
 
-    3. Process auctions
-       `skip(ilk, id)`:
-       - cancel individual flip auctions in the `tend` (forward) phase
-       - `dent` (reverse) phase auctions can continue with no issue
+      a. `gap`, the collateral shortfall per collateral type by
+         considering under-collateralised CDPs.
 
-    4. Process CDPs
-       `skim(ilk, urn)`:
-       - cancels debt
+      b. `debt`, the outstanding dai supply after including system
+         surplus / deficit
+
+    We determine (a) by processing all under-collateralised CDPs with
+    `skim`:
+
+    3. `skim(ilk, urn)`:
+       - cancels CDP debt
        - any excess collateral remains
        - backing collateral taken
 
-    Collateral may now be retrieved from processed CDPs:
+    We determine (b) and (c) by processing ongoing auctions. We need to
+    ensure that auctions will not receive any further dai income. In the
+    two-way auction model this occurs when all auctions are in the
+    reverse (`dent`) phase. There are two ways of ensuring this: a) set
+    the cooldown period to be at least as long as the longest auction
+    duration, which needs to be determined by the cage administrator,
+    and b) cancel all ongoing auctions and seize the collateral.
+
+    Option (a) takes a fairly predictable time to occur but with altered
+    auction dynamics due to the now varying price of dai, whereas option
+    (b) is accelerated allowing for faster processing at the expense
+    of more processing calls. Option (b) allows dai holders to retrieve
+    their collateral faster.
+
+    4. a. Wait until all auctions have reached their end.
+
+       b. Cancel live auctions
+          `skip(ilk, id)`:
+           - cancel individual flip auctions in the `tend` (forward) phase
+           - retrieves collateral and returns dai to bidder
+           - `dent` (reverse) phase auctions can continue with no issue
+
+
+    When a CDP has been processed and has no debt remaining, the
+    remaining collateral can be removed.
 
     5. `free(ilk)`:
         - remove collateral from the caller's CDP
@@ -122,21 +149,30 @@ contract Spotty {
     6. `thaw()`:
        - only callable after processing time period elapsed
        - assumption that all under-collateralised CDPs are processed
+       - fixes the total outstanding supply of dai
        - may also need to have processed extra CDPs to cover surplus in the vow
 
     7. `flow(ilk)`:
         - calculate the `fix` cash price for a given ilk
-        - adjusts the cage price in the case of deficit/surplus
+        - adjusts the cage price in the case of deficit / surplus
 
     At this point we have computed the final price for each collateral
     type and users can now turn their dai into collateral. Each unit dai
     can claim a fixed portfolio of collateral.
 
-    8. `shop(wad)`:
-        - lock some dai in preparation for `cash`
+    Dai holders must first `pack` some dai into a `bag`. Once packed,
+    dai cannot be unpacked and is not transferrable. More dai can be
+    added to a bag later.
 
-    9. `cash(ilk, wad)`
-        - exchange some dai for gems from a specific ilk
+    8. `pack(wad)`:
+        - put some dai into a bag in preparation for `cash`
+
+    Finally, collateral can be obtained with `cash`. The bigger the bag,
+    the more collateral can be released.
+
+    9. `cash(ilk, wad)`:
+        - exchange some dai from your bag for gems from a specific ilk
+        - the number of gems is limited by how big your bag is
 */
 
 contract End {
@@ -150,20 +186,20 @@ contract End {
     VatLike  public vat;
     CatLike  public cat;
     VowLike  public vow;
-
     Spotty   public spot;
 
-    uint256  public live;
-    uint256  public wait;
-    uint256  public when;
-    uint256  public debt;
+    uint256  public live;  // cage flag
+    uint256  public when;  // time of cage
+    uint256  public wait;  // processing cooldown length
+    uint256  public debt;  // total outstanding dai following processing
 
-    mapping (address => uint256)                      public dai;
-    mapping (bytes32 => uint256)                      public tag;
-    mapping (bytes32 => uint256)                      public gap;
-    mapping (bytes32 => uint256)                      public fix;
-    mapping (bytes32 => uint256)                      public art;
-    mapping (bytes32 => mapping (address => uint256)) public bags;
+    mapping (bytes32 => uint256) public tag;  // cage price
+    mapping (bytes32 => uint256) public gap;  // collateral shortfall
+    mapping (bytes32 => uint256) public art;  //
+    mapping (bytes32 => uint256) public fix;  // final cash price
+
+    mapping (address => uint256)                      public bag;
+    mapping (bytes32 => mapping (address => uint256)) public out;
 
     // --- Init ---
     constructor() public {
@@ -224,9 +260,8 @@ contract End {
         require(live == 0);
 
         Flippy flip = Flippy(cat.ilks(ilk).flip);
-
-        VatLike.Ilk memory i = vat.ilks(ilk);
-        Flippy.Bid  memory bid = Flippy(flip).bids(id);
+        VatLike.Ilk memory i   = vat.ilks(ilk);
+        Flippy.Bid  memory bid = flip.bids(id);
 
         vat.suck(address(vow), address(vow),  bid.tab);
         vat.suck(address(vow), address(this), bid.bid);
@@ -279,12 +314,12 @@ contract End {
         require(debt != 0);
         vat.move(msg.sender, address(vow), mul(wad, RAY));
         vow.heal(mul(wad, RAY));
-        dai[msg.sender] = add(dai[msg.sender], wad);
+        bag[msg.sender] = add(bag[msg.sender], wad);
     }
     function cash(bytes32 ilk, uint wad) public {
         require(fix[ilk] != 0);
         vat.flux(ilk, address(this), msg.sender, rmul(wad, fix[ilk]));
-        bags[ilk][msg.sender] = add(bags[ilk][msg.sender], wad);
-        require(bags[ilk][msg.sender] <= dai[msg.sender]);
+        out[ilk][msg.sender] = add(out[ilk][msg.sender], wad);
+        require(out[ilk][msg.sender] <= bag[msg.sender]);
     }
 }

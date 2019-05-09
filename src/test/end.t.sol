@@ -695,12 +695,12 @@ contract EndTest is DSTest {
 
         ali.shop(1 ether);
         ali.cash("gold", 1 ether);
-        assertEq(end.bags("gold", address(ali)), 3 ether);
-        assertEq(end.bags("coal", address(ali)), 1 ether);
+        assertEq(end.out("gold", address(ali)), 3 ether);
+        assertEq(end.out("coal", address(ali)), 1 ether);
         ali.shop(1 ether);
         ali.cash("coal", 1 ether);
-        assertEq(end.bags("gold", address(ali)), 3 ether);
-        assertEq(end.bags("coal", address(ali)), 2 ether);
+        assertEq(end.out("gold", address(ali)), 3 ether);
+        assertEq(end.out("coal", address(ali)), 2 ether);
         assertEq(gem("gold", address(ali)), 0.375 ether);
         assertEq(gem("coal", address(ali)), 0.05 ether);
     }
