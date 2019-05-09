@@ -31,17 +31,13 @@ contract VatLike {
         uint256 ink;
         uint256 art;
     }
-    function sin(address) public view returns (uint);
-    function dai(address) public view returns (uint);
     function ilks(bytes32 ilk) public returns (Ilk memory);
     function urns(bytes32 ilk, address urn) public returns (Urn memory);
     function debt() public returns (uint);
     function move(address src, address dst, uint256 rad) public;
     function hope(address) public;
     function flux(bytes32 ilk, address src, address dst, uint256 rad) public;
-    function tune(bytes32 i, address u, address v, address w, int256 dink, int256 dart) public;
     function grab(bytes32 i, address u, address v, address w, int256 dink, int256 dart) public;
-    function heal(uint256 rad) public;
     function suck(address u, address v, uint256 rad) public;
     function cage() public;
 }
@@ -56,11 +52,8 @@ contract CatLike {
 }
 contract VowLike {
     function Joy() public view returns (uint);
-    function Awe() public view returns (uint);
     function heal(uint256 rad) public;
-    function kiss(uint256 rad) public;
     function cage() public;
-    function loot() public;
 }
 contract Flippy {
     struct Bid {
