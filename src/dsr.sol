@@ -32,9 +32,9 @@ import "ds-note/note.sol";
    - `dsr`: the Dai Savings Rate
    - `pie`: user balance of Savings Dai
 
-   - `save`: deposit / withdraw savings dai
+   - `join`: start saving some dai
+   - `exit`: remove some dai
    - `drip`: perform rate collection
-   - `move`: transfer savings dai (for use by adapters)
 
 */
 
@@ -54,12 +54,12 @@ contract Pot is DSNote {
     mapping (address => uint256) public pie;  // user Savings Dai
 
     uint256 public Pie;  // total Savings Dai
-    uint256 public dsr;  // The Dai Savings Rate
-    uint256 public chi;  // The Rate Accumulator
+    uint256 public dsr;  // the Dai Savings Rate
+    uint256 public chi;  // the Rate Accumulator
 
     VatLike public vat;  // CDP engine
-    address public vow;  // Debt engine
-    uint48  public rho;  // Time of last drip
+    address public vow;  // debt engine
+    uint48  public rho;  // time of last drip
 
     // --- Init ---
     constructor(address vat_) public {
@@ -96,9 +96,7 @@ contract Pot is DSNote {
     }
 
     function rmul(uint x, uint y) internal pure returns (uint z) {
-        z = x * y;
-        require(y == 0 || z / y == x);
-        z = z / ONE;
+        z = mul(x, y) / ONE;
     }
 
     function add(uint x, uint y) internal pure returns (uint z) {
