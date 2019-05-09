@@ -277,7 +277,6 @@ contract FlipTest is DSTest {
         assertEq(vat.dai_balance(ali),   199 ether);
         assertEq(vat.dai_balance(gal),     1 ether);
 
-        flip.cage();
         vat.mint(address(this), 1 ether);
         flip.yank(id);
         // bid is refunded to bidder from caller
@@ -297,33 +296,7 @@ contract FlipTest is DSTest {
         Guy(bob).tend(id, 100 ether, 50 ether);
         Guy(ali).dent(id,  95 ether, 50 ether);
 
+        // cannot yank in the dent phase
         assertTrue(!Guy(ali).try_yank(id));
-    }
-    function test_yank_cage_deal() public {
-        uint id = flip.kick({ lot: 100 ether
-                            , tab: 50 ether
-                            , urn: urn
-                            , gal: gal
-                            , bid: 0
-                            });
-
-        Guy(ali).tend(id, 100 ether, 1 ether);
-        // bid taken from bidder
-        assertEq(vat.dai_balance(ali),   199 ether);
-        assertEq(vat.dai_balance(address(gal)), 1 ether);
-
-        flip.cage();
-
-        hevm.warp(5 hours);
-        // can't deal in deficit after cage
-        assertTrue(!Guy(ali).try_deal(id));
-
-        vat.mint(address(this), 1 ether);
-        flip.yank(id);
-        // bid is refunded to bidder from caller
-        assertEq(vat.dai_balance(ali),            200 ether);
-        assertEq(vat.dai_balance(address(this)),    0 ether);
-        // gems go to caller
-        assertEq(vat.gem_balance(address(this)), 1000 ether);
     }
 }

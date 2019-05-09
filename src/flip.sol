@@ -67,7 +67,6 @@ contract Flipper is DSNote {
     uint48  public   ttl = 3 hours;  // 3 hours bid duration
     uint48  public   tau = 2 days;   // 2 days total auction length
     uint256 public kicks = 0;
-    uint256 public live;
 
     // --- Events ---
     event Kick(
@@ -84,7 +83,6 @@ contract Flipper is DSNote {
         vat = VatLike(vat_);
         ilk = ilk_;
         wards[msg.sender] = 1;
-        live = 1;
     }
 
     // --- Math ---
@@ -154,17 +152,12 @@ contract Flipper is DSNote {
         bids[id].tic = add(uint48(now), ttl);
     }
     function deal(uint id) public note {
-        require(live == 1 || bids[id].bid == bids[id].tab);
         require(bids[id].tic != 0 && (bids[id].tic < now || bids[id].end < now));
         vat.flux(ilk, address(this), bids[id].guy, bids[id].lot);
         delete bids[id];
     }
 
-    function cage() public note auth {
-        live = 0;
-    }
     function yank(uint id) public note auth {
-        require(live == 0);
         require(bids[id].guy != address(0));
         require(bids[id].bid < bids[id].tab);
         vat.flux(ilk, address(this), msg.sender, bids[id].lot);

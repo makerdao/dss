@@ -66,8 +66,6 @@ contract Flippy {
         address gal;
         uint256 tab;
     }
-    function cage() public;
-    function live() public view returns (uint);
     function bids(uint id) public view returns (Bid memory);
     function yank(uint id) public;
 }
@@ -226,7 +224,6 @@ contract End {
         require(live == 0);
 
         Flippy flip = Flippy(cat.ilks(ilk).flip);
-        if (flip.live() == 1) flip.cage();
 
         VatLike.Ilk memory i = vat.ilks(ilk);
         Flippy.Bid  memory bid = Flippy(flip).bids(id);
@@ -236,7 +233,10 @@ contract End {
         vat.hope(address(flip));
         flip.yank(id);
 
-        vat.grab(ilk, bid.urn, address(this), address(vow), int(bid.lot), int(bid.tab / i.rate));
+        int lot = int(bid.lot);
+        int art = int(bid.tab / i.rate);
+        require(lot >= 0 && art >= 0);
+        vat.grab(ilk, bid.urn, address(this), address(vow), lot, art);
     }
 
     function skim(bytes32 ilk, address urn) public {
