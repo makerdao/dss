@@ -298,9 +298,9 @@ contract End {
     }
 
     function thaw() public {
-        require(now >= when + wait);
         require(debt == 0);
         require(vow.Joy() == 0);
+        require(now >= when + wait);
         debt = vat.debt();
     }
     function flow(bytes32 ilk) public {
