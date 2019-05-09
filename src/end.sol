@@ -128,7 +128,7 @@ contract Spotty {
 
     6. `thaw()`:
        - only callable after processing time period elapsed
-       - assumption that all undercollateralised CDPs are processed
+       - assumption that all under-collateralised CDPs are processed
        - may also need to have processed extra CDPs to cover surplus in the vow
 
     7. `flow(ilk)`:

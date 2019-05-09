@@ -229,7 +229,7 @@ contract EndTest is DSTest {
         assertEq(vow.flapper().live(), 0);
     }
 
-    // -- Scenario where there is one well-collateralised CDP
+    // -- Scenario where there is one over-collateralised CDP
     // -- and there is no Vow deficit or surplus
     function test_cage_collateralised() public {
         Ilk memory gold = init_collateral("gold");
@@ -291,7 +291,7 @@ contract EndTest is DSTest {
         assertEq(balanceOf("gold", address(gold.gemA)), 0);
     }
 
-    // -- Scenario where there is one well-collateralised and one
+    // -- Scenario where there is one over-collateralised and one
     // -- under-collateralised CDP, and no Vow deficit or surplus
     function test_cage_undercollateralised() public {
         Ilk memory gold = init_collateral("gold");
@@ -456,7 +456,7 @@ contract EndTest is DSTest {
         assertEq(balanceOf("gold", address(gold.gemA)), 0);
     }
 
-    // -- Scenario where there is one well-collateralised CDP
+    // -- Scenario where there is one over-collateralised CDP
     // -- and there is a deficit in the Vow
     function test_cage_collateralised_deficit() public {
         Ilk memory gold = init_collateral("gold");
@@ -520,7 +520,7 @@ contract EndTest is DSTest {
         assertEq(balanceOf("gold", address(gold.gemA)), 0);
     }
 
-    // -- Scenario where there is one well-collateralised CDP
+    // -- Scenario where there is one over-collateralised CDP
     // -- and one under-collateralised CDP and there is a
     // -- surplus in the Vow
     function test_cage_undercollateralised_surplus() public {
@@ -614,7 +614,7 @@ contract EndTest is DSTest {
         assertEq(balanceOf("gold", address(gold.gemA)), 0);
     }
 
-    // -- Scenario where there is one well-collateralised and one
+    // -- Scenario where there is one over-collateralised and one
     // -- under-collateralised CDP of different collateral types
     // -- and no Vow deficit or surplus
     function test_cage_net_undercollateralised_multiple_ilks() public {
@@ -644,7 +644,7 @@ contract EndTest is DSTest {
         end.cage();
         end.cage("gold");
         end.cage("coal");
-        end.skim("gold", urn1);  // well-collateralised
+        end.skim("gold", urn1);  // over-collateralised
         end.skim("coal", urn2);  // under-collateralised
 
         hevm.warp(1 hours);
