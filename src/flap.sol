@@ -90,6 +90,13 @@ contract Flapper is DSNote {
         require(y == 0 || (z = x * y) / y == x);
     }
 
+    // --- Admin ---
+    function file(bytes32 what, uint data) public note auth {
+        if (what == "beg") beg = data;
+        if (what == "ttl") ttl = uint48(data);
+        if (what == "tau") tau = uint48(data);
+    }
+
     // --- Auction ---
     function kick(address gal, uint lot, uint bid)
         public returns (uint id)
