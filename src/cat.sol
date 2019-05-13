@@ -57,7 +57,7 @@ contract Cat is DSNote {
     struct Ilk {
         address flip;  // Liquidator
         uint256 chop;  // Liquidation Penalty   [ray]
-        uint256 lump;  // Liquidation Quantity  [rad]
+        uint256 lump;  // Liquidation Quantity  [wad]
     }
 
     mapping (bytes32 => Ilk) public ilks;
@@ -117,8 +117,8 @@ contract Cat is DSNote {
         require(live == 1);
         require(mul(u.ink, i.spot) < mul(u.art, i.rate));
 
-        uint art = min(u.art, ilks[ilk].lump / i.rate);
-        uint lot = min(u.ink, mul(art, u.ink) / u.art);
+        uint lot = min(u.ink, ilks[ilk].lump);
+        uint art = min(u.art, mul(lot, u.art) / u.ink);
         uint tab = mul(art, i.rate);
 
         require(-int(lot) < 0 && -int(art) < 0);

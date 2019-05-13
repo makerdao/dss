@@ -1,4 +1,5 @@
 pragma solidity >=0.5.0;
+pragma experimental ABIEncoderV2;
 
 import "ds-test/test.sol";
 import "ds-token/token.sol";
@@ -369,6 +370,20 @@ contract JoinTest is DSTest {
     }
 }
 
+contract FlipLike {
+    struct Bid {
+        uint256 bid;
+        uint256 lot;
+        address guy;  // high bidder
+        uint48  tic;  // expiry time
+        uint48  end;
+        address urn;
+        address gal;
+        uint256 tab;
+    }
+    function bids(uint) public view returns (Bid memory);
+}
+
 contract BiteTest is DSTest {
     Hevm hevm;
 
@@ -463,6 +478,48 @@ contract BiteTest is DSTest {
         gold.approve(address(vat));
         gov.approve(address(flap));
     }
+
+    function test_bite_under_lump() public {
+        vat.file("gold", 'spot', ray(2.5 ether));
+        vat.frob("gold",  40 ether, 100 ether);
+        // tag=4, mat=2
+        vat.file("gold", 'spot', ray(2 ether));  // now unsafe
+
+        cat.file("gold", "lump", 50 ether);
+        cat.file("gold", "chop", ray(1.1 ether));
+
+        uint auction = cat.bite("gold", address(this));
+        // the full CDP is liquidated
+        assertEq(ink("gold", address(this)), 0);
+        assertEq(art("gold", address(this)), 0);
+        // all debt goes to the vow
+        assertEq(vow.Awe(), rad(100 ether));
+        // auction is for all collateral
+        FlipLike.Bid memory bid = FlipLike(address(flip)).bids(auction);
+        assertEq(bid.lot,        40 ether);
+        assertEq(bid.tab,   rad(110 ether));
+    }
+    function test_bite_over_lump() public {
+        vat.file("gold", 'spot', ray(2.5 ether));
+        vat.frob("gold",  40 ether, 100 ether);
+        // tag=4, mat=2
+        vat.file("gold", 'spot', ray(2 ether));  // now unsafe
+
+        cat.file("gold", "chop", ray(1.1 ether));
+        cat.file("gold", "lump", 30 ether);
+
+        uint auction = cat.bite("gold", address(this));
+        // the CDP is partially liquidated
+        assertEq(ink("gold", address(this)), 10 ether);
+        assertEq(art("gold", address(this)), 25 ether);
+        // a fraction of the debt goes to the vow
+        assertEq(vow.Awe(), rad(75 ether));
+        // auction is for a fraction of the collateral
+        FlipLike.Bid memory bid = FlipLike(address(flip)).bids(auction);
+        assertEq(bid.lot,       30 ether);
+        assertEq(bid.tab,   rad(82.5 ether));
+    }
+
     function test_happy_bite() public {
         // spot = tag / (par . mat)
         // tag=5, mat=2
@@ -477,7 +534,7 @@ contract BiteTest is DSTest {
         assertEq(vow.Woe(), 0 ether);
         assertEq(gem("gold", address(this)), 960 ether);
 
-        cat.file("gold", "lump", rad(100 ether));
+        cat.file("gold", "lump", 100 ether);  // => bite everything
         uint auction = cat.bite("gold", address(this));
         assertEq(ink("gold", address(this)), 0);
         assertEq(art("gold", address(this)), 0);
@@ -507,7 +564,7 @@ contract BiteTest is DSTest {
         vat.frob("gold",  40 ether, 100 ether);
         vat.file("gold", 'spot', ray(2 ether));  // now unsafe
 
-        cat.file("gold", "lump", rad(100 ether));
+        cat.file("gold", "lump", 100 ether);  // => bite everything
         assertEq(vow.sin(uint48(now)), rad(  0 ether));
         cat.bite("gold", address(this));
         assertEq(vow.sin(uint48(now)), rad(100 ether));
