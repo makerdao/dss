@@ -75,11 +75,6 @@ contract Vow is DSNote {
     function sub(uint x, uint y) internal pure returns (uint z) {
         require((z = x - y) <= x);
     }
-    uint constant ONE = 10 ** 27;
-    function rmul(uint x, uint y) internal pure returns (uint z) {
-        require(y == 0 || (z = x * y) / y == x);
-        z = z / ONE;
-    }
     function min(uint x, uint y) internal pure returns (uint z) {
         if (x > y) { z = y; } else { z = x; }
     }
