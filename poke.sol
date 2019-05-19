@@ -1,6 +1,7 @@
 pragma solidity >=0.5.0;
 
 import "ds-math/math.sol";
+import "ds-note/note.sol";
 
 contract VatLike {
     function file(bytes32, bytes32, uint) public;
@@ -10,7 +11,7 @@ contract PipLike {
     function peek() public returns (bytes32, bool);
 }
 
-contract Spotter is DSMath {
+contract Spotter is DSMath, DSNote {
     VatLike public vat;
     mapping (bytes32 => Ilk) public ilks;
     uint256 public par = RAY; // ref per dai
@@ -38,15 +39,15 @@ contract Spotter is DSMath {
     }
 
     // --- Administration ---
-    function file(bytes32 ilk, address pip_) public auth {
+    function file(bytes32 ilk, address pip_) public note auth {
         ilks[ilk].pip = PipLike(pip_);
     }
 
-    function file(bytes32 what, uint data) public auth {
+    function file(bytes32 what, uint data) public note auth {
         if (what == "par") par = data;
     }
 
-    function file(bytes32 ilk, bytes32 what, uint data) public auth {
+    function file(bytes32 ilk, bytes32 what, uint data) public note auth {
         if (what == "mat") ilks[ilk].mat = data;
     }
 
