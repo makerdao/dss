@@ -255,7 +255,7 @@ contract End {
         require(live == 0);
         require(tag[ilk] == 0);
         Art[ilk] = vat.ilks(ilk).Art;
-        tag[ilk] = rdiv(RAY, uint(spot.ilks(ilk).pip.read()));
+        tag[ilk] = rdiv(RAY, mul(uint(spot.ilks(ilk).pip.read()), 10 ** 9));
     }
 
     function skip(bytes32 ilk, uint256 id) public {
