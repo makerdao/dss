@@ -83,7 +83,7 @@ contract Spotty {
 }
 
 /*
-    This is the `End`, it coordinates Global Settlement. This is an
+    This is the `End` and it coordinates Global Settlement. This is an
     involved, stateful process that takes place over nine steps.
 
     First we freeze the system and lock the prices for each ilk.
@@ -113,13 +113,13 @@ contract Spotty {
        - any excess collateral remains
        - backing collateral taken
 
-    We determine (b) by processing ongoing auctions. We need to ensure
-    that auctions will not receive any further dai income. In the
-    two-way auction model this occurs when all auctions are in the
-    reverse (`dent`) phase. There are two ways of ensuring this:
-    a) set the cooldown period to be at least as long as the longest
-    auction duration, which needs to be determined by the cage
-    administrator, and b) cancel all ongoing auctions and seize the
+    We determine (b) by processing ongoing dai generating processes,
+    i.e. auctions. We need to ensure that auctions will not generate any
+    further dai income. In the two-way auction model this occurs when
+    all auctions are in the reverse (`dent`) phase. There are two ways
+    of ensuring this: a) set the cooldown period to be at least as long
+    as the longest auction duration, which needs to be determined by the
+    cage administrator, and b) cancel all ongoing auctions and seize the
     collateral.
 
     Option (a) takes a fairly predictable time to occur but with altered
@@ -136,7 +136,6 @@ contract Spotty {
            - retrieves collateral and returns dai to bidder
            - `dent` (reverse) phase auctions can continue normally
 
-
     When a CDP has been processed and has no debt remaining, the
     remaining collateral can be removed.
 
@@ -151,15 +150,15 @@ contract Spotty {
        - only callable after processing time period elapsed
        - assumption that all under-collateralised CDPs are processed
        - fixes the total outstanding supply of dai
-       - may also need to have processed extra CDPs to cover surplus in the vow
+       - may also require extra CDP processing to cover vow surplus
 
     7. `flow(ilk)`:
-        - calculate the `fix` cash price for a given ilk
-        - adjusts the cage price in the case of deficit / surplus
+        - calculate the `fix`, the cash price for a given ilk
+        - adjusts the `fix` in the case of deficit / surplus
 
     At this point we have computed the final price for each collateral
-    type and users can now turn their dai into collateral. Each unit dai
-    can claim a fixed portfolio of collateral.
+    type and dai holders can now turn their dai into collateral. Each
+    unit dai can claim a fixed basket of collateral.
 
     Dai holders must first `pack` some dai into a `bag`. Once packed,
     dai cannot be unpacked and is not transferrable. More dai can be
