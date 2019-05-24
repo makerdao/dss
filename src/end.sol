@@ -222,6 +222,7 @@ contract End {
     function min(uint x, uint y) internal pure returns (uint z) {
         return x <= y ? x : y;
     }
+    uint constant WAD = 10 ** 18;
     uint constant RAY = 10 ** 27;
     function rmul(uint x, uint y) internal pure returns (uint z) {
         z = mul(x, y) / RAY;
@@ -255,7 +256,8 @@ contract End {
         require(live == 0);
         require(tag[ilk] == 0);
         Art[ilk] = vat.ilks(ilk).Art;
-        tag[ilk] = rdiv(RAY, uint(spot.ilks(ilk).pip.read()));
+        // pip returns a wad, invert it and convert to ray
+        tag[ilk] = rdiv(WAD, uint(spot.ilks(ilk).pip.read()));
     }
 
     function skip(bytes32 ilk, uint256 id) public {

@@ -150,7 +150,7 @@ contract EndTest is DSTest {
         DSValue pip = new DSValue();
         spot.file(name, address(pip));
         // initial collateral price of 5
-        pip.poke(bytes32(5 * RAY));
+        pip.poke(bytes32(5 * WAD));
 
         vat.init(name);
         GemJoin gemA = new GemJoin(address(vat), name, address(coin));
@@ -247,7 +247,7 @@ contract EndTest is DSTest {
         assertEq(vat.vice(), 0);
 
         // collateral price is 5
-        gold.pip.poke(bytes32(5 * RAY));
+        gold.pip.poke(bytes32(5 * WAD));
         end.cage();
         end.cage("gold");
         end.skim("gold", urn1);
@@ -316,7 +316,7 @@ contract EndTest is DSTest {
         assertEq(vat.vice(), 0);
 
         // collateral price is 2
-        gold.pip.poke(bytes32(2 * RAY));
+        gold.pip.poke(bytes32(2 * WAD));
         end.cage();
         end.cage("gold");
         end.skim("gold", urn1);  // over-collateralised
@@ -404,7 +404,7 @@ contract EndTest is DSTest {
         assertEq(dai(urn1), 14 ether);
 
         // collateral price is 5
-        gold.pip.poke(bytes32(5 * RAY));
+        gold.pip.poke(bytes32(5 * WAD));
         end.cage();
         end.cage("gold");
 
@@ -475,7 +475,7 @@ contract EndTest is DSTest {
         assertEq(vat.vice(), rad(1 ether));
 
         // collateral price is 5
-        gold.pip.poke(bytes32(5 * RAY));
+        gold.pip.poke(bytes32(5 * WAD));
         end.cage();
         end.cage("gold");
         end.skim("gold", urn1);
@@ -547,7 +547,7 @@ contract EndTest is DSTest {
         assertEq(vat.vice(), 0);
 
         // collateral price is 2
-        gold.pip.poke(bytes32(2 * RAY));
+        gold.pip.poke(bytes32(2 * WAD));
         end.cage();
         end.cage("gold");
         end.skim("gold", urn1);  // over-collateralised
@@ -636,9 +636,9 @@ contract EndTest is DSTest {
         bob.frob("coal", urn2, urn2, urn2, 1 ether, 5 ether);
         // bob's urn has 0 gem, 1 ink, 5 tab
 
-        gold.pip.poke(bytes32(2 * RAY));
+        gold.pip.poke(bytes32(2 * WAD));
         // urn1 has 20 dai of ink and 15 dai of tab
-        coal.pip.poke(bytes32(2 * RAY));
+        coal.pip.poke(bytes32(2 * WAD));
         // urn2 has 2 dai of ink and 5 dai of tab
         end.cage();
         end.cage("gold");
