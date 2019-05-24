@@ -23,7 +23,7 @@ contract Auction {
     function kick(address gal, uint lot, uint bid) public returns (uint);
     function cage(uint) public;
     function cage() public;
-    function live() public returns (uint256);
+    function live() public returns (uint);
 }
 
 contract VatLike {
@@ -31,8 +31,6 @@ contract VatLike {
     function sin (address) public view returns (uint);
     function heal(uint256) public;
     function hope(address) public;
-    function nope(address) public;
-    function move(address,address,uint) public;
 }
 
 contract Vow is DSNote {
