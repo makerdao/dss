@@ -10,7 +10,7 @@ previous iteration of Dai was called Single Collateral Dai (SCD), or
 ## Tooling
 
 - dapp.tools
-- solc v0.4.24
+- solc v0.5.0
 - tests use ds-test and are in files ending .t.sol
 
 
@@ -63,10 +63,6 @@ the considerations that make this code look like it does:
   into themselves, except for math. Again, this masks complexity.
 
 
-## Architecture
-
-![MCD calls](img/mcd-calls.png)
-
 ## CDP Engine
 
 The core CDP, Dai, and collateral state is kept in the `Vat`. This
@@ -93,7 +89,7 @@ Similarly, a collateral `Ilk`:
 
 Here, "encumbered" means "locked in a CDP".
 
-CDPs are managed via `tune(i, u, v, w, dink, dart)`, which modifies the
+CDPs are managed via `frob(i, u, v, w, dink, dart)`, which modifies the
 CDP of user `u`, using `gem` from user `v` and creating `dai` for user
 `w`.
 
@@ -111,42 +107,21 @@ quantity of Sin.
 
 Finally, the quantity `dai` can be transferred between users with `move`.
 
-### Identifiers
+### Rate
 
-The above discusses "users", but really the `Vat` does not have a
-notion of "addresses" or "users", and just assigns internal values to
-`bytes32` identifiers. The operator of the `Vat` is free to use any
-scheme they like to manage these identifiers. A simple scheme
-is to give an ethereum address control over any identifier that has the
-address as the last 20 bytes.
+The ilk quantity `rate` define the ratio of exchange
+between un-encumbered and encumbered Debt.
 
-
-### Rates
-
-The ilk quantities `take` and `rate` define the ratio of exchange
-between un-encumbered and encumbered Collateral and Debt respectively.
-
-These quantitites allow for manipulations collateral and debt balances
+This quantity allows for manipulation of debt balances
 across a whole Ilk.
-
-Collateral can be seized or injected into an ilk using `toll(i, u, take)`,
-which decreases the `gem` balance of the user `u` by increasing the
-encumbered collateral balance of all urns in the ilk by the ratio
-`take`.
 
 Debt can be seized or injected into an ilk using `fold(i, u, rate)`,
 which increases the `dai` balance of the user `u` by increasing the
 encumbered debt balance of all urns in the ilk by the ratio `rate`.
 
-The practical use of these mechanisms is in applying stability fees and
-seizing collateral in the case of global settlement.
-
 ## CDP Interface
 
-The `Vat` is unsuitable for use by untrusted actors. External
-users can manage their CDP using the `Pit` ("trading pit").
-
-The `Pit` contains risk parameters for each `ilk`:
+The `Vat` contains risk parameters for each `ilk`:
 
 - `spot`: the maximum amount of Dai drawn per unit collateral
 - `line`: the maximum total Dai drawn
@@ -155,7 +130,7 @@ And a global risk parameter:
 
 - `Line`: the maximum total Dai drawn across all ilks
 
-The `Pit` exposes one public function:
+The `Vat` exposes the public function:
 
 - `frob(ilk, dink, dart)`: manipulate the callers CDP in the given `ilk`
   by `dink` and `dart`, subject to the risk parameters
