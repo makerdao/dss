@@ -1,8 +1,8 @@
 pragma solidity >=0.5.0;
 
 import "ds-test/test.sol";
-import "dss/vat.sol";
-import './dsr.sol';
+import {Vat} from '../vat.sol';
+import {Pot} from '../pot.sol';
 
 contract Hevm {
     function warp(uint256) public;
