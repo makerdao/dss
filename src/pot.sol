@@ -1,4 +1,4 @@
-/// dsr.sol -- Dai Savings Rate
+/// pot.sol -- Dai Savings Rate
 
 // Copyright (C) 2018 Rain <rainbreak@riseup.net>
 //
