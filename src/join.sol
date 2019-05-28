@@ -68,15 +68,14 @@ contract GemJoin is DSNote {
         ilk = ilk_;
         gem = GemLike(gem_);
     }
-    function join(address urn, uint wad) public note {
+    function join(address usr, uint wad) public note {
         require(int(wad) >= 0);
-        vat.slip(ilk, urn, int(wad));
+        vat.slip(ilk, usr, int(wad));
         require(gem.transferFrom(msg.sender, address(this), wad));
     }
     function exit(address usr, uint wad) public note {
-        address urn = msg.sender;
-        require(int(wad) >= 0);
-        vat.slip(ilk, urn, -int(wad));
+        require(-int(wad) <= 0);
+        vat.slip(ilk, msg.sender, -int(wad));
         require(gem.transfer(usr, wad));
     }
 }
@@ -88,14 +87,13 @@ contract ETHJoin is DSNote {
         vat = VatLike(vat_);
         ilk = ilk_;
     }
-    function join(address urn) public payable note {
+    function join(address usr) public payable note {
         require(int(msg.value) >= 0);
-        vat.slip(ilk, urn, int(msg.value));
+        vat.slip(ilk, usr, int(msg.value));
     }
     function exit(address payable usr, uint wad) public note {
-        address urn = msg.sender;
         require(int(wad) >= 0);
-        vat.slip(ilk, urn, -int(wad));
+        vat.slip(ilk, msg.sender, -int(wad));
         usr.transfer(wad);
     }
 }
@@ -111,13 +109,12 @@ contract DaiJoin is DSNote {
     function mul(uint x, uint y) internal pure returns (uint z) {
         require(y == 0 || (z = x * y) / y == x);
     }
-    function join(address urn, uint wad) public note {
-        vat.move(address(this), urn, mul(ONE, wad));
+    function join(address usr, uint wad) public note {
+        vat.move(address(this), usr, mul(ONE, wad));
         dai.burn(msg.sender, wad);
     }
     function exit(address usr, uint wad) public note {
-        address urn = msg.sender;
-        vat.move(urn, address(this), mul(ONE, wad));
+        vat.move(msg.sender, address(this), mul(ONE, wad));
         dai.mint(usr, wad);
     }
 }
