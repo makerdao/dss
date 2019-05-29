@@ -45,7 +45,7 @@ contract Vow is DSNote {
     Auction public flapper;
     Auction public flopper;
 
-    mapping (uint48 => uint256) public sin; // debt queue
+    mapping (uint256 => uint256) public sin; // debt queue
     uint256 public Sin;   // queued debt          [rad]
     uint256 public Ash;   // on-auction debt      [rad]
 
@@ -100,11 +100,11 @@ contract Vow is DSNote {
 
     // Push to debt-queue
     function fess(uint tab) public note auth {
-        sin[uint48(now)] = add(sin[uint48(now)], tab);
+        sin[now] = add(sin[now], tab);
         Sin = add(Sin, tab);
     }
     // Pop from debt-queue
-    function flog(uint48 era) public note {
+    function flog(uint era) public note {
         require(add(era, wait) <= now);
         Sin = sub(Sin, sin[era]);
         sin[era] = 0;

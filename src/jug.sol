@@ -22,7 +22,7 @@ contract Jug is DSNote {
     // --- Data ---
     struct Ilk {
         uint256 duty;
-        uint48  rho;
+        uint256  rho;
     }
 
     mapping (bytes32 => Ilk) public ilks;
@@ -80,7 +80,7 @@ contract Jug is DSNote {
         Ilk storage i = ilks[ilk];
         require(i.duty == 0);
         i.duty = ONE;
-        i.rho = uint48(now);
+        i.rho  = now;
     }
     function file(bytes32 ilk, bytes32 what, uint data) public note auth {
         if (what == "duty") ilks[ilk].duty = data;
@@ -97,6 +97,6 @@ contract Jug is DSNote {
         require(now >= ilks[ilk].rho);
         VatLike.Ilk memory i = vat.ilks(ilk);
         vat.fold(ilk, vow, diff(rmul(rpow(add(base, ilks[ilk].duty), now - ilks[ilk].rho, ONE), i.rate), i.rate));
-        ilks[ilk].rho = uint48(now);
+        ilks[ilk].rho = now;
     }
 }

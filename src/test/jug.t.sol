@@ -28,8 +28,8 @@ contract JugTest is DSTest {
         return rad_ / 10 ** 27;
     }
     function rho(bytes32 ilk) internal view returns (uint) {
-        (uint duty, uint48 rho_) = drip.ilks(ilk); duty;
-        return uint(rho_);
+        (uint duty, uint rho_) = drip.ilks(ilk); duty;
+        return rho_;
     }
     function rate(bytes32 ilk) internal view returns (uint) {
         Vat.Ilk memory i = VatLike(address(vat)).ilks(ilk);

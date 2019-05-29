@@ -59,7 +59,7 @@ contract Pot is DSNote {
 
     VatLike public vat;  // CDP engine
     address public vow;  // debt engine
-    uint48  public rho;  // time of last drip
+    uint256 public rho;  // time of last drip
 
     // --- Init ---
     constructor(address vat_) public {
@@ -125,7 +125,7 @@ contract Pot is DSNote {
         require(now >= rho);
         uint chi_ = sub(rmul(rpow(dsr, now - rho, ONE), chi), chi);
         chi = add(chi, chi_);
-        rho  = uint48(now);
+        rho = now;
         vat.suck(address(vow), address(this), mul(Pie, chi_));
     }
 

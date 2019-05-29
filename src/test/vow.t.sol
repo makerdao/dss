@@ -46,8 +46,8 @@ contract VowTest is DSTest {
         vat.hope(address(flop));
     }
 
-    function try_flog(uint48 era) internal returns (bool ok) {
-        string memory sig = "flog(uint48)";
+    function try_flog(uint era) internal returns (bool ok) {
+        string memory sig = "flog(uint256)";
         (ok,) = address(vow).call(abi.encodeWithSignature(sig, era));
     }
     function try_dent(uint id, uint lot, uint bid) internal returns (bool ok) {
@@ -97,7 +97,7 @@ contract VowTest is DSTest {
     }
     function flog(uint wad) internal {
         suck(address(0), wad);  // suck dai into the zero address
-        vow.flog(uint48(now));
+        vow.flog(now);
     }
     function heal(uint wad) internal {
         vow.heal(rad(wad));
@@ -108,10 +108,10 @@ contract VowTest is DSTest {
         vow.file('wait', uint(100 seconds));
         assertEq(vow.wait(), 100 seconds);
 
-        uint48 tic = uint48(now);
+        uint tic = now;
         vow.fess(100 ether);
         assertTrue(!try_flog(tic) );
-        hevm.warp(tic + uint48(100 seconds));
+        hevm.warp(tic + 100 seconds);
         assertTrue( try_flog(tic) );
     }
 
