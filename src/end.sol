@@ -191,15 +191,15 @@ contract End {
     uint256  public live;  // cage flag
     uint256  public when;  // time of cage
     uint256  public wait;  // processing cooldown length
-    uint256  public debt;  // total outstanding dai following processing
+    uint256  public debt;  // total outstanding dai following processing [rad]
 
-    mapping (bytes32 => uint256) public tag;  // cage price
-    mapping (bytes32 => uint256) public gap;  // collateral shortfall
-    mapping (bytes32 => uint256) public Art;  // total debt on cage
-    mapping (bytes32 => uint256) public fix;  // final cash price
+    mapping (bytes32 => uint256) public tag;  // cage price           [ray]
+    mapping (bytes32 => uint256) public gap;  // collateral shortfall [wad]
+    mapping (bytes32 => uint256) public Art;  // total debt per ilk   [wad]
+    mapping (bytes32 => uint256) public fix;  // final cash price     [ray]
 
-    mapping (address => uint256)                      public bag;
-    mapping (bytes32 => mapping (address => uint256)) public out;
+    mapping (address => uint256)                      public bag;  // [wad]
+    mapping (bytes32 => mapping (address => uint256)) public out;  // [wad]
 
     // --- Init ---
     constructor() public {
@@ -260,7 +260,7 @@ contract End {
     }
 
     function skip(bytes32 ilk, uint256 id) public {
-        require(live == 0);
+        require(tag[ilk] != 0);
 
         Flippy flip = Flippy(cat.ilks(ilk).flip);
         VatLike.Ilk memory i   = vat.ilks(ilk);
@@ -292,6 +292,7 @@ contract End {
     }
 
     function free(bytes32 ilk) public {
+        require(live == 0);
         VatLike.Urn memory u = vat.urns(ilk, msg.sender);
         require(u.art == 0);
         require(-int(u.ink) < 0);
@@ -299,9 +300,10 @@ contract End {
     }
 
     function thaw() public {
+        require(live == 0);
         require(debt == 0);
         require(vow.Joy() == 0);
-        require(now >= when + wait);
+        require(now >= add(when, wait));
         debt = vat.debt();
     }
     function flow(bytes32 ilk) public {
