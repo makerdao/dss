@@ -2,8 +2,8 @@ pragma solidity >=0.5.0;
 
 import "ds-test/test.sol";
 import {DSToken} from "ds-token/token.sol";
-
-import {Flapper} from "../flap.sol";
+import "../flap.sol";
+import "../vat.sol";
 
 
 contract Hevm {
@@ -14,7 +14,7 @@ contract Guy {
     Flapper fuss;
     constructor(Flapper fuss_) public {
         fuss = fuss_;
-        DSToken(address(fuss.dai())).approve(address(fuss));
+        Vat(address(fuss.vat())).hope(address(fuss));
         DSToken(address(fuss.gem())).approve(address(fuss));
     }
     function tend(uint id, uint lot, uint bid) public {
@@ -39,18 +39,11 @@ contract Guy {
 
 contract Gal {}
 
-contract VatLike is DSToken('') {
-    uint constant ONE = 10 ** 27;
-    function move(address src, address dst, uint rad) public {
-        super.move(src, dst, rad);
-    }
-}
-
 contract FlapTest is DSTest {
     Hevm hevm;
 
     Flapper fuss;
-    VatLike dai;
+    Vat     vat;
     DSToken gem;
 
     address ali;
@@ -61,33 +54,34 @@ contract FlapTest is DSTest {
         hevm = Hevm(0x7109709ECfa91a80626fF3989D68f67F5b1DD12D);
         hevm.warp(1 hours);
 
-        dai = new VatLike();
+        vat = new Vat();
         gem = new DSToken('');
 
-        fuss = new Flapper(address(dai), address(gem));
+        fuss = new Flapper(address(vat), address(gem));
 
         ali = address(new Guy(fuss));
         bob = address(new Guy(fuss));
         gal = address(new Gal());
 
-        dai.approve(address(fuss));
+        vat.hope(address(fuss));
         gem.approve(address(fuss));
 
-        dai.mint(1000 ether);
+        vat.suck(address(this), address(this), 1000 ether);
+
         gem.mint(1000 ether);
 
         gem.push(ali, 200 ether);
         gem.push(bob, 200 ether);
     }
     function test_kick() public {
-        assertEq(dai.balanceOf(address(this)), 1000 ether);
-        assertEq(dai.balanceOf(address(fuss)),    0 ether);
+        assertEq(vat.dai(address(this)), 1000 ether);
+        assertEq(vat.dai(address(fuss)),    0 ether);
         fuss.kick({ lot: 100 ether
                   , gal: gal
                   , bid: 0
                   });
-        assertEq(dai.balanceOf(address(this)),  900 ether);
-        assertEq(dai.balanceOf(address(fuss)),  100 ether);
+        assertEq(vat.dai(address(this)),  900 ether);
+        assertEq(vat.dai(address(fuss)),  100 ether);
     }
     function test_tend() public {
         uint id = fuss.kick({ lot: 100 ether
@@ -95,7 +89,7 @@ contract FlapTest is DSTest {
                             , bid: 0
                             });
         // lot taken from creator
-        assertEq(dai.balanceOf(address(this)), 900 ether);
+        assertEq(vat.dai(address(this)), 900 ether);
 
         Guy(ali).tend(id, 100 ether, 1 ether);
         // bid taken from bidder
@@ -114,8 +108,8 @@ contract FlapTest is DSTest {
         hevm.warp(5 weeks);
         Guy(bob).deal(id);
         // bob gets the winnings
-        assertEq(dai.balanceOf(address(fuss)),  0 ether);
-        assertEq(dai.balanceOf(bob), 100 ether);
+        assertEq(vat.dai(address(fuss)),  0 ether);
+        assertEq(vat.dai(bob), 100 ether);
     }
     function test_beg() public {
         uint id = fuss.kick({ lot: 100 ether
