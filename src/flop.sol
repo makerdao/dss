@@ -19,7 +19,7 @@ pragma solidity >=0.5.0;
 
 import "./lib.sol";
 
-contract DaiLike {
+contract VatLike {
     function move(address,address,uint) public;
 }
 contract GemLike {
@@ -56,7 +56,7 @@ contract Flopper is DSNote {
 
     mapping (uint => Bid) public bids;
 
-    DaiLike  public   dai;
+    VatLike  public   vat;
     GemLike  public   gem;
 
     uint256  constant ONE = 1.00E27;
@@ -75,9 +75,9 @@ contract Flopper is DSNote {
     );
 
     // --- Init ---
-    constructor(address dai_, address gem_) public {
+    constructor(address vat_, address gem_) public {
         wards[msg.sender] = 1;
-        dai = DaiLike(dai_);
+        vat = VatLike(vat_);
         gem = GemLike(gem_);
         live = 1;
     }
@@ -121,7 +121,7 @@ contract Flopper is DSNote {
         require(lot <  bids[id].lot);
         require(uint(mul(beg, lot)) / ONE <= bids[id].lot);  // div as lot can be huge
 
-        dai.move(msg.sender, bids[id].guy, bid);
+        vat.move(msg.sender, bids[id].guy, bid);
 
         bids[id].guy = msg.sender;
         bids[id].lot = lot;
@@ -141,7 +141,7 @@ contract Flopper is DSNote {
     function yank(uint id) public note {
         require(live == 0);
         require(bids[id].guy != address(0));
-        dai.move(address(this), bids[id].guy, bids[id].bid);
+        vat.move(address(this), bids[id].guy, bids[id].bid);
         delete bids[id];
     }
 }
