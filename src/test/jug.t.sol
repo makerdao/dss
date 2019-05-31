@@ -130,6 +130,19 @@ contract JugTest is DSTest {
         drip.drip("i");
         assertEq(wad(vat.dai(ali)), 15.7625 ether);
     }
+    function test_drip_negative_3d() public {
+        drip.init("i");
+        drip.file("vow", ali);
+
+        drip.file("i", "duty", 999999706969857929985428567);  // -2.5% / day
+        hevm.warp(3 days);
+        assertEq(wad(vat.dai(address(this))), 100 ether);
+        vat.move(address(this), ali, rad(100 ether));
+        assertEq(wad(vat.dai(ali)), 100 ether);
+        drip.drip("i");
+        assertEq(wad(vat.dai(ali)), 92.6859375 ether);
+    }
+
     function test_drip_multi() public {
         drip.init("i");
         drip.file("vow", ali);
