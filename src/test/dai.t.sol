@@ -103,8 +103,11 @@ contract DaiTest is DSTest {
     address cal = 0x29C76e6aD8f28BB1004902578Fb108c507Be341b;
     address del = 0xdd2d5D3f7f1b35b7A0601D6A00DbB7D44Af58479;
     uint8 v = 28;
-    bytes32 r = 0x3a8e040d1cc1e40d4f72fb2056ec88c0cc5271d052bd117486b0837cb3561096;
-    bytes32 s = 0x608a6f1e750dd468ebdef8fd0149e2b5aabf3779365a50ca3924e2e1163dfd1d;
+    bytes32 r = 0x46323dda87c592902a10f931e64a8160ae899d141f46b07a73e676b0e5daa1c4;
+    bytes32 s = 0x6339a2fc9fdf1c0737fb35eb0928f0558170e3900da9b483ed1904bd9fdb2f87;
+    bytes32 _r = 0xee602350fe5a2593bd8e4d0791bbd4e7f316e30aa9391c2519fc39b5e1cb619d;
+    bytes32 _s = 0x1d31aca1f34c37c7a1b8abd7264f3b246e0da38d38427f5d18f2d1b54b0af02d;
+    uint8 _v = 27;
 
 
     function setUp() public {
@@ -119,7 +122,7 @@ contract DaiTest is DSTest {
     }
 
     function createToken() internal returns (Dai) {
-        return new Dai("$","TST", "1", 1);
+        return new Dai(99);
     }
 
     function testSetupPrecondition() public {
@@ -277,6 +280,14 @@ contract DaiTest is DSTest {
         assertEq(address(token), address(0xDB356e865AAaFa1e37764121EA9e801Af13eEb83));
     }
 
+    function testTypehash() public {
+      assertEq(token.PERMIT_TYPEHASH(), 0xea2aa0a1be11a07ed86d755c93467f4f82362b452371d1ba94d1715123511acb);
+    }
+
+    function testDomain_Separator() public {
+      assertEq(token.DOMAIN_SEPARATOR(), 0x92a148ae95a9faf19ab88b195b0da85dd00a6764ac8a66d5e64fb3add1579cac);
+    }
+
     function testPermit() public {
         assertEq(token.nonces(cal),0);
         assertEq(token.allowance(cal, del),0);
@@ -287,9 +298,6 @@ contract DaiTest is DSTest {
 
     function testPermitWithExpiry() public {
       assertEq(now, 0);
-      bytes32 _r = 0xb23715c2adca23ea6502e78015fb5d5b5ee693ef84be13ace7b09bced876bbad;
-      bytes32 _s = 0x1c65ff8aefb3e52a25c0d7a7abe4923a398d9f1754a731b7591e4ed86ee226f2;
-      uint8 _v = 27;
       token.permit(cal, del, 0, 1, true, _v, _r, _s);
       assertEq(token.allowance(cal, del),uint(-1));
       assertEq(token.nonces(cal),1);
@@ -298,10 +306,7 @@ contract DaiTest is DSTest {
     function testFailPermitWithExpiry() public {
       hevm.warp(2);
       assertEq(now, 2);
-      bytes32 r_ = 0xb23715c2adca23ea6502e78015fb5d5b5ee693ef84be13ace7b09bced876bbad;
-      bytes32 s_ = 0x1c65ff8aefb3e52a25c0d7a7abe4923a398d9f1754a731b7591e4ed86ee226f2;
-      uint8 v_ = 27;
-      token.permit(cal, del, 0, 1, true, v_, r_, s_);
+      token.permit(cal, del, 0, 1, true, _v, _r, _s);
     }
 
     function testFailReplay() public {
