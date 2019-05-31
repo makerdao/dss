@@ -23,10 +23,10 @@ contract Dai {
     modifier auth { require(wards[msg.sender] == 1); _; }
 
     // --- ERC20 Data ---
-    uint8   public decimals = 18;
-    string  public name;
-    string  public symbol;
-    string  public version;
+    string  public constant name     = "Dai Stablecoin";
+    string  public constant symbol   = "DAI";
+    string  public constant version  = "1";
+    uint8   public constant decimals = 18;
     uint256 public totalSupply;
 
     mapping (address => uint)                      public balanceOf;
@@ -50,15 +50,12 @@ contract Dai {
         "Permit(address holder,address spender,uint256 nonce,uint256 expiry,bool allowed)"
     );
 
-    constructor(string memory symbol_, string memory name_, string memory version_, uint256 chainId_) public {
+    constructor(uint256 chainId_) public {
         wards[msg.sender] = 1;
-        symbol = symbol_;
-        name = name_;
-        version = version_;
         DOMAIN_SEPARATOR = keccak256(abi.encode(
             keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"),
-            keccak256("Dai Semi-Automated Permit Office"),
-            keccak256(bytes(version_)),
+            keccak256(bytes(name)),
+            keccak256(bytes(version)),
             chainId_,
             address(this)
         ));
