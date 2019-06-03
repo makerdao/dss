@@ -156,15 +156,18 @@ contract Vat {
         urn.art = add(urn.art, dart);
         ilk.Art = add(ilk.Art, dart);
 
+        int dtab = mul(ilk.rate, dart);
+        uint tab = mul(urn.art, ilk.rate);
+
         gem[i][v] = sub(gem[i][v], dink);
-        dai[w]    = add(dai[w], mul(ilk.rate, dart));
-        debt      = add(debt,   mul(ilk.rate, dart));
+        dai[w]    = add(dai[w],    dtab);
+        debt      = add(debt,      dtab);
 
         bool cool = dart <= 0;
         bool firm = dink >= 0;
         bool nice = cool && firm;
         bool calm = mul(ilk.Art, ilk.rate) <= ilk.line && debt <= Line;
-        bool safe = mul(urn.art, ilk.rate) <= mul(urn.ink, ilk.spot);
+        bool safe = tab <= mul(urn.ink, ilk.spot);
 
         require((calm || cool) && (nice || safe));
 
@@ -172,7 +175,7 @@ contract Vat {
         require(wish(v, msg.sender) || !firm);
         require(wish(w, msg.sender) || !cool);
 
-        require(mul(urn.art, ilk.rate) >= ilk.dust || urn.art == 0);
+        require(tab >= ilk.dust || urn.art == 0);
         require(ilk.rate != 0);
         require(live == 1);
     }
@@ -187,16 +190,19 @@ contract Vat {
         v.ink = add(v.ink, dink);
         v.art = add(v.art, dart);
 
+        uint utab = mul(u.art, i.rate);
+        uint vtab = mul(v.art, i.rate);
+
         // both sides consent
         require(wish(src, msg.sender) && wish(dst, msg.sender));
 
         // both sides safe
-        require(mul(u.art, i.rate) <= mul(u.ink, i.spot));
-        require(mul(v.art, i.rate) <= mul(v.ink, i.spot));
+        require(utab <= mul(u.ink, i.spot));
+        require(vtab <= mul(v.ink, i.spot));
 
         // both sides non-dusty
-        require(mul(u.art, i.rate) >= i.dust || u.art == 0);
-        require(mul(v.art, i.rate) >= i.dust || v.art == 0);
+        require(utab >= i.dust || u.art == 0);
+        require(vtab >= i.dust || v.art == 0);
     }
     // --- CDP Confiscation ---
     function grab(bytes32 i, address u, address v, address w, int dink, int dart) public note auth {
@@ -207,9 +213,11 @@ contract Vat {
         urn.art = add(urn.art, dart);
         ilk.Art = add(ilk.Art, dart);
 
+        int dtab = mul(ilk.rate, dart);
+
         gem[i][v] = sub(gem[i][v], dink);
-        sin[w]    = sub(sin[w], mul(ilk.rate, dart));
-        vice      = sub(vice,   mul(ilk.rate, dart));
+        sin[w]    = sub(sin[w],    dtab);
+        vice      = sub(vice,      dtab);
     }
 
     // --- Settlement ---
