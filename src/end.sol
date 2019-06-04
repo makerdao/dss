@@ -318,7 +318,6 @@ contract End {
     function pack(uint256 wad) public {
         require(debt != 0);
         vat.move(msg.sender, address(vow), mul(wad, RAY));
-        vow.heal(mul(wad, RAY));
         bag[msg.sender] = add(bag[msg.sender], wad);
     }
     function cash(bytes32 ilk, uint wad) public {

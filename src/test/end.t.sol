@@ -275,6 +275,7 @@ contract EndTest is DSTest {
         // dai redemption
         ali.hope(address(end));
         ali.pack(15 ether);
+        vow.heal(rad(15 ether));
 
         // global checks:
         assertEq(vat.debt(), 0);
@@ -347,6 +348,7 @@ contract EndTest is DSTest {
         // first dai redemption
         ali.hope(address(end));
         ali.pack(15 ether);
+        vow.heal(rad(15 ether));
 
         // global checks:
         assertEq(vat.debt(), rad(3 ether));
@@ -363,6 +365,7 @@ contract EndTest is DSTest {
         // second dai redemption
         bob.hope(address(end));
         bob.pack(3 ether);
+        vow.heal(rad(3 ether));
 
         // global checks:
         assertEq(vat.debt(), 0);
@@ -439,6 +442,7 @@ contract EndTest is DSTest {
         // dai redemption
         ali.hope(address(end));
         ali.pack(15 ether);
+        vow.heal(rad(15 ether));
 
         // global checks:
         assertEq(vat.debt(), 0);
@@ -503,6 +507,7 @@ contract EndTest is DSTest {
         // dai redemption
         ali.hope(address(end));
         ali.pack(16 ether);
+        vow.heal(rad(16 ether));
 
         // global checks:
         assertEq(vat.debt(), 0);
@@ -580,6 +585,7 @@ contract EndTest is DSTest {
         // first dai redemption
         ali.hope(address(end));
         ali.pack(14 ether);
+        vow.heal(rad(14 ether));
 
         // global checks:
         assertEq(vat.debt(), rad(3 ether));
@@ -596,6 +602,7 @@ contract EndTest is DSTest {
         // second dai redemption
         bob.hope(address(end));
         bob.pack(3 ether);
+        vow.heal(rad(3 ether));
 
         // global checks:
         assertEq(vat.debt(), 0);
