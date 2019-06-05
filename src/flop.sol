@@ -51,7 +51,6 @@ contract Flopper is DSNote {
         address guy;  // high bidder
         uint48  tic;  // expiry time
         uint48  end;
-        address vow;
     }
 
     mapping (uint => Bid) public bids;
@@ -103,7 +102,6 @@ contract Flopper is DSNote {
         require(kicks < uint(-1));
         id = ++kicks;
 
-        bids[id].vow = msg.sender;
         bids[id].bid = bid;
         bids[id].lot = lot;
         bids[id].guy = gal;
@@ -119,7 +117,7 @@ contract Flopper is DSNote {
 
         require(bid == bids[id].bid);
         require(lot <  bids[id].lot);
-        require(uint(mul(beg, lot)) / ONE <= bids[id].lot);  // div as lot can be huge
+        require(mul(beg, lot) / ONE <= bids[id].lot);  // div as lot can be huge
 
         vat.move(msg.sender, bids[id].guy, bid);
 
