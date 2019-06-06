@@ -87,7 +87,7 @@ contract FlipTest is DSTest {
     address ali;
     address bob;
     address gal;
-    address urn = address(0xacab);
+    address usr = address(0xacab);
 
     function setUp() public {
         hevm = Hevm(0x7109709ECfa91a80626fF3989D68f67F5b1DD12D);
@@ -115,7 +115,7 @@ contract FlipTest is DSTest {
     function test_kick() public {
         flip.kick({ lot: 100 ether
                   , tab: 50 ether
-                  , urn: urn
+                  , usr: usr
                   , gal: gal
                   , bid: 0
                   });
@@ -127,7 +127,7 @@ contract FlipTest is DSTest {
     function test_tend() public {
         uint id = flip.kick({ lot: 100 ether
                             , tab: 50 ether
-                            , urn: urn
+                            , usr: usr
                             , gal: gal
                             , bid: 0
                             });
@@ -154,7 +154,7 @@ contract FlipTest is DSTest {
     function test_tend_later() public {
         uint id = flip.kick({ lot: 100 ether
                             , tab: 50 ether
-                            , urn: urn
+                            , usr: usr
                             , gal: gal
                             , bid: 0
                             });
@@ -169,7 +169,7 @@ contract FlipTest is DSTest {
     function test_dent() public {
         uint id = flip.kick({ lot: 100 ether
                             , tab: 50 ether
-                            , urn: urn
+                            , usr: usr
                             , gal: gal
                             , bid: 0
                             });
@@ -185,7 +185,7 @@ contract FlipTest is DSTest {
     function test_beg() public {
         uint id = flip.kick({ lot: 100 ether
                             , tab: 50 ether
-                            , urn: urn
+                            , usr: usr
                             , gal: gal
                             , bid: 0
                             });
@@ -206,7 +206,7 @@ contract FlipTest is DSTest {
     function test_deal() public {
         uint id = flip.kick({ lot: 100 ether
                             , tab: 50 ether
-                            , urn: urn
+                            , usr: usr
                             , gal: gal
                             , bid: 0
                             });
@@ -219,7 +219,7 @@ contract FlipTest is DSTest {
 
         uint ie = flip.kick({ lot: 100 ether
                             , tab: 50 ether
-                            , urn: urn
+                            , usr: usr
                             , gal: gal
                             , bid: 0
                             });
@@ -235,7 +235,7 @@ contract FlipTest is DSTest {
         // start an auction
         uint id = flip.kick({ lot: 100 ether
                             , tab: 50 ether
-                            , urn: urn
+                            , usr: usr
                             , gal: gal
                             , bid: 0
                             });
@@ -254,7 +254,7 @@ contract FlipTest is DSTest {
         // be refundable to the creator. Rather, it ticks indefinitely.
         uint id = flip.kick({ lot: 100 ether
                             , tab: 50 ether
-                            , urn: urn
+                            , usr: usr
                             , gal: gal
                             , bid: 0
                             });
@@ -267,7 +267,7 @@ contract FlipTest is DSTest {
     function test_yank_tend() public {
         uint id = flip.kick({ lot: 100 ether
                             , tab: 50 ether
-                            , urn: urn
+                            , usr: usr
                             , gal: gal
                             , bid: 0
                             });
@@ -288,7 +288,7 @@ contract FlipTest is DSTest {
     function test_yank_dent() public {
         uint id = flip.kick({ lot: 100 ether
                             , tab: 50 ether
-                            , urn: urn
+                            , usr: usr
                             , gal: gal
                             , bid: 0
                             });

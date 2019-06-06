@@ -32,7 +32,7 @@ contract VatLike {
  - `tab` total dai wanted
  - `bid` dai paid
  - `gal` receives dai income
- - `urn` receives gem forgone
+ - `usr` receives gem forgone
  - `ttl` single bid lifetime
  - `beg` minimum bid increase
  - `end` max auction duration
@@ -41,8 +41,8 @@ contract VatLike {
 contract Flipper is DSNote {
     // --- Auth ---
     mapping (address => uint) public wards;
-    function rely(address guy) public note auth { wards[guy] = 1; }
-    function deny(address guy) public note auth { wards[guy] = 0; }
+    function rely(address usr) public note auth { wards[usr] = 1; }
+    function deny(address usr) public note auth { wards[usr] = 0; }
     modifier auth { require(wards[msg.sender] == 1); _; }
 
     // --- Data ---
@@ -52,7 +52,7 @@ contract Flipper is DSNote {
         address guy;  // high bidder
         uint48  tic;  // expiry time
         uint48  end;
-        address urn;
+        address usr;
         address gal;
         uint256 tab;
     }
@@ -74,7 +74,7 @@ contract Flipper is DSNote {
       uint256 lot,
       uint256 bid,
       uint256 tab,
-      address indexed urn,
+      address indexed usr,
       address indexed gal
     );
 
@@ -101,7 +101,7 @@ contract Flipper is DSNote {
     }
 
     // --- Auction ---
-    function kick(address urn, address gal, uint tab, uint lot, uint bid)
+    function kick(address usr, address gal, uint tab, uint lot, uint bid)
         public note returns (uint id)
     {
         require(kicks < uint(-1));
@@ -111,13 +111,13 @@ contract Flipper is DSNote {
         bids[id].lot = lot;
         bids[id].guy = msg.sender; // configurable??
         bids[id].end = add(uint48(now), tau);
-        bids[id].urn = urn;
+        bids[id].usr = usr;
         bids[id].gal = gal;
         bids[id].tab = tab;
 
         vat.flux(ilk, msg.sender, address(this), lot);
 
-        emit Kick(id, lot, bid, tab, urn, gal);
+        emit Kick(id, lot, bid, tab, usr, gal);
     }
     function tick(uint id) public note {
         require(bids[id].end < now);
@@ -152,7 +152,7 @@ contract Flipper is DSNote {
         require(mul(beg, lot) <= mul(bids[id].lot, ONE));
 
         vat.move(msg.sender, bids[id].guy, bid);
-        vat.flux(ilk, address(this), bids[id].urn, bids[id].lot - lot);
+        vat.flux(ilk, address(this), bids[id].usr, bids[id].lot - lot);
 
         bids[id].guy = msg.sender;
         bids[id].lot = lot;
