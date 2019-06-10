@@ -74,7 +74,7 @@ contract Vow is DSNote {
         require((z = x - y) <= x);
     }
     function min(uint x, uint y) internal pure returns (uint z) {
-        if (x > y) { z = y; } else { z = x; }
+        return x <= y ? x : y;
     }
 
     // --- Administration ---
@@ -83,19 +83,6 @@ contract Vow is DSNote {
         if (what == "bump") bump = data;
         if (what == "sump") sump = data;
         if (what == "hump") hump = data;
-    }
-
-    // Total deficit
-    function Awe() public view returns (uint) {
-        return vat.sin(address(this));
-    }
-    // Total surplus
-    function Joy() public view returns (uint) {
-        return vat.dai(address(this));
-    }
-    // Unqueued, pre-auction debt
-    function Woe() public view returns (uint) {
-        return sub(sub(Awe(), Sin), Ash);
     }
 
     // Push to debt-queue
@@ -112,26 +99,28 @@ contract Vow is DSNote {
 
     // Debt settlement
     function heal(uint rad) public note {
-        require(rad <= Joy() && rad <= Woe());
+        require(rad <= vat.dai(address(this)));
+        require(rad <= sub(sub(vat.sin(address(this)), Sin), Ash));
         vat.heal(rad);
     }
     function kiss(uint rad) public note {
-        require(rad <= Ash && rad <= Joy());
+        require(rad <= Ash);
+        require(rad <= vat.dai(address(this)));
         Ash = sub(Ash, rad);
         vat.heal(rad);
     }
 
     // Debt auction
     function flop() public returns (uint id) {
-        require(Woe() >= sump);
-        require(Joy() == 0);
+        require(sump <= sub(sub(vat.sin(address(this)), Sin), Ash));
+        require(vat.dai(address(this)) == 0);
         Ash = add(Ash, sump);
         id = flopper.kick(address(this), uint(-1), sump);
     }
     // Surplus auction
     function flap() public returns (uint id) {
-        require(Joy() >= add(add(Awe(), bump), hump));
-        require(Woe() == 0);
+        require(vat.dai(address(this)) >= add(add(vat.sin(address(this)), bump), hump));
+        require(sub(sub(vat.sin(address(this)), Sin), Ash) == 0);
         id = flapper.kick(address(0), bump, 0);
     }
 
@@ -141,6 +130,6 @@ contract Vow is DSNote {
         Ash = 0;
         flapper.cage(vat.dai(address(flapper)));
         flopper.cage();
-        vat.heal(min(Joy(), Awe()));
+        vat.heal(min(vat.dai(address(this)), vat.sin(address(this))));
     }
 }

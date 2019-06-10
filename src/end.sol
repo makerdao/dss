@@ -31,6 +31,7 @@ contract VatLike {
         uint256 ink;
         uint256 art;
     }
+    function dai(address) public view returns (uint);
     function ilks(bytes32 ilk) public returns (Ilk memory);
     function urns(bytes32 ilk, address urn) public returns (Urn memory);
     function debt() public returns (uint);
@@ -51,7 +52,6 @@ contract CatLike {
     function cage() public;
 }
 contract VowLike {
-    function Joy() public view returns (uint);
     function heal(uint256 rad) public;
     function cage() public;
 }
@@ -302,7 +302,7 @@ contract End {
     function thaw() public {
         require(live == 0);
         require(debt == 0);
-        require(vow.Joy() == 0);
+        require(vat.dai(address(vow)) == 0);
         require(now >= add(when, wait));
         debt = vat.debt();
     }

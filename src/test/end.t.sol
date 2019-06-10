@@ -423,7 +423,7 @@ contract EndTest is DSTest {
         assertEq(vat.sin(address(vow)), rad(30 ether));
 
         // balance the vow
-        vow.heal(min(vow.Joy(), vow.Woe()));
+        vow.heal(min(vat.dai(address(vow)), vat.sin(address(vow))));
         // global checks:
         assertEq(vat.debt(), rad(15 ether));
         assertEq(vat.vice(), rad(15 ether));
@@ -661,9 +661,9 @@ contract EndTest is DSTest {
         ali.hope(address(end));
         bob.hope(address(end));
 
-        assertEq(vat.debt(), rad(20 ether));
-        assertEq(vat.vice(), rad(20 ether));
-        assertEq(vow.Awe(),  rad(20 ether));
+        assertEq(vat.debt(),             rad(20 ether));
+        assertEq(vat.vice(),             rad(20 ether));
+        assertEq(vat.sin(address(vow)),  rad(20 ether));
 
         assertEq(end.Art("gold"), 15 ether);
         assertEq(end.Art("coal"),  5 ether);

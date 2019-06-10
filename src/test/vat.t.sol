@@ -34,6 +34,23 @@ contract TestVat is Vat {
     }
 }
 
+contract TestVow is Vow {
+    constructor(address vat, address flapper, address flopper)
+        public Vow(vat, flapper, flopper) {}
+    // Total deficit
+    function Awe() public view returns (uint) {
+        return vat.sin(address(this));
+    }
+    // Total surplus
+    function Joy() public view returns (uint) {
+        return vat.dai(address(this));
+    }
+    // Unqueued, pre-auction debt
+    function Woe() public view returns (uint) {
+        return sub(sub(Awe(), Sin), Ash);
+    }
+}
+
 contract Usr {
     Vat public vat;
     constructor(Vat vat_) public {
@@ -388,7 +405,7 @@ contract BiteTest is DSTest {
     Hevm hevm;
 
     TestVat vat;
-    Vow     vow;
+    TestVow vow;
     Cat     cat;
     DSToken gold;
     Jug     jug;
@@ -440,7 +457,7 @@ contract BiteTest is DSTest {
         flop = new Flopper(address(vat), address(gov));
         gov.setOwner(address(flop));
 
-        vow = new Vow(address(vat), address(flap), address(flop));
+        vow = new TestVow(address(vat), address(flap), address(flop));
         flop.rely(address(vow));
 
         jug = new Jug(address(vat));
