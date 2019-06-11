@@ -38,10 +38,10 @@ contract Dai {
 
     // --- Math ---
     function add(uint x, uint y) internal pure returns (uint z) {
-        require((z = x + y) >= x, "math-add-overflow");
+        require((z = x + y) >= x);
     }
     function sub(uint x, uint y) internal pure returns (uint z) {
-        require((z = x - y) <= x, "math-sub-underflow");
+        require((z = x - y) <= x);
     }
 
     // --- EIP712 niceties ---
@@ -68,7 +68,9 @@ contract Dai {
     function transferFrom(address src, address dst, uint wad)
         public returns (bool)
     {
+        require(balanceOf[src] >= wad, "dai/insufficient-balance");
         if (src != msg.sender && allowance[src][msg.sender] != uint(-1)) {
+            require(allowance[src][msg.sender] >= wad, "dai/insufficient-allowance");
             allowance[src][msg.sender] = sub(allowance[src][msg.sender], wad);
         }
         balanceOf[src] = sub(balanceOf[src], wad);
@@ -82,7 +84,9 @@ contract Dai {
         emit Transfer(address(0), usr, wad);
     }
     function burn(address usr, uint wad) public {
+        require(balanceOf[usr] >= wad, "dai/insufficient-balance");
         if (usr != msg.sender && allowance[usr][msg.sender] != uint(-1)) {
+            require(allowance[usr][msg.sender] >= wad, "dai/insufficient-allowance");
             allowance[usr][msg.sender] = sub(allowance[usr][msg.sender], wad);
         }
         balanceOf[usr] = sub(balanceOf[usr], wad);
