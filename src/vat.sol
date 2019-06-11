@@ -165,13 +165,12 @@ contract Vat {
 
         bool cool = dart <= 0;
         bool firm = dink >= 0;
-        bool nice = cool && firm;
         bool calm = mul(ilk.Art, ilk.rate) <= ilk.line && debt <= Line;
         bool safe = tab <= mul(urn.ink, ilk.spot);
 
-        require((calm || cool) && (nice || safe));
+        require((calm || cool) && (cool && firm || safe));
 
-        require(wish(u, msg.sender) ||  nice);
+        require(wish(u, msg.sender) || cool && firm);
         require(wish(v, msg.sender) || !firm);
         require(wish(w, msg.sender) || !cool);
 
