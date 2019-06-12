@@ -111,14 +111,14 @@ contract Vow is DSNote {
     }
 
     // Debt auction
-    function flop() public returns (uint id) {
+    function flop() public note returns (uint id) {
         require(sump <= sub(sub(vat.sin(address(this)), Sin), Ash));
         require(vat.dai(address(this)) == 0);
         Ash = add(Ash, sump);
         id = flopper.kick(address(this), uint(-1), sump);
     }
     // Surplus auction
-    function flap() public returns (uint id) {
+    function flap() public note returns (uint id) {
         require(vat.dai(address(this)) >= add(add(vat.sin(address(this)), bump), hump));
         require(sub(sub(vat.sin(address(this)), Sin), Ash) == 0);
         id = flapper.kick(address(0), bump, 0);
