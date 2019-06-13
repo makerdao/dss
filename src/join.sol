@@ -74,7 +74,7 @@ contract GemJoin is DSNote {
         require(gem.transferFrom(msg.sender, address(this), wad));
     }
     function exit(address usr, uint wad) public note {
-        require(-int(wad) <= 0);
+        require(wad <= 2 ** 255);
         vat.slip(ilk, msg.sender, -int(wad));
         require(gem.transfer(usr, wad));
     }
