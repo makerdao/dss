@@ -13,13 +13,15 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-pragma solidity >=0.4.24;
+pragma solidity >=0.5.0;
 
-contract Dai {
+import "./lib.sol";
+
+contract Dai is DSNote {
     // --- Auth ---
     mapping (address => uint) public wards;
-    function rely(address guy) public auth { wards[guy] = 1; }
-    function deny(address guy) public auth { wards[guy] = 0; }
+    function rely(address guy) public note auth { wards[guy] = 1; }
+    function deny(address guy) public note auth { wards[guy] = 0; }
     modifier auth { require(wards[msg.sender] == 1); _; }
 
     // --- ERC20 Data ---
