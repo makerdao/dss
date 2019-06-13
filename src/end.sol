@@ -19,6 +19,8 @@
 pragma solidity >=0.5.0;
 pragma experimental ABIEncoderV2;
 
+import "./lib.sol";
+
 contract VatLike {
     struct Ilk {
         uint256 Art;
@@ -175,11 +177,11 @@ contract Spotty {
         - the number of gems is limited by how big your bag is
 */
 
-contract End {
+contract End is DSNote {
     // --- Auth ---
     mapping (address => uint) public wards;
-    function rely(address guy) public auth { wards[guy] = 1; }
-    function deny(address guy) public auth { wards[guy] = 0; }
+    function rely(address guy) public note auth { wards[guy] = 1; }
+    function deny(address guy) public note auth { wards[guy] = 0; }
     modifier auth { require(wards[msg.sender] == 1); _; }
 
     // --- Data ---
@@ -231,18 +233,18 @@ contract End {
     }
 
     // --- Administration ---
-    function file(bytes32 what, address data) public auth {
+    function file(bytes32 what, address data) public note auth {
         if (what == "vat")  vat = VatLike(data);
         if (what == "cat")  cat = CatLike(data);
         if (what == "vow")  vow = VowLike(data);
         if (what == "spot") spot = Spotty(data);
     }
-    function file(bytes32 what, uint256 data) public auth {
+    function file(bytes32 what, uint256 data) public note auth {
         if (what == "wait") wait = data;
     }
 
     // --- Settlement ---
-    function cage() public auth {
+    function cage() public note auth {
         require(live == 1);
         live = 0;
         when = now;
@@ -251,7 +253,7 @@ contract End {
         vow.cage();
     }
 
-    function cage(bytes32 ilk) public {
+    function cage(bytes32 ilk) public note {
         require(live == 0);
         require(tag[ilk] == 0);
         Art[ilk] = vat.ilks(ilk).Art;
@@ -259,7 +261,7 @@ contract End {
         tag[ilk] = rdiv(WAD, uint(spot.ilks(ilk).pip.read()));
     }
 
-    function skip(bytes32 ilk, uint256 id) public {
+    function skip(bytes32 ilk, uint256 id) public note {
         require(tag[ilk] != 0);
 
         Flippy flip = Flippy(cat.ilks(ilk).flip);
@@ -278,7 +280,7 @@ contract End {
         vat.grab(ilk, bid.urn, address(this), address(vow), int(lot), int(art));
     }
 
-    function skim(bytes32 ilk, address urn) public {
+    function skim(bytes32 ilk, address urn) public note {
         require(tag[ilk] != 0);
         VatLike.Ilk memory i = vat.ilks(ilk);
         VatLike.Urn memory u = vat.urns(ilk, urn);
@@ -291,7 +293,7 @@ contract End {
         vat.grab(ilk, urn, address(this), address(vow), -int(wad), -int(u.art));
     }
 
-    function free(bytes32 ilk) public {
+    function free(bytes32 ilk) public note {
         require(live == 0);
         VatLike.Urn memory u = vat.urns(ilk, msg.sender);
         require(u.art == 0);
@@ -299,14 +301,14 @@ contract End {
         vat.grab(ilk, msg.sender, msg.sender, address(vow), -int(u.ink), 0);
     }
 
-    function thaw() public {
+    function thaw() public note {
         require(live == 0);
         require(debt == 0);
         require(vat.dai(address(vow)) == 0);
         require(now >= add(when, wait));
         debt = vat.debt();
     }
-    function flow(bytes32 ilk) public {
+    function flow(bytes32 ilk) public note {
         require(debt != 0);
         require(fix[ilk] == 0);
 
@@ -315,12 +317,12 @@ contract End {
         fix[ilk] = rdiv(mul(sub(wad, gap[ilk]), RAY), debt);
     }
 
-    function pack(uint256 wad) public {
+    function pack(uint256 wad) public note {
         require(debt != 0);
         vat.move(msg.sender, address(vow), mul(wad, RAY));
         bag[msg.sender] = add(bag[msg.sender], wad);
     }
-    function cash(bytes32 ilk, uint wad) public {
+    function cash(bytes32 ilk, uint wad) public note {
         require(fix[ilk] != 0);
         vat.flux(ilk, address(this), msg.sender, rmul(wad, fix[ilk]));
         out[ilk][msg.sender] = add(out[ilk][msg.sender], wad);
