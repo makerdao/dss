@@ -287,7 +287,7 @@ contract End {
         uint wad = min(u.ink, owe);
         gap[ilk] = add(gap[ilk], sub(owe, wad));
 
-        require(-int(wad) <= 0 && -int(u.art) <= 0);
+        require(wad <= 2**255 && u.art <= 2**255);
         vat.grab(ilk, urn, address(this), address(vow), -int(wad), -int(u.art));
     }
 
@@ -295,7 +295,7 @@ contract End {
         require(live == 0);
         VatLike.Urn memory u = vat.urns(ilk, msg.sender);
         require(u.art == 0);
-        require(-int(u.ink) < 0);
+        require(u.ink <= 2**255);
         vat.grab(ilk, msg.sender, msg.sender, address(vow), -int(u.ink), 0);
     }
 

@@ -121,7 +121,7 @@ contract Cat is DSNote {
         uint art = min(u.art, mul(lot, u.art) / u.ink);
         uint tab = mul(art, i.rate);
 
-        require(-int(lot) < 0 && -int(art) < 0);
+        require(lot <= 2**255 && art <= 2**255);
         vat.grab(ilk, urn, address(this), address(vow), -int(lot), -int(art));
 
         vow.fess(tab);
