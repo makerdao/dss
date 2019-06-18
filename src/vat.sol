@@ -149,8 +149,8 @@ contract Vat {
 
     // --- CDP Manipulation ---
     function frob(bytes32 i, address u, address v, address w, int dink, int dart) public note {
-        Urn storage urn = urns[i][u];
-        Ilk storage ilk = ilks[i];
+        Urn memory urn = urns[i][u];
+        Ilk memory ilk = ilks[i];
 
         urn.ink = add(urn.ink, dink);
         urn.art = add(urn.art, dart);
@@ -163,20 +163,27 @@ contract Vat {
         dai[w]    = add(dai[w],    dtab);
         debt      = add(debt,      dtab);
 
-        bool cool = dart <= 0;
-        bool firm = dink >= 0;
-        bool calm = mul(ilk.Art, ilk.rate) <= ilk.line && debt <= Line;
-        bool safe = tab <= mul(urn.ink, ilk.spot);
+        // either debt has decreased, or debt ceilings are not exceeded
+        require(dart <= 0 || mul(ilk.Art, ilk.rate) <= ilk.line && debt <= Line);
+        // urn is either less risky than before, or it is safe
+        require(dart <= 0 && dink >= 0 || tab <= mul(urn.ink, ilk.spot));
 
-        require((calm || cool) && (cool && firm || safe));
+        // urn is either more safe, or the owner consents
+        require(dart <= 0 && dink >= 0 || wish(u, msg.sender));
+        // collateral src consents
+        require(dink < 0 || wish(v, msg.sender));
+        // debt dst consents
+        require(dart > 0 || wish(w, msg.sender));
 
-        require(wish(u, msg.sender) || cool && firm);
-        require(wish(v, msg.sender) || !firm);
-        require(wish(w, msg.sender) || !cool);
-
-        require(tab >= ilk.dust || urn.art == 0);
+        // urn has no debt, or a non-dusty amount
+        require(urn.art == 0 || tab >= ilk.dust);
+        // ilk has been initialised
         require(ilk.rate != 0);
+        // system is live
         require(live == 1);
+
+        urns[i][u] = urn;
+        ilks[i]    = ilk;
     }
     // --- CDP Fungibility ---
     function fork(bytes32 ilk, address src, address dst, int dink, int dart) public note {
