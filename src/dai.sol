@@ -127,9 +127,9 @@ contract Dai is DSNote {
                                      expiry,
                                      allowed))
         ));
-        require(holder == ecrecover(digest, v, r, s), "invalid permit");
-        require(expiry == 0 || now <= expiry, "permit expired");
-        require(nonce == nonces[holder]++, "invalid nonce");
+        require(holder == ecrecover(digest, v, r, s), "dai/invalid-permit");
+        require(expiry == 0 || now <= expiry, "dai/permit-expired");
+        require(nonce == nonces[holder]++, "dai/invalid-nonce");
         uint wad = allowed ? uint(-1) : 0;
         allowance[holder][spender] = wad;
         emit Approval(holder, spender, wad);
