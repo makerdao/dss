@@ -171,9 +171,9 @@ contract Vat {
         // urn is either more safe, or the owner consents
         require(dart <= 0 && dink >= 0 || wish(u, msg.sender));
         // collateral src consents
-        require(dink < 0 || wish(v, msg.sender));
+        require(dink <= 0 || wish(v, msg.sender));
         // debt dst consents
-        require(dart > 0 || wish(w, msg.sender));
+        require(dart >= 0 || wish(w, msg.sender));
 
         // urn has no debt, or a non-dusty amount
         require(urn.art == 0 || tab >= ilk.dust);
