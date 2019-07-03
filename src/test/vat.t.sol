@@ -445,7 +445,7 @@ contract BiteTest is DSTest {
 
     function setUp() public {
         hevm = Hevm(0x7109709ECfa91a80626fF3989D68f67F5b1DD12D);
-        hevm.warp(0);
+        hevm.warp(604411200);
 
         gov = new DSToken('GOV');
         gov.mint(100 ether);
@@ -571,7 +571,7 @@ contract BiteTest is DSTest {
         assertEq(gem("gold", address(this)),   962 ether);
         assertEq(vow.sin(now),     rad(100 ether));
 
-        hevm.warp(4 hours);
+        hevm.warp(now + 4 hours);
         flip.deal(auction);
         assertEq(vat.balanceOf(address(vow)),  100 ether);
     }
@@ -604,7 +604,7 @@ contract BiteTest is DSTest {
         assertEq(vow.Ash(),  rad(10 ether));
 
         assertEq(gov.balanceOf(address(this)),  100 ether);
-        hevm.warp(4 hours);
+        hevm.warp(now + 4 hours);
         flop.deal(f1);
         assertEq(gov.balanceOf(address(this)), 1100 ether);
     }
@@ -622,7 +622,7 @@ contract BiteTest is DSTest {
         assertEq(vat.balanceOf(address(this)),   0 ether);
         assertEq(gov.balanceOf(address(this)), 100 ether);
         flap.tend(id, rad(100 ether), 10 ether);
-        hevm.warp(4 hours);
+        hevm.warp(now + 4 hours);
         flap.deal(id);
         assertEq(vat.balanceOf(address(this)),   100 ether);
         assertEq(gov.balanceOf(address(this)),    90 ether);

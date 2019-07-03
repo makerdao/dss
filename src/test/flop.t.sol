@@ -67,7 +67,7 @@ contract FlopTest is DSTest {
 
     function setUp() public {
         hevm = Hevm(0x7109709ECfa91a80626fF3989D68f67F5b1DD12D);
-        hevm.warp(1 hours);
+        hevm.warp(604411200);
 
         vat = new Vat();
         gem = new DSToken('');
@@ -117,7 +117,7 @@ contract FlopTest is DSTest {
         // gal receives no more
         assertEq(vat.dai(gal), 10 ether);
 
-        hevm.warp(5 weeks);
+        hevm.warp(now + 5 weeks);
         assertEq(gem.totalSupply(),  0 ether);
         gem.setOwner(address(fuss));
         Guy(bob).deal(id);

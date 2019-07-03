@@ -52,7 +52,7 @@ contract FlapTest is DSTest {
 
     function setUp() public {
         hevm = Hevm(0x7109709ECfa91a80626fF3989D68f67F5b1DD12D);
-        hevm.warp(1 hours);
+        hevm.warp(604411200);
 
         vat = new Vat();
         gem = new DSToken('');
@@ -105,7 +105,7 @@ contract FlapTest is DSTest {
         // gal receives excess
         assertEq(gem.balanceOf(gal),   2 ether);
 
-        hevm.warp(5 weeks);
+        hevm.warp(now + 5 weeks);
         Guy(bob).deal(id);
         // bob gets the winnings
         assertEq(vat.dai(address(fuss)),  0 ether);

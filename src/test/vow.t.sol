@@ -29,7 +29,7 @@ contract VowTest is DSTest {
 
     function setUp() public {
         hevm = Hevm(0x7109709ECfa91a80626fF3989D68f67F5b1DD12D);
-        hevm.warp(0);
+        hevm.warp(604411200);
 
         vat = new Vat();
 
@@ -111,7 +111,7 @@ contract VowTest is DSTest {
         uint tic = now;
         vow.fess(100 ether);
         assertTrue(!try_flog(tic) );
-        hevm.warp(tic + 100 seconds);
+        hevm.warp(now + tic + 100 seconds);
         assertTrue( try_flog(tic) );
     }
 
