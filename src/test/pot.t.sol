@@ -27,7 +27,7 @@ contract DSRTest is DSTest {
 
     function setUp() public {
         hevm = Hevm(0x7109709ECfa91a80626fF3989D68f67F5b1DD12D);
-        hevm.warp(0);
+        hevm.warp(604411200);
 
         vat = new Vat();
         pot = new Pot(address(vat));
@@ -54,7 +54,7 @@ contract DSRTest is DSTest {
     function test_save_1d() public {
         pot.join(100 ether);
         pot.file("dsr", uint(1000000564701133626865910626));  // 5% / day
-        hevm.warp(1 days);
+        hevm.warp(now + 1 days);
         pot.drip();
         assertEq(pot.pie(self), 100 ether);
         pot.exit(100 ether);
@@ -63,11 +63,11 @@ contract DSRTest is DSTest {
     function test_drip_multi() public {
         pot.join(100 ether);
         pot.file("dsr", uint(1000000564701133626865910626));  // 5% / day
-        hevm.warp(1 days);
+        hevm.warp(now + 1 days);
         pot.drip();
         assertEq(wad(vat.dai(potb)),   105 ether);
         pot.file("dsr", uint(1000001103127689513476993127));  // 10% / day
-        hevm.warp(2 days);
+        hevm.warp(now + 1 days);
         pot.drip();
         assertEq(wad(vat.sin(vow)), 15.5 ether);
         assertEq(wad(vat.dai(potb)), 115.5 ether);
@@ -77,14 +77,14 @@ contract DSRTest is DSTest {
     function test_save_multi() public {
         pot.join(100 ether);
         pot.file("dsr", uint(1000000564701133626865910626));  // 5% / day
-        hevm.warp(1 days);
+        hevm.warp(now + 1 days);
         pot.drip();
         pot.exit(50 ether);
         assertEq(wad(vat.dai(self)), 52.5 ether);
         assertEq(pot.Pie(),          50.0 ether);
 
         pot.file("dsr", uint(1000001103127689513476993127));  // 10% / day
-        hevm.warp(2 days);
+        hevm.warp(now + 1 days);
         pot.drip();
         pot.exit(50 ether);
         assertEq(wad(vat.dai(self)), 110.25 ether);

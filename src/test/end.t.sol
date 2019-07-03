@@ -181,7 +181,7 @@ contract EndTest is DSTest {
 
     function setUp() public {
         hevm = Hevm(0x7109709ECfa91a80626fF3989D68f67F5b1DD12D);
-        hevm.warp(0);
+        hevm.warp(604411200);
 
         vat = new Vat();
         DSToken gov = new DSToken('GOV');
@@ -267,7 +267,7 @@ contract EndTest is DSTest {
         assertEq(gem("gold", urn1), 7 ether);
         ali.exit(gold.gemA, address(this), 7 ether);
 
-        hevm.warp(1 hours);
+        hevm.warp(now + 1 hours);
         end.thaw();
         end.flow("gold");
         assertTrue(end.fix("gold") != 0);
@@ -340,7 +340,7 @@ contract EndTest is DSTest {
         assertEq(gem("gold", urn1), 2.5 ether);
         ali.exit(gold.gemA, address(this), 2.5 ether);
 
-        hevm.warp(1 hours);
+        hevm.warp(now + 1 hours);
         end.thaw();
         end.flow("gold");
         assertTrue(end.fix("gold") != 0);
@@ -434,7 +434,7 @@ contract EndTest is DSTest {
         assertEq(gem("gold", urn1), 7 ether);
         ali.exit(gold.gemA, address(this), 7 ether);
 
-        hevm.warp(1 hours);
+        hevm.warp(now + 1 hours);
         end.thaw();
         end.flow("gold");
         assertTrue(end.fix("gold") != 0);
@@ -499,7 +499,7 @@ contract EndTest is DSTest {
         assertEq(gem("gold", urn1), 7 ether);
         ali.exit(gold.gemA, address(this), 7 ether);
 
-        hevm.warp(1 hours);
+        hevm.warp(now + 1 hours);
         end.thaw();
         end.flow("gold");
         assertTrue(end.fix("gold") != 0);
@@ -575,7 +575,7 @@ contract EndTest is DSTest {
         assertEq(gem("gold", urn1), 2.5 ether);
         ali.exit(gold.gemA, address(this), 2.5 ether);
 
-        hevm.warp(1 hours);
+        hevm.warp(now + 1 hours);
         // balance the vow
         vow.heal(rad(1 ether));
         end.thaw();
@@ -653,7 +653,7 @@ contract EndTest is DSTest {
         end.skim("gold", urn1);  // over-collateralised
         end.skim("coal", urn2);  // under-collateralised
 
-        hevm.warp(1 hours);
+        hevm.warp(now + 1 hours);
         end.thaw();
         end.flow("gold");
         end.flow("coal");
