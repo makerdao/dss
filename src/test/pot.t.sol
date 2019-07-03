@@ -48,6 +48,8 @@ contract DSRTest is DSTest {
         assertEq(wad(vat.dai(self)),   0 ether);
         assertEq(pot.pie(self),      100 ether);
 
+        pot.drip();
+
         pot.exit(100 ether);
         assertEq(wad(vat.dai(self)), 100 ether);
     }
