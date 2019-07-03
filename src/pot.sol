@@ -67,6 +67,7 @@ contract Pot is DSNote {
         vat = VatLike(vat_);
         dsr = ONE;
         chi = ONE;
+        rho = now;
     }
 
     // --- Math ---
