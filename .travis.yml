@@ -5,4 +5,4 @@ script: |
   git clone --recursive https://github.com/dapphub/dapptools $HOME/.dapp/dapptools
   nix-env -f $HOME/.dapp/dapptools -iA dapp solc
 
-  dapp --use solc:0.5.0 test
+  dapp --use solc:0.5.9 test
