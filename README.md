@@ -5,12 +5,6 @@ Collateral Dai. This is a high level description of the system, assuming
 familiarity with the basic economic mechanics as described in the
 whitepaper.
 
-
-### TODO
-
-- Global settlement needs realising from current prototype
-- Reward Dai. Similarly, prototype exists.
-
 ## Additional Documentation
 
 `dss` is also documented in the [wiki](https://github.com/makerdao/dss/wiki) and in [DEVELOPING.md](https://github.com/makerdao/dss/blob/master/DEVELOPING.md)
@@ -106,7 +100,7 @@ An important difference between SCD and MCD is the switch from fixed
 price sell offs to auctions as the means of liquidating collateral.
 
 The auctions implemented here are simple and expect liquidations to
-occur in *fixed size lots* (say $10,000).
+occur in *fixed size lots* (say 10,000 ETH).
 
 
 ## Settlement
@@ -135,5 +129,3 @@ functions and configure it.
 
 It is expected that modification of this state will be via an interface
 that is used by the Governance layer.
-
-
