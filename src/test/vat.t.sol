@@ -455,7 +455,6 @@ contract BiteTest is DSTest {
 
         flap = new Flapper(address(vat), address(gov));
         flop = new Flopper(address(vat), address(gov));
-        gov.setOwner(address(flop));
 
         vow = new TestVow(address(vat), address(flap), address(flop));
         flop.rely(address(vow));
@@ -605,6 +604,7 @@ contract BiteTest is DSTest {
 
         assertEq(gov.balanceOf(address(this)),  100 ether);
         hevm.warp(now + 4 hours);
+        gov.setOwner(address(flop));
         flop.deal(f1);
         assertEq(gov.balanceOf(address(this)), 1100 ether);
     }
@@ -623,6 +623,7 @@ contract BiteTest is DSTest {
         assertEq(gov.balanceOf(address(this)), 100 ether);
         flap.tend(id, rad(100 ether), 10 ether);
         hevm.warp(now + 4 hours);
+        gov.setOwner(address(flap));
         flap.deal(id);
         assertEq(vat.balanceOf(address(this)),   100 ether);
         assertEq(gov.balanceOf(address(this)),    90 ether);

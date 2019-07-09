@@ -24,6 +24,7 @@ contract VatLike {
 }
 contract GemLike {
     function move(address,address,uint) public;
+    function burn(address,uint) public;
 }
 
 /*
@@ -31,7 +32,6 @@ contract GemLike {
 
  - `lot` dai for sale
  - `bid` gems paid
- - `gal` receives gem income
  - `ttl` single bid lifetime
  - `beg` minimum bid increase
  - `end` max auction duration
@@ -51,7 +51,6 @@ contract Flapper is DSNote {
         address guy;  // high bidder
         uint48  tic;  // expiry time
         uint48  end;
-        address gal;
     }
 
     mapping (uint => Bid) public bids;
@@ -70,8 +69,7 @@ contract Flapper is DSNote {
     event Kick(
       uint256 id,
       uint256 lot,
-      uint256 bid,
-      address indexed gal
+      uint256 bid
     );
 
     // --- Init ---
@@ -98,9 +96,7 @@ contract Flapper is DSNote {
     }
 
     // --- Auction ---
-    function kick(address gal, uint lot, uint bid)
-        public returns (uint id)
-    {
+    function kick(uint lot, uint bid) public returns (uint id) {
         require(live == 1);
         require(kicks < uint(-1));
         id = ++kicks;
@@ -109,11 +105,10 @@ contract Flapper is DSNote {
         bids[id].lot = lot;
         bids[id].guy = msg.sender; // configurable??
         bids[id].end = add(uint48(now), tau);
-        bids[id].gal = gal;
 
         vat.move(msg.sender, address(this), lot);
 
-        emit Kick(id, lot, bid, gal);
+        emit Kick(id, lot, bid);
     }
     function tend(uint id, uint lot, uint bid) public note {
         require(live == 1);
@@ -126,7 +121,7 @@ contract Flapper is DSNote {
         require(mul(bid, ONE) >= mul(beg, bids[id].bid));
 
         gem.move(msg.sender, bids[id].guy, bids[id].bid);
-        gem.move(msg.sender, bids[id].gal, bid - bids[id].bid);
+        gem.move(msg.sender, address(this), bid - bids[id].bid);
 
         bids[id].guy = msg.sender;
         bids[id].bid = bid;
@@ -137,6 +132,7 @@ contract Flapper is DSNote {
         require(bids[id].tic < now && bids[id].tic != 0 ||
                 bids[id].end < now);
         vat.move(address(this), bids[id].guy, bids[id].lot);
+        gem.burn(address(this), bids[id].bid);
         delete bids[id];
     }
 

@@ -37,18 +37,16 @@ contract Guy {
     }
 }
 
-contract Gal {}
-
 contract FlapTest is DSTest {
     Hevm hevm;
 
     Flapper fuss;
+    address flap;
     Vat     vat;
     DSToken gem;
 
     address ali;
     address bob;
-    address gal;
 
     function setUp() public {
         hevm = Hevm(0x7109709ECfa91a80626fF3989D68f67F5b1DD12D);
@@ -58,10 +56,10 @@ contract FlapTest is DSTest {
         gem = new DSToken('');
 
         fuss = new Flapper(address(vat), address(gem));
+        flap = address(fuss);
 
         ali = address(new Guy(fuss));
         bob = address(new Guy(fuss));
-        gal = address(new Gal());
 
         vat.hope(address(fuss));
         gem.approve(address(fuss));
@@ -69,6 +67,7 @@ contract FlapTest is DSTest {
         vat.suck(address(this), address(this), 1000 ether);
 
         gem.mint(1000 ether);
+        gem.setOwner(flap);
 
         gem.push(ali, 200 ether);
         gem.push(bob, 200 ether);
@@ -77,7 +76,6 @@ contract FlapTest is DSTest {
         assertEq(vat.dai(address(this)), 1000 ether);
         assertEq(vat.dai(address(fuss)),    0 ether);
         fuss.kick({ lot: 100 ether
-                  , gal: gal
                   , bid: 0
                   });
         assertEq(vat.dai(address(this)),  900 ether);
@@ -85,7 +83,6 @@ contract FlapTest is DSTest {
     }
     function test_tend() public {
         uint id = fuss.kick({ lot: 100 ether
-                            , gal: gal
                             , bid: 0
                             });
         // lot taken from creator
@@ -94,26 +91,27 @@ contract FlapTest is DSTest {
         Guy(ali).tend(id, 100 ether, 1 ether);
         // bid taken from bidder
         assertEq(gem.balanceOf(ali), 199 ether);
-        // gal receives payment
-        assertEq(gem.balanceOf(gal),   1 ether);
+        // payment remains in auction
+        assertEq(gem.balanceOf(flap),  1 ether);
 
         Guy(bob).tend(id, 100 ether, 2 ether);
         // bid taken from bidder
         assertEq(gem.balanceOf(bob), 198 ether);
         // prev bidder refunded
         assertEq(gem.balanceOf(ali), 200 ether);
-        // gal receives excess
-        assertEq(gem.balanceOf(gal),   2 ether);
+        // excess remains in auction
+        assertEq(gem.balanceOf(flap),   2 ether);
 
         hevm.warp(now + 5 weeks);
         Guy(bob).deal(id);
-        // bob gets the winnings
+        // high bidder gets the lot
         assertEq(vat.dai(address(fuss)),  0 ether);
         assertEq(vat.dai(bob), 100 ether);
+        // income is burned
+        assertEq(gem.balanceOf(flap),   0 ether);
     }
     function test_beg() public {
         uint id = fuss.kick({ lot: 100 ether
-                            , gal: gal
                             , bid: 0
                             });
         assertTrue( Guy(ali).try_tend(id, 100 ether, 1.00 ether));

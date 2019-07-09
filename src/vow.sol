@@ -19,10 +19,15 @@ pragma solidity >=0.5.0;
 
 import "./lib.sol";
 
-contract Auction {
+contract Flopper {
     function kick(address gal, uint lot, uint bid) public returns (uint);
-    function cage(uint) public;
     function cage() public;
+    function live() public returns (uint);
+}
+
+contract Flapper {
+    function kick(uint lot, uint bid) public returns (uint);
+    function cage(uint) public;
     function live() public returns (uint);
 }
 
@@ -42,8 +47,8 @@ contract Vow is DSNote {
 
     // --- Data ---
     VatLike public vat;
-    Auction public flapper;
-    Auction public flopper;
+    Flapper public flapper;
+    Flopper public flopper;
 
     mapping (uint256 => uint256) public sin; // debt queue
     uint256 public Sin;   // queued debt          [rad]
@@ -60,8 +65,8 @@ contract Vow is DSNote {
     constructor(address vat_, address flapper_, address flopper_) public {
         wards[msg.sender] = 1;
         vat     = VatLike(vat_);
-        flapper = Auction(flapper_);
-        flopper = Auction(flopper_);
+        flapper = Flapper(flapper_);
+        flopper = Flopper(flopper_);
         vat.hope(flapper_);
         live = 1;
     }
@@ -121,7 +126,7 @@ contract Vow is DSNote {
     function flap() public note returns (uint id) {
         require(vat.dai(address(this)) >= add(add(vat.sin(address(this)), bump), hump));
         require(sub(sub(vat.sin(address(this)), Sin), Ash) == 0);
-        id = flapper.kick(address(0), bump, 0);
+        id = flapper.kick(bump, 0);
     }
 
     function cage() public note auth {
