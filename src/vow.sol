@@ -44,6 +44,7 @@ contract Vow is DSNote {
     VatLike public vat;
     Auction public flapper;
     Auction public flopper;
+    address public pit;
 
     mapping (uint256 => uint256) public sin; // debt queue
     uint256 public Sin;   // queued debt          [rad]
@@ -85,6 +86,10 @@ contract Vow is DSNote {
         if (what == "hump") hump = data;
     }
 
+    function file(bytes32 what, address data) public note auth {
+        if (what == "pit") pit = data;
+    }
+
     // Push to debt-queue
     function fess(uint tab) public note auth {
         sin[now] = add(sin[now], tab);
@@ -121,7 +126,7 @@ contract Vow is DSNote {
     function flap() public note returns (uint id) {
         require(vat.dai(address(this)) >= add(add(vat.sin(address(this)), bump), hump));
         require(sub(sub(vat.sin(address(this)), Sin), Ash) == 0);
-        id = flapper.kick(address(0), bump, 0);
+        id = flapper.kick(pit, bump, 0);
     }
 
     function cage() public note auth {
