@@ -52,7 +52,7 @@ contract Vat {
 
     uint256 public debt;  // Total Dai Issued    [rad]
     uint256 public vice;  // Total Unbacked Dai  [rad]
-    uint256 public Line;  // Total Debt Ceiling  [wad]
+    uint256 public Line;  // Total Debt Ceiling  [rad]
     uint256 public live;  // Access Flag
 
     // --- Logs ---
