@@ -64,7 +64,7 @@ contract Flippy {
         address guy;
         uint48  tic;
         uint48  end;
-        address urn;
+        address usr;
         address gal;
         uint256 tab;
     }
@@ -277,7 +277,7 @@ contract End is DSNote {
         uint art = bid.tab / i.rate;
         Art[ilk] = add(Art[ilk], art);
         require(int(lot) >= 0 && int(art) >= 0);
-        vat.grab(ilk, bid.urn, address(this), address(vow), int(lot), int(art));
+        vat.grab(ilk, bid.usr, address(this), address(vow), int(lot), int(art));
     }
 
     function skim(bytes32 ilk, address urn) public note {
