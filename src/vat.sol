@@ -170,6 +170,7 @@ contract Vat {
 
         int dtab = mul(ilk.rate, dart);
         uint tab = mul(urn.art, ilk.rate);
+        debt     = add(debt, dtab);
 
         // either debt has decreased, or debt ceilings are not exceeded
         require(either(dart <= 0, both(mul(ilk.Art, ilk.rate) <= ilk.line, debt <= Line)));
@@ -188,7 +189,6 @@ contract Vat {
 
         gem[i][v] = sub(gem[i][v], dink);
         dai[w]    = add(dai[w],    dtab);
-        debt      = add(debt,      dtab);
 
         urns[i][u] = urn;
         ilks[i]    = ilk;
