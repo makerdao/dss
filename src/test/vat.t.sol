@@ -28,10 +28,6 @@ contract TestVat is Vat {
     function balanceOf(address usr) public view returns (uint) {
         return dai[usr] / ONE;
     }
-    function frob(bytes32 ilk, int dink, int dart) public {
-        address usr = msg.sender;
-        frob(ilk, usr, usr, usr, dink, dart);
-    }
 }
 
 contract TestVow is Vow {
@@ -104,6 +100,7 @@ contract FrobTest is DSTest {
     Jug     jug;
 
     GemJoin gemA;
+    address me;
 
     function try_frob(bytes32 ilk, int ink, int art) public returns (bool ok) {
         string memory sig = "frob(bytes32,address,address,address,int256,int256)";
@@ -138,6 +135,8 @@ contract FrobTest is DSTest {
         vat.rely(address(gemA));
 
         gemA.join(address(this), 1000 ether);
+
+        me = address(this);
     }
 
     function gem(bytes32 ilk, address urn) internal view returns (uint) {
@@ -171,10 +170,10 @@ contract FrobTest is DSTest {
     function test_lock() public {
         assertEq(ink("gold", address(this)),    0 ether);
         assertEq(gem("gold", address(this)), 1000 ether);
-        vat.frob("gold", 6 ether, 0);
+        vat.frob("gold", me, me, me, 6 ether, 0);
         assertEq(ink("gold", address(this)),   6 ether);
         assertEq(gem("gold", address(this)), 994 ether);
-        vat.frob("gold", -6 ether, 0);
+        vat.frob("gold", me, me, me, -6 ether, 0);
         assertEq(ink("gold", address(this)),    0 ether);
         assertEq(gem("gold", address(this)), 1000 ether);
     }
@@ -198,14 +197,14 @@ contract FrobTest is DSTest {
     function test_safe() public {
         // safe means that the cdp is not risky
         // you can't frob a cdp into unsafe
-        vat.frob("gold", 10 ether, 5 ether);                // safe draw
+        vat.frob("gold", me, me, me, 10 ether, 5 ether);                // safe draw
         assertTrue(!try_frob("gold", 0 ether, 6 ether));  // unsafe draw
     }
     function test_nice() public {
         // nice means that the collateral has increased or the debt has
         // decreased. remaining unsafe is ok as long as you're nice
 
-        vat.frob("gold", 10 ether, 10 ether);
+        vat.frob("gold", me, me, me, 10 ether, 10 ether);
         vat.file("gold", 'spot', ray(0.5 ether));  // now unsafe
 
         // debt can't increase if unsafe
@@ -418,6 +417,8 @@ contract BiteTest is DSTest {
 
     DSToken gov;
 
+    address me;
+
     function try_frob(bytes32 ilk, int ink, int art) public returns (bool ok) {
         string memory sig = "frob(bytes32,address,address,address,int256,int256)";
         address self = address(this);
@@ -493,11 +494,13 @@ contract BiteTest is DSTest {
         vat.hope(address(flop));
         gold.approve(address(vat));
         gov.approve(address(flap));
+
+        me = address(this);
     }
 
     function test_bite_under_lump() public {
         vat.file("gold", 'spot', ray(2.5 ether));
-        vat.frob("gold",  40 ether, 100 ether);
+        vat.frob("gold", me, me, me, 40 ether, 100 ether);
         // tag=4, mat=2
         vat.file("gold", 'spot', ray(2 ether));  // now unsafe
 
@@ -517,7 +520,7 @@ contract BiteTest is DSTest {
     }
     function test_bite_over_lump() public {
         vat.file("gold", 'spot', ray(2.5 ether));
-        vat.frob("gold",  40 ether, 100 ether);
+        vat.frob("gold", me, me, me, 40 ether, 100 ether);
         // tag=4, mat=2
         vat.file("gold", 'spot', ray(2 ether));  // now unsafe
 
@@ -540,7 +543,7 @@ contract BiteTest is DSTest {
         // spot = tag / (par . mat)
         // tag=5, mat=2
         vat.file("gold", 'spot', ray(2.5 ether));
-        vat.frob("gold",  40 ether, 100 ether);
+        vat.frob("gold", me, me, me, 40 ether, 100 ether);
 
         // tag=4, mat=2
         vat.file("gold", 'spot', ray(2 ether));  // now unsafe
@@ -577,7 +580,7 @@ contract BiteTest is DSTest {
 
     function test_floppy_bite() public {
         vat.file("gold", 'spot', ray(2.5 ether));
-        vat.frob("gold",  40 ether, 100 ether);
+        vat.frob("gold", me, me, me, 40 ether, 100 ether);
         vat.file("gold", 'spot', ray(2 ether));  // now unsafe
 
         cat.file("gold", "lump", 100 ether);  // => bite everything

@@ -39,15 +39,15 @@ import "./lib.sol";
 */
 
 contract VatLike {
-    function move(address,address,uint256) public;
-    function suck(address,address,uint256) public;
+    function move(address,address,uint256) external;
+    function suck(address,address,uint256) external;
 }
 
 contract Pot is DSNote {
     // --- Auth ---
     mapping (address => uint) public wards;
-    function rely(address guy) public note auth { wards[guy] = 1; }
-    function deny(address guy) public note auth { wards[guy] = 0; }
+    function rely(address guy) external note auth { wards[guy] = 1; }
+    function deny(address guy) external note auth { wards[guy] = 0; }
     modifier auth { require(wards[msg.sender] == 1); _; }
 
     // --- Data ---
@@ -113,16 +113,16 @@ contract Pot is DSNote {
     }
 
     // --- Administration ---
-    function file(bytes32 what, uint256 data) public note auth {
+    function file(bytes32 what, uint256 data) external note auth {
         if (what == "dsr") dsr = data;
     }
 
-    function file(bytes32 what, address addr) public note auth {
+    function file(bytes32 what, address addr) external note auth {
         if (what == "vow") vow = addr;
     }
 
     // --- Savings Rate Accumulation ---
-    function drip() public note {
+    function drip() external note {
         require(now >= rho);
         uint chi_ = sub(rmul(rpow(dsr, now - rho, ONE), chi), chi);
         chi = add(chi, chi_);
@@ -131,13 +131,13 @@ contract Pot is DSNote {
     }
 
     // --- Savings Dai Management ---
-    function join(uint wad) public note {
+    function join(uint wad) external note {
         pie[msg.sender] = add(pie[msg.sender], wad);
         Pie             = add(Pie,             wad);
         vat.move(msg.sender, address(this), mul(chi, wad));
     }
 
-    function exit(uint wad) public note {
+    function exit(uint wad) external note {
         pie[msg.sender] = sub(pie[msg.sender], wad);
         Pie             = sub(Pie,             wad);
         vat.move(address(this), msg.sender, mul(chi, wad));

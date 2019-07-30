@@ -8,15 +8,15 @@ contract VatLike {
         uint256 Art;   // wad
         uint256 rate;  // ray
     }
-    function ilks(bytes32) public returns (Ilk memory);
-    function fold(bytes32,address,int) public;
+    function ilks(bytes32) external returns (Ilk memory);
+    function fold(bytes32,address,int) external;
 }
 
 contract Jug is DSNote {
     // --- Auth ---
     mapping (address => uint) public wards;
-    function rely(address usr) public note auth { wards[usr] = 1; }
-    function deny(address usr) public note auth { wards[usr] = 0; }
+    function rely(address usr) external note auth { wards[usr] = 1; }
+    function deny(address usr) external note auth { wards[usr] = 0; }
     modifier auth { require(wards[msg.sender] == 1); _; }
 
     // --- Data ---
@@ -76,24 +76,24 @@ contract Jug is DSNote {
     }
 
     // --- Administration ---
-    function init(bytes32 ilk) public note auth {
+    function init(bytes32 ilk) external note auth {
         Ilk storage i = ilks[ilk];
         require(i.duty == 0);
         i.duty = ONE;
         i.rho  = now;
     }
-    function file(bytes32 ilk, bytes32 what, uint data) public note auth {
+    function file(bytes32 ilk, bytes32 what, uint data) external note auth {
         if (what == "duty") ilks[ilk].duty = data;
     }
-    function file(bytes32 what, uint data) public note auth {
+    function file(bytes32 what, uint data) external note auth {
         if (what == "base") base = data;
     }
-    function file(bytes32 what, address data) public note auth {
+    function file(bytes32 what, address data) external note auth {
         if (what == "vow") vow = data;
     }
 
     // --- Stability Fee Collection ---
-    function drip(bytes32 ilk) public note {
+    function drip(bytes32 ilk) external note {
         require(now >= ilks[ilk].rho);
         VatLike.Ilk memory i = vat.ilks(ilk);
         vat.fold(ilk, vow, diff(rmul(rpow(add(base, ilks[ilk].duty), now - ilks[ilk].rho, ONE), i.rate), i.rate));

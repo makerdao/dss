@@ -33,16 +33,16 @@ contract VatLike {
         uint256 ink;
         uint256 art;
     }
-    function dai(address) public view returns (uint);
-    function ilks(bytes32 ilk) public returns (Ilk memory);
-    function urns(bytes32 ilk, address urn) public returns (Urn memory);
-    function debt() public returns (uint);
-    function move(address src, address dst, uint256 rad) public;
-    function hope(address) public;
-    function flux(bytes32 ilk, address src, address dst, uint256 rad) public;
-    function grab(bytes32 i, address u, address v, address w, int256 dink, int256 dart) public;
-    function suck(address u, address v, uint256 rad) public;
-    function cage() public;
+    function dai(address) external view returns (uint);
+    function ilks(bytes32 ilk) external returns (Ilk memory);
+    function urns(bytes32 ilk, address urn) external returns (Urn memory);
+    function debt() external returns (uint);
+    function move(address src, address dst, uint256 rad) external;
+    function hope(address) external;
+    function flux(bytes32 ilk, address src, address dst, uint256 rad) external;
+    function grab(bytes32 i, address u, address v, address w, int256 dink, int256 dart) external;
+    function suck(address u, address v, uint256 rad) external;
+    function cage() external;
 }
 contract CatLike {
     struct Ilk {
@@ -50,12 +50,12 @@ contract CatLike {
         uint256 chop;  // Liquidation Penalty   [ray]
         uint256 lump;  // Liquidation Quantity  [rad]
     }
-    function ilks(bytes32) public returns (Ilk memory);
-    function cage() public;
+    function ilks(bytes32) external returns (Ilk memory);
+    function cage() external;
 }
 contract VowLike {
-    function heal(uint256 rad) public;
-    function cage() public;
+    function heal(uint256 rad) external;
+    function cage() external;
 }
 contract Flippy {
     struct Bid {
@@ -68,12 +68,12 @@ contract Flippy {
         address gal;
         uint256 tab;
     }
-    function bids(uint id) public view returns (Bid memory);
-    function yank(uint id) public;
+    function bids(uint id) external view returns (Bid memory);
+    function yank(uint id) external;
 }
 
 contract PipLike {
-    function read() public view returns (bytes32);
+    function read() external view returns (bytes32);
 }
 
 contract Spotty {
@@ -81,7 +81,7 @@ contract Spotty {
         PipLike pip;
         uint256 mat;
     }
-    function ilks(bytes32) public view returns (Ilk memory);
+    function ilks(bytes32) external view returns (Ilk memory);
 }
 
 /*
@@ -186,8 +186,8 @@ contract Spotty {
 contract End is DSNote {
     // --- Auth ---
     mapping (address => uint) public wards;
-    function rely(address guy) public note auth { wards[guy] = 1; }
-    function deny(address guy) public note auth { wards[guy] = 0; }
+    function rely(address guy) external note auth { wards[guy] = 1; }
+    function deny(address guy) external note auth { wards[guy] = 0; }
     modifier auth { require(wards[msg.sender] == 1); _; }
 
     // --- Data ---
@@ -239,18 +239,18 @@ contract End is DSNote {
     }
 
     // --- Administration ---
-    function file(bytes32 what, address data) public note auth {
+    function file(bytes32 what, address data) external note auth {
         if (what == "vat")  vat = VatLike(data);
         if (what == "cat")  cat = CatLike(data);
         if (what == "vow")  vow = VowLike(data);
         if (what == "spot") spot = Spotty(data);
     }
-    function file(bytes32 what, uint256 data) public note auth {
+    function file(bytes32 what, uint256 data) external note auth {
         if (what == "wait") wait = data;
     }
 
     // --- Settlement ---
-    function cage() public note auth {
+    function cage() external note auth {
         require(live == 1);
         live = 0;
         when = now;
@@ -259,7 +259,7 @@ contract End is DSNote {
         vow.cage();
     }
 
-    function cage(bytes32 ilk) public note {
+    function cage(bytes32 ilk) external note {
         require(live == 0);
         require(tag[ilk] == 0);
         Art[ilk] = vat.ilks(ilk).Art;
@@ -267,7 +267,7 @@ contract End is DSNote {
         tag[ilk] = rdiv(WAD, uint(spot.ilks(ilk).pip.read()));
     }
 
-    function skip(bytes32 ilk, uint256 id) public note {
+    function skip(bytes32 ilk, uint256 id) external note {
         require(tag[ilk] != 0);
 
         Flippy flip = Flippy(cat.ilks(ilk).flip);
@@ -286,7 +286,7 @@ contract End is DSNote {
         vat.grab(ilk, bid.usr, address(this), address(vow), int(lot), int(art));
     }
 
-    function skim(bytes32 ilk, address urn) public note {
+    function skim(bytes32 ilk, address urn) external note {
         require(tag[ilk] != 0);
         VatLike.Ilk memory i = vat.ilks(ilk);
         VatLike.Urn memory u = vat.urns(ilk, urn);
@@ -299,7 +299,7 @@ contract End is DSNote {
         vat.grab(ilk, urn, address(this), address(vow), -int(wad), -int(u.art));
     }
 
-    function free(bytes32 ilk) public note {
+    function free(bytes32 ilk) external note {
         require(live == 0);
         VatLike.Urn memory u = vat.urns(ilk, msg.sender);
         require(u.art == 0);
@@ -307,14 +307,14 @@ contract End is DSNote {
         vat.grab(ilk, msg.sender, msg.sender, address(vow), -int(u.ink), 0);
     }
 
-    function thaw() public note {
+    function thaw() external note {
         require(live == 0);
         require(debt == 0);
         require(vat.dai(address(vow)) == 0);
         require(now >= add(when, wait));
         debt = vat.debt();
     }
-    function flow(bytes32 ilk) public note {
+    function flow(bytes32 ilk) external note {
         require(debt != 0);
         require(fix[ilk] == 0);
 
@@ -323,12 +323,12 @@ contract End is DSNote {
         fix[ilk] = rdiv(mul(sub(wad, gap[ilk]), RAY), debt);
     }
 
-    function pack(uint256 wad) public note {
+    function pack(uint256 wad) external note {
         require(debt != 0);
         vat.move(msg.sender, address(vow), mul(wad, RAY));
         bag[msg.sender] = add(bag[msg.sender], wad);
     }
-    function cash(bytes32 ilk, uint wad) public note {
+    function cash(bytes32 ilk, uint wad) external note {
         require(fix[ilk] != 0);
         vat.flux(ilk, address(this), msg.sender, rmul(wad, fix[ilk]));
         out[ilk][msg.sender] = add(out[ilk][msg.sender], wad);

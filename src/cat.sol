@@ -36,21 +36,21 @@ contract VatLike {
         uint256 ink;   // wad
         uint256 art;   // wad
     }
-    function ilks(bytes32) public view returns (Ilk memory);
-    function urns(bytes32,address) public view returns (Urn memory);
-    function grab(bytes32,address,address,address,int,int) public;
-    function hope(address) public;
+    function ilks(bytes32) external view returns (Ilk memory);
+    function urns(bytes32,address) external view returns (Urn memory);
+    function grab(bytes32,address,address,address,int,int) external;
+    function hope(address) external;
 }
 
 contract VowLike {
-    function fess(uint) public;
+    function fess(uint) external;
 }
 
 contract Cat is DSNote {
     // --- Auth ---
     mapping (address => uint) public wards;
-    function rely(address usr) public note auth { wards[usr] = 1; }
-    function deny(address usr) public note auth { wards[usr] = 0; }
+    function rely(address usr) external note auth { wards[usr] = 1; }
+    function deny(address usr) external note auth { wards[usr] = 0; }
     modifier auth { require(wards[msg.sender] == 1); _; }
 
     // --- Data ---
@@ -98,19 +98,19 @@ contract Cat is DSNote {
     }
 
     // --- Administration ---
-    function file(bytes32 what, address data) public note auth {
+    function file(bytes32 what, address data) external note auth {
         if (what == "vow") vow = VowLike(data);
     }
-    function file(bytes32 ilk, bytes32 what, uint data) public note auth {
+    function file(bytes32 ilk, bytes32 what, uint data) external note auth {
         if (what == "chop") ilks[ilk].chop = data;
         if (what == "lump") ilks[ilk].lump = data;
     }
-    function file(bytes32 ilk, bytes32 what, address flip) public note auth {
+    function file(bytes32 ilk, bytes32 what, address flip) external note auth {
         if (what == "flip") { ilks[ilk].flip = flip; vat.hope(flip); }
     }
 
     // --- CDP Liquidation ---
-    function bite(bytes32 ilk, address urn) public returns (uint id) {
+    function bite(bytes32 ilk, address urn) external returns (uint id) {
         VatLike.Ilk memory i = vat.ilks(ilk);
         VatLike.Urn memory u = vat.urns(ilk, urn);
 
@@ -135,7 +135,7 @@ contract Cat is DSNote {
         emit Bite(ilk, urn, lot, art, tab, ilks[ilk].flip, id);
     }
 
-    function cage() public note auth {
+    function cage() external note auth {
         live = 0;
     }
 }

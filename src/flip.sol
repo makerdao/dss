@@ -20,8 +20,8 @@ pragma solidity >=0.5.0;
 import "./lib.sol";
 
 contract VatLike {
-    function move(address,address,uint) public;
-    function flux(bytes32,address,address,uint) public;
+    function move(address,address,uint) external;
+    function flux(bytes32,address,address,uint) external;
 }
 
 /*
@@ -41,8 +41,8 @@ contract VatLike {
 contract Flipper is DSNote {
     // --- Auth ---
     mapping (address => uint) public wards;
-    function rely(address usr) public note auth { wards[usr] = 1; }
-    function deny(address usr) public note auth { wards[usr] = 0; }
+    function rely(address usr) external note auth { wards[usr] = 1; }
+    function deny(address usr) external note auth { wards[usr] = 0; }
     modifier auth { require(wards[msg.sender] == 1); _; }
 
     // --- Data ---
@@ -94,7 +94,7 @@ contract Flipper is DSNote {
     }
 
     // --- Admin ---
-    function file(bytes32 what, uint data) public note auth {
+    function file(bytes32 what, uint data) external note auth {
         if (what == "beg") beg = data;
         if (what == "ttl") ttl = uint48(data);
         if (what == "tau") tau = uint48(data);
@@ -119,12 +119,12 @@ contract Flipper is DSNote {
 
         emit Kick(id, lot, bid, tab, usr, gal);
     }
-    function tick(uint id) public note {
+    function tick(uint id) external note {
         require(bids[id].end < now);
         require(bids[id].tic == 0);
         bids[id].end = add(uint48(now), tau);
     }
-    function tend(uint id, uint lot, uint bid) public note {
+    function tend(uint id, uint lot, uint bid) external note {
         require(bids[id].guy != address(0));
         require(bids[id].tic > now || bids[id].tic == 0);
         require(bids[id].end > now);
@@ -141,7 +141,7 @@ contract Flipper is DSNote {
         bids[id].bid = bid;
         bids[id].tic = add(uint48(now), ttl);
     }
-    function dent(uint id, uint lot, uint bid) public note {
+    function dent(uint id, uint lot, uint bid) external note {
         require(bids[id].guy != address(0));
         require(bids[id].tic > now || bids[id].tic == 0);
         require(bids[id].end > now);
@@ -158,13 +158,13 @@ contract Flipper is DSNote {
         bids[id].lot = lot;
         bids[id].tic = add(uint48(now), ttl);
     }
-    function deal(uint id) public note {
+    function deal(uint id) external note {
         require(bids[id].tic != 0 && (bids[id].tic < now || bids[id].end < now));
         vat.flux(ilk, address(this), bids[id].guy, bids[id].lot);
         delete bids[id];
     }
 
-    function yank(uint id) public note auth {
+    function yank(uint id) external note auth {
         require(bids[id].guy != address(0));
         require(bids[id].bid < bids[id].tab);
         vat.flux(ilk, address(this), msg.sender, bids[id].lot);

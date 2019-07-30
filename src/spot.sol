@@ -18,18 +18,18 @@ pragma solidity >=0.5.0;
 import "./lib.sol";
 
 contract VatLike {
-    function file(bytes32, bytes32, uint) public;
+    function file(bytes32, bytes32, uint) external;
 }
 
 contract PipLike {
-    function peek() public returns (bytes32, bool);
+    function peek() external returns (bytes32, bool);
 }
 
 contract Spotter is DSNote {
     // --- Auth ---
     mapping (address => uint) public wards;
-    function rely(address guy) public note auth { wards[guy] = 1;  }
-    function deny(address guy) public note auth { wards[guy] = 0; }
+    function rely(address guy) external note auth { wards[guy] = 1;  }
+    function deny(address guy) external note auth { wards[guy] = 0; }
     modifier auth { require(wards[msg.sender] == 1); _; }
 
     // --- Data ---
@@ -68,18 +68,18 @@ contract Spotter is DSNote {
     }
 
     // --- Administration ---
-    function file(bytes32 ilk, address pip_) public note auth {
+    function file(bytes32 ilk, address pip_) external note auth {
         ilks[ilk].pip = PipLike(pip_);
     }
-    function file(bytes32 what, uint data) public note auth {
+    function file(bytes32 what, uint data) external note auth {
         if (what == "par") par = data;
     }
-    function file(bytes32 ilk, bytes32 what, uint data) public note auth {
+    function file(bytes32 ilk, bytes32 what, uint data) external note auth {
         if (what == "mat") ilks[ilk].mat = data;
     }
 
     // --- Update value ---
-    function poke(bytes32 ilk) public {
+    function poke(bytes32 ilk) external {
         (bytes32 val, bool zzz) = ilks[ilk].pip.peek();
         if (zzz) {
             uint256 spot = rdiv(rdiv(mul(uint(val), 10 ** 9), par), ilks[ilk].mat);

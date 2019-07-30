@@ -20,10 +20,10 @@ pragma solidity >=0.5.0;
 import "./lib.sol";
 
 contract VatLike {
-    function move(address,address,uint) public;
+    function move(address,address,uint) external;
 }
 contract GemLike {
-    function mint(address,uint) public;
+    function mint(address,uint) external;
 }
 
 /*
@@ -40,8 +40,8 @@ contract GemLike {
 contract Flopper is DSNote {
     // --- Auth ---
     mapping (address => uint) public wards;
-    function rely(address usr) public note auth { wards[usr] = 1; }
-    function deny(address usr) public note auth { wards[usr] = 0; }
+    function rely(address usr) external note auth { wards[usr] = 1; }
+    function deny(address usr) external note auth { wards[usr] = 0; }
     modifier auth { require(wards[msg.sender] == 1); _; }
 
     // --- Data ---
@@ -90,14 +90,14 @@ contract Flopper is DSNote {
     }
 
     // --- Admin ---
-    function file(bytes32 what, uint data) public note auth {
+    function file(bytes32 what, uint data) external note auth {
         if (what == "beg") beg = data;
         if (what == "ttl") ttl = uint48(data);
         if (what == "tau") tau = uint48(data);
     }
 
     // --- Auction ---
-    function kick(address gal, uint lot, uint bid) public auth returns (uint id) {
+    function kick(address gal, uint lot, uint bid) external auth returns (uint id) {
         require(live == 1);
         require(kicks < uint(-1));
         id = ++kicks;
@@ -109,7 +109,7 @@ contract Flopper is DSNote {
 
         emit Kick(id, lot, bid, gal);
     }
-    function dent(uint id, uint lot, uint bid) public note {
+    function dent(uint id, uint lot, uint bid) external note {
         require(live == 1);
         require(bids[id].guy != address(0));
         require(bids[id].tic > now || bids[id].tic == 0);
@@ -125,7 +125,7 @@ contract Flopper is DSNote {
         bids[id].lot = lot;
         bids[id].tic = add(uint48(now), ttl);
     }
-    function deal(uint id) public note {
+    function deal(uint id) external note {
         require(live == 1);
         require(bids[id].tic < now && bids[id].tic != 0 ||
                 bids[id].end < now);
@@ -133,10 +133,10 @@ contract Flopper is DSNote {
         delete bids[id];
     }
 
-    function cage() public note auth {
+    function cage() external note auth {
        live = 0;
     }
-    function yank(uint id) public note {
+    function yank(uint id) external note {
         require(live == 0);
         require(bids[id].guy != address(0));
         vat.move(address(this), bids[id].guy, bids[id].bid);

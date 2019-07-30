@@ -20,19 +20,19 @@ pragma solidity >=0.5.0;
 import "./lib.sol";
 
 contract GemLike {
-    function transfer(address,uint) public returns (bool);
-    function transferFrom(address,address,uint) public returns (bool);
+    function transfer(address,uint) external returns (bool);
+    function transferFrom(address,address,uint) external returns (bool);
 }
 
 contract DSTokenLike {
-    function mint(address,uint) public;
-    function burn(address,uint) public;
+    function mint(address,uint) external;
+    function burn(address,uint) external;
 }
 
 contract VatLike {
-    function slip(bytes32,address,int) public;
-    function move(address,address,uint) public;
-    function flux(bytes32,address,address,uint) public;
+    function slip(bytes32,address,int) external;
+    function move(address,address,uint) external;
+    function flux(bytes32,address,address,uint) external;
 }
 
 /*
@@ -68,12 +68,12 @@ contract GemJoin is DSNote {
         ilk = ilk_;
         gem = GemLike(gem_);
     }
-    function join(address usr, uint wad) public note {
+    function join(address usr, uint wad) external note {
         require(int(wad) >= 0);
         vat.slip(ilk, usr, int(wad));
         require(gem.transferFrom(msg.sender, address(this), wad));
     }
-    function exit(address usr, uint wad) public note {
+    function exit(address usr, uint wad) external note {
         require(wad <= 2 ** 255);
         vat.slip(ilk, msg.sender, -int(wad));
         require(gem.transfer(usr, wad));
@@ -87,11 +87,11 @@ contract ETHJoin is DSNote {
         vat = VatLike(vat_);
         ilk = ilk_;
     }
-    function join(address usr) public payable note {
+    function join(address usr) external payable note {
         require(int(msg.value) >= 0);
         vat.slip(ilk, usr, int(msg.value));
     }
-    function exit(address payable usr, uint wad) public note {
+    function exit(address payable usr, uint wad) external note {
         require(int(wad) >= 0);
         vat.slip(ilk, msg.sender, -int(wad));
         usr.transfer(wad);
@@ -109,11 +109,11 @@ contract DaiJoin is DSNote {
     function mul(uint x, uint y) internal pure returns (uint z) {
         require(y == 0 || (z = x * y) / y == x);
     }
-    function join(address usr, uint wad) public note {
+    function join(address usr, uint wad) external note {
         vat.move(address(this), usr, mul(ONE, wad));
         dai.burn(msg.sender, wad);
     }
-    function exit(address usr, uint wad) public note {
+    function exit(address usr, uint wad) external note {
         vat.move(msg.sender, address(this), mul(ONE, wad));
         dai.mint(usr, wad);
     }

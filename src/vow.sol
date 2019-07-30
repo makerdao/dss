@@ -20,29 +20,29 @@ pragma solidity >=0.5.0;
 import "./lib.sol";
 
 contract Flopper {
-    function kick(address gal, uint lot, uint bid) public returns (uint);
-    function cage() public;
-    function live() public returns (uint);
+    function kick(address gal, uint lot, uint bid) external returns (uint);
+    function cage() external;
+    function live() external returns (uint);
 }
 
 contract Flapper {
-    function kick(uint lot, uint bid) public returns (uint);
-    function cage(uint) public;
-    function live() public returns (uint);
+    function kick(uint lot, uint bid) external returns (uint);
+    function cage(uint) external;
+    function live() external returns (uint);
 }
 
 contract VatLike {
-    function dai (address) public view returns (uint);
-    function sin (address) public view returns (uint);
-    function heal(uint256) public;
-    function hope(address) public;
+    function dai (address) external view returns (uint);
+    function sin (address) external view returns (uint);
+    function heal(uint256) external;
+    function hope(address) external;
 }
 
 contract Vow is DSNote {
     // --- Auth ---
     mapping (address => uint) public wards;
-    function rely(address usr) public note auth { wards[usr] = 1; }
-    function deny(address usr) public note auth { wards[usr] = 0; }
+    function rely(address usr) external note auth { wards[usr] = 1; }
+    function deny(address usr) external note auth { wards[usr] = 0; }
     modifier auth { require(wards[msg.sender] == 1); _; }
 
     // --- Data ---
@@ -83,7 +83,7 @@ contract Vow is DSNote {
     }
 
     // --- Administration ---
-    function file(bytes32 what, uint data) public note auth {
+    function file(bytes32 what, uint data) external note auth {
         if (what == "wait") wait = data;
         if (what == "bump") bump = data;
         if (what == "sump") sump = data;
@@ -91,24 +91,24 @@ contract Vow is DSNote {
     }
 
     // Push to debt-queue
-    function fess(uint tab) public note auth {
+    function fess(uint tab) external note auth {
         sin[now] = add(sin[now], tab);
         Sin = add(Sin, tab);
     }
     // Pop from debt-queue
-    function flog(uint era) public note {
+    function flog(uint era) external note {
         require(add(era, wait) <= now);
         Sin = sub(Sin, sin[era]);
         sin[era] = 0;
     }
 
     // Debt settlement
-    function heal(uint rad) public note {
+    function heal(uint rad) external note {
         require(rad <= vat.dai(address(this)));
         require(rad <= sub(sub(vat.sin(address(this)), Sin), Ash));
         vat.heal(rad);
     }
-    function kiss(uint rad) public note {
+    function kiss(uint rad) external note {
         require(rad <= Ash);
         require(rad <= vat.dai(address(this)));
         Ash = sub(Ash, rad);
@@ -116,20 +116,20 @@ contract Vow is DSNote {
     }
 
     // Debt auction
-    function flop() public note returns (uint id) {
+    function flop() external note returns (uint id) {
         require(sump <= sub(sub(vat.sin(address(this)), Sin), Ash));
         require(vat.dai(address(this)) == 0);
         Ash = add(Ash, sump);
         id = flopper.kick(address(this), uint(-1), sump);
     }
     // Surplus auction
-    function flap() public note returns (uint id) {
+    function flap() external note returns (uint id) {
         require(vat.dai(address(this)) >= add(add(vat.sin(address(this)), bump), hump));
         require(sub(sub(vat.sin(address(this)), Sin), Ash) == 0);
         id = flapper.kick(bump, 0);
     }
 
-    function cage() public note auth {
+    function cage() external note auth {
         live = 0;
         Sin = 0;
         Ash = 0;
