@@ -130,13 +130,12 @@ contract Spotty {
     of more processing calls. Option (b) allows dai holders to retrieve
     their collateral faster.
 
-    4. a. Wait until all auctions have reached their end; OR
-
-       b. Cancel live auctions
-          `skip(ilk, id)`:
-           - cancel individual flip auctions in the `tend` (forward) phase
-           - retrieves collateral and returns dai to bidder
-           - `dent` (reverse) phase auctions can continue normally
+    We cancel live auctions `skip`:
+    
+    4. `skip(ilk, id)`:
+       - cancel individual flip auctions in the `tend` (forward) phase
+       - retrieves collateral and returns dai to bidder
+       - `dent` (reverse) phase auctions can continue normally
 
     When a CDP has been processed and has no debt remaining, the
     remaining collateral can be removed.
