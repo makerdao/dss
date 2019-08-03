@@ -119,24 +119,30 @@ contract Spotty {
     i.e. auctions. We need to ensure that auctions will not generate any
     further dai income. In the two-way auction model this occurs when
     all auctions are in the reverse (`dent`) phase. There are two ways
-    of ensuring this: a) set the cooldown period to be at least as long
-    as the longest auction duration, which needs to be determined by the
-    cage administrator, and b) cancel all ongoing auctions and seize the
-    collateral.
+    of ensuring this:
 
-    Option (a) takes a fairly predictable time to occur but with altered
-    auction dynamics due to the now varying price of dai, whereas option
-    (b) is accelerated allowing for faster processing at the expense
-    of more processing calls. Option (b) allows dai holders to retrieve
-    their collateral faster.
+    4.  i) `wait`: set the cooldown period to be at least as long as the
+           longest auction duration, which needs to be determined by the
+           cage administrator.
 
-    4. a. Wait until all auctions have reached their end; OR
+           This takes a fairly predictable time to occur but with altered
+           auction dynamics due to the now varying price of dai.
 
-       b. Cancel live auctions
-          `skip(ilk, id)`:
-           - cancel individual flip auctions in the `tend` (forward) phase
-           - retrieves collateral and returns dai to bidder
-           - `dent` (reverse) phase auctions can continue normally
+       ii) `skip`: cancel all ongoing auctions and seize the collateral.
+
+           This allows for faster processing at the expense of more
+           processing calls. This option allows dai holders to retrieve
+           their collateral faster.
+
+           `skip(ilk, id)`:
+            - cancel individual flip auctions in the `tend` (forward) phase
+            - retrieves collateral and returns dai to bidder
+            - `dent` (reverse) phase auctions can continue normally
+
+    Option (i), `wait`, is sufficient for processing the system
+    settlement but option (ii), `skip`, will speed it up. Both options
+    are available in this implementation, with `skip` being enabled on a
+    per-auction basis.
 
     When a CDP has been processed and has no debt remaining, the
     remaining collateral can be removed.
