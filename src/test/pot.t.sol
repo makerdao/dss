@@ -76,6 +76,20 @@ contract DSRTest is DSTest {
         assertEq(pot.Pie(),          100   ether);
         assertEq(pot.chi() / 10 ** 9, 1.155 ether);
     }
+    function test_drip_multi_inBlock() public {
+        pot.drip();
+        uint rho = pot.rho();
+        assertEq(rho, now);
+        hevm.warp(now + 1 days);
+        rho = pot.rho();
+        assertEq(rho, now - 1 days);
+        pot.drip();
+        rho = pot.rho();
+        assertEq(rho, now);
+        pot.drip();
+        rho = pot.rho();
+        assertEq(rho, now);
+    }
     function test_save_multi() public {
         pot.join(100 ether);
         pot.file("dsr", uint(1000000564701133626865910626));  // 5% / day
