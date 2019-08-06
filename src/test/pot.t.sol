@@ -76,6 +76,20 @@ contract DSRTest is DSTest {
         assertEq(pot.Pie(),          100   ether);
         assertEq(pot.chi() / 10 ** 9, 1.155 ether);
     }
+    function test_drip_multi_inBlock() public {
+        pot.drip();
+        uint rho = pot.rho();
+        assertEq(rho, now);
+        hevm.warp(now + 1 days);
+        rho = pot.rho();
+        assertEq(rho, now - 1 days);
+        pot.drip();
+        rho = pot.rho();
+        assertEq(rho, now);
+        pot.drip();
+        rho = pot.rho();
+        assertEq(rho, now);
+    }
     function test_save_multi() public {
         pot.join(100 ether);
         pot.file("dsr", uint(1000000564701133626865910626));  // 5% / day
@@ -91,5 +105,23 @@ contract DSRTest is DSTest {
         pot.exit(50 ether);
         assertEq(wad(vat.dai(self)), 110.25 ether);
         assertEq(pot.Pie(),            0.00 ether);
+    }
+    function test_fresh_chi() public {
+        uint rho = pot.rho();
+        assertEq(rho, now);
+        hevm.warp(now + 1 days);
+        assertEq(rho, now - 1 days);
+        pot.drip();
+        pot.join(100 ether);
+        assertEq(pot.pie(self), 100 ether);
+        pot.exit(100 ether);
+        // if we exit in the same transaction we should not earn DSR
+        assertEq(wad(vat.dai(self)), 100 ether);
+    }
+    function testFail_stale_chi() public {
+        pot.file("dsr", uint(1000000564701133626865910626));  // 5% / day
+        pot.drip();
+        hevm.warp(now + 1 days);
+        pot.join(100 ether);
     }
 }

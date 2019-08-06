@@ -132,6 +132,7 @@ contract Pot is DSNote {
 
     // --- Savings Dai Management ---
     function join(uint wad) external note {
+        require(now == rho);
         pie[msg.sender] = add(pie[msg.sender], wad);
         Pie             = add(Pie,             wad);
         vat.move(msg.sender, address(this), mul(chi, wad));
