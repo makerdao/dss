@@ -123,7 +123,7 @@ contract Pot is DSNote {
 
     // --- Savings Rate Accumulation ---
     function drip() external note {
-        require(now >= rho, "no-double-drip");
+        require(now >= rho);
         uint chi_ = sub(rmul(rpow(dsr, now - rho, ONE), chi), chi);
         chi = add(chi, chi_);
         rho = now;
@@ -132,7 +132,7 @@ contract Pot is DSNote {
 
     // --- Savings Dai Management ---
     function join(uint wad) external note {
-        require(now == rho, "no-stale-chi");
+        require(now == rho);
         pie[msg.sender] = add(pie[msg.sender], wad);
         Pie             = add(Pie,             wad);
         vat.move(msg.sender, address(this), mul(chi, wad));
