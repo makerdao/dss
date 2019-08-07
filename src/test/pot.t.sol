@@ -8,6 +8,19 @@ contract Hevm {
     function warp(uint256) public;
 }
 
+contract Usr {
+    Pot public pot;
+    constructor(Pot pot_) public {
+        pot = pot_;
+    }
+    function hope(address usr) public {
+        pot.hope(usr);
+    }
+    function nope(address usr) public {
+        pot.nope(usr);
+    }
+}
+
 contract DSRTest is DSTest {
     Hevm hevm;
 
@@ -61,6 +74,37 @@ contract DSRTest is DSTest {
         assertEq(pot.pie(self), 100 ether);
         pot.exit(100 ether);
         assertEq(wad(vat.dai(self)), 105 ether);
+    }
+    function test_move() public {
+        pot.join(100 ether);
+        assertEq(pot.pie(address(123)), 0);
+        pot.move(address(this), address(123), 20 ether);
+        assertEq(pot.pie(address(123)), 20 ether);
+    }
+    function test_move_other() public {
+        Usr ali = new Usr(pot);
+        pot.join(100 ether);
+        pot.move(address(this), address(ali), 100 ether);
+        assertEq(pot.pie(address(this)), 0 ether);
+        assertEq(pot.pie(address(ali)), 100 ether);
+        ali.hope(address(this));
+        pot.move(address(ali), address(this), 40 ether);
+        assertEq(pot.pie(address(this)), 40 ether);
+        assertEq(pot.pie(address(ali)), 60 ether);
+    }
+    function testFail_move_other() public {
+        Usr ali = new Usr(pot);
+        pot.join(100 ether);
+        pot.move(address(this), address(ali), 100 ether);
+        pot.move(address(ali), address(this), 40 ether);
+    }
+    function testFail_move_other2() public {
+        Usr ali = new Usr(pot);
+        pot.join(100 ether);
+        pot.move(address(this), address(ali), 100 ether);
+        ali.hope(address(this));
+        ali.nope(address(this));
+        pot.move(address(ali), address(this), 40 ether);
     }
     function test_drip_multi() public {
         pot.join(100 ether);

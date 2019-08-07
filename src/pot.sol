@@ -50,6 +50,13 @@ contract Pot is DSNote {
     function deny(address guy) external note auth { wards[guy] = 0; }
     modifier auth { require(wards[msg.sender] == 1); _; }
 
+    mapping(address => mapping (address => uint)) public can;
+    function hope(address usr) external { can[msg.sender][usr] = 1; }
+    function nope(address usr) external { can[msg.sender][usr] = 0; }
+    function wish(address bit, address usr) internal view returns (bool) {
+        return bit == usr || can[bit][usr] == 1;
+    }
+
     // --- Data ---
     mapping (address => uint256) public pie;  // user Savings Dai
 
@@ -131,6 +138,12 @@ contract Pot is DSNote {
     }
 
     // --- Savings Dai Management ---
+    function move(address src, address dst, uint wad) external note {
+        require(wish(src, msg.sender));
+        pie[src] = sub(pie[src], wad);
+        pie[dst] = add(pie[dst], wad);
+    }
+
     function join(uint wad) external note {
         require(now == rho);
         pie[msg.sender] = add(pie[msg.sender], wad);
