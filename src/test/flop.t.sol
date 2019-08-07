@@ -35,6 +35,12 @@ contract Guy {
         string memory sig = "deal(uint256)";
         (ok,) = address(fuss).call(abi.encodeWithSignature(sig, id));
     }
+    function try_tick(uint id)
+        public returns (bool ok)
+    {
+        string memory sig = "tick(uint256)";
+        (ok,) = address(fuss).call(abi.encodeWithSignature(sig, id));
+    }
 }
 
 contract Gal {}
@@ -125,5 +131,34 @@ contract FlopTest is DSTest {
         assertEq(gem.totalSupply(), 80 ether);
         // bob gets the winnings
         assertEq(gem.balanceOf(bob), 80 ether);
+    }
+    function test_tick() public {
+        // start an auction
+        uint id = fuss.kick({ lot: uint(-1)   // or whatever high starting value
+                            , gal: gal
+                            , bid: 10 ether
+                            });
+        // check no tick
+        assertTrue(!Guy(ali).try_tick(id));
+        // run past the end
+        hevm.warp(now + 2 weeks);
+        // check not biddable
+        assertTrue(!Guy(ali).try_dent(id, 100 ether, 10 ether));
+        assertTrue( Guy(ali).try_tick(id));
+        // check biddable
+        assertTrue( Guy(ali).try_dent(id, 100 ether, 10 ether));
+    }
+    function test_no_deal_after_end() public {
+        // if there are no bids and the auction ends, then it should not
+        // be refundable to the creator. Rather, it ticks indefinitely.
+        uint id = fuss.kick({ lot: uint(-1)   // or whatever high starting value
+                            , gal: gal
+                            , bid: 10 ether
+                            });
+        assertTrue(!Guy(ali).try_deal(id));
+        hevm.warp(now + 2 weeks);
+        assertTrue(!Guy(ali).try_deal(id));
+        assertTrue( Guy(ali).try_tick(id));
+        assertTrue(!Guy(ali).try_deal(id));
     }
 }
