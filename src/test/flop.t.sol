@@ -11,29 +11,35 @@ contract Hevm {
 }
 
 contract Guy {
-    Flopper fuss;
-    constructor(Flopper fuss_) public {
-        fuss = fuss_;
-        Vat(address(fuss.vat())).hope(address(fuss));
-        DSToken(address(fuss.gem())).approve(address(fuss));
+    Flopper flop;
+    constructor(Flopper flop_) public {
+        flop = flop_;
+        Vat(address(flop.vat())).hope(address(flop));
+        DSToken(address(flop.gem())).approve(address(flop));
     }
     function dent(uint id, uint lot, uint bid) public {
-        fuss.dent(id, lot, bid);
+        flop.dent(id, lot, bid);
     }
     function deal(uint id) public {
-        fuss.deal(id);
+        flop.deal(id);
     }
     function try_dent(uint id, uint lot, uint bid)
         public returns (bool ok)
     {
         string memory sig = "dent(uint256,uint256,uint256)";
-        (ok,) = address(fuss).call(abi.encodeWithSignature(sig, id, lot, bid));
+        (ok,) = address(flop).call(abi.encodeWithSignature(sig, id, lot, bid));
     }
     function try_deal(uint id)
         public returns (bool ok)
     {
         string memory sig = "deal(uint256)";
-        (ok,) = address(fuss).call(abi.encodeWithSignature(sig, id));
+        (ok,) = address(flop).call(abi.encodeWithSignature(sig, id));
+    }
+    function try_tick(uint id)
+        public returns (bool ok)
+    {
+        string memory sig = "tick(uint256)";
+        (ok,) = address(flop).call(abi.encodeWithSignature(sig, id));
     }
 }
 
@@ -55,7 +61,7 @@ contract Vatish is DSToken('') {
 contract FlopTest is DSTest {
     Hevm hevm;
 
-    Flopper fuss;
+    Flopper flop;
     Vat     vat;
     DSToken gem;
 
@@ -72,14 +78,14 @@ contract FlopTest is DSTest {
         vat = new Vat();
         gem = new DSToken('');
 
-        fuss = new Flopper(address(vat), address(gem));
+        flop = new Flopper(address(vat), address(gem));
 
-        ali = address(new Guy(fuss));
-        bob = address(new Guy(fuss));
+        ali = address(new Guy(flop));
+        bob = address(new Guy(flop));
         gal = address(new Gal());
 
-        vat.hope(address(fuss));
-        gem.approve(address(fuss));
+        vat.hope(address(flop));
+        gem.approve(address(flop));
 
         vat.suck(address(this), address(this), 1000 ether);
 
@@ -89,7 +95,7 @@ contract FlopTest is DSTest {
     function test_kick() public {
         assertEq(vat.dai(address(this)), 600 ether);
         assertEq(gem.balanceOf(address(this)),   0 ether);
-        fuss.kick({ lot: uint(-1)   // or whatever high starting value
+        flop.kick({ lot: uint(-1)   // or whatever high starting value
                   , gal: gal
                   , bid: 0
                   });
@@ -98,7 +104,7 @@ contract FlopTest is DSTest {
         assertEq(gem.balanceOf(address(this)),   0 ether);
     }
     function test_dent() public {
-        uint id = fuss.kick({ lot: uint(-1)   // or whatever high starting value
+        uint id = flop.kick({ lot: uint(-1)   // or whatever high starting value
                             , gal: gal
                             , bid: 10 ether
                             });
@@ -119,11 +125,40 @@ contract FlopTest is DSTest {
 
         hevm.warp(now + 5 weeks);
         assertEq(gem.totalSupply(),  0 ether);
-        gem.setOwner(address(fuss));
+        gem.setOwner(address(flop));
         Guy(bob).deal(id);
         // gems minted on demand
         assertEq(gem.totalSupply(), 80 ether);
         // bob gets the winnings
         assertEq(gem.balanceOf(bob), 80 ether);
+    }
+    function test_tick() public {
+        // start an auction
+        uint id = flop.kick({ lot: uint(-1)   // or whatever high starting value
+                            , gal: gal
+                            , bid: 10 ether
+                            });
+        // check no tick
+        assertTrue(!Guy(ali).try_tick(id));
+        // run past the end
+        hevm.warp(now + 2 weeks);
+        // check not biddable
+        assertTrue(!Guy(ali).try_dent(id, 100 ether, 10 ether));
+        assertTrue( Guy(ali).try_tick(id));
+        // check biddable
+        assertTrue( Guy(ali).try_dent(id, 100 ether, 10 ether));
+    }
+    function test_no_deal_after_end() public {
+        // if there are no bids and the auction ends, then it should not
+        // be refundable to the creator. Rather, it ticks indefinitely.
+        uint id = flop.kick({ lot: uint(-1)   // or whatever high starting value
+                            , gal: gal
+                            , bid: 10 ether
+                            });
+        assertTrue(!Guy(ali).try_deal(id));
+        hevm.warp(now + 2 weeks);
+        assertTrue(!Guy(ali).try_deal(id));
+        assertTrue( Guy(ali).try_tick(id));
+        assertTrue(!Guy(ali).try_deal(id));
     }
 }
