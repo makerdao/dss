@@ -147,6 +147,7 @@ contract FlopTest is DSTest {
         assertTrue( Guy(ali).try_tick(id));
         // check biddable
         (, uint _lot,,,) = flop.bids(id);
+        // tick should increase the lot by beg (5%) and restart the auction
         assertEq(_lot, 210 ether);
         assertTrue( Guy(ali).try_dent(id, 100 ether, 10 ether));
     }
