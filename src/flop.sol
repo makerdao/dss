@@ -113,6 +113,7 @@ contract Flopper is DSNote {
     function tick(uint id) external note {
         require(bids[id].end < now);
         require(bids[id].tic == 0);
+        bids[id].lot = mul(beg, bids[id].lot) / ONE;
         bids[id].end = add(uint48(now), tau);
     }
     function dent(uint id, uint lot, uint bid) external note {
