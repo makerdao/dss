@@ -54,11 +54,11 @@ contract Vow is DSNote {
     uint256 public Sin;   // queued debt          [rad]
     uint256 public Ash;   // on-auction debt      [rad]
 
-    uint256 public wait;  // flop delay           [rad]
-    uint256 public pump;  // flop fixed lot size  [rad]
-    uint256 public sump;  // flop fixed bid size  [rad]
+    uint256 public wait;  // flop delay            [rad]
+    uint256 public dump;  // flop fixed lot size    [rad]
+    uint256 public sump;  // flop fixed bid size    [rad]
 
-    uint256 public bump;  // flap fixed lot size  [rad]
+    uint256 public bump;  // flap fixed lot size    [rad]
     uint256 public hump;  // surplus buffer       [rad]
 
     uint256 public live;
@@ -89,7 +89,7 @@ contract Vow is DSNote {
         if (what == "wait") wait = data;
         else if (what == "bump") bump = data;
         else if (what == "sump") sump = data;
-        else if (what == "pump") pump = data;
+        else if (what == "dump") pump = data;
         else if (what == "hump") hump = data;
         else revert();
     }
@@ -124,7 +124,7 @@ contract Vow is DSNote {
         require(sump <= sub(sub(vat.sin(address(this)), Sin), Ash));
         require(vat.dai(address(this)) == 0);
         Ash = add(Ash, sump);
-        id = flopper.kick(address(this), pump, sump);
+        id = flopper.kick(address(this), dump, sump);
     }
     // Surplus auction
     function flap() external note returns (uint id) {

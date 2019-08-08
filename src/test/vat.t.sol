@@ -596,7 +596,7 @@ contract BiteTest is DSTest {
         assertEq(vow.Ash(), rad(  0 ether));
 
         vow.file("sump", rad(10 ether));
-        vow.file("pump", 2000 ether);
+        vow.file("dump", 2000 ether);
         uint f1 = vow.flop();
         assertEq(vow.Woe(),  rad(90 ether));
         assertEq(vow.Joy(),  rad( 0 ether));
