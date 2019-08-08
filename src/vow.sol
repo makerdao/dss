@@ -89,7 +89,7 @@ contract Vow is DSNote {
         if (what == "wait") wait = data;
         else if (what == "bump") bump = data;
         else if (what == "sump") sump = data;
-        else if (what == "dump") pump = data;
+        else if (what == "dump") dump = data;
         else if (what == "hump") hump = data;
         else revert();
     }
