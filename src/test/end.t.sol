@@ -25,6 +25,7 @@ import "ds-value/value.sol";
 import {Vat}  from '../vat.sol';
 import {Cat}  from '../cat.sol';
 import {Vow}  from '../vow.sol';
+import {Pot}  from '../pot.sol';
 import {Flipper} from '../flip.sol';
 import {Flapper} from '../flap.sol';
 import {Flopper} from '../flop.sol';
@@ -87,6 +88,7 @@ contract EndTest is DSTest {
     Vat   vat;
     End   end;
     Vow   vow;
+    Pot   pot;
     Cat   cat;
 
     TestSpot spot;
@@ -192,6 +194,10 @@ contract EndTest is DSTest {
 
         vow = new Vow(address(vat), address(flap), address(flop));
 
+        pot = new Pot(address(vat));
+        vat.rely(address(pot));
+        pot.file("vow", address(vow));
+
         cat = new Cat(address(vat));
         cat.file("vow", address(vow));
         vat.rely(address(cat));
@@ -204,10 +210,12 @@ contract EndTest is DSTest {
         end.file("vat", address(vat));
         end.file("cat", address(cat));
         end.file("vow", address(vow));
+        end.file("pot", address(pot));
         end.file("spot", address(spot));
         end.file("wait", 1 hours);
         vat.rely(address(end));
         vow.rely(address(end));
+        pot.rely(address(end));
         cat.rely(address(end));
         flap.rely(address(vow));
         flop.rely(address(vow));
@@ -218,6 +226,7 @@ contract EndTest is DSTest {
         assertEq(vat.live(), 1);
         assertEq(cat.live(), 1);
         assertEq(vow.live(), 1);
+        assertEq(pot.live(), 1);
         assertEq(vow.flopper().live(), 1);
         assertEq(vow.flapper().live(), 1);
         end.cage();
@@ -225,8 +234,18 @@ contract EndTest is DSTest {
         assertEq(vat.live(), 0);
         assertEq(cat.live(), 0);
         assertEq(vow.live(), 0);
+        assertEq(pot.live(), 0);
         assertEq(vow.flopper().live(), 0);
         assertEq(vow.flapper().live(), 0);
+    }
+
+    function testFail_cage_drip() public {
+        assertEq(pot.live(), 1);
+        pot.drip();
+        end.cage();
+
+        assertEq(pot.live(), 0);
+        pot.drip();
     }
 
     // -- Scenario where there is one over-collateralised CDP
