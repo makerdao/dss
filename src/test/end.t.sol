@@ -147,7 +147,6 @@ contract EndTest is DSTest {
 
     function try_pot_file(bytes32 what, uint data) public returns(bool ok) {
         string memory sig = "file(bytes32, uint)";
-        address self = address(this);
         (ok,) = address(pot).call(abi.encodeWithSignature(sig, what, data));
     }
 
