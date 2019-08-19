@@ -117,6 +117,7 @@ contract Pot is DSNote {
 
     // --- Administration ---
     function file(bytes32 what, uint256 data) external note auth {
+        require(live == 1);
         if (what == "dsr") dsr = data;
     }
 
@@ -126,11 +127,11 @@ contract Pot is DSNote {
 
     function cage() external note auth {
         live = 0;
+        dsr = ONE;
     }
 
     // --- Savings Rate Accumulation ---
     function drip() external note {
-        require(live == 1);
         require(now >= rho);
         uint chi_ = sub(rmul(rpow(dsr, now - rho, ONE), chi), chi);
         chi = add(chi, chi_);

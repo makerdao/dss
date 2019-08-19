@@ -145,6 +145,12 @@ contract EndTest is DSTest {
         return ilks[ilk].gem.balanceOf(usr);
     }
 
+    function try_pot_file(bytes32 what, uint data) public returns(bool ok) {
+        string memory sig = "file(bytes32, uint)";
+        address self = address(this);
+        (ok,) = address(pot).call(abi.encodeWithSignature(sig, what, data));
+    }
+
     function init_collateral(bytes32 name) internal returns (Ilk memory) {
         DSToken coin = new DSToken(name);
         coin.mint(20 ether);
@@ -239,13 +245,14 @@ contract EndTest is DSTest {
         assertEq(vow.flapper().live(), 0);
     }
 
-    function testFail_cage_drip() public {
+    function test_cage_pot_drip() public {
         assertEq(pot.live(), 1);
         pot.drip();
         end.cage();
 
         assertEq(pot.live(), 0);
-        pot.drip();
+        assertEq(pot.dsr(), 10 ** 27);
+        assertTrue(!try_pot_file("dsr", 10 ** 27 + 1));
     }
 
     // -- Scenario where there is one over-collateralised CDP
