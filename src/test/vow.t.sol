@@ -104,9 +104,9 @@ contract VowTest is DSTest {
     }
 
     function test_flog_wait() public {
-        assertEq(vow.wait(), 0);
+        assertEq(uint(vow.wait()), 0);
         vow.file('wait', uint(100 seconds));
-        assertEq(vow.wait(), 100 seconds);
+        assertEq(uint(vow.wait()), 100 seconds);
 
         uint tic = now;
         vow.fess(100 ether);

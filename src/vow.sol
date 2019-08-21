@@ -51,13 +51,13 @@ contract Vow is DSNote {
     Flopper public flopper;
 
     mapping (uint256 => uint256) public sin; // debt queue
-    uint256 public Sin;   // queued debt          [rad]
-    uint256 public Ash;   // on-auction debt      [rad]
+    uint256 public Sin;    // queued debt         [rad]
+    uint256 public Ash;    // on-auction debt     [rad]
 
-    uint256 public wait;  // flop delay           [rad]
-    uint256 public sump;  // flop fixed lot size  [rad]
-    uint256 public bump;  // flap fixed lot size  [rad]
-    uint256 public hump;  // surplus buffer       [rad]
+    uint48  public wait;   // flop delay           [rad]
+    uint256 public sump;   // flop fixed lot size   [rad]
+    uint256 public bump;   // flap fixed lot size   [rad]
+    uint256 public hump;   // surplus buffer      [rad]
 
     uint256 public live;
 
@@ -84,7 +84,7 @@ contract Vow is DSNote {
 
     // --- Administration ---
     function file(bytes32 what, uint data) external note auth {
-        if (what == "wait") wait = data;
+        if (what == "wait") wait = uint48(data);
         if (what == "bump") bump = data;
         if (what == "sump") sump = data;
         if (what == "hump") hump = data;
