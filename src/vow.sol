@@ -97,7 +97,7 @@ contract Vow is DSNote {
     }
     // Pop from debt-queue
     function flog(uint era) external note {
-        require(add(era, wait) <= now);
+        require(add(era, uint256(wait)) <= now);
         Sin = sub(Sin, sin[era]);
         sin[era] = 0;
     }
