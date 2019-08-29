@@ -102,7 +102,7 @@ contract Flipper is DSNote {
 
     // --- Auction ---
     function kick(address usr, address gal, uint tab, uint lot, uint bid)
-        public returns (uint id)
+        public auth returns (uint id)
     {
         require(kicks < uint(-1));
         id = ++kicks;
