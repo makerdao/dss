@@ -56,6 +56,7 @@ contract FlapTest is DSTest {
         gem = new DSToken('');
 
         fuss = new Flapper(address(vat), address(gem));
+        fuss.rely(address(this));
         flap = address(fuss);
 
         ali = address(new Guy(fuss));
