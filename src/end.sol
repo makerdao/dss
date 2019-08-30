@@ -53,6 +53,9 @@ contract CatLike {
     function ilks(bytes32) external returns (Ilk memory);
     function cage() external;
 }
+contract PotLike {
+    function cage() external;
+}
 contract VowLike {
     function heal(uint256 rad) external;
     function cage() external;
@@ -94,6 +97,7 @@ contract Spotty {
         - freezes user entrypoints
         - cancels flop/flap auctions
         - starts cooldown period
+        - stops pot drips
 
     2. `cage(ilk)`:
        - set the cage price for each `ilk`, reading off the price feed
@@ -194,6 +198,7 @@ contract End is DSNote {
     VatLike  public vat;
     CatLike  public cat;
     VowLike  public vow;
+    PotLike  public pot;
     Spotty   public spot;
 
     uint256  public live;  // cage flag
@@ -243,6 +248,7 @@ contract End is DSNote {
         if (what == "vat")  vat = VatLike(data);
         if (what == "cat")  cat = CatLike(data);
         if (what == "vow")  vow = VowLike(data);
+        if (what == "pot")  pot = PotLike(data);
         if (what == "spot") spot = Spotty(data);
     }
     function file(bytes32 what, uint256 data) external note auth {
@@ -257,6 +263,7 @@ contract End is DSNote {
         vat.cage();
         cat.cage();
         vow.cage();
+        pot.cage();
     }
 
     function cage(bytes32 ilk) external note {

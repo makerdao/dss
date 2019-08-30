@@ -61,6 +61,8 @@ contract Pot is DSNote {
     address public vow;  // debt engine
     uint256 public rho;  // time of last drip
 
+    uint256 public live;  // Access Flag
+
     // --- Init ---
     constructor(address vat_) public {
         wards[msg.sender] = 1;
@@ -68,6 +70,7 @@ contract Pot is DSNote {
         dsr = ONE;
         chi = ONE;
         rho = now;
+        live = 1;
     }
 
     // --- Math ---
@@ -114,11 +117,17 @@ contract Pot is DSNote {
 
     // --- Administration ---
     function file(bytes32 what, uint256 data) external note auth {
+        require(live == 1);
         if (what == "dsr") dsr = data;
     }
 
     function file(bytes32 what, address addr) external note auth {
         if (what == "vow") vow = addr;
+    }
+
+    function cage() external note auth {
+        live = 0;
+        dsr = ONE;
     }
 
     // --- Savings Rate Accumulation ---
