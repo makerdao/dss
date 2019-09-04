@@ -84,6 +84,7 @@ contract Spotty {
         PipLike pip;
         uint256 mat;
     }
+    function poke(bytes32) external;
     function ilks(bytes32) external view returns (Ilk memory);
 }
 
@@ -270,8 +271,9 @@ contract End is DSNote {
         require(live == 0);
         require(tag[ilk] == 0);
         Art[ilk] = vat.ilks(ilk).Art;
-        // pip returns a wad, invert it and convert to ray
-        tag[ilk] = rdiv(WAD, uint(spot.ilks(ilk).pip.read()));
+        // spot and mat are both RAY, so multiple then invert it
+        spot.poke(ilk);
+        tag[ilk] = rdiv(RAY, rmul(vat.ilks(ilk).spot, spot.ilks(ilk).mat));
     }
 
     function skip(bytes32 ilk, uint256 id) external note {

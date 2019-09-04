@@ -31,22 +31,31 @@ import {Flapper} from '../flap.sol';
 import {Flopper} from '../flop.sol';
 import {GemJoin} from '../join.sol';
 import {End}  from '../end.sol';
+import {Spotter} from '../spot.sol';
 
 contract Hevm {
     function warp(uint256) public;
 }
 
-contract TestSpot {
-    struct Ilk {
-        address pip;
-        uint256 mat;
-    }
-    mapping (bytes32 => Ilk) public ilks;
+// contract TestSpot {
+//     struct Ilk {
+//         address pip;
+//         uint256 mat;
+//     }
+//     mapping (bytes32 => Ilk) public ilks;
 
-    function file(bytes32 ilk, address pip_) public {
-        ilks[ilk].pip = pip_;
-    }
-}
+//     function file(bytes32 ilk, address pip_) public {
+//         ilks[ilk].pip = pip_;
+//     }
+//     function poke(bytes32 ilk) external {
+//         (bytes32 val, bool zzz) = ilks[ilk].pip.peek();
+//         if (zzz) {
+//             uint256 spot = rdiv(rdiv(mul(uint(val), 10 ** 9), par), ilks[ilk].mat);
+//             vat.file(ilk, "spot", spot);
+//             emit Poke(ilk, val, spot);
+//         }
+//     }
+// }
 
 contract Usr {
     Vat public vat;
@@ -91,7 +100,7 @@ contract EndTest is DSTest {
     Pot   pot;
     Cat   cat;
 
-    TestSpot spot;
+    Spotter spot;
 
     struct Ilk {
         DSValue pip;
@@ -156,6 +165,7 @@ contract EndTest is DSTest {
 
         DSValue pip = new DSValue();
         spot.file(name, address(pip));
+        spot.file(name, "mat", RAY);
         // initial collateral price of 5
         pip.poke(bytes32(5 * WAD));
 
@@ -208,8 +218,9 @@ contract EndTest is DSTest {
         vat.rely(address(cat));
         vow.rely(address(cat));
 
-        spot = new TestSpot();
+        spot = new Spotter(address(vat));
         vat.file("Line",         rad(1000 ether));
+        vat.rely(address(spot));
 
         end = new End();
         end.file("vat", address(vat));
