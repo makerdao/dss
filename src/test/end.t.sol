@@ -37,26 +37,6 @@ contract Hevm {
     function warp(uint256) public;
 }
 
-// contract TestSpot {
-//     struct Ilk {
-//         address pip;
-//         uint256 mat;
-//     }
-//     mapping (bytes32 => Ilk) public ilks;
-
-//     function file(bytes32 ilk, address pip_) public {
-//         ilks[ilk].pip = pip_;
-//     }
-//     function poke(bytes32 ilk) external {
-//         (bytes32 val, bool zzz) = ilks[ilk].pip.peek();
-//         if (zzz) {
-//             uint256 spot = rdiv(rdiv(mul(uint(val), 10 ** 9), par), ilks[ilk].mat);
-//             vat.file(ilk, "spot", spot);
-//             emit Poke(ilk, val, spot);
-//         }
-//     }
-// }
-
 contract Usr {
     Vat public vat;
     End public end;
