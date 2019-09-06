@@ -281,36 +281,41 @@ contract DaiTest is DSTest {
     }
 
     function testTypehash() public {
-      assertEq(token.PERMIT_TYPEHASH(), 0xea2aa0a1be11a07ed86d755c93467f4f82362b452371d1ba94d1715123511acb);
+        assertEq(token.PERMIT_TYPEHASH(), 0xea2aa0a1be11a07ed86d755c93467f4f82362b452371d1ba94d1715123511acb);
     }
 
     function testDomain_Separator() public {
-      assertEq(token.DOMAIN_SEPARATOR(), 0xc8bf33c5645588f50a4ef57b0c7959b26b61f1456241cc11261acabb2e7217d9);
+        assertEq(token.DOMAIN_SEPARATOR(), 0xc8bf33c5645588f50a4ef57b0c7959b26b61f1456241cc11261acabb2e7217d9);
     }
 
     function testPermit() public {
-        assertEq(token.nonces(cal),0);
-        assertEq(token.allowance(cal, del),0);
+        assertEq(token.nonces(cal), 0);
+        assertEq(token.allowance(cal, del), 0);
         token.permit(cal, del, 0, 0, true, v, r, s);
         assertEq(token.allowance(cal, del),uint(-1));
         assertEq(token.nonces(cal),1);
     }
 
+    function testFailPermitAddress0() public {
+        v = 0;
+        token.permit(address(0), del, 0, 0, true, v, r, s);
+    }
+
     function testPermitWithExpiry() public {
-      assertEq(now, 604411200);
-      token.permit(cal, del, 0, 604411200 + 1 hours, true, _v, _r, _s);
-      assertEq(token.allowance(cal, del),uint(-1));
-      assertEq(token.nonces(cal),1);
+        assertEq(now, 604411200);
+        token.permit(cal, del, 0, 604411200 + 1 hours, true, _v, _r, _s);
+        assertEq(token.allowance(cal, del),uint(-1));
+        assertEq(token.nonces(cal),1);
     }
 
     function testFailPermitWithExpiry() public {
-      hevm.warp(now + 2 hours);
-      assertEq(now, 604411200 + 2 hours);
-      token.permit(cal, del, 0, 1, true, _v, _r, _s);
+        hevm.warp(now + 2 hours);
+        assertEq(now, 604411200 + 2 hours);
+        token.permit(cal, del, 0, 1, true, _v, _r, _s);
     }
 
     function testFailReplay() public {
-      token.permit(cal, del, 0, 0, true, v, r, s);
-      token.permit(cal, del, 0, 0, true, v, r, s);
+        token.permit(cal, del, 0, 0, true, v, r, s);
+        token.permit(cal, del, 0, 0, true, v, r, s);
     }
 }

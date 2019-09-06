@@ -127,6 +127,8 @@ contract Dai is DSNote {
                                      expiry,
                                      allowed))
         ));
+
+        require(holder != address(0), "dai/invalid-address-0");
         require(holder == ecrecover(digest, v, r, s), "dai/invalid-permit");
         require(expiry == 0 || now <= expiry, "dai/permit-expired");
         require(nonce == nonces[holder]++, "dai/invalid-nonce");
