@@ -42,6 +42,11 @@ contract TestSpot {
         uint256 mat;
     }
     mapping (bytes32 => Ilk) public ilks;
+    uint256 public par;
+
+    constructor() public {
+        par = 10**27;
+    }
 
     function file(bytes32 ilk, address pip_) public {
         ilks[ilk].pip = pip_;

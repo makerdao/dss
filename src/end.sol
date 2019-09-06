@@ -84,6 +84,7 @@ contract Spotty {
         PipLike pip;
         uint256 mat;
     }
+    function par() external view returns (uint256);
     function ilks(bytes32) external view returns (Ilk memory);
 }
 
@@ -242,6 +243,9 @@ contract End is DSNote {
     function rdiv(uint x, uint y) internal pure returns (uint z) {
         z = mul(x, RAY) / y;
     }
+    function wdiv(uint x, uint y) internal pure returns (uint z) {
+        z = mul(x, WAD) / y;
+    }
 
     // --- Administration ---
     function file(bytes32 what, address data) external note auth {
@@ -270,8 +274,8 @@ contract End is DSNote {
         require(live == 0);
         require(tag[ilk] == 0);
         Art[ilk] = vat.ilks(ilk).Art;
-        // pip returns a wad, invert it and convert to ray
-        tag[ilk] = rdiv(WAD, uint(spot.ilks(ilk).pip.read()));
+        // par is a ray, pip returns a wad
+        tag[ilk] = wdiv(spot.par(), uint(spot.ilks(ilk).pip.read()));
     }
 
     function skip(bytes32 ilk, uint256 id) external note {
