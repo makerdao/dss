@@ -122,11 +122,13 @@ contract Vat {
     }
     function file(bytes32 what, uint data) external note auth {
         if (what == "Line") Line = data;
+        else revert();
     }
     function file(bytes32 ilk, bytes32 what, uint data) external note auth {
         if (what == "spot") ilks[ilk].spot = data;
-        if (what == "line") ilks[ilk].line = data;
-        if (what == "dust") ilks[ilk].dust = data;
+        else if (what == "line") ilks[ilk].line = data;
+        else if (what == "dust") ilks[ilk].dust = data;
+        else revert();
     }
     function cage() external note auth {
         live = 0;

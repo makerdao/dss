@@ -73,9 +73,11 @@ contract Spotter is DSNote {
     }
     function file(bytes32 what, uint data) external note auth {
         if (what == "par") par = data;
+        else revert();
     }
     function file(bytes32 ilk, bytes32 what, uint data) external note auth {
         if (what == "mat") ilks[ilk].mat = data;
+        else revert();
     }
 
     // --- Update value ---

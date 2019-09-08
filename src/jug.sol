@@ -84,12 +84,15 @@ contract Jug is DSNote {
     }
     function file(bytes32 ilk, bytes32 what, uint data) external note auth {
         if (what == "duty") ilks[ilk].duty = data;
+        else revert();
     }
     function file(bytes32 what, uint data) external note auth {
         if (what == "base") base = data;
+        else revert();
     }
     function file(bytes32 what, address data) external note auth {
         if (what == "vow") vow = data;
+        else revert();
     }
 
     // --- Stability Fee Collection ---

@@ -96,8 +96,9 @@ contract Flipper is DSNote {
     // --- Admin ---
     function file(bytes32 what, uint data) external note auth {
         if (what == "beg") beg = data;
-        if (what == "ttl") ttl = uint48(data);
-        if (what == "tau") tau = uint48(data);
+        else if (what == "ttl") ttl = uint48(data);
+        else if (what == "tau") tau = uint48(data);
+        else revert();
     }
 
     // --- Auction ---
