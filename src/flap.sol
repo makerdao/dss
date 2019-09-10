@@ -130,8 +130,7 @@ contract Flapper is DSNote {
     }
     function deal(uint id) external note {
         require(live == 1);
-        require(bids[id].tic < now && bids[id].tic != 0 ||
-                bids[id].end < now);
+        require(bids[id].tic != 0 && (bids[id].tic < now || bids[id].end < now));
         vat.move(address(this), bids[id].guy, bids[id].lot);
         gem.burn(address(this), bids[id].bid);
         delete bids[id];
