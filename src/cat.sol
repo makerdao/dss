@@ -100,13 +100,16 @@ contract Cat is DSNote {
     // --- Administration ---
     function file(bytes32 what, address data) external note auth {
         if (what == "vow") vow = VowLike(data);
+        else revert();
     }
     function file(bytes32 ilk, bytes32 what, uint data) external note auth {
         if (what == "chop") ilks[ilk].chop = data;
-        if (what == "lump") ilks[ilk].lump = data;
+        else if (what == "lump") ilks[ilk].lump = data;
+        else revert();
     }
     function file(bytes32 ilk, bytes32 what, address flip) external note auth {
         if (what == "flip") { ilks[ilk].flip = flip; vat.hope(flip); }
+        else revert();
     }
 
     // --- CDP Liquidation ---

@@ -85,9 +85,10 @@ contract Vow is DSNote {
     // --- Administration ---
     function file(bytes32 what, uint data) external note auth {
         if (what == "wait") wait = data;
-        if (what == "bump") bump = data;
-        if (what == "sump") sump = data;
-        if (what == "hump") hump = data;
+        else if (what == "bump") bump = data;
+        else if (what == "sump") sump = data;
+        else if (what == "hump") hump = data;
+        else revert();
     }
 
     // Push to debt-queue

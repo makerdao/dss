@@ -246,13 +246,15 @@ contract End is DSNote {
     // --- Administration ---
     function file(bytes32 what, address data) external note auth {
         if (what == "vat")  vat = VatLike(data);
-        if (what == "cat")  cat = CatLike(data);
-        if (what == "vow")  vow = VowLike(data);
-        if (what == "pot")  pot = PotLike(data);
-        if (what == "spot") spot = Spotty(data);
+        else if (what == "cat")  cat = CatLike(data);
+        else if (what == "vow")  vow = VowLike(data);
+        else if (what == "pot")  pot = PotLike(data);
+        else if (what == "spot") spot = Spotty(data);
+        else revert();
     }
     function file(bytes32 what, uint256 data) external note auth {
         if (what == "wait") wait = data;
+        else revert();
     }
 
     // --- Settlement ---

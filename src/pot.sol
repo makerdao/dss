@@ -119,10 +119,12 @@ contract Pot is DSNote {
     function file(bytes32 what, uint256 data) external note auth {
         require(live == 1);
         if (what == "dsr") dsr = data;
+        else revert();
     }
 
     function file(bytes32 what, address addr) external note auth {
         if (what == "vow") vow = addr;
+        else revert();
     }
 
     function cage() external note auth {
