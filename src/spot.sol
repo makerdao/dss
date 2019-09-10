@@ -68,8 +68,9 @@ contract Spotter is DSNote {
     }
 
     // --- Administration ---
-    function file(bytes32 ilk, address pip_) external note auth {
-        ilks[ilk].pip = PipLike(pip_);
+    function file(bytes32 ilk, bytes32 what, address pip_) external note auth {
+        if (what == "pip") ilks[ilk].pip = PipLike(pip_);
+        else revert();
     }
     function file(bytes32 what, uint data) external note auth {
         if (what == "par") par = data;
