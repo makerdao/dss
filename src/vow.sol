@@ -54,8 +54,8 @@ contract Vow is DSNote {
     uint256 public Sin;   // queued debt          [rad]
     uint256 public Ash;   // on-auction debt      [rad]
 
-    uint256 public wait;  // flop delay            [rad]
-    uint256 public dump;  // flop fixed lot size    [rad]
+    uint256 public wait;  // flop delay
+    uint256 public dump;  // flop fixed lot size    [wad]
     uint256 public sump;  // flop fixed bid size    [rad]
 
     uint256 public bump;  // flap fixed lot size    [rad]
