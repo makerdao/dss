@@ -95,7 +95,7 @@ contract FlopTest is DSTest {
     function test_kick() public {
         assertEq(vat.dai(address(this)), 600 ether);
         assertEq(gem.balanceOf(address(this)),   0 ether);
-        flop.kick({ lot: uint(-1)   // or whatever high starting value
+        flop.kick({ lot: 200 ether   // or whatever high starting value
                   , gal: gal
                   , bid: 0
                   });
@@ -104,7 +104,7 @@ contract FlopTest is DSTest {
         assertEq(gem.balanceOf(address(this)),   0 ether);
     }
     function test_dent() public {
-        uint id = flop.kick({ lot: uint(-1)   // or whatever high starting value
+        uint id = flop.kick({ lot: 200 ether   // or whatever high starting value
                             , gal: gal
                             , bid: 10 ether
                             });
@@ -134,7 +134,7 @@ contract FlopTest is DSTest {
     }
     function test_tick() public {
         // start an auction
-        uint id = flop.kick({ lot: uint(-1)   // or whatever high starting value
+        uint id = flop.kick({ lot: 200 ether   // or whatever high starting value
                             , gal: gal
                             , bid: 10 ether
                             });
@@ -146,12 +146,15 @@ contract FlopTest is DSTest {
         assertTrue(!Guy(ali).try_dent(id, 100 ether, 10 ether));
         assertTrue( Guy(ali).try_tick(id));
         // check biddable
+        (, uint _lot,,,) = flop.bids(id);
+        // tick should increase the lot by pad (50%) and restart the auction
+        assertEq(_lot, 300 ether);
         assertTrue( Guy(ali).try_dent(id, 100 ether, 10 ether));
     }
     function test_no_deal_after_end() public {
         // if there are no bids and the auction ends, then it should not
         // be refundable to the creator. Rather, it ticks indefinitely.
-        uint id = flop.kick({ lot: uint(-1)   // or whatever high starting value
+        uint id = flop.kick({ lot: 200 ether   // or whatever high starting value
                             , gal: gal
                             , bid: 10 ether
                             });

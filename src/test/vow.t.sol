@@ -42,6 +42,7 @@ contract VowTest is DSTest {
 
         vow.file("bump", rad(100 ether));
         vow.file("sump", rad(100 ether));
+        vow.file("dump", 200 ether);
 
         vat.hope(address(flop));
     }

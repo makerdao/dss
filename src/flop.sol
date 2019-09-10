@@ -60,6 +60,7 @@ contract Flopper is DSNote {
 
     uint256  constant ONE = 1.00E27;
     uint256  public   beg = 1.05E27;  // 5% minimum bid increase
+    uint256  public   pad = 1.50E27;  // 50% lot increase for tick
     uint48   public   ttl = 3 hours;  // 3 hours bid lifetime
     uint48   public   tau = 2 days;   // 2 days total auction length
     uint256  public kicks = 0;
@@ -92,6 +93,7 @@ contract Flopper is DSNote {
     // --- Admin ---
     function file(bytes32 what, uint data) external note auth {
         if (what == "beg") beg = data;
+        else if (what == "pad") pad = data;
         else if (what == "ttl") ttl = uint48(data);
         else if (what == "tau") tau = uint48(data);
         else revert();
@@ -113,6 +115,7 @@ contract Flopper is DSNote {
     function tick(uint id) external note {
         require(bids[id].end < now);
         require(bids[id].tic == 0);
+        bids[id].lot = mul(pad, bids[id].lot) / ONE;
         bids[id].end = add(uint48(now), tau);
     }
     function dent(uint id, uint lot, uint bid) external note {
