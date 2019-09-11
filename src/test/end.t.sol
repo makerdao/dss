@@ -144,7 +144,7 @@ contract EndTest is DSTest {
         coin.mint(20 ether);
 
         DSValue pip = new DSValue();
-        spot.file(name, address(pip));
+        spot.file(name, "pip", address(pip));
         spot.file(name, "mat", ray(1.5 ether));
         // initial collateral price of 5
         pip.poke(bytes32(5 * WAD));
