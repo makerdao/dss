@@ -136,8 +136,7 @@ contract Flopper is DSNote {
     }
     function deal(uint id) external note {
         require(live == 1);
-        require(bids[id].tic < now && bids[id].tic != 0 ||
-                bids[id].end < now);
+        require(bids[id].tic != 0 && (bids[id].tic < now || bids[id].end < now));
         gem.mint(bids[id].guy, bids[id].lot);
         delete bids[id];
     }
