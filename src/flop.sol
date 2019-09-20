@@ -126,7 +126,7 @@ contract Flopper is DSNote {
 
         require(bid == bids[id].bid);
         require(lot <  bids[id].lot);
-        require(mul(beg, lot) / ONE <= bids[id].lot);  // div as lot can be huge
+        require(mul(beg, lot) <= mul(bids[id].lot, ONE));
 
         vat.move(msg.sender, bids[id].guy, bid);
 
