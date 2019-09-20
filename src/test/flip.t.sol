@@ -99,7 +99,6 @@ contract FlipTest is DSTest {
         vat.set_ilk("gems");
 
         flip = new Flipper(address(vat), "gems");
-        flip.rely(address(this));
 
         ali = address(new Guy(flip));
         bob = address(new Guy(flip));
