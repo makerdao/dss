@@ -191,7 +191,6 @@ contract EndTest is DSTest {
         gov.setOwner(address(flop));
 
         vow = new Vow(address(vat), address(flap), address(flop));
-        flap.rely(address(vow));
 
         cat = new Cat(address(vat));
         cat.file("vow", address(vow));
