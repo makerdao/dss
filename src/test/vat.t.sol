@@ -458,6 +458,7 @@ contract BiteTest is DSTest {
         flop = new Flopper(address(vat), address(gov));
 
         vow = new TestVow(address(vat), address(flap), address(flop));
+        flap.rely(address(vow));
         flop.rely(address(vow));
 
         jug = new Jug(address(vat));

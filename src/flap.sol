@@ -97,7 +97,7 @@ contract Flapper is DSNote {
     }
 
     // --- Auction ---
-    function kick(uint lot, uint bid) external returns (uint id) {
+    function kick(uint lot, uint bid) external auth returns (uint id) {
         require(live == 1);
         require(kicks < uint(-1));
         id = ++kicks;
