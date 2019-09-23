@@ -111,6 +111,11 @@ contract Flapper is DSNote {
 
         emit Kick(id, lot, bid);
     }
+    function tick(uint id) external note {
+        require(bids[id].end < now);
+        require(bids[id].tic == 0);
+        bids[id].end = add(uint48(now), tau);
+    }
     function tend(uint id, uint lot, uint bid) external note {
         require(live == 1);
         require(bids[id].guy != address(0));
