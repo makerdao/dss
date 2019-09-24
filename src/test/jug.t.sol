@@ -18,7 +18,7 @@ contract VatLike {
 
 contract JugTest is DSTest {
     Hevm hevm;
-    Jug drip;
+    Jug jug;
     Vat  vat;
 
     function rad(uint wad_) internal pure returns (uint) {
@@ -28,7 +28,7 @@ contract JugTest is DSTest {
         return rad_ / 10 ** 27;
     }
     function rho(bytes32 ilk) internal view returns (uint) {
-        (uint duty, uint rho_) = drip.ilks(ilk); duty;
+        (uint duty, uint rho_) = jug.ilks(ilk); duty;
         return rho_;
     }
     function rate(bytes32 ilk) internal view returns (uint) {
@@ -47,8 +47,8 @@ contract JugTest is DSTest {
         hevm.warp(604411200);
 
         vat  = new Vat();
-        drip = new Jug(address(vat));
-        vat.rely(address(drip));
+        jug = new Jug(address(vat));
+        vat.rely(address(jug));
         vat.init("i");
 
         draw("i", 100 ether);
@@ -73,87 +73,87 @@ contract JugTest is DSTest {
         assertEq(i.Art, 100 ether);
     }
     function test_drip_updates_rho() public {
-        drip.init("i");
+        jug.init("i");
         assertEq(rho("i"), now);
 
-        drip.file("i", "duty", 10 ** 27);
-        drip.drip("i");
+        jug.file("i", "duty", 10 ** 27);
+        jug.drip("i");
         assertEq(rho("i"), now);
         hevm.warp(now + 1);
         assertEq(rho("i"), now - 1);
-        drip.drip("i");
+        jug.drip("i");
         assertEq(rho("i"), now);
         hevm.warp(now + 1 days);
-        drip.drip("i");
+        jug.drip("i");
         assertEq(rho("i"), now);
     }
     function test_drip_file() public {
-        drip.init("i");
-        drip.file("i", "duty", 10 ** 27);
-        drip.drip("i");
-        drip.file("i", "duty", 1000000564701133626865910626);  // 5% / day
+        jug.init("i");
+        jug.file("i", "duty", 10 ** 27);
+        jug.drip("i");
+        jug.file("i", "duty", 1000000564701133626865910626);  // 5% / day
     }
     function test_drip_0d() public {
-        drip.init("i");
-        drip.file("i", "duty", 1000000564701133626865910626);  // 5% / day
+        jug.init("i");
+        jug.file("i", "duty", 1000000564701133626865910626);  // 5% / day
         assertEq(vat.dai(ali), rad(0 ether));
-        drip.drip("i");
+        jug.drip("i");
         assertEq(vat.dai(ali), rad(0 ether));
     }
     function test_drip_1d() public {
-        drip.init("i");
-        drip.file("vow", ali);
+        jug.init("i");
+        jug.file("vow", ali);
 
-        drip.file("i", "duty", 1000000564701133626865910626);  // 5% / day
+        jug.file("i", "duty", 1000000564701133626865910626);  // 5% / day
         hevm.warp(now + 1 days);
         assertEq(wad(vat.dai(ali)), 0 ether);
-        drip.drip("i");
+        jug.drip("i");
         assertEq(wad(vat.dai(ali)), 5 ether);
     }
     function test_drip_2d() public {
-        drip.init("i");
-        drip.file("vow", ali);
-        drip.file("i", "duty", 1000000564701133626865910626);  // 5% / day
+        jug.init("i");
+        jug.file("vow", ali);
+        jug.file("i", "duty", 1000000564701133626865910626);  // 5% / day
 
         hevm.warp(now + 2 days);
         assertEq(wad(vat.dai(ali)), 0 ether);
-        drip.drip("i");
+        jug.drip("i");
         assertEq(wad(vat.dai(ali)), 10.25 ether);
     }
     function test_drip_3d() public {
-        drip.init("i");
-        drip.file("vow", ali);
+        jug.init("i");
+        jug.file("vow", ali);
 
-        drip.file("i", "duty", 1000000564701133626865910626);  // 5% / day
+        jug.file("i", "duty", 1000000564701133626865910626);  // 5% / day
         hevm.warp(now + 3 days);
         assertEq(wad(vat.dai(ali)), 0 ether);
-        drip.drip("i");
+        jug.drip("i");
         assertEq(wad(vat.dai(ali)), 15.7625 ether);
     }
     function test_drip_negative_3d() public {
-        drip.init("i");
-        drip.file("vow", ali);
+        jug.init("i");
+        jug.file("vow", ali);
 
-        drip.file("i", "duty", 999999706969857929985428567);  // -2.5% / day
+        jug.file("i", "duty", 999999706969857929985428567);  // -2.5% / day
         hevm.warp(now + 3 days);
         assertEq(wad(vat.dai(address(this))), 100 ether);
         vat.move(address(this), ali, rad(100 ether));
         assertEq(wad(vat.dai(ali)), 100 ether);
-        drip.drip("i");
+        jug.drip("i");
         assertEq(wad(vat.dai(ali)), 92.6859375 ether);
     }
 
     function test_drip_multi() public {
-        drip.init("i");
-        drip.file("vow", ali);
+        jug.init("i");
+        jug.file("vow", ali);
 
-        drip.file("i", "duty", 1000000564701133626865910626);  // 5% / day
+        jug.file("i", "duty", 1000000564701133626865910626);  // 5% / day
         hevm.warp(now + 1 days);
-        drip.drip("i");
+        jug.drip("i");
         assertEq(wad(vat.dai(ali)), 5 ether);
-        drip.file("i", "duty", 1000001103127689513476993127);  // 10% / day
+        jug.file("i", "duty", 1000001103127689513476993127);  // 10% / day
         hevm.warp(now + 1 days);
-        drip.drip("i");
+        jug.drip("i");
         assertEq(wad(vat.dai(ali)),  15.5 ether);
         assertEq(wad(vat.debt()),     115.5 ether);
         assertEq(rate("i") / 10 ** 9, 1.155 ether);
@@ -162,15 +162,26 @@ contract JugTest is DSTest {
         vat.init("j");
         draw("j", 100 ether);
 
-        drip.init("i");
-        drip.init("j");
-        drip.file("vow", ali);
+        jug.init("i");
+        jug.init("j");
+        jug.file("vow", ali);
 
-        drip.file("i", "duty", 1050000000000000000000000000);  // 5% / second
-        drip.file("j", "duty", 1000000000000000000000000000);  // 0% / second
-        drip.file("base",  uint(50000000000000000000000000)); // 5% / second
+        jug.file("i", "duty", 1050000000000000000000000000);  // 5% / second
+        jug.file("j", "duty", 1000000000000000000000000000);  // 0% / second
+        jug.file("base",  uint(50000000000000000000000000)); // 5% / second
         hevm.warp(now + 1);
-        drip.drip("i");
+        jug.drip("i");
         assertEq(wad(vat.dai(ali)), 10 ether);
+    }
+    function test_file_duty() public {
+        jug.init("i");
+        hevm.warp(now + 1);
+        jug.drip("i");
+        jug.file("i", "duty", 1);
+    }
+    function testFail_file_duty() public {
+        jug.init("i");
+        hevm.warp(now + 1);
+        jug.file("i", "duty", 1);
     }
 }
