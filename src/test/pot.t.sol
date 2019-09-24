@@ -124,4 +124,13 @@ contract DSRTest is DSTest {
         hevm.warp(now + 1 days);
         pot.join(100 ether);
     }
+    function test_file() public {
+        hevm.warp(now + 1);
+        pot.drip();
+        pot.file("dsr", uint(1));
+    }
+    function testFail_file() public {
+        hevm.warp(now + 1);
+        pot.file("dsr", uint(1));
+    }
 }
