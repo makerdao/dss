@@ -83,6 +83,7 @@ contract Jug is DSNote {
         i.rho  = now;
     }
     function file(bytes32 ilk, bytes32 what, uint data) external note auth {
+        require(now == ilks[ilk].rho);
         if (what == "duty") ilks[ilk].duty = data;
         else revert();
     }
