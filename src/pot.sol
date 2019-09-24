@@ -118,6 +118,7 @@ contract Pot is DSNote {
     // --- Administration ---
     function file(bytes32 what, uint256 data) external note auth {
         require(live == 1);
+        require(now == rho);
         if (what == "dsr") dsr = data;
         else revert();
     }
