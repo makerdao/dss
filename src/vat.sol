@@ -25,8 +25,8 @@ contract Vat {
     modifier auth { require(wards[msg.sender] == 1); _; }
 
     mapping(address => mapping (address => uint)) public can;
-    function hope(address usr) external { can[msg.sender][usr] = 1; }
-    function nope(address usr) external { can[msg.sender][usr] = 0; }
+    function hope(address usr) external note { can[msg.sender][usr] = 1; }
+    function nope(address usr) external note { can[msg.sender][usr] = 0; }
     function wish(address bit, address usr) internal view returns (bool) {
         return either(bit == usr, can[bit][usr] == 1);
     }
