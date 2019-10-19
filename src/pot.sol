@@ -85,7 +85,7 @@ contract Pot is DSNote {
                     let half := div(base, 2)  // for rounding.
                     for { n := div(n, 2) } n { n := div(n,2) } {
                         let xx := mul(x, x)
-                        if iszero(eq(div(xx, x), x)) { revert(0,0) }
+                        if shr(128, x) { revert(0,0) }
                         let xxRound := add(xx, half)
                         if lt(xxRound, xx) { revert(0,0) }
                         x := div(xxRound, base)
