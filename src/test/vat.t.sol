@@ -325,6 +325,8 @@ contract FrobTest is DSTest {
 
 contract JoinTest is DSTest {
     TestVat vat;
+    DSToken gem;
+    GemJoin gemA;
     ETHJoin ethA;
     DaiJoin daiA;
     DSToken dai;
@@ -333,6 +335,10 @@ contract JoinTest is DSTest {
     function setUp() public {
         vat = new TestVat();
         vat.init("eth");
+
+        gem  = new DSToken("Gem");
+        gemA = new GemJoin(address(vat), "gem", address(gem));
+        vat.rely(address(gemA));
 
         ethA = new ETHJoin(address(vat), "eth");
         vat.rely(address(ethA));
@@ -344,9 +350,37 @@ contract JoinTest is DSTest {
 
         me = address(this);
     }
+    function try_cage(address a) public payable returns (bool ok) {
+        string memory sig = "cage()";
+        (ok,) = a.call(abi.encodeWithSignature(sig));
+    }
+    function try_join_gem(address usr, uint wad) public returns (bool ok) {
+        string memory sig = "join(address,uint256)";
+        (ok,) = address(gemA).call(abi.encodeWithSignature(sig, usr, wad));
+    }
+    function try_join_eth(address usr) public payable returns (bool ok) {
+        string memory sig = "join(address)";
+        (ok,) = address(ethA).call.value(msg.value)(abi.encodeWithSignature(sig, usr));
+    }
+    function try_exit_dai(address usr, uint wad) public returns (bool ok) {
+        string memory sig = "exit(address,uint256)";
+        (ok,) = address(daiA).call(abi.encodeWithSignature(sig, usr, wad));
+    }
     function () external payable {}
+    function test_gem_join() public {
+        gem.mint(20 ether);
+        gem.approve(address(gemA), 20 ether);
+        assertTrue( try_join_gem(address(this), 10 ether));
+        assertEq(vat.gem("gem", me), 10 ether);
+        assertTrue( try_cage(address(gemA)));
+        assertTrue(!try_join_gem(address(this), 10 ether));
+        assertEq(vat.gem("gem", me), 10 ether);
+    }
     function test_eth_join() public {
-        ethA.join.value(10 ether)(address(this));
+        assertTrue( this.try_join_eth.value(10 ether)(address(this)));
+        assertEq(vat.gem("eth", me), 10 ether);
+        assertTrue( try_cage(address(ethA)));
+        assertTrue(!this.try_join_eth.value(10 ether)(address(this)));
         assertEq(vat.gem("eth", me), 10 ether);
     }
     function test_eth_exit() public {
@@ -362,9 +396,13 @@ contract JoinTest is DSTest {
         address urn = address(this);
         vat.mint(address(this), 100 ether);
         vat.hope(address(daiA));
-        daiA.exit(urn, 60 ether);
-        assertEq(dai.balanceOf(address(this)), 60 ether);
-        assertEq(vat.dai(me),              rad(40 ether));
+        assertTrue( try_exit_dai(urn, 40 ether));
+        assertEq(dai.balanceOf(address(this)), 40 ether);
+        assertEq(vat.dai(me),              rad(60 ether));
+        assertTrue( try_cage(address(daiA)));
+        assertTrue(!try_exit_dai(urn, 40 ether));
+        assertEq(dai.balanceOf(address(this)), 40 ether);
+        assertEq(vat.dai(me),              rad(60 ether));
     }
     function test_dai_exit_join() public {
         address urn = address(this);
@@ -383,6 +421,14 @@ contract JoinTest is DSTest {
     function test_nonzero_fallback_reverts() public {
         (bool ok,) = address(ethA).call.value(10)("invalid calldata");
         assertTrue(!ok);
+    }
+    function test_cage_no_access() public {
+        gemA.deny(address(this));
+        assertTrue(!try_cage(address(gemA)));
+        ethA.deny(address(this));
+        assertTrue(!try_cage(address(ethA)));
+        daiA.deny(address(this));
+        assertTrue(!try_cage(address(daiA)));
     }
 }
 

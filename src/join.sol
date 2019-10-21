@@ -59,15 +59,29 @@ contract VatLike {
 */
 
 contract GemJoin is DSNote {
+    // --- Auth ---
+    mapping (address => uint) public wards;
+    function rely(address usr) external note auth { wards[usr] = 1; }
+    function deny(address usr) external note auth { wards[usr] = 0; }
+    modifier auth { require(wards[msg.sender] == 1); _; }
+
     VatLike public vat;
     bytes32 public ilk;
     GemLike public gem;
+    uint256 public live;  // Access Flag
+
     constructor(address vat_, bytes32 ilk_, address gem_) public {
+        wards[msg.sender] = 1;
+        live = 1;
         vat = VatLike(vat_);
         ilk = ilk_;
         gem = GemLike(gem_);
     }
+    function cage() external note auth {
+        live = 0;
+    }
     function join(address usr, uint wad) external note {
+        require(live == 1);
         require(int(wad) >= 0);
         vat.slip(ilk, usr, int(wad));
         require(gem.transferFrom(msg.sender, address(this), wad));
@@ -80,13 +94,27 @@ contract GemJoin is DSNote {
 }
 
 contract ETHJoin is DSNote {
+    // --- Auth ---
+    mapping (address => uint) public wards;
+    function rely(address usr) external note auth { wards[usr] = 1; }
+    function deny(address usr) external note auth { wards[usr] = 0; }
+    modifier auth { require(wards[msg.sender] == 1); _; }
+
     VatLike public vat;
     bytes32 public ilk;
+    uint256 public live;  // Access Flag
+
     constructor(address vat_, bytes32 ilk_) public {
+        wards[msg.sender] = 1;
+        live = 1;
         vat = VatLike(vat_);
         ilk = ilk_;
     }
+    function cage() external note auth {
+        live = 0;
+    }
     function join(address usr) external payable note {
+        require(live == 1);
         require(int(msg.value) >= 0);
         vat.slip(ilk, usr, int(msg.value));
     }
@@ -98,11 +126,24 @@ contract ETHJoin is DSNote {
 }
 
 contract DaiJoin is DSNote {
+    // --- Auth ---
+    mapping (address => uint) public wards;
+    function rely(address usr) external note auth { wards[usr] = 1; }
+    function deny(address usr) external note auth { wards[usr] = 0; }
+    modifier auth { require(wards[msg.sender] == 1); _; }
+
     VatLike public vat;
     DSTokenLike public dai;
+    uint256 public live;  // Access Flag
+
     constructor(address vat_, address dai_) public {
+        wards[msg.sender] = 1;
+        live = 1;
         vat = VatLike(vat_);
         dai = DSTokenLike(dai_);
+    }
+    function cage() external note auth {
+        live = 0;
     }
     uint constant ONE = 10 ** 27;
     function mul(uint x, uint y) internal pure returns (uint z) {
@@ -113,6 +154,7 @@ contract DaiJoin is DSNote {
         dai.burn(msg.sender, wad);
     }
     function exit(address usr, uint wad) external note {
+        require(live == 1);
         vat.move(msg.sender, address(this), mul(ONE, wad));
         dai.mint(usr, wad);
     }
