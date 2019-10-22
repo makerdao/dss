@@ -70,7 +70,7 @@ contract GemJoin is DSNote {
     bytes32 public ilk;
     GemLike public gem;
     uint    public dec;
-    uint256 public live;  // Access Flag
+    uint    public live;  // Access Flag
 
     constructor(address vat_, bytes32 ilk_, address gem_) public {
         wards[msg.sender] = 1;
@@ -105,7 +105,7 @@ contract ETHJoin is DSNote {
 
     VatLike public vat;
     bytes32 public ilk;
-    uint256 public live;  // Access Flag
+    uint    public live;  // Access Flag
 
     constructor(address vat_, bytes32 ilk_) public {
         wards[msg.sender] = 1;
@@ -137,7 +137,7 @@ contract DaiJoin is DSNote {
 
     VatLike public vat;
     DSTokenLike public dai;
-    uint256 public live;  // Access Flag
+    uint    public live;  // Access Flag
 
     constructor(address vat_, address dai_) public {
         wards[msg.sender] = 1;
