@@ -20,6 +20,7 @@ pragma solidity 0.5.11;
 import "./lib.sol";
 
 contract GemLike {
+    function decimals() public view returns (uint);
     function transfer(address,uint) external returns (bool);
     function transferFrom(address,address,uint) external returns (bool);
 }
@@ -68,6 +69,7 @@ contract GemJoin is DSNote {
     VatLike public vat;
     bytes32 public ilk;
     GemLike public gem;
+    uint    public dec;
     uint256 public live;  // Access Flag
 
     constructor(address vat_, bytes32 ilk_, address gem_) public {
@@ -76,6 +78,7 @@ contract GemJoin is DSNote {
         vat = VatLike(vat_);
         ilk = ilk_;
         gem = GemLike(gem_);
+        dec = gem.decimals();
     }
     function cage() external note auth {
         live = 0;
