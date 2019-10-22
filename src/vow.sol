@@ -19,13 +19,13 @@ pragma solidity 0.5.11;
 
 import "./lib.sol";
 
-contract Flopper {
+contract FlopLike {
     function kick(address gal, uint lot, uint bid) external returns (uint);
     function cage() external;
     function live() external returns (uint);
 }
 
-contract Flapper {
+contract FlapLike {
     function kick(uint lot, uint bid) external returns (uint);
     function cage(uint) external;
     function live() external returns (uint);
@@ -47,8 +47,8 @@ contract Vow is DSNote {
 
     // --- Data ---
     VatLike public vat;
-    Flapper public flapper;
-    Flopper public flopper;
+    FlapLike public flapper;
+    FlopLike public flopper;
 
     mapping (uint256 => uint256) public sin; // debt queue
     uint256 public Sin;   // queued debt          [rad]
@@ -67,8 +67,8 @@ contract Vow is DSNote {
     constructor(address vat_, address flapper_, address flopper_) public {
         wards[msg.sender] = 1;
         vat     = VatLike(vat_);
-        flapper = Flapper(flapper_);
-        flopper = Flopper(flopper_);
+        flapper = FlapLike(flapper_);
+        flopper = FlopLike(flopper_);
         vat.hope(flapper_);
         live = 1;
     }
