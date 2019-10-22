@@ -17,26 +17,23 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 pragma solidity 0.5.11;
-pragma experimental ABIEncoderV2;
 
 import "./lib.sol";
 
 contract VatLike {
-    struct Ilk {
-        uint256 Art;
-        uint256 rate;
-        uint256 spot;
-        uint256 line;
-        uint256 dust;
-    }
-    struct Urn {
-        uint256 ink;
-        uint256 art;
-    }
-    function dai(address) external view returns (uint);
-    function ilks(bytes32 ilk) external returns (Ilk memory);
-    function urns(bytes32 ilk, address urn) external returns (Urn memory);
-    function debt() external returns (uint);
+    function dai(address) external view returns (uint256);
+    function ilks(bytes32 ilk) external returns (
+        uint256 Art,
+        uint256 rate,
+        uint256 spot,
+        uint256 line,
+        uint256 dust
+    );
+    function urns(bytes32 ilk, address urn) external returns (
+        uint256 ink,
+        uint256 art
+    );
+    function debt() external returns (uint256);
     function move(address src, address dst, uint256 rad) external;
     function hope(address) external;
     function flux(bytes32 ilk, address src, address dst, uint256 rad) external;
@@ -45,12 +42,11 @@ contract VatLike {
     function cage() external;
 }
 contract CatLike {
-    struct Ilk {
-        address flip;  // Liquidator
-        uint256 chop;  // Liquidation Penalty   [ray]
-        uint256 lump;  // Liquidation Quantity  [rad]
-    }
-    function ilks(bytes32) external returns (Ilk memory);
+    function ilks(bytes32) external returns (
+        address flip,  // Liquidator
+        uint256 chop,  // Liquidation Penalty   [ray]
+        uint256 lump   // Liquidation Quantity  [rad]
+    );
     function cage() external;
 }
 contract PotLike {
@@ -60,17 +56,16 @@ contract VowLike {
     function cage() external;
 }
 contract Flippy {
-    struct Bid {
-        uint256 bid;
-        uint256 lot;
-        address guy;
-        uint48  tic;
-        uint48  end;
-        address usr;
-        address gal;
-        uint256 tab;
-    }
-    function bids(uint id) external view returns (Bid memory);
+    function bids(uint id) external view returns (
+        uint256 bid,
+        uint256 lot,
+        address guy,
+        uint48  tic,
+        uint48  end,
+        address usr,
+        address gal,
+        uint256 tab
+    );
     function yank(uint id) external;
 }
 
@@ -79,12 +74,11 @@ contract PipLike {
 }
 
 contract Spotty {
-    struct Ilk {
-        PipLike pip;
-        uint256 mat;
-    }
     function par() external view returns (uint256);
-    function ilks(bytes32) external view returns (Ilk memory);
+    function ilks(bytes32) external view returns (
+        PipLike pip,
+        uint256 mat
+    );
     function cage() external;
 }
 
@@ -278,49 +272,50 @@ contract End is DSNote {
     function cage(bytes32 ilk) external note {
         require(live == 0);
         require(tag[ilk] == 0);
-        Art[ilk] = vat.ilks(ilk).Art;
+        (Art[ilk],,,,) = vat.ilks(ilk);
+        (PipLike pip,) = spot.ilks(ilk);
         // par is a ray, pip returns a wad
-        tag[ilk] = wdiv(spot.par(), uint(spot.ilks(ilk).pip.read()));
+        tag[ilk] = wdiv(spot.par(), uint(pip.read()));
     }
 
     function skip(bytes32 ilk, uint256 id) external note {
         require(tag[ilk] != 0);
 
-        Flippy flip = Flippy(cat.ilks(ilk).flip);
-        VatLike.Ilk memory i   = vat.ilks(ilk);
-        Flippy.Bid  memory bid = flip.bids(id);
+        (address flipV,,) = cat.ilks(ilk);
+        Flippy flip = Flippy(flipV);
+        (, uint rate,,,) = vat.ilks(ilk);
+        (uint bid, uint lot,,,, address usr,, uint tab) = flip.bids(id);
 
-        vat.suck(address(vow), address(vow),  bid.tab);
-        vat.suck(address(vow), address(this), bid.bid);
+        vat.suck(address(vow), address(vow),  tab);
+        vat.suck(address(vow), address(this), bid);
         vat.hope(address(flip));
         flip.yank(id);
 
-        uint lot = bid.lot;
-        uint art = bid.tab / i.rate;
+        uint art = tab / rate;
         Art[ilk] = add(Art[ilk], art);
         require(int(lot) >= 0 && int(art) >= 0);
-        vat.grab(ilk, bid.usr, address(this), address(vow), int(lot), int(art));
+        vat.grab(ilk, usr, address(this), address(vow), int(lot), int(art));
     }
 
     function skim(bytes32 ilk, address urn) external note {
         require(tag[ilk] != 0);
-        VatLike.Ilk memory i = vat.ilks(ilk);
-        VatLike.Urn memory u = vat.urns(ilk, urn);
+        (, uint rate,,,) = vat.ilks(ilk);
+        (uint ink, uint art) = vat.urns(ilk, urn);
 
-        uint owe = rmul(rmul(u.art, i.rate), tag[ilk]);
-        uint wad = min(u.ink, owe);
+        uint owe = rmul(rmul(art, rate), tag[ilk]);
+        uint wad = min(ink, owe);
         gap[ilk] = add(gap[ilk], sub(owe, wad));
 
-        require(wad <= 2**255 && u.art <= 2**255);
-        vat.grab(ilk, urn, address(this), address(vow), -int(wad), -int(u.art));
+        require(wad <= 2**255 && art <= 2**255);
+        vat.grab(ilk, urn, address(this), address(vow), -int(wad), -int(art));
     }
 
     function free(bytes32 ilk) external note {
         require(live == 0);
-        VatLike.Urn memory u = vat.urns(ilk, msg.sender);
-        require(u.art == 0);
-        require(u.ink <= 2**255);
-        vat.grab(ilk, msg.sender, msg.sender, address(vow), -int(u.ink), 0);
+        (uint ink, uint art) = vat.urns(ilk, msg.sender);
+        require(art == 0);
+        require(ink <= 2**255);
+        vat.grab(ilk, msg.sender, msg.sender, address(vow), -int(ink), 0);
     }
 
     function thaw() external note {
@@ -334,8 +329,8 @@ contract End is DSNote {
         require(debt != 0);
         require(fix[ilk] == 0);
 
-        VatLike.Ilk memory i = vat.ilks(ilk);
-        uint256 wad = rmul(rmul(Art[ilk], i.rate), tag[ilk]);
+        (, uint rate,,,) = vat.ilks(ilk);
+        uint256 wad = rmul(rmul(Art[ilk], rate), tag[ilk]);
         fix[ilk] = rdiv(mul(sub(wad, gap[ilk]), RAY), debt);
     }
 

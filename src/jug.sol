@@ -1,14 +1,12 @@
 pragma solidity 0.5.11;
-pragma experimental ABIEncoderV2;
 
 import "./lib.sol";
 
 contract VatLike {
-    struct Ilk {
-        uint256 Art;   // wad
-        uint256 rate;  // ray
-    }
-    function ilks(bytes32) external returns (Ilk memory);
+    function ilks(bytes32) external returns (
+        uint256 Art,   // wad
+        uint256 rate   // ray
+    );
     function fold(bytes32,address,int) external;
 }
 
@@ -99,8 +97,8 @@ contract Jug is DSNote {
     // --- Stability Fee Collection ---
     function drip(bytes32 ilk) external note {
         require(now >= ilks[ilk].rho);
-        VatLike.Ilk memory i = vat.ilks(ilk);
-        vat.fold(ilk, vow, diff(rmul(rpow(add(base, ilks[ilk].duty), now - ilks[ilk].rho, ONE), i.rate), i.rate));
+        (, uint rate) = vat.ilks(ilk);
+        vat.fold(ilk, vow, diff(rmul(rpow(add(base, ilks[ilk].duty), now - ilks[ilk].rho, ONE), rate), rate));
         ilks[ilk].rho = now;
     }
 }
