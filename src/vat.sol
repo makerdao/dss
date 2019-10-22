@@ -210,15 +210,15 @@ contract Vat {
         uint vtab = mul(v.art, i.rate);
 
         // both sides consent
-        require(wish(src, msg.sender) && wish(dst, msg.sender));
+        require(both(wish(src, msg.sender), wish(dst, msg.sender)));
 
         // both sides safe
         require(utab <= mul(u.ink, i.spot));
         require(vtab <= mul(v.ink, i.spot));
 
         // both sides non-dusty
-        require(utab >= i.dust || u.art == 0);
-        require(vtab >= i.dust || v.art == 0);
+        require(either(utab >= i.dust, u.art == 0));
+        require(either(vtab >= i.dust, v.art == 0));
     }
     // --- CDP Confiscation ---
     function grab(bytes32 i, address u, address v, address w, int dink, int dart) external note auth {
