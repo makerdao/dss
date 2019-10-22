@@ -135,9 +135,9 @@ contract Pot is DSNote {
     // --- Savings Rate Accumulation ---
     function drip() external note {
         require(now >= rho);
-        uint latest = rmul(rpow(dsr, now - rho, ONE), chi);
-        uint chi_ = sub(latest, chi);
-        chi = latest;
+        uint tmp = rmul(rpow(dsr, now - rho, ONE), chi);
+        uint chi_ = sub(tmp, chi);
+        chi = tmp;
         rho = now;
         vat.suck(address(vow), address(this), mul(Pie, chi_));
     }
