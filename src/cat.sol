@@ -118,7 +118,7 @@ contract Cat is DSNote {
         VatLike.Urn memory u = vat.urns(ilk, urn);
 
         require(live == 1);
-        require(mul(u.ink, i.spot) < mul(u.art, i.rate));
+        require(i.spot > 0 && mul(u.ink, i.spot) < mul(u.art, i.rate));
 
         uint lot = min(u.ink, ilks[ilk].lump);
         uint art = min(u.art, mul(lot, u.art) / u.ink);
