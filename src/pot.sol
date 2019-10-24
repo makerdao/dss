@@ -129,6 +129,7 @@ contract Pot is DSNote {
     }
 
     function cage() external note auth {
+        require(live == 1);
         live = 0;
         dsr = ONE;
     }

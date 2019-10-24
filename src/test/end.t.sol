@@ -212,6 +212,7 @@ contract EndTest is DSTest {
         end.file("wait", 1 hours);
         vat.rely(address(end));
         vow.rely(address(end));
+        spot.rely(address(end));
         pot.rely(address(end));
         cat.rely(address(end));
         flap.rely(address(vow));

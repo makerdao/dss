@@ -57,7 +57,6 @@ contract PotLike {
     function cage() external;
 }
 contract VowLike {
-    function heal(uint256 rad) external;
     function cage() external;
 }
 contract Flippy {
@@ -86,6 +85,7 @@ contract Spotty {
     }
     function par() external view returns (uint256);
     function ilks(bytes32) external view returns (Ilk memory);
+    function cage() external;
 }
 
 /*
@@ -191,8 +191,8 @@ contract Spotty {
 contract End is DSNote {
     // --- Auth ---
     mapping (address => uint) public wards;
-    function rely(address guy) external note auth { wards[guy] = 1; }
-    function deny(address guy) external note auth { wards[guy] = 0; }
+    function rely(address guy) external note auth { require(live == 1); wards[guy] = 1; }
+    function deny(address guy) external note auth { require(live == 1); wards[guy] = 0; }
     modifier auth { require(wards[msg.sender] == 1); _; }
 
     // --- Data ---
@@ -249,6 +249,7 @@ contract End is DSNote {
 
     // --- Administration ---
     function file(bytes32 what, address data) external note auth {
+        require(live == 1);
         if (what == "vat")  vat = VatLike(data);
         else if (what == "cat")  cat = CatLike(data);
         else if (what == "vow")  vow = VowLike(data);
@@ -257,6 +258,7 @@ contract End is DSNote {
         else revert();
     }
     function file(bytes32 what, uint256 data) external note auth {
+        require(live == 1);
         if (what == "wait") wait = data;
         else revert();
     }
@@ -269,6 +271,7 @@ contract End is DSNote {
         vat.cage();
         cat.cage();
         vow.cage();
+        spot.cage();
         pot.cage();
     }
 
