@@ -41,7 +41,7 @@ contract VatLike {
 contract Vow is DSNote {
     // --- Auth ---
     mapping (address => uint) public wards;
-    function rely(address usr) external note auth { wards[usr] = 1; }
+    function rely(address usr) external note auth { require(live == 1); wards[usr] = 1; }
     function deny(address usr) external note auth { wards[usr] = 0; }
     modifier auth { require(wards[msg.sender] == 1); _; }
 
@@ -134,6 +134,7 @@ contract Vow is DSNote {
     }
 
     function cage() external note auth {
+        require(live == 1);
         live = 0;
         Sin = 0;
         Ash = 0;

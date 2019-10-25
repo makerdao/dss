@@ -20,8 +20,8 @@ pragma solidity 0.5.11;
 contract Vat {
     // --- Auth ---
     mapping (address => uint) public wards;
-    function rely(address usr) external note auth { wards[usr] = 1; }
-    function deny(address usr) external note auth { wards[usr] = 0; }
+    function rely(address usr) external note auth { require(live == 1); wards[usr] = 1; }
+    function deny(address usr) external note auth { require(live == 1); wards[usr] = 0; }
     modifier auth { require(wards[msg.sender] == 1); _; }
 
     mapping(address => mapping (address => uint)) public can;
@@ -121,10 +121,12 @@ contract Vat {
         ilks[ilk].rate = 10 ** 27;
     }
     function file(bytes32 what, uint data) external note auth {
+        require(live == 1);
         if (what == "Line") Line = data;
         else revert();
     }
     function file(bytes32 ilk, bytes32 what, uint data) external note auth {
+        require(live == 1);
         if (what == "spot") ilks[ilk].spot = data;
         else if (what == "line") ilks[ilk].line = data;
         else if (what == "dust") ilks[ilk].dust = data;
