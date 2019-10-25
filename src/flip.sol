@@ -116,8 +116,6 @@ contract Flipper is DSNote {
         bids[id].gal = gal;
         bids[id].tab = tab;
 
-        vat.flux(ilk, msg.sender, address(this), lot);
-
         emit Kick(id, lot, bid, tab, usr, gal);
     }
     function tick(uint id) external note {

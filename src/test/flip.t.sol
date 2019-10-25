@@ -125,6 +125,7 @@ contract FlipTest is DSTest {
         flip.tend(42, 0, 0);
     }
     function test_tend() public {
+        vat.flux("gems", address(this), address(flip), 100 ether);
         uint id = flip.kick({ lot: 100 ether
                             , tab: 50 ether
                             , usr: usr
@@ -167,6 +168,7 @@ contract FlipTest is DSTest {
         assertEq(vat.dai_balance(gal),   1 ether);
     }
     function test_dent() public {
+        vat.flux("gems", address(this), address(flip), 100 ether);
         uint id = flip.kick({ lot: 100 ether
                             , tab: 50 ether
                             , usr: usr
@@ -183,6 +185,7 @@ contract FlipTest is DSTest {
         assertEq(vat.dai_balance(bob),  200 ether);
     }
     function test_beg() public {
+        vat.flux("gems", address(this), address(flip), 100 ether);
         uint id = flip.kick({ lot: 100 ether
                             , tab: 50 ether
                             , usr: usr
@@ -204,6 +207,7 @@ contract FlipTest is DSTest {
         assertTrue( Guy(ali).try_dent(id,  95 ether, 50 ether));
     }
     function test_deal() public {
+        vat.flux("gems", address(this), address(flip), 100 ether);
         uint id = flip.kick({ lot: 100 ether
                             , tab: 50 ether
                             , usr: usr
@@ -217,6 +221,7 @@ contract FlipTest is DSTest {
         hevm.warp(now + 4.1 hours);
         assertTrue( Guy(bob).try_deal(id));
 
+        vat.flux("gems", address(this), address(flip), 100 ether);
         uint ie = flip.kick({ lot: 100 ether
                             , tab: 50 ether
                             , usr: usr
@@ -265,6 +270,7 @@ contract FlipTest is DSTest {
         assertTrue(!Guy(ali).try_deal(id));
     }
     function test_yank_tend() public {
+        vat.flux("gems", address(this), address(flip), 100 ether);
         uint id = flip.kick({ lot: 100 ether
                             , tab: 50 ether
                             , usr: usr
@@ -286,6 +292,7 @@ contract FlipTest is DSTest {
         assertEq(vat.gem_balance(address(this)), 1000 ether);
     }
     function test_yank_dent() public {
+        vat.flux("gems", address(this), address(flip), 100 ether);
         uint id = flip.kick({ lot: 100 ether
                             , tab: 50 ether
                             , usr: usr

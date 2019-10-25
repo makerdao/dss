@@ -39,6 +39,7 @@ contract VatLike {
     function ilks(bytes32) external view returns (Ilk memory);
     function urns(bytes32,address) external view returns (Urn memory);
     function grab(bytes32,address,address,address,int,int) external;
+    function flux(bytes32,address,address,uint) external;
     function hope(address) external;
 }
 
@@ -108,7 +109,7 @@ contract Cat is DSNote {
         else revert();
     }
     function file(bytes32 ilk, bytes32 what, address flip) external note auth {
-        if (what == "flip") { ilks[ilk].flip = flip; vat.hope(flip); }
+        if (what == "flip") ilks[ilk].flip = flip;
         else revert();
     }
 
@@ -128,6 +129,7 @@ contract Cat is DSNote {
         vat.grab(ilk, urn, address(this), address(vow), -int(lot), -int(art));
 
         vow.fess(tab);
+        vat.flux(ilk, address(this), ilks[ilk].flip, lot);
         id = Kicker(ilks[ilk].flip).kick({ urn: urn
                                          , gal: address(vow)
                                          , tab: rmul(tab, ilks[ilk].chop)

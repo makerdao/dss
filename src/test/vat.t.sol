@@ -565,6 +565,7 @@ contract BiteTest is DSTest {
         FlipLike.Bid memory bid = FlipLike(address(flip)).bids(auction);
         assertEq(bid.lot,        40 ether);
         assertEq(bid.tab,   rad(110 ether));
+        assertEq(gem("gold", address(flip)), 40 ether);
     }
     function test_bite_over_lump() public {
         vat.file("gold", 'spot', ray(2.5 ether));
@@ -585,6 +586,7 @@ contract BiteTest is DSTest {
         FlipLike.Bid memory bid = FlipLike(address(flip)).bids(auction);
         assertEq(bid.lot,       30 ether);
         assertEq(bid.tab,   rad(82.5 ether));
+        assertEq(gem("gold", address(flip)), 30 ether);
     }
 
     function test_happy_bite() public {
