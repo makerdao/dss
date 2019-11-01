@@ -13,7 +13,7 @@
 
 pragma solidity 0.5.11;
 
-contract DSNote {
+contract LibNote {
     event LogNote(
         bytes4   indexed  sig,
         address  indexed  usr,

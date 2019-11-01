@@ -188,7 +188,7 @@ contract Spotty {
         - the number of gems is limited by how big your bag is
 */
 
-contract End is DSNote {
+contract End is LibNote {
     // --- Auth ---
     mapping (address => uint) public wards;
     function rely(address guy) external note auth { wards[guy] = 1; }

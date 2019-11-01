@@ -46,7 +46,7 @@ contract VowLike {
     function fess(uint) external;
 }
 
-contract Cat is DSNote {
+contract Cat is LibNote {
     // --- Auth ---
     mapping (address => uint) public wards;
     function rely(address usr) external note auth { wards[usr] = 1; }

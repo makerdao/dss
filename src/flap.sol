@@ -37,7 +37,7 @@ contract GemLike {
  - `end` max auction duration
 */
 
-contract Flapper is DSNote {
+contract Flapper is LibNote {
     // --- Auth ---
     mapping (address => uint) public wards;
     function rely(address usr) external note auth { wards[usr] = 1; }

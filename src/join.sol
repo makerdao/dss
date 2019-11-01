@@ -59,7 +59,7 @@ contract VatLike {
 
 */
 
-contract GemJoin is DSNote {
+contract GemJoin is LibNote {
     // --- Auth ---
     mapping (address => uint) public wards;
     function rely(address usr) external note auth { wards[usr] = 1; }
@@ -96,7 +96,7 @@ contract GemJoin is DSNote {
     }
 }
 
-contract ETHJoin is DSNote {
+contract ETHJoin is LibNote {
     // --- Auth ---
     mapping (address => uint) public wards;
     function rely(address usr) external note auth { wards[usr] = 1; }
@@ -128,7 +128,7 @@ contract ETHJoin is DSNote {
     }
 }
 
-contract DaiJoin is DSNote {
+contract DaiJoin is LibNote {
     // --- Auth ---
     mapping (address => uint) public wards;
     function rely(address usr) external note auth { wards[usr] = 1; }

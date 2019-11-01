@@ -38,7 +38,7 @@ contract VatLike {
  - `end` max auction duration
 */
 
-contract Flipper is DSNote {
+contract Flipper is LibNote {
     // --- Auth ---
     mapping (address => uint) public wards;
     function rely(address usr) external note auth { wards[usr] = 1; }

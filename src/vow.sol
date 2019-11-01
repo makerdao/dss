@@ -38,7 +38,7 @@ contract VatLike {
     function hope(address) external;
 }
 
-contract Vow is DSNote {
+contract Vow is LibNote {
     // --- Auth ---
     mapping (address => uint) public wards;
     function rely(address usr) external note auth { require(live == 1); wards[usr] = 1; }

@@ -17,7 +17,7 @@ pragma solidity 0.5.11;
 
 import "./lib.sol";
 
-contract Dai is DSNote {
+contract Dai is LibNote {
     // --- Auth ---
     mapping (address => uint) public wards;
     function rely(address guy) external note auth { wards[guy] = 1; }

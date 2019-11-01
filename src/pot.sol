@@ -43,7 +43,7 @@ contract VatLike {
     function suck(address,address,uint256) external;
 }
 
-contract Pot is DSNote {
+contract Pot is LibNote {
     // --- Auth ---
     mapping (address => uint) public wards;
     function rely(address guy) external note auth { wards[guy] = 1; }

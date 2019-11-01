@@ -25,7 +25,7 @@ contract PipLike {
     function peek() external returns (bytes32, bool);
 }
 
-contract Spotter is DSNote {
+contract Spotter is LibNote {
     // --- Auth ---
     mapping (address => uint) public wards;
     function rely(address guy) external note auth { wards[guy] = 1;  }

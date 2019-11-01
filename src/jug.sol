@@ -12,7 +12,7 @@ contract VatLike {
     function fold(bytes32,address,int) external;
 }
 
-contract Jug is DSNote {
+contract Jug is LibNote {
     // --- Auth ---
     mapping (address => uint) public wards;
     function rely(address usr) external note auth { wards[usr] = 1; }
