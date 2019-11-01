@@ -191,8 +191,8 @@ contract Spotty {
 contract End is DSNote {
     // --- Auth ---
     mapping (address => uint) public wards;
-    function rely(address guy) external note auth { require(live == 1); wards[guy] = 1; }
-    function deny(address guy) external note auth { require(live == 1); wards[guy] = 0; }
+    function rely(address guy) external note auth { wards[guy] = 1; }
+    function deny(address guy) external note auth { wards[guy] = 0; }
     modifier auth { require(wards[msg.sender] == 1); _; }
 
     // --- Data ---
