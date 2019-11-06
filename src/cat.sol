@@ -16,7 +16,6 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 pragma solidity 0.5.11;
-pragma experimental ABIEncoderV2;
 
 import "./lib.sol";
 
@@ -26,18 +25,15 @@ contract Kicker {
 }
 
 contract VatLike {
-    struct Ilk {
-        uint256 Art;   // wad
-        uint256 rate;  // ray
-        uint256 spot;  // ray
-        uint256 line;  // rad
-    }
-    struct Urn {
-        uint256 ink;   // wad
-        uint256 art;   // wad
-    }
-    function ilks(bytes32) external view returns (Ilk memory);
-    function urns(bytes32,address) external view returns (Urn memory);
+    function ilks(bytes32) external view returns (
+        uint256 Art,   // wad
+        uint256 rate,  // ray
+        uint256 spot   // ray
+    );
+    function urns(bytes32,address) external view returns (
+        uint256 ink,   // wad
+        uint256 art    // wad
+    );
     function grab(bytes32,address,address,address,int,int) external;
     function hope(address) external;
 }
@@ -114,28 +110,27 @@ contract Cat is LibNote {
 
     // --- CDP Liquidation ---
     function bite(bytes32 ilk, address urn) external returns (uint id) {
-        VatLike.Ilk memory i = vat.ilks(ilk);
-        VatLike.Urn memory u = vat.urns(ilk, urn);
+        (, uint rate, uint spot) = vat.ilks(ilk);
+        (uint ink, uint art) = vat.urns(ilk, urn);
 
         require(live == 1);
-        require(i.spot > 0 && mul(u.ink, i.spot) < mul(u.art, i.rate));
+        require(spot > 0 && mul(ink, spot) < mul(art, rate));
 
-        uint lot = min(u.ink, ilks[ilk].lump);
-        uint art = min(u.art, mul(lot, u.art) / u.ink);
-        uint tab = mul(art, i.rate);
+        uint lot = min(ink, ilks[ilk].lump);
+        art      = min(art, mul(lot, art) / ink);
 
         require(lot <= 2**255 && art <= 2**255);
         vat.grab(ilk, urn, address(this), address(vow), -int(lot), -int(art));
 
-        vow.fess(tab);
+        vow.fess(mul(art, rate));
         id = Kicker(ilks[ilk].flip).kick({ urn: urn
                                          , gal: address(vow)
-                                         , tab: rmul(tab, ilks[ilk].chop)
+                                         , tab: rmul(mul(art, rate), ilks[ilk].chop)
                                          , lot: lot
                                          , bid: 0
                                          });
 
-        emit Bite(ilk, urn, lot, art, tab, ilks[ilk].flip, id);
+        emit Bite(ilk, urn, lot, art, mul(art, rate), ilks[ilk].flip, id);
     }
 
     function cage() external note auth {
