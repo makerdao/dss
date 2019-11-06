@@ -72,8 +72,8 @@ contract Dai is LibNote {
     function transferFrom(address src, address dst, uint wad)
         public returns (bool)
     {
-        require(dst != address(this), "Dai/cannot-send-to-this-contract");
         require(balanceOf[src] >= wad, "Dai/insufficient-balance");
+        require(dst != address(this), "Dai/cannot-send-to-this-contract");
         if (src != msg.sender && allowance[src][msg.sender] != uint(-1)) {
             require(allowance[src][msg.sender] >= wad, "Dai/insufficient-allowance");
             allowance[src][msg.sender] = sub(allowance[src][msg.sender], wad);
