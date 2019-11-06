@@ -176,7 +176,7 @@ contract Vat {
         ilk.Art = add(ilk.Art, dart);
 
         int dtab = mul(ilk.rate, dart);
-        uint tab = mul(urn.art, ilk.rate);
+        uint tab = mul(ilk.rate, urn.art);
         debt     = add(debt, dtab);
 
         // either debt has decreased, or debt ceilings are not exceeded
