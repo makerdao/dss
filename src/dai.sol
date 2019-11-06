@@ -69,6 +69,7 @@ contract Dai is DSNote {
     function transferFrom(address src, address dst, uint wad)
         public returns (bool)
     {
+        require(dst != address(this), "dai/cannot-send-to-this-contract");
         require(balanceOf[src] >= wad, "dai/insufficient-balance");
         if (src != msg.sender && allowance[src][msg.sender] != uint(-1)) {
             require(allowance[src][msg.sender] >= wad, "dai/insufficient-allowance");

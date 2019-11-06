@@ -318,4 +318,9 @@ contract DaiTest is DSTest {
         token.permit(cal, del, 0, 0, true, v, r, s);
         token.permit(cal, del, 0, 0, true, v, r, s);
     }
+
+    function testFailTransferToDaiContract() public logs_gas {
+        token.transfer(user1, 50);
+        TokenUser(user1).doTransfer(address(token), 50);
+    }
 }
