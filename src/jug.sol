@@ -86,15 +86,15 @@ contract Jug is LibNote {
     function file(bytes32 ilk, bytes32 what, uint data) external note auth {
         require(now == ilks[ilk].rho, "Jug/rho-not-updated");
         if (what == "duty") ilks[ilk].duty = data;
-        else revert("Jug/file-wrong-param");
+        else revert("Jug/file-unrecognized-param");
     }
     function file(bytes32 what, uint data) external note auth {
         if (what == "base") base = data;
-        else revert("Jug/file-wrong-param");
+        else revert("Jug/file-unrecognized-param");
     }
     function file(bytes32 what, address data) external note auth {
         if (what == "vow") vow = data;
-        else revert("Jug/file-wrong-param");
+        else revert("Jug/file-unrecognized-param");
     }
 
     // --- Stability Fee Collection ---

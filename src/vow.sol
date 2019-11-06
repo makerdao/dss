@@ -94,7 +94,7 @@ contract Vow is LibNote {
         else if (what == "sump") sump = data;
         else if (what == "dump") dump = data;
         else if (what == "hump") hump = data;
-        else revert("Vow/file-wrong-param");
+        else revert("Vow/file-unrecognized-param");
     }
 
     // Push to debt-queue
@@ -111,27 +111,27 @@ contract Vow is LibNote {
 
     // Debt settlement
     function heal(uint rad) external note {
-        require(rad <= vat.dai(address(this)), "Vow/not-enough-dai");
-        require(rad <= sub(sub(vat.sin(address(this)), Sin), Ash), "Vow/not-enough-debt");
+        require(rad <= vat.dai(address(this)), "Vow/insufficient-surplus");
+        require(rad <= sub(sub(vat.sin(address(this)), Sin), Ash), "Vow/insufficient-debt");
         vat.heal(rad);
     }
     function kiss(uint rad) external note {
         require(rad <= Ash, "Vow/not-enough-ash");
-        require(rad <= vat.dai(address(this)), "Vow/not-enough-dai");
+        require(rad <= vat.dai(address(this)), "Vow/insufficient-surplus");
         Ash = sub(Ash, rad);
         vat.heal(rad);
     }
 
     // Debt auction
     function flop() external note returns (uint id) {
-        require(sump <= sub(sub(vat.sin(address(this)), Sin), Ash), "Vow/debt-lower-sump");
-        require(vat.dai(address(this)) == 0, "Vow/dai-not-zero");
+        require(sump <= sub(sub(vat.sin(address(this)), Sin), Ash), "Vow/insufficient-debt");
+        require(vat.dai(address(this)) == 0, "Vow/surplus-not-zero");
         Ash = add(Ash, sump);
         id = flopper.kick(address(this), dump, sump);
     }
     // Surplus auction
     function flap() external note returns (uint id) {
-        require(vat.dai(address(this)) >= add(add(vat.sin(address(this)), bump), hump), "Vow/not-enough-surplus");
+        require(vat.dai(address(this)) >= add(add(vat.sin(address(this)), bump), hump), "Vow/insufficient-surplus");
         require(sub(sub(vat.sin(address(this)), Sin), Ash) == 0, "Vow/debt-not-zero");
         id = flapper.kick(bump, 0);
     }

@@ -101,7 +101,7 @@ contract Flipper is LibNote {
         if (what == "beg") beg = data;
         else if (what == "ttl") ttl = uint48(data);
         else if (what == "tau") tau = uint48(data);
-        else revert("Flipper/file-wrong-param");
+        else revert("Flipper/file-unrecognized-param");
     }
 
     // --- Auction ---
@@ -125,18 +125,18 @@ contract Flipper is LibNote {
     }
     function tick(uint id) external note {
         require(bids[id].end < now, "Flipper/not-finished");
-        require(bids[id].tic == 0, "Flipper/already-bidded");
+        require(bids[id].tic == 0, "Flipper/bid-already-placed");
         bids[id].end = add(uint48(now), tau);
     }
     function tend(uint id, uint lot, uint bid) external note {
-        require(bids[id].guy != address(0), "Flipper/not-set");
+        require(bids[id].guy != address(0), "Flipper/guy-not-set");
         require(bids[id].tic > now || bids[id].tic == 0, "Flipper/already-finished-tic");
         require(bids[id].end > now, "Flipper/already-finished-end");
 
         require(lot == bids[id].lot, "Flipper/lot-not-matching");
         require(bid <= bids[id].tab, "Flipper/higher-than-tab");
         require(bid >  bids[id].bid, "Flipper/bid-not-higher");
-        require(mul(bid, ONE) >= mul(beg, bids[id].bid) || bid == bids[id].tab, "Flipper/not-minimum-increase");
+        require(mul(bid, ONE) >= mul(beg, bids[id].bid) || bid == bids[id].tab, "Flipper/insufficient-increase");
 
         vat.move(msg.sender, bids[id].guy, bids[id].bid);
         vat.move(msg.sender, bids[id].gal, bid - bids[id].bid);
@@ -146,14 +146,14 @@ contract Flipper is LibNote {
         bids[id].tic = add(uint48(now), ttl);
     }
     function dent(uint id, uint lot, uint bid) external note {
-        require(bids[id].guy != address(0), "Flipper/not-set");
+        require(bids[id].guy != address(0), "Flipper/guy-not-set");
         require(bids[id].tic > now || bids[id].tic == 0, "Flipper/already-finished-tic");
         require(bids[id].end > now, "Flipper/already-finished-end");
 
         require(bid == bids[id].bid, "Flipper/not-matching-bid");
         require(bid == bids[id].tab, "Flipper/tend-not-finished");
         require(lot < bids[id].lot, "Flipper/lot-not-lower");
-        require(mul(beg, lot) <= mul(bids[id].lot, ONE), "Flipper/not-minimum-decrease");
+        require(mul(beg, lot) <= mul(bids[id].lot, ONE), "Flipper/insufficient-decrease");
 
         vat.move(msg.sender, bids[id].guy, bid);
         vat.flux(ilk, address(this), bids[id].usr, bids[id].lot - lot);
@@ -169,7 +169,7 @@ contract Flipper is LibNote {
     }
 
     function yank(uint id) external note auth {
-        require(bids[id].guy != address(0), "Flipper/not-set");
+        require(bids[id].guy != address(0), "Flipper/guy-not-set");
         require(bids[id].bid < bids[id].tab, "Flipper/already-dent-phase");
         vat.flux(ilk, address(this), msg.sender, bids[id].lot);
         vat.move(msg.sender, bids[id].guy, bids[id].bid);

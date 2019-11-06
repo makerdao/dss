@@ -126,14 +126,14 @@ contract Vat {
     function file(bytes32 what, uint data) external note auth {
         require(live == 1, "Vat/not-live");
         if (what == "Line") Line = data;
-        else revert("Vat/file-wrong-param");
+        else revert("Vat/file-unrecognized-param");
     }
     function file(bytes32 ilk, bytes32 what, uint data) external note auth {
         require(live == 1, "Vat/not-live");
         if (what == "spot") ilks[ilk].spot = data;
         else if (what == "line") ilks[ilk].line = data;
         else if (what == "dust") ilks[ilk].dust = data;
-        else revert("Vat/file-wrong-param");
+        else revert("Vat/file-unrecognized-param");
     }
     function cage() external note auth {
         live = 0;
@@ -180,7 +180,7 @@ contract Vat {
         debt     = add(debt, dtab);
 
         // either debt has decreased, or debt ceilings are not exceeded
-        require(either(dart <= 0, both(mul(ilk.Art, ilk.rate) <= ilk.line, debt <= Line)), "Vat/ceiling-exceed");
+        require(either(dart <= 0, both(mul(ilk.Art, ilk.rate) <= ilk.line, debt <= Line)), "Vat/ceiling-exceeded");
         // urn is either less risky than before, or it is safe
         require(either(both(dart <= 0, dink >= 0), tab <= mul(urn.ink, ilk.spot)), "Vat/not-safe");
 

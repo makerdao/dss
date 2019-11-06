@@ -96,7 +96,7 @@ contract Flapper is LibNote {
         if (what == "beg") beg = data;
         else if (what == "ttl") ttl = uint48(data);
         else if (what == "tau") tau = uint48(data);
-        else revert("Flapper/file-wrong-param");
+        else revert("Flapper/file-unrecognized-param");
     }
 
     // --- Auction ---
@@ -116,18 +116,18 @@ contract Flapper is LibNote {
     }
     function tick(uint id) external note {
         require(bids[id].end < now, "Flapper/not-finished");
-        require(bids[id].tic == 0, "Flapper/already-bidded");
+        require(bids[id].tic == 0, "Flapper/bid-already-placed");
         bids[id].end = add(uint48(now), tau);
     }
     function tend(uint id, uint lot, uint bid) external note {
         require(live == 1, "Flapper/not-live");
-        require(bids[id].guy != address(0), "Flapper/not-set");
+        require(bids[id].guy != address(0), "Flapper/guy-not-set");
         require(bids[id].tic > now || bids[id].tic == 0, "Flapper/already-finished-tic");
         require(bids[id].end > now, "Flapper/already-finished-end");
 
         require(lot == bids[id].lot, "Flapper/lot-not-matching");
         require(bid >  bids[id].bid, "Flapper/bid-not-higher");
-        require(mul(bid, ONE) >= mul(beg, bids[id].bid), "Flapper/not-minimum-increase");
+        require(mul(bid, ONE) >= mul(beg, bids[id].bid), "Flapper/insufficient-increase");
 
         gem.move(msg.sender, bids[id].guy, bids[id].bid);
         gem.move(msg.sender, address(this), bid - bids[id].bid);
@@ -150,7 +150,7 @@ contract Flapper is LibNote {
     }
     function yank(uint id) external note {
         require(live == 0, "Flapper/still-live");
-        require(bids[id].guy != address(0), "Flapper/not-set");
+        require(bids[id].guy != address(0), "Flapper/guy-not-set");
         gem.move(address(this), bids[id].guy, bids[id].bid);
         delete bids[id];
     }

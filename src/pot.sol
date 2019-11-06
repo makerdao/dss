@@ -123,12 +123,12 @@ contract Pot is LibNote {
         require(live == 1, "Pot/not-live");
         require(now == rho, "Pot/rho-not-updated");
         if (what == "dsr") dsr = data;
-        else revert("Pot/file-wrong-param");
+        else revert("Pot/file-unrecognized-param");
     }
 
     function file(bytes32 what, address addr) external note auth {
         if (what == "vow") vow = addr;
-        else revert("Pot/file-wrong-param");
+        else revert("Pot/file-unrecognized-param");
     }
 
     function cage() external note auth {

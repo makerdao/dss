@@ -99,7 +99,7 @@ contract Flopper is LibNote {
         else if (what == "pad") pad = data;
         else if (what == "ttl") ttl = uint48(data);
         else if (what == "tau") tau = uint48(data);
-        else revert("Flopper/file-wrong-param");
+        else revert("Flopper/file-unrecognized-param");
     }
 
     // --- Auction ---
@@ -117,19 +117,19 @@ contract Flopper is LibNote {
     }
     function tick(uint id) external note {
         require(bids[id].end < now, "Flopper/not-finished");
-        require(bids[id].tic == 0, "Flopper/already-bidded");
+        require(bids[id].tic == 0, "Flopper/bid-already-placed");
         bids[id].lot = mul(pad, bids[id].lot) / ONE;
         bids[id].end = add(uint48(now), tau);
     }
     function dent(uint id, uint lot, uint bid) external note {
         require(live == 1, "Flopper/not-live");
-        require(bids[id].guy != address(0), "Flopper/not-set");
+        require(bids[id].guy != address(0), "Flopper/guy-not-set");
         require(bids[id].tic > now || bids[id].tic == 0, "Flopper/already-finished-tic");
         require(bids[id].end > now, "Flopper/already-finished-end");
 
         require(bid == bids[id].bid, "Flopper/not-matching-bid");
         require(lot <  bids[id].lot, "Flopper/lot-not-lower");
-        require(mul(beg, lot) <= mul(bids[id].lot, ONE), "Flopper/not-minimum-decrease");
+        require(mul(beg, lot) <= mul(bids[id].lot, ONE), "Flopper/insufficient-decrease");
 
         vat.move(msg.sender, bids[id].guy, bid);
 
@@ -149,7 +149,7 @@ contract Flopper is LibNote {
     }
     function yank(uint id) external note {
         require(live == 0, "Flopper/still-live");
-        require(bids[id].guy != address(0), "Flopper/not-set");
+        require(bids[id].guy != address(0), "Flopper/guy-not-set");
         vat.move(address(this), bids[id].guy, bids[id].bid);
         delete bids[id];
     }

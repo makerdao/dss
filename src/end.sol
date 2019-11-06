@@ -252,12 +252,12 @@ contract End is LibNote {
         else if (what == "vow")  vow = VowLike(data);
         else if (what == "pot")  pot = PotLike(data);
         else if (what == "spot") spot = Spotty(data);
-        else revert("End/file-wrong-param");
+        else revert("End/file-unrecognized-param");
     }
     function file(bytes32 what, uint256 data) external note auth {
         require(live == 1, "End/not-live");
         if (what == "wait") wait = data;
-        else revert("End/file-wrong-param");
+        else revert("End/file-unrecognized-param");
     }
 
     // --- Settlement ---
@@ -296,7 +296,7 @@ contract End is LibNote {
 
         uint art = tab / rate;
         Art[ilk] = add(Art[ilk], art);
-        require(int(lot) >= 0 && int(art) >= 0, "End/ink-art-zero");
+        require(int(lot) >= 0 && int(art) >= 0, "End/overflow");
         vat.grab(ilk, usr, address(this), address(vow), int(lot), int(art));
     }
 
@@ -324,7 +324,7 @@ contract End is LibNote {
     function thaw() external note {
         require(live == 0, "End/still-live");
         require(debt == 0, "End/debt-not-zero");
-        require(vat.dai(address(vow)) == 0, "End/dai-not-zero");
+        require(vat.dai(address(vow)) == 0, "End/surplus-not-zero");
         require(now >= add(when, wait), "End/wait-not-finished");
         debt = vat.debt();
     }

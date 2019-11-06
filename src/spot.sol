@@ -77,17 +77,17 @@ contract Spotter is LibNote {
     function file(bytes32 ilk, bytes32 what, address pip_) external note auth {
         require(live == 1, "Spotter/not-live");
         if (what == "pip") ilks[ilk].pip = PipLike(pip_);
-        else revert("Spotter/file-wrong-param");
+        else revert("Spotter/file-unrecognized-param");
     }
     function file(bytes32 what, uint data) external note auth {
         require(live == 1, "Spotter/not-live");
         if (what == "par") par = data;
-        else revert("Spotter/file-wrong-param");
+        else revert("Spotter/file-unrecognized-param");
     }
     function file(bytes32 ilk, bytes32 what, uint data) external note auth {
         require(live == 1, "Spotter/not-live");
         if (what == "mat") ilks[ilk].mat = data;
-        else revert("Spotter/file-wrong-param");
+        else revert("Spotter/file-unrecognized-param");
     }
 
     // --- Update value ---
