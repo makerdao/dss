@@ -13,16 +13,19 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-pragma solidity 0.5.11;
+pragma solidity 0.5.12;
 
 import "./lib.sol";
 
-contract Dai is DSNote {
+contract Dai is LibNote {
     // --- Auth ---
     mapping (address => uint) public wards;
     function rely(address guy) external note auth { wards[guy] = 1; }
     function deny(address guy) external note auth { wards[guy] = 0; }
-    modifier auth { require(wards[msg.sender] == 1); _; }
+    modifier auth {
+        require(wards[msg.sender] == 1, "Dai/not-authorized");
+        _;
+    }
 
     // --- ERC20 Data ---
     string  public constant name     = "Dai Stablecoin";
@@ -69,10 +72,10 @@ contract Dai is DSNote {
     function transferFrom(address src, address dst, uint wad)
         public returns (bool)
     {
-        require(dst != address(this), "dai/cannot-send-to-this-contract");
-        require(balanceOf[src] >= wad, "dai/insufficient-balance");
+        require(dst != address(this), "Dai/cannot-send-to-this-contract");
+        require(balanceOf[src] >= wad, "Dai/insufficient-balance");
         if (src != msg.sender && allowance[src][msg.sender] != uint(-1)) {
-            require(allowance[src][msg.sender] >= wad, "dai/insufficient-allowance");
+            require(allowance[src][msg.sender] >= wad, "Dai/insufficient-allowance");
             allowance[src][msg.sender] = sub(allowance[src][msg.sender], wad);
         }
         balanceOf[src] = sub(balanceOf[src], wad);
@@ -86,9 +89,9 @@ contract Dai is DSNote {
         emit Transfer(address(0), usr, wad);
     }
     function burn(address usr, uint wad) external {
-        require(balanceOf[usr] >= wad, "dai/insufficient-balance");
+        require(balanceOf[usr] >= wad, "Dai/insufficient-balance");
         if (usr != msg.sender && allowance[usr][msg.sender] != uint(-1)) {
-            require(allowance[usr][msg.sender] >= wad, "dai/insufficient-allowance");
+            require(allowance[usr][msg.sender] >= wad, "Dai/insufficient-allowance");
             allowance[usr][msg.sender] = sub(allowance[usr][msg.sender], wad);
         }
         balanceOf[usr] = sub(balanceOf[usr], wad);
@@ -128,10 +131,10 @@ contract Dai is DSNote {
                                      allowed))
         ));
 
-        require(holder != address(0), "dai/invalid-address-0");
-        require(holder == ecrecover(digest, v, r, s), "dai/invalid-permit");
-        require(expiry == 0 || now <= expiry, "dai/permit-expired");
-        require(nonce == nonces[holder]++, "dai/invalid-nonce");
+        require(holder != address(0), "Dai/invalid-address-0");
+        require(holder == ecrecover(digest, v, r, s), "Dai/invalid-permit");
+        require(expiry == 0 || now <= expiry, "Dai/permit-expired");
+        require(nonce == nonces[holder]++, "Dai/invalid-nonce");
         uint wad = allowed ? uint(-1) : 0;
         allowance[holder][spender] = wad;
         emit Approval(holder, spender, wad);
