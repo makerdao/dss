@@ -42,7 +42,10 @@ contract Flopper is LibNote {
     mapping (address => uint) public wards;
     function rely(address usr) external note auth { wards[usr] = 1; }
     function deny(address usr) external note auth { wards[usr] = 0; }
-    modifier auth { require(wards[msg.sender] == 1); _; }
+    modifier auth {
+        require(wards[msg.sender] == 1, "Flopper/not-authorized");
+        _;
+    }
 
     // --- Data ---
     struct Bid {
@@ -96,13 +99,13 @@ contract Flopper is LibNote {
         else if (what == "pad") pad = data;
         else if (what == "ttl") ttl = uint48(data);
         else if (what == "tau") tau = uint48(data);
-        else revert();
+        else revert("Flopper/file-unrecognized-param");
     }
 
     // --- Auction ---
     function kick(address gal, uint lot, uint bid) external auth returns (uint id) {
-        require(live == 1);
-        require(kicks < uint(-1));
+        require(live == 1, "Flopper/not-live");
+        require(kicks < uint(-1), "Flopper/overflow");
         id = ++kicks;
 
         bids[id].bid = bid;
@@ -113,20 +116,20 @@ contract Flopper is LibNote {
         emit Kick(id, lot, bid, gal);
     }
     function tick(uint id) external note {
-        require(bids[id].end < now);
-        require(bids[id].tic == 0);
+        require(bids[id].end < now, "Flopper/not-finished");
+        require(bids[id].tic == 0, "Flopper/bid-already-placed");
         bids[id].lot = mul(pad, bids[id].lot) / ONE;
         bids[id].end = add(uint48(now), tau);
     }
     function dent(uint id, uint lot, uint bid) external note {
-        require(live == 1);
-        require(bids[id].guy != address(0));
-        require(bids[id].tic > now || bids[id].tic == 0);
-        require(bids[id].end > now);
+        require(live == 1, "Flopper/not-live");
+        require(bids[id].guy != address(0), "Flopper/guy-not-set");
+        require(bids[id].tic > now || bids[id].tic == 0, "Flopper/already-finished-tic");
+        require(bids[id].end > now, "Flopper/already-finished-end");
 
-        require(bid == bids[id].bid);
-        require(lot <  bids[id].lot);
-        require(mul(beg, lot) <= mul(bids[id].lot, ONE));
+        require(bid == bids[id].bid, "Flopper/not-matching-bid");
+        require(lot <  bids[id].lot, "Flopper/lot-not-lower");
+        require(mul(beg, lot) <= mul(bids[id].lot, ONE), "Flopper/insufficient-decrease");
 
         vat.move(msg.sender, bids[id].guy, bid);
 
@@ -135,8 +138,8 @@ contract Flopper is LibNote {
         bids[id].tic = add(uint48(now), ttl);
     }
     function deal(uint id) external note {
-        require(live == 1);
-        require(bids[id].tic != 0 && (bids[id].tic < now || bids[id].end < now));
+        require(live == 1, "Flopper/not-live");
+        require(bids[id].tic != 0 && (bids[id].tic < now || bids[id].end < now), "Flopper/not-finished");
         gem.mint(bids[id].guy, bids[id].lot);
         delete bids[id];
     }
@@ -145,8 +148,8 @@ contract Flopper is LibNote {
        live = 0;
     }
     function yank(uint id) external note {
-        require(live == 0);
-        require(bids[id].guy != address(0));
+        require(live == 0, "Flopper/still-live");
+        require(bids[id].guy != address(0), "Flopper/guy-not-set");
         vat.move(address(this), bids[id].guy, bids[id].bid);
         delete bids[id];
     }

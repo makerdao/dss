@@ -43,7 +43,10 @@ contract Flipper is LibNote {
     mapping (address => uint) public wards;
     function rely(address usr) external note auth { wards[usr] = 1; }
     function deny(address usr) external note auth { wards[usr] = 0; }
-    modifier auth { require(wards[msg.sender] == 1); _; }
+    modifier auth {
+        require(wards[msg.sender] == 1, "Flipper/not-authorized");
+        _;
+    }
 
     // --- Data ---
     struct Bid {
@@ -98,14 +101,14 @@ contract Flipper is LibNote {
         if (what == "beg") beg = data;
         else if (what == "ttl") ttl = uint48(data);
         else if (what == "tau") tau = uint48(data);
-        else revert();
+        else revert("Flipper/file-unrecognized-param");
     }
 
     // --- Auction ---
     function kick(address usr, address gal, uint tab, uint lot, uint bid)
         public auth returns (uint id)
     {
-        require(kicks < uint(-1));
+        require(kicks < uint(-1), "Flipper/overflow");
         id = ++kicks;
 
         bids[id].bid = bid;
@@ -121,19 +124,19 @@ contract Flipper is LibNote {
         emit Kick(id, lot, bid, tab, usr, gal);
     }
     function tick(uint id) external note {
-        require(bids[id].end < now);
-        require(bids[id].tic == 0);
+        require(bids[id].end < now, "Flipper/not-finished");
+        require(bids[id].tic == 0, "Flipper/bid-already-placed");
         bids[id].end = add(uint48(now), tau);
     }
     function tend(uint id, uint lot, uint bid) external note {
-        require(bids[id].guy != address(0));
-        require(bids[id].tic > now || bids[id].tic == 0);
-        require(bids[id].end > now);
+        require(bids[id].guy != address(0), "Flipper/guy-not-set");
+        require(bids[id].tic > now || bids[id].tic == 0, "Flipper/already-finished-tic");
+        require(bids[id].end > now, "Flipper/already-finished-end");
 
-        require(lot == bids[id].lot);
-        require(bid <= bids[id].tab);
-        require(bid >  bids[id].bid);
-        require(mul(bid, ONE) >= mul(beg, bids[id].bid) || bid == bids[id].tab);
+        require(lot == bids[id].lot, "Flipper/lot-not-matching");
+        require(bid <= bids[id].tab, "Flipper/higher-than-tab");
+        require(bid >  bids[id].bid, "Flipper/bid-not-higher");
+        require(mul(bid, ONE) >= mul(beg, bids[id].bid) || bid == bids[id].tab, "Flipper/insufficient-increase");
 
         vat.move(msg.sender, bids[id].guy, bids[id].bid);
         vat.move(msg.sender, bids[id].gal, bid - bids[id].bid);
@@ -143,14 +146,14 @@ contract Flipper is LibNote {
         bids[id].tic = add(uint48(now), ttl);
     }
     function dent(uint id, uint lot, uint bid) external note {
-        require(bids[id].guy != address(0));
-        require(bids[id].tic > now || bids[id].tic == 0);
-        require(bids[id].end > now);
+        require(bids[id].guy != address(0), "Flipper/guy-not-set");
+        require(bids[id].tic > now || bids[id].tic == 0, "Flipper/already-finished-tic");
+        require(bids[id].end > now, "Flipper/already-finished-end");
 
-        require(bid == bids[id].bid);
-        require(bid == bids[id].tab);
-        require(lot < bids[id].lot);
-        require(mul(beg, lot) <= mul(bids[id].lot, ONE));
+        require(bid == bids[id].bid, "Flipper/not-matching-bid");
+        require(bid == bids[id].tab, "Flipper/tend-not-finished");
+        require(lot < bids[id].lot, "Flipper/lot-not-lower");
+        require(mul(beg, lot) <= mul(bids[id].lot, ONE), "Flipper/insufficient-decrease");
 
         vat.move(msg.sender, bids[id].guy, bid);
         vat.flux(ilk, address(this), bids[id].usr, bids[id].lot - lot);
@@ -160,14 +163,14 @@ contract Flipper is LibNote {
         bids[id].tic = add(uint48(now), ttl);
     }
     function deal(uint id) external note {
-        require(bids[id].tic != 0 && (bids[id].tic < now || bids[id].end < now));
+        require(bids[id].tic != 0 && (bids[id].tic < now || bids[id].end < now), "Flipper/not-finished");
         vat.flux(ilk, address(this), bids[id].guy, bids[id].lot);
         delete bids[id];
     }
 
     function yank(uint id) external note auth {
-        require(bids[id].guy != address(0));
-        require(bids[id].bid < bids[id].tab);
+        require(bids[id].guy != address(0), "Flipper/guy-not-set");
+        require(bids[id].bid < bids[id].tab, "Flipper/already-dent-phase");
         vat.flux(ilk, address(this), msg.sender, bids[id].lot);
         vat.move(msg.sender, bids[id].guy, bids[id].bid);
         delete bids[id];

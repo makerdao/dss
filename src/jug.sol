@@ -15,7 +15,10 @@ contract Jug is LibNote {
     mapping (address => uint) public wards;
     function rely(address usr) external note auth { wards[usr] = 1; }
     function deny(address usr) external note auth { wards[usr] = 0; }
-    modifier auth { require(wards[msg.sender] == 1); _; }
+    modifier auth {
+        require(wards[msg.sender] == 1, "Jug/not-authorized");
+        _;
+    }
 
     // --- Data ---
     struct Ilk {
@@ -76,27 +79,27 @@ contract Jug is LibNote {
     // --- Administration ---
     function init(bytes32 ilk) external note auth {
         Ilk storage i = ilks[ilk];
-        require(i.duty == 0);
+        require(i.duty == 0, "Jug/ilk-already-init");
         i.duty = ONE;
         i.rho  = now;
     }
     function file(bytes32 ilk, bytes32 what, uint data) external note auth {
-        require(now == ilks[ilk].rho);
+        require(now == ilks[ilk].rho, "Jug/rho-not-updated");
         if (what == "duty") ilks[ilk].duty = data;
-        else revert();
+        else revert("Jug/file-unrecognized-param");
     }
     function file(bytes32 what, uint data) external note auth {
         if (what == "base") base = data;
-        else revert();
+        else revert("Jug/file-unrecognized-param");
     }
     function file(bytes32 what, address data) external note auth {
         if (what == "vow") vow = data;
-        else revert();
+        else revert("Jug/file-unrecognized-param");
     }
 
     // --- Stability Fee Collection ---
     function drip(bytes32 ilk) external note {
-        require(now >= ilks[ilk].rho);
+        require(now >= ilks[ilk].rho, "Jug/invalid-now");
         (, uint rate) = vat.ilks(ilk);
         vat.fold(ilk, vow, diff(rmul(rpow(add(base, ilks[ilk].duty), now - ilks[ilk].rho, ONE), rate), rate));
         ilks[ilk].rho = now;

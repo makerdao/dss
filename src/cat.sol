@@ -47,7 +47,10 @@ contract Cat is LibNote {
     mapping (address => uint) public wards;
     function rely(address usr) external note auth { wards[usr] = 1; }
     function deny(address usr) external note auth { wards[usr] = 0; }
-    modifier auth { require(wards[msg.sender] == 1); _; }
+    modifier auth {
+        require(wards[msg.sender] == 1, "Cat/not-authorized");
+        _;
+    }
 
     // --- Data ---
     struct Ilk {
@@ -96,16 +99,16 @@ contract Cat is LibNote {
     // --- Administration ---
     function file(bytes32 what, address data) external note auth {
         if (what == "vow") vow = VowLike(data);
-        else revert();
+        else revert("Cat/file-unrecognized-param");
     }
     function file(bytes32 ilk, bytes32 what, uint data) external note auth {
         if (what == "chop") ilks[ilk].chop = data;
         else if (what == "lump") ilks[ilk].lump = data;
-        else revert();
+        else revert("Cat/file-unrecognized-param");
     }
     function file(bytes32 ilk, bytes32 what, address flip) external note auth {
         if (what == "flip") { ilks[ilk].flip = flip; vat.hope(flip); }
-        else revert();
+        else revert("Cat/file-unrecognized-param");
     }
 
     // --- CDP Liquidation ---
@@ -113,13 +116,13 @@ contract Cat is LibNote {
         (, uint rate, uint spot) = vat.ilks(ilk);
         (uint ink, uint art) = vat.urns(ilk, urn);
 
-        require(live == 1);
-        require(spot > 0 && mul(ink, spot) < mul(art, rate));
+        require(live == 1, "Cat/not-live");
+        require(spot > 0 && mul(ink, spot) < mul(art, rate), "Cat/not-unsafe");
 
         uint lot = min(ink, ilks[ilk].lump);
         art      = min(art, mul(lot, art) / ink);
 
-        require(lot <= 2**255 && art <= 2**255);
+        require(lot <= 2**255 && art <= 2**255, "Cat/overflow");
         vat.grab(ilk, urn, address(this), address(vow), -int(lot), -int(art));
 
         vow.fess(mul(art, rate));

@@ -187,7 +187,10 @@ contract End is LibNote {
     mapping (address => uint) public wards;
     function rely(address guy) external note auth { wards[guy] = 1; }
     function deny(address guy) external note auth { wards[guy] = 0; }
-    modifier auth { require(wards[msg.sender] == 1); _; }
+    modifier auth {
+        require(wards[msg.sender] == 1, "End/not-authorized");
+        _;
+    }
 
     // --- Data ---
     VatLike  public vat;
@@ -243,23 +246,23 @@ contract End is LibNote {
 
     // --- Administration ---
     function file(bytes32 what, address data) external note auth {
-        require(live == 1);
+        require(live == 1, "End/not-live");
         if (what == "vat")  vat = VatLike(data);
         else if (what == "cat")  cat = CatLike(data);
         else if (what == "vow")  vow = VowLike(data);
         else if (what == "pot")  pot = PotLike(data);
         else if (what == "spot") spot = Spotty(data);
-        else revert();
+        else revert("End/file-unrecognized-param");
     }
     function file(bytes32 what, uint256 data) external note auth {
-        require(live == 1);
+        require(live == 1, "End/not-live");
         if (what == "wait") wait = data;
-        else revert();
+        else revert("End/file-unrecognized-param");
     }
 
     // --- Settlement ---
     function cage() external note auth {
-        require(live == 1);
+        require(live == 1, "End/not-live");
         live = 0;
         when = now;
         vat.cage();
@@ -270,8 +273,8 @@ contract End is LibNote {
     }
 
     function cage(bytes32 ilk) external note {
-        require(live == 0);
-        require(tag[ilk] == 0);
+        require(live == 0, "End/still-live");
+        require(tag[ilk] == 0, "End/tag-ilk-already-defined");
         (Art[ilk],,,,) = vat.ilks(ilk);
         (PipLike pip,) = spot.ilks(ilk);
         // par is a ray, pip returns a wad
@@ -279,7 +282,7 @@ contract End is LibNote {
     }
 
     function skip(bytes32 ilk, uint256 id) external note {
-        require(tag[ilk] != 0);
+        require(tag[ilk] != 0, "End/tag-ilk-not-defined");
 
         (address flipV,,) = cat.ilks(ilk);
         Flippy flip = Flippy(flipV);
@@ -293,12 +296,12 @@ contract End is LibNote {
 
         uint art = tab / rate;
         Art[ilk] = add(Art[ilk], art);
-        require(int(lot) >= 0 && int(art) >= 0);
+        require(int(lot) >= 0 && int(art) >= 0, "End/overflow");
         vat.grab(ilk, usr, address(this), address(vow), int(lot), int(art));
     }
 
     function skim(bytes32 ilk, address urn) external note {
-        require(tag[ilk] != 0);
+        require(tag[ilk] != 0, "End/tag-ilk-not-defined");
         (, uint rate,,,) = vat.ilks(ilk);
         (uint ink, uint art) = vat.urns(ilk, urn);
 
@@ -306,28 +309,28 @@ contract End is LibNote {
         uint wad = min(ink, owe);
         gap[ilk] = add(gap[ilk], sub(owe, wad));
 
-        require(wad <= 2**255 && art <= 2**255);
+        require(wad <= 2**255 && art <= 2**255, "End/overflow");
         vat.grab(ilk, urn, address(this), address(vow), -int(wad), -int(art));
     }
 
     function free(bytes32 ilk) external note {
-        require(live == 0);
+        require(live == 0, "End/still-live");
         (uint ink, uint art) = vat.urns(ilk, msg.sender);
-        require(art == 0);
-        require(ink <= 2**255);
+        require(art == 0, "End/art-not-zero");
+        require(ink <= 2**255, "End/overflow");
         vat.grab(ilk, msg.sender, msg.sender, address(vow), -int(ink), 0);
     }
 
     function thaw() external note {
-        require(live == 0);
-        require(debt == 0);
-        require(vat.dai(address(vow)) == 0);
-        require(now >= add(when, wait));
+        require(live == 0, "End/still-live");
+        require(debt == 0, "End/debt-not-zero");
+        require(vat.dai(address(vow)) == 0, "End/surplus-not-zero");
+        require(now >= add(when, wait), "End/wait-not-finished");
         debt = vat.debt();
     }
     function flow(bytes32 ilk) external note {
-        require(debt != 0);
-        require(fix[ilk] == 0);
+        require(debt != 0, "End/debt-zero");
+        require(fix[ilk] == 0, "End/fix-ilk-already-defined");
 
         (, uint rate,,,) = vat.ilks(ilk);
         uint256 wad = rmul(rmul(Art[ilk], rate), tag[ilk]);
@@ -335,14 +338,14 @@ contract End is LibNote {
     }
 
     function pack(uint256 wad) external note {
-        require(debt != 0);
+        require(debt != 0, "End/debt-zero");
         vat.move(msg.sender, address(vow), mul(wad, RAY));
         bag[msg.sender] = add(bag[msg.sender], wad);
     }
     function cash(bytes32 ilk, uint wad) external note {
-        require(fix[ilk] != 0);
+        require(fix[ilk] != 0, "End/fix-ilk-not-defined");
         vat.flux(ilk, address(this), msg.sender, rmul(wad, fix[ilk]));
         out[ilk][msg.sender] = add(out[ilk][msg.sender], wad);
-        require(out[ilk][msg.sender] <= bag[msg.sender]);
+        require(out[ilk][msg.sender] <= bag[msg.sender], "End/insufficient-bag-balance");
     }
 }

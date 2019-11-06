@@ -20,9 +20,12 @@ pragma solidity 0.5.12;
 contract Vat {
     // --- Auth ---
     mapping (address => uint) public wards;
-    function rely(address usr) external note auth { require(live == 1); wards[usr] = 1; }
-    function deny(address usr) external note auth { require(live == 1); wards[usr] = 0; }
-    modifier auth { require(wards[msg.sender] == 1); _; }
+    function rely(address usr) external note auth { require(live == 1, "Vat/not-live"); wards[usr] = 1; }
+    function deny(address usr) external note auth { require(live == 1, "Vat/not-live"); wards[usr] = 0; }
+    modifier auth {
+        require(wards[msg.sender] == 1, "Vat/not-authorized");
+        _;
+    }
 
     mapping(address => mapping (address => uint)) public can;
     function hope(address usr) external note { can[msg.sender][usr] = 1; }
@@ -117,20 +120,20 @@ contract Vat {
 
     // --- Administration ---
     function init(bytes32 ilk) external note auth {
-        require(ilks[ilk].rate == 0);
+        require(ilks[ilk].rate == 0, "Vat/ilk-already-init");
         ilks[ilk].rate = 10 ** 27;
     }
     function file(bytes32 what, uint data) external note auth {
-        require(live == 1);
+        require(live == 1, "Vat/not-live");
         if (what == "Line") Line = data;
-        else revert();
+        else revert("Vat/file-unrecognized-param");
     }
     function file(bytes32 ilk, bytes32 what, uint data) external note auth {
-        require(live == 1);
+        require(live == 1, "Vat/not-live");
         if (what == "spot") ilks[ilk].spot = data;
         else if (what == "line") ilks[ilk].line = data;
         else if (what == "dust") ilks[ilk].dust = data;
-        else revert();
+        else revert("Vat/file-unrecognized-param");
     }
     function cage() external note auth {
         live = 0;
@@ -141,12 +144,12 @@ contract Vat {
         gem[ilk][usr] = add(gem[ilk][usr], wad);
     }
     function flux(bytes32 ilk, address src, address dst, uint256 wad) external note {
-        require(wish(src, msg.sender));
+        require(wish(src, msg.sender), "Vat/not-allowed");
         gem[ilk][src] = sub(gem[ilk][src], wad);
         gem[ilk][dst] = add(gem[ilk][dst], wad);
     }
     function move(address src, address dst, uint256 rad) external note {
-        require(wish(src, msg.sender));
+        require(wish(src, msg.sender), "Vat/not-allowed");
         dai[src] = sub(dai[src], rad);
         dai[dst] = add(dai[dst], rad);
     }
@@ -161,12 +164,12 @@ contract Vat {
     // --- CDP Manipulation ---
     function frob(bytes32 i, address u, address v, address w, int dink, int dart) external note {
         // system is live
-        require(live == 1);
+        require(live == 1, "Vat/not-live");
 
         Urn memory urn = urns[i][u];
         Ilk memory ilk = ilks[i];
         // ilk has been initialised
-        require(ilk.rate != 0);
+        require(ilk.rate != 0, "Vat/ilk-not-init");
 
         urn.ink = add(urn.ink, dink);
         urn.art = add(urn.art, dart);
@@ -177,19 +180,19 @@ contract Vat {
         debt     = add(debt, dtab);
 
         // either debt has decreased, or debt ceilings are not exceeded
-        require(either(dart <= 0, both(mul(ilk.Art, ilk.rate) <= ilk.line, debt <= Line)));
+        require(either(dart <= 0, both(mul(ilk.Art, ilk.rate) <= ilk.line, debt <= Line)), "Vat/ceiling-exceeded");
         // urn is either less risky than before, or it is safe
-        require(either(both(dart <= 0, dink >= 0), tab <= mul(urn.ink, ilk.spot)));
+        require(either(both(dart <= 0, dink >= 0), tab <= mul(urn.ink, ilk.spot)), "Vat/not-safe");
 
         // urn is either more safe, or the owner consents
-        require(either(both(dart <= 0, dink >= 0), wish(u, msg.sender)));
+        require(either(both(dart <= 0, dink >= 0), wish(u, msg.sender)), "Vat/not-allowed-u");
         // collateral src consents
-        require(either(dink <= 0, wish(v, msg.sender)));
+        require(either(dink <= 0, wish(v, msg.sender)), "Vat/not-allowed-v");
         // debt dst consents
-        require(either(dart >= 0, wish(w, msg.sender)));
+        require(either(dart >= 0, wish(w, msg.sender)), "Vat/not-allowed-w");
 
         // urn has no debt, or a non-dusty amount
-        require(either(urn.art == 0, tab >= ilk.dust));
+        require(either(urn.art == 0, tab >= ilk.dust), "Vat/dust");
 
         gem[i][v] = sub(gem[i][v], dink);
         dai[w]    = add(dai[w],    dtab);
@@ -212,15 +215,15 @@ contract Vat {
         uint vtab = mul(v.art, i.rate);
 
         // both sides consent
-        require(both(wish(src, msg.sender), wish(dst, msg.sender)));
+        require(both(wish(src, msg.sender), wish(dst, msg.sender)), "Vat/not-allowed");
 
         // both sides safe
-        require(utab <= mul(u.ink, i.spot));
-        require(vtab <= mul(v.ink, i.spot));
+        require(utab <= mul(u.ink, i.spot), "Vat/not-safe-src");
+        require(vtab <= mul(v.ink, i.spot), "Vat/not-safe-dst");
 
         // both sides non-dusty
-        require(either(utab >= i.dust, u.art == 0));
-        require(either(vtab >= i.dust, v.art == 0));
+        require(either(utab >= i.dust, u.art == 0), "Vat/dust-src");
+        require(either(vtab >= i.dust, v.art == 0), "Vat/dust-dst");
     }
     // --- CDP Confiscation ---
     function grab(bytes32 i, address u, address v, address w, int dink, int dart) external note auth {
@@ -255,7 +258,7 @@ contract Vat {
 
     // --- Rates ---
     function fold(bytes32 i, address u, int rate) external note auth {
-        require(live == 1);
+        require(live == 1, "Vat/not-live");
         Ilk storage ilk = ilks[i];
         ilk.rate = add(ilk.rate, rate);
         int rad  = mul(ilk.Art, rate);

@@ -30,7 +30,10 @@ contract Spotter is LibNote {
     mapping (address => uint) public wards;
     function rely(address guy) external note auth { wards[guy] = 1;  }
     function deny(address guy) external note auth { wards[guy] = 0; }
-    modifier auth { require(wards[msg.sender] == 1); _; }
+    modifier auth {
+        require(wards[msg.sender] == 1, "Spotter/not-authorized");
+        _;
+    }
 
     // --- Data ---
     struct Ilk {
@@ -72,19 +75,19 @@ contract Spotter is LibNote {
 
     // --- Administration ---
     function file(bytes32 ilk, bytes32 what, address pip_) external note auth {
-        require(live == 1);
+        require(live == 1, "Spotter/not-live");
         if (what == "pip") ilks[ilk].pip = PipLike(pip_);
-        else revert();
+        else revert("Spotter/file-unrecognized-param");
     }
     function file(bytes32 what, uint data) external note auth {
-        require(live == 1);
+        require(live == 1, "Spotter/not-live");
         if (what == "par") par = data;
-        else revert();
+        else revert("Spotter/file-unrecognized-param");
     }
     function file(bytes32 ilk, bytes32 what, uint data) external note auth {
-        require(live == 1);
+        require(live == 1, "Spotter/not-live");
         if (what == "mat") ilks[ilk].mat = data;
-        else revert();
+        else revert("Spotter/file-unrecognized-param");
     }
 
     // --- Update value ---
