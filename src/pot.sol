@@ -146,6 +146,11 @@ contract Pot is LibNote {
         vat.suck(address(vow), address(this), mul(Pie, chi_));
     }
 
+    function drop() external view returns (uint) {
+        if (now == rho) return chi;
+        return rmul(rpow(dsr, now - rho, ONE), chi);
+    }
+
     // --- Savings Dai Management ---
     function join(uint wad) external note {
         require(now == rho, "Pot/rho-not-updated");
