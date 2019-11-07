@@ -36,6 +36,7 @@ contract VatLike {
     );
     function grab(bytes32,address,address,address,int,int) external;
     function hope(address) external;
+    function nope(address) external;
 }
 
 contract VowLike {
@@ -107,7 +108,11 @@ contract Cat is LibNote {
         else revert("Cat/file-unrecognized-param");
     }
     function file(bytes32 ilk, bytes32 what, address flip) external note auth {
-        if (what == "flip") { ilks[ilk].flip = flip; vat.hope(flip); }
+        if (what == "flip") {
+            vat.nope(ilks[ilk].flip);
+            ilks[ilk].flip = flip;
+            vat.hope(flip);
+        }
         else revert("Cat/file-unrecognized-param");
     }
 
