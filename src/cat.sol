@@ -109,9 +109,9 @@ contract Cat is LibNote {
     }
     function file(bytes32 ilk, bytes32 what, address flip) external note auth {
         if (what == "flip") {
-          vat.nope(ilks[ilk].flip);
-          ilks[ilk].flip = flip;
-          vat.hope(flip);
+            vat.nope(ilks[ilk].flip);
+            ilks[ilk].flip = flip;
+            vat.hope(flip);
         }
         else revert("Cat/file-unrecognized-param");
     }
