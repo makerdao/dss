@@ -1,5 +1,4 @@
 pragma solidity 0.5.12;
-pragma experimental ABIEncoderV2;
 
 import "ds-test/test.sol";
 
@@ -12,8 +11,13 @@ contract Hevm {
 }
 
 contract VatLike {
-    function ilks(bytes32) public view returns (Vat.Ilk memory);
-    function urns(bytes32,address) public view returns (Vat.Urn memory);
+    function ilks(bytes32) public view returns (
+        uint256 Art,
+        uint256 rate,
+        uint256 spot,
+        uint256 line,
+        uint256 dust
+    );
 }
 
 contract JugTest is DSTest {
@@ -31,13 +35,14 @@ contract JugTest is DSTest {
         (uint duty, uint rho_) = jug.ilks(ilk); duty;
         return rho_;
     }
-    function rate(bytes32 ilk) internal view returns (uint) {
-        Vat.Ilk memory i = VatLike(address(vat)).ilks(ilk);
-        return i.rate;
+    function Art(bytes32 ilk) internal view returns (uint ArtV) {
+        (ArtV,,,,) = VatLike(address(vat)).ilks(ilk);
     }
-    function line(bytes32 ilk) internal view returns (uint) {
-        Vat.Ilk memory i = VatLike(address(vat)).ilks(ilk);
-        return i.line;
+    function rate(bytes32 ilk) internal view returns (uint rateV) {
+        (, rateV,,,) = VatLike(address(vat)).ilks(ilk);
+    }
+    function line(bytes32 ilk) internal view returns (uint lineV) {
+        (,,, lineV,) = VatLike(address(vat)).ilks(ilk);
     }
 
     address ali = address(bytes20("ali"));
@@ -69,8 +74,7 @@ contract JugTest is DSTest {
         assertEq(uint(now), 1);
         hevm.warp(2);
         assertEq(uint(now), 2);
-        Vat.Ilk memory i = VatLike(address(vat)).ilks("i");
-        assertEq(i.Art, 100 ether);
+        assertEq(Art("i"), 100 ether);
     }
     function test_drip_updates_rho() public {
         jug.init("i");

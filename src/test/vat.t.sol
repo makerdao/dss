@@ -1,5 +1,4 @@
 pragma solidity 0.5.12;
-pragma experimental ABIEncoderV2;
 
 import "ds-test/test.sol";
 import "ds-token/token.sol";
@@ -443,7 +442,16 @@ contract FlipLike {
         address gal;
         uint256 tab;
     }
-    function bids(uint) public view returns (Bid memory);
+    function bids(uint) public view returns (
+        uint256 bid,
+        uint256 lot,
+        address guy,
+        uint48  tic,
+        uint48  end,
+        address usr,
+        address gal,
+        uint256 tab
+    );
 }
 
 contract BiteTest is DSTest {
@@ -562,9 +570,9 @@ contract BiteTest is DSTest {
         // all debt goes to the vow
         assertEq(vow.Awe(), rad(100 ether));
         // auction is for all collateral
-        FlipLike.Bid memory bid = FlipLike(address(flip)).bids(auction);
-        assertEq(bid.lot,        40 ether);
-        assertEq(bid.tab,   rad(110 ether));
+        (, uint lot,,,,,, uint tab) = FlipLike(address(flip)).bids(auction);
+        assertEq(lot,        40 ether);
+        assertEq(tab,   rad(110 ether));
     }
     function test_bite_over_lump() public {
         vat.file("gold", 'spot', ray(2.5 ether));
@@ -582,9 +590,9 @@ contract BiteTest is DSTest {
         // a fraction of the debt goes to the vow
         assertEq(vow.Awe(), rad(75 ether));
         // auction is for a fraction of the collateral
-        FlipLike.Bid memory bid = FlipLike(address(flip)).bids(auction);
-        assertEq(bid.lot,       30 ether);
-        assertEq(bid.tab,   rad(82.5 ether));
+        (, uint lot,,,,,, uint tab) = FlipLike(address(flip)).bids(auction);
+        assertEq(lot,       30 ether);
+        assertEq(tab,   rad(82.5 ether));
     }
 
     function test_happy_bite() public {
