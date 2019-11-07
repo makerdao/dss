@@ -53,7 +53,7 @@ contract Vatish is DSToken('') {
     function hope(address usr) public {
          super.approve(usr);
     }
-    function dai(address usr) public returns (uint) {
+    function dai(address usr) public view returns (uint) {
          return super.balanceOf(usr);
     }
 }
