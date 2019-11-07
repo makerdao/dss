@@ -97,6 +97,12 @@ contract Vow is LibNote {
         else revert("Vow/file-unrecognized-param");
     }
 
+    function file(bytes32 what, address data) external note auth {
+        if (what == "flapper") { flapper = FlapLike(data); vat.hope(data); }
+        else if (what == "flopper") flopper = FlopLike(data);
+        else revert("Vow/file-unrecognized-param");
+    }
+
     // Push to debt-queue
     function fess(uint tab) external note auth {
         sin[now] = add(sin[now], tab);
