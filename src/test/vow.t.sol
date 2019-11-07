@@ -105,6 +105,26 @@ contract VowTest is DSTest {
         vow.heal(rad(wad));
     }
 
+    function test_change_flap_flop() public {
+        Flap newFlap = new Flap(address(vat), address(gov));
+        Flop newFlop = new Flop(address(vat), address(gov));
+
+        newFlap.rely(address(vow));
+        newFlop.rely(address(vow));
+
+        assertEq(vat.can(address(vow), address(flap)), 1);
+        assertEq(vat.can(address(vow), address(newFlap)), 0);
+
+        vow.file('flapper', address(newFlap));
+        vow.file('flopper', address(newFlop));
+
+        assertEq(address(vow.flapper()), address(newFlap));
+        assertEq(address(vow.flopper()), address(newFlop));
+
+        assertEq(vat.can(address(vow), address(flap)), 0);
+        assertEq(vat.can(address(vow), address(newFlap)), 1);
+    }
+
     function test_flog_wait() public {
         assertEq(vow.wait(), 0);
         vow.file('wait', uint(100 seconds));

@@ -36,6 +36,7 @@ contract VatLike {
     function sin (address) external view returns (uint);
     function heal(uint256) external;
     function hope(address) external;
+    function nope(address) external;
 }
 
 contract Vow is LibNote {
@@ -98,7 +99,11 @@ contract Vow is LibNote {
     }
 
     function file(bytes32 what, address data) external note auth {
-        if (what == "flapper") { flapper = FlapLike(data); vat.hope(data); }
+        if (what == "flapper") {
+            vat.nope(address(flapper));
+            flapper = FlapLike(data);
+            vat.hope(data);
+        }
         else if (what == "flopper") flopper = FlopLike(data);
         else revert("Vow/file-unrecognized-param");
     }
