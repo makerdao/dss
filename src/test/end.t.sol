@@ -16,7 +16,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-pragma solidity 0.5.11;
+pragma solidity 0.5.12;
 
 import "ds-test/test.sol";
 import "ds-token/token.sol";
@@ -212,6 +212,7 @@ contract EndTest is DSTest {
         end.file("wait", 1 hours);
         vat.rely(address(end));
         vow.rely(address(end));
+        spot.rely(address(end));
         pot.rely(address(end));
         cat.rely(address(end));
         flap.rely(address(vow));

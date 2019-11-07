@@ -15,7 +15,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-pragma solidity 0.5.11;
+pragma solidity 0.5.12;
 
 import "./lib.sol";
 
@@ -43,12 +43,15 @@ contract VatLike {
     function suck(address,address,uint256) external;
 }
 
-contract Pot is DSNote {
+contract Pot is LibNote {
     // --- Auth ---
     mapping (address => uint) public wards;
     function rely(address guy) external note auth { wards[guy] = 1; }
     function deny(address guy) external note auth { wards[guy] = 0; }
-    modifier auth { require(wards[msg.sender] == 1); _; }
+    modifier auth {
+        require(wards[msg.sender] == 1, "Pot/not-authorized");
+        _;
+    }
 
     // --- Data ---
     mapping (address => uint256) public pie;  // user Savings Dai
@@ -117,15 +120,15 @@ contract Pot is DSNote {
 
     // --- Administration ---
     function file(bytes32 what, uint256 data) external note auth {
-        require(live == 1);
-        require(now == rho);
+        require(live == 1, "Pot/not-live");
+        require(now == rho, "Pot/rho-not-updated");
         if (what == "dsr") dsr = data;
-        else revert();
+        else revert("Pot/file-unrecognized-param");
     }
 
     function file(bytes32 what, address addr) external note auth {
         if (what == "vow") vow = addr;
-        else revert();
+        else revert("Pot/file-unrecognized-param");
     }
 
     function cage() external note auth {
@@ -134,9 +137,9 @@ contract Pot is DSNote {
     }
 
     // --- Savings Rate Accumulation ---
-    function drip() external note {
-        require(now >= rho);
-        uint tmp = rmul(rpow(dsr, now - rho, ONE), chi);
+    function drip() external note returns (uint tmp) {
+        require(now >= rho, "Pot/invalid-now");
+        tmp = rmul(rpow(dsr, now - rho, ONE), chi);
         uint chi_ = sub(tmp, chi);
         chi = tmp;
         rho = now;
@@ -145,7 +148,7 @@ contract Pot is DSNote {
 
     // --- Savings Dai Management ---
     function join(uint wad) external note {
-        require(now == rho);
+        require(now == rho, "Pot/rho-not-updated");
         pie[msg.sender] = add(pie[msg.sender], wad);
         Pie             = add(Pie,             wad);
         vat.move(msg.sender, address(this), mul(chi, wad));

@@ -13,7 +13,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-pragma solidity 0.5.11;
+pragma solidity 0.5.12;
 
 import "./lib.sol";
 
@@ -25,12 +25,15 @@ contract PipLike {
     function peek() external returns (bytes32, bool);
 }
 
-contract Spotter is DSNote {
+contract Spotter is LibNote {
     // --- Auth ---
     mapping (address => uint) public wards;
     function rely(address guy) external note auth { wards[guy] = 1;  }
     function deny(address guy) external note auth { wards[guy] = 0; }
-    modifier auth { require(wards[msg.sender] == 1); _; }
+    modifier auth {
+        require(wards[msg.sender] == 1, "Spotter/not-authorized");
+        _;
+    }
 
     // --- Data ---
     struct Ilk {
@@ -42,6 +45,8 @@ contract Spotter is DSNote {
 
     VatLike public vat;
     uint256 public par; // ref per dai
+
+    uint256 public live;
 
     // --- Events ---
     event Poke(
@@ -55,6 +60,7 @@ contract Spotter is DSNote {
         wards[msg.sender] = 1;
         vat = VatLike(vat_);
         par = ONE;
+        live = 1;
     }
 
     // --- Math ---
@@ -69,16 +75,19 @@ contract Spotter is DSNote {
 
     // --- Administration ---
     function file(bytes32 ilk, bytes32 what, address pip_) external note auth {
+        require(live == 1, "Spotter/not-live");
         if (what == "pip") ilks[ilk].pip = PipLike(pip_);
-        else revert();
+        else revert("Spotter/file-unrecognized-param");
     }
     function file(bytes32 what, uint data) external note auth {
+        require(live == 1, "Spotter/not-live");
         if (what == "par") par = data;
-        else revert();
+        else revert("Spotter/file-unrecognized-param");
     }
     function file(bytes32 ilk, bytes32 what, uint data) external note auth {
+        require(live == 1, "Spotter/not-live");
         if (what == "mat") ilks[ilk].mat = data;
-        else revert();
+        else revert("Spotter/file-unrecognized-param");
     }
 
     // --- Update value ---
@@ -87,5 +96,9 @@ contract Spotter is DSNote {
         uint256 spot = has ? rdiv(rdiv(mul(uint(val), 10 ** 9), par), ilks[ilk].mat) : 0;
         vat.file(ilk, "spot", spot);
         emit Poke(ilk, val, spot);
+    }
+
+    function cage() external note auth {
+        live = 0;
     }
 }

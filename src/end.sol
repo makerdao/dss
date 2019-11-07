@@ -16,27 +16,24 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-pragma solidity 0.5.11;
-pragma experimental ABIEncoderV2;
+pragma solidity 0.5.12;
 
 import "./lib.sol";
 
 contract VatLike {
-    struct Ilk {
-        uint256 Art;
-        uint256 rate;
-        uint256 spot;
-        uint256 line;
-        uint256 dust;
-    }
-    struct Urn {
-        uint256 ink;
-        uint256 art;
-    }
-    function dai(address) external view returns (uint);
-    function ilks(bytes32 ilk) external returns (Ilk memory);
-    function urns(bytes32 ilk, address urn) external returns (Urn memory);
-    function debt() external returns (uint);
+    function dai(address) external view returns (uint256);
+    function ilks(bytes32 ilk) external returns (
+        uint256 Art,
+        uint256 rate,
+        uint256 spot,
+        uint256 line,
+        uint256 dust
+    );
+    function urns(bytes32 ilk, address urn) external returns (
+        uint256 ink,
+        uint256 art
+    );
+    function debt() external returns (uint256);
     function move(address src, address dst, uint256 rad) external;
     function hope(address) external;
     function flux(bytes32 ilk, address src, address dst, uint256 rad) external;
@@ -45,33 +42,30 @@ contract VatLike {
     function cage() external;
 }
 contract CatLike {
-    struct Ilk {
-        address flip;  // Liquidator
-        uint256 chop;  // Liquidation Penalty   [ray]
-        uint256 lump;  // Liquidation Quantity  [rad]
-    }
-    function ilks(bytes32) external returns (Ilk memory);
+    function ilks(bytes32) external returns (
+        address flip,  // Liquidator
+        uint256 chop,  // Liquidation Penalty   [ray]
+        uint256 lump   // Liquidation Quantity  [rad]
+    );
     function cage() external;
 }
 contract PotLike {
     function cage() external;
 }
 contract VowLike {
-    function heal(uint256 rad) external;
     function cage() external;
 }
 contract Flippy {
-    struct Bid {
-        uint256 bid;
-        uint256 lot;
-        address guy;
-        uint48  tic;
-        uint48  end;
-        address usr;
-        address gal;
-        uint256 tab;
-    }
-    function bids(uint id) external view returns (Bid memory);
+    function bids(uint id) external view returns (
+        uint256 bid,
+        uint256 lot,
+        address guy,
+        uint48  tic,
+        uint48  end,
+        address usr,
+        address gal,
+        uint256 tab
+    );
     function yank(uint id) external;
 }
 
@@ -80,12 +74,12 @@ contract PipLike {
 }
 
 contract Spotty {
-    struct Ilk {
-        PipLike pip;
-        uint256 mat;
-    }
     function par() external view returns (uint256);
-    function ilks(bytes32) external view returns (Ilk memory);
+    function ilks(bytes32) external view returns (
+        PipLike pip,
+        uint256 mat
+    );
+    function cage() external;
 }
 
 /*
@@ -188,12 +182,15 @@ contract Spotty {
         - the number of gems is limited by how big your bag is
 */
 
-contract End is DSNote {
+contract End is LibNote {
     // --- Auth ---
     mapping (address => uint) public wards;
     function rely(address guy) external note auth { wards[guy] = 1; }
     function deny(address guy) external note auth { wards[guy] = 0; }
-    modifier auth { require(wards[msg.sender] == 1); _; }
+    modifier auth {
+        require(wards[msg.sender] == 1, "End/not-authorized");
+        _;
+    }
 
     // --- Data ---
     VatLike  public vat;
@@ -249,102 +246,106 @@ contract End is DSNote {
 
     // --- Administration ---
     function file(bytes32 what, address data) external note auth {
+        require(live == 1, "End/not-live");
         if (what == "vat")  vat = VatLike(data);
         else if (what == "cat")  cat = CatLike(data);
         else if (what == "vow")  vow = VowLike(data);
         else if (what == "pot")  pot = PotLike(data);
         else if (what == "spot") spot = Spotty(data);
-        else revert();
+        else revert("End/file-unrecognized-param");
     }
     function file(bytes32 what, uint256 data) external note auth {
+        require(live == 1, "End/not-live");
         if (what == "wait") wait = data;
-        else revert();
+        else revert("End/file-unrecognized-param");
     }
 
     // --- Settlement ---
     function cage() external note auth {
-        require(live == 1);
+        require(live == 1, "End/not-live");
         live = 0;
         when = now;
         vat.cage();
         cat.cage();
         vow.cage();
+        spot.cage();
         pot.cage();
     }
 
     function cage(bytes32 ilk) external note {
-        require(live == 0);
-        require(tag[ilk] == 0);
-        Art[ilk] = vat.ilks(ilk).Art;
+        require(live == 0, "End/still-live");
+        require(tag[ilk] == 0, "End/tag-ilk-already-defined");
+        (Art[ilk],,,,) = vat.ilks(ilk);
+        (PipLike pip,) = spot.ilks(ilk);
         // par is a ray, pip returns a wad
-        tag[ilk] = wdiv(spot.par(), uint(spot.ilks(ilk).pip.read()));
+        tag[ilk] = wdiv(spot.par(), uint(pip.read()));
     }
 
     function skip(bytes32 ilk, uint256 id) external note {
-        require(tag[ilk] != 0);
+        require(tag[ilk] != 0, "End/tag-ilk-not-defined");
 
-        Flippy flip = Flippy(cat.ilks(ilk).flip);
-        VatLike.Ilk memory i   = vat.ilks(ilk);
-        Flippy.Bid  memory bid = flip.bids(id);
+        (address flipV,,) = cat.ilks(ilk);
+        Flippy flip = Flippy(flipV);
+        (, uint rate,,,) = vat.ilks(ilk);
+        (uint bid, uint lot,,,, address usr,, uint tab) = flip.bids(id);
 
-        vat.suck(address(vow), address(vow),  bid.tab);
-        vat.suck(address(vow), address(this), bid.bid);
+        vat.suck(address(vow), address(vow),  tab);
+        vat.suck(address(vow), address(this), bid);
         vat.hope(address(flip));
         flip.yank(id);
 
-        uint lot = bid.lot;
-        uint art = bid.tab / i.rate;
+        uint art = tab / rate;
         Art[ilk] = add(Art[ilk], art);
-        require(int(lot) >= 0 && int(art) >= 0);
-        vat.grab(ilk, bid.usr, address(this), address(vow), int(lot), int(art));
+        require(int(lot) >= 0 && int(art) >= 0, "End/overflow");
+        vat.grab(ilk, usr, address(this), address(vow), int(lot), int(art));
     }
 
     function skim(bytes32 ilk, address urn) external note {
-        require(tag[ilk] != 0);
-        VatLike.Ilk memory i = vat.ilks(ilk);
-        VatLike.Urn memory u = vat.urns(ilk, urn);
+        require(tag[ilk] != 0, "End/tag-ilk-not-defined");
+        (, uint rate,,,) = vat.ilks(ilk);
+        (uint ink, uint art) = vat.urns(ilk, urn);
 
-        uint owe = rmul(rmul(u.art, i.rate), tag[ilk]);
-        uint wad = min(u.ink, owe);
+        uint owe = rmul(rmul(art, rate), tag[ilk]);
+        uint wad = min(ink, owe);
         gap[ilk] = add(gap[ilk], sub(owe, wad));
 
-        require(wad <= 2**255 && u.art <= 2**255);
-        vat.grab(ilk, urn, address(this), address(vow), -int(wad), -int(u.art));
+        require(wad <= 2**255 && art <= 2**255, "End/overflow");
+        vat.grab(ilk, urn, address(this), address(vow), -int(wad), -int(art));
     }
 
     function free(bytes32 ilk) external note {
-        require(live == 0);
-        VatLike.Urn memory u = vat.urns(ilk, msg.sender);
-        require(u.art == 0);
-        require(u.ink <= 2**255);
-        vat.grab(ilk, msg.sender, msg.sender, address(vow), -int(u.ink), 0);
+        require(live == 0, "End/still-live");
+        (uint ink, uint art) = vat.urns(ilk, msg.sender);
+        require(art == 0, "End/art-not-zero");
+        require(ink <= 2**255, "End/overflow");
+        vat.grab(ilk, msg.sender, msg.sender, address(vow), -int(ink), 0);
     }
 
     function thaw() external note {
-        require(live == 0);
-        require(debt == 0);
-        require(vat.dai(address(vow)) == 0);
-        require(now >= add(when, wait));
+        require(live == 0, "End/still-live");
+        require(debt == 0, "End/debt-not-zero");
+        require(vat.dai(address(vow)) == 0, "End/surplus-not-zero");
+        require(now >= add(when, wait), "End/wait-not-finished");
         debt = vat.debt();
     }
     function flow(bytes32 ilk) external note {
-        require(debt != 0);
-        require(fix[ilk] == 0);
+        require(debt != 0, "End/debt-zero");
+        require(fix[ilk] == 0, "End/fix-ilk-already-defined");
 
-        VatLike.Ilk memory i = vat.ilks(ilk);
-        uint256 wad = rmul(rmul(Art[ilk], i.rate), tag[ilk]);
+        (, uint rate,,,) = vat.ilks(ilk);
+        uint256 wad = rmul(rmul(Art[ilk], rate), tag[ilk]);
         fix[ilk] = rdiv(mul(sub(wad, gap[ilk]), RAY), debt);
     }
 
     function pack(uint256 wad) external note {
-        require(debt != 0);
+        require(debt != 0, "End/debt-zero");
         vat.move(msg.sender, address(vow), mul(wad, RAY));
         bag[msg.sender] = add(bag[msg.sender], wad);
     }
     function cash(bytes32 ilk, uint wad) external note {
-        require(fix[ilk] != 0);
+        require(fix[ilk] != 0, "End/fix-ilk-not-defined");
         vat.flux(ilk, address(this), msg.sender, rmul(wad, fix[ilk]));
         out[ilk][msg.sender] = add(out[ilk][msg.sender], wad);
-        require(out[ilk][msg.sender] <= bag[msg.sender]);
+        require(out[ilk][msg.sender] <= bag[msg.sender], "End/insufficient-bag-balance");
     }
 }
