@@ -137,14 +137,15 @@ contract Pot is LibNote {
     }
 
     // --- Savings Rate Accumulation ---
-    function drip() external note returns (uint tmp) {
+    function drip() external note returns (uint) {
         if (now == rho) return chi;
         require(now > rho, "Pot/invalid-now");
-        tmp = rmul(rpow(dsr, now - rho, ONE), chi);
+        uint tmp = rmul(rpow(dsr, now - rho, ONE), chi);
         uint chi_ = sub(tmp, chi);
         chi = tmp;
         rho = now;
         vat.suck(address(vow), address(this), mul(Pie, chi_));
+        return chi;
     }
 
     // --- Savings Dai Management ---

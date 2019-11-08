@@ -98,11 +98,13 @@ contract Jug is LibNote {
     }
 
     // --- Stability Fee Collection ---
-    function drip(bytes32 ilk) external note returns (uint rate) {
+    function drip(bytes32 ilk) external note returns (uint) {
         require(now >= ilks[ilk].rho, "Jug/invalid-now");
         (, uint prev) = vat.ilks(ilk);
-        rate = rmul(rpow(add(base, ilks[ilk].duty), now - ilks[ilk].rho, ONE), prev);
+        if (now == ilks[ilk].rho) return prev;
+        uint rate = rmul(rpow(add(base, ilks[ilk].duty), now - ilks[ilk].rho, ONE), prev);
         vat.fold(ilk, vow, diff(rate, prev));
         ilks[ilk].rho = now;
+        return rate;
     }
 }

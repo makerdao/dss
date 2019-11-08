@@ -162,6 +162,18 @@ contract JugTest is DSTest {
         assertEq(wad(vat.debt()),     115.5 ether);
         assertEq(rate("i") / 10 ** 9, 1.155 ether);
     }
+    function test_drip_multi_inBlock() public {
+        jug.init("i");
+        jug.file("vow", ali);
+
+        jug.file("i", "duty", 1000000564701133626865910626);  // 5% / day
+        hevm.warp(now + 1 days);
+        jug.drip("i");
+        (, uint prev,,,) = vat.ilks("i");
+        jug.drip("i");
+        (, uint rate,,,) = vat.ilks("i");
+        assertEq(prev, rate);
+    }
     function test_drip_base() public {
         vat.init("j");
         draw("j", 100 ether);
