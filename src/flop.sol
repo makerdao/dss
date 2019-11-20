@@ -21,6 +21,7 @@ import "./lib.sol";
 
 contract VatLike {
     function move(address,address,uint) external;
+    function suck(address,address,uint) external;
 }
 contract GemLike {
     function mint(address,uint) external;
@@ -68,6 +69,7 @@ contract Flopper is LibNote {
     uint48   public   tau = 2 days;   // 2 days total auction length
     uint256  public kicks = 0;
     uint256  public live;
+    address  public vow;  // not used until shutdown
 
     // --- Events ---
     event Kick(
@@ -144,13 +146,15 @@ contract Flopper is LibNote {
         delete bids[id];
     }
 
+    // --- Shutdown ---
     function cage() external note auth {
        live = 0;
+       vow = msg.sender;
     }
     function yank(uint id) external note {
         require(live == 0, "Flopper/still-live");
         require(bids[id].guy != address(0), "Flopper/guy-not-set");
-        vat.move(address(this), bids[id].guy, bids[id].bid);
+        vat.suck(vow, bids[id].guy, bids[id].bid);
         delete bids[id];
     }
 }
