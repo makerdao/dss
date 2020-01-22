@@ -285,7 +285,7 @@ contract DaiTest is DSTest {
     }
 
     function testDomain_Separator() public {
-        assertEq(token.DOMAIN_SEPARATOR(), 0x12bf37c2cc038856d7efae7381c12376dea490731e8ad8d1f38179218de0e433);
+        assertEq(token.DOMAIN_SEPARATOR(), 0xc8bf33c5645588f50a4ef57b0c7959b26b61f1456241cc11261acabb2e7217d9);
     }
 
     function testPermit() public {
