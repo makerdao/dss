@@ -5,6 +5,6 @@ before_install:
   - nix-env -iA nixpkgs.cachix
   - cachix use dapp
   - git clone --recursive https://github.com/dapphub/dapptools $HOME/.dapp/dapptools
-  - nix-env -f $HOME/.dapp/dapptools -iA dapp solc
+  - nix-env -f https://github.com/makerdao/nixpkgs-pin/tarball/master -iA pkgsVersions.dapp-0_26_0.{solc,dapp}
 script:
   - dapp --use solc:0.5.12 test
