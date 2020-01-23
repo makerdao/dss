@@ -2,7 +2,7 @@ os:
   - linux
 language: nix
 before_install:
-  - nix-env -if https://github.com/cachix/cachix/tarball/master --substituters https://cachix.cachix.org --trusted-public-keys cachix.cachix.org-1:eWNHQldwUO7G2VkjpnjDbWwy4KQ/HNxht7H4SSoMckM=
+  - nix-env -iA nixpkgs.cachix
   - cachix use dapp
   - git clone --recursive https://github.com/dapphub/dapptools $HOME/.dapp/dapptools
   - nix-env -f $HOME/.dapp/dapptools -iA dapp solc
