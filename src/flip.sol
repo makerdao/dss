@@ -24,6 +24,19 @@ contract VatLike {
     function flux(bytes32,address,address,uint) external;
 }
 
+contract SpotLike {
+    struct Ilk {
+        PipLike pip;
+        uint256 mat;
+    }
+    function par() public returns (uint256);
+    function ilks(bytes32 ilk) public returns (PipLike, uint256);
+}
+
+contract PipLike {
+    function peek() external returns (bytes32, bool);
+}
+
 /*
    This thing lets you flip some gems for a given amount of dai.
    Once the given amount of dai is raised, gems are forgone instead.
@@ -71,6 +84,9 @@ contract Flipper is LibNote {
     uint48  public   tau = 2 days;   // 2 days total auction length
     uint256 public kicks = 0;
 
+    SpotLike public spot;  // Spotter address
+    uint256  public cut;   // ratio of starting bid to market price of the lot [wad]
+
     // --- Events ---
     event Kick(
       uint256 id,
@@ -95,12 +111,28 @@ contract Flipper is LibNote {
     function mul(uint x, uint y) internal pure returns (uint z) {
         require(y == 0 || (z = x * y) / y == x);
     }
+    uint256 constant WAD = 10 ** 18;
+    function wmul(uint x, uint y) internal pure returns (uint z) {
+        z = mul(x, y) / WAD;
+    }
+    uint256 constant RAY = 10 ** 27;
+    function rmul(uint x, uint y) internal pure returns (uint z) {
+        z = mul(x, y) / RAY;
+    }
+    function rdiv(uint x, uint y) internal pure returns (uint z) {
+      z = mul(x, RAY) / y;
+    }
 
     // --- Admin ---
     function file(bytes32 what, uint data) external note auth {
         if (what == "beg") beg = data;
         else if (what == "ttl") ttl = uint48(data);
         else if (what == "tau") tau = uint48(data);
+        else if (what == "cut") cut = data;
+        else revert("Flipper/file-unrecognized-param");
+    }
+    function file(bytes32 what, address data) external note auth {
+        if (what == "spot") spot = SpotLike(data);
         else revert("Flipper/file-unrecognized-param");
     }
 
@@ -111,9 +143,17 @@ contract Flipper is LibNote {
         require(kicks < uint(-1), "Flipper/overflow");
         id = ++kicks;
 
-        bids[id].bid = bid;
+        (PipLike pip,) = spot.ilks(ilk);
+
+        // Need to be whitelisted to make this call
+        (bytes32 val, bool has) = pip.peek();
+        require(has, "Flipper/no-price");
+
+        uint256 par = spot.par();
+
+        bids[id].bid = rmul(wmul(rdiv(uint256(val), par), lot), cut);
         bids[id].lot = lot;
-        bids[id].guy = msg.sender; // configurable??
+        bids[id].guy = gal;
         bids[id].end = add(uint48(now), tau);
         bids[id].usr = usr;
         bids[id].gal = gal;
@@ -127,6 +167,16 @@ contract Flipper is LibNote {
         require(bids[id].end < now, "Flipper/not-finished");
         require(bids[id].tic == 0, "Flipper/bid-already-placed");
         bids[id].end = add(uint48(now), tau);
+
+        (PipLike pip,) = spot.ilks(ilk);
+
+        // Need to be whitelisted to make this call
+        (bytes32 val, bool has) = pip.peek();
+        require(has, "Flipper/no-price");
+
+        uint256 par = spot.par();
+
+        bids[id].bid = rmul(wmul(rdiv(uint256(val), par), bids[id].lot), cut);
     }
     function tend(uint id, uint lot, uint bid) external note {
         require(bids[id].guy != address(0), "Flipper/guy-not-set");
