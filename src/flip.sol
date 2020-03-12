@@ -140,13 +140,9 @@ contract Flipper is LibNote {
         require(kicks < uint(-1), "Flipper/overflow");
         id = ++kicks;
 
-        // Need to be whitelisted to make this call
-        (bytes32 val, bool has) = feed.peek();
-        require(has, "Flipper/no-price");
-        uint256 par = spot.par();
-        bids[id].bid = rmul(wmul(rdiv(uint256(val), par), lot), cut);
+        bids[id].bid = bid;
         bids[id].lot = lot;
-        bids[id].guy = gal;
+        bids[id].guy = msg.sender;
         bids[id].end = add(uint48(now), tau);
         bids[id].usr = usr;
         bids[id].gal = gal;
@@ -160,12 +156,6 @@ contract Flipper is LibNote {
         require(bids[id].end < now, "Flipper/not-finished");
         require(bids[id].tic == 0, "Flipper/bid-already-placed");
         bids[id].end = add(uint48(now), tau);
-
-        // Need to be whitelisted to make this call
-        (bytes32 val, bool has) = feed.peek();
-        require(has, "Flipper/no-price");
-        uint256 par = spot.par();
-        bids[id].bid = rmul(wmul(rdiv(uint256(val), par), bids[id].lot), cut);
     }
     function tend(uint id, uint lot, uint bid) external note {
         require(bids[id].guy != address(0), "Flipper/guy-not-set");
@@ -176,6 +166,15 @@ contract Flipper is LibNote {
         require(bid <= bids[id].tab, "Flipper/higher-than-tab");
         require(bid >  bids[id].bid, "Flipper/bid-not-higher");
         require(mul(bid, ONE) >= mul(beg, bids[id].bid) || bid == bids[id].tab, "Flipper/insufficient-increase");
+
+        // check for first bid only
+        if (bids[id].bid == 0) {
+            // Need to be whitelisted to make this call
+            (bytes32 val, bool has) = feed.peek();
+            require(has, "Flipper/no-price");
+            uint256 par = spot.par();
+            require(bid >= rmul(wmul(rdiv(uint256(val), par), lot), cut));
+        }
 
         vat.move(msg.sender, bids[id].guy, bids[id].bid);
         vat.move(msg.sender, bids[id].gal, bid - bids[id].bid);
