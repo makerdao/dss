@@ -171,9 +171,10 @@ contract Flipper is LibNote {
         if (bids[id].bid == 0) {
             // Need to be whitelisted to make this call
             (bytes32 val, bool has) = feed.peek();
-            require(has, "Flipper/no-price");
-            uint256 par = spot.par();
-            require(bid >= rmul(wmul(rdiv(uint256(val), par), lot), cut));
+            if (has) {
+                uint256 par = spot.par();
+                require(bid >= rmul(wmul(rdiv(uint256(val), par), lot), cut));
+            }
         }
 
         vat.move(msg.sender, bids[id].guy, bids[id].bid);
