@@ -25,15 +25,10 @@ contract VatLike {
 }
 
 contract SpotLike {
-    struct Ilk {
-        PipLike pip;
-        uint256 mat;
-    }
     function par() public returns (uint256);
-    function ilks(bytes32 ilk) public returns (PipLike, uint256);
 }
 
-contract PipLike {
+contract FeedLike {
     function peek() external returns (bytes32, bool);
 }
 
@@ -85,6 +80,7 @@ contract Flipper is LibNote {
     uint256 public kicks = 0;
 
     SpotLike public spot;  // Spotter address
+    FeedLike public feed;  // This is the Medianizer, or wherever the OSM reads undelayed prices from
     uint256  public cut;   // ratio of starting bid to market price of the lot [wad]
 
     // --- Events ---
@@ -133,6 +129,7 @@ contract Flipper is LibNote {
     }
     function file(bytes32 what, address data) external note auth {
         if (what == "spot") spot = SpotLike(data);
+        if (what == "feed") feed = FeedLike(data);
         else revert("Flipper/file-unrecognized-param");
     }
 
@@ -143,14 +140,10 @@ contract Flipper is LibNote {
         require(kicks < uint(-1), "Flipper/overflow");
         id = ++kicks;
 
-        (PipLike pip,) = spot.ilks(ilk);
-
         // Need to be whitelisted to make this call
-        (bytes32 val, bool has) = pip.peek();
+        (bytes32 val, bool has) = feed.peek();
         require(has, "Flipper/no-price");
-
         uint256 par = spot.par();
-
         bids[id].bid = rmul(wmul(rdiv(uint256(val), par), lot), cut);
         bids[id].lot = lot;
         bids[id].guy = gal;
@@ -168,14 +161,10 @@ contract Flipper is LibNote {
         require(bids[id].tic == 0, "Flipper/bid-already-placed");
         bids[id].end = add(uint48(now), tau);
 
-        (PipLike pip,) = spot.ilks(ilk);
-
         // Need to be whitelisted to make this call
-        (bytes32 val, bool has) = pip.peek();
+        (bytes32 val, bool has) = feed.peek();
         require(has, "Flipper/no-price");
-
         uint256 par = spot.par();
-
         bids[id].bid = rmul(wmul(rdiv(uint256(val), par), bids[id].lot), cut);
     }
     function tend(uint id, uint lot, uint bid) external note {
