@@ -81,7 +81,7 @@ contract Flipper is LibNote {
 
     SpotLike public spot;  // Spotter address
     FeedLike public feed;  // This is the Medianizer, or wherever the OSM reads undelayed prices from
-    uint256  public cut;   // ratio of starting bid to market price of the lot [wad]
+    uint256  public cut;   // ratio of starting bid to market price of the lot [ray]
 
     // --- Events ---
     event Kick(
