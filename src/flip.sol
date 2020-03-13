@@ -173,7 +173,7 @@ contract Flipper is LibNote {
             (bytes32 val, bool has) = feed.peek();
             if (has) {
                 uint256 par = spot.par();
-                require(bid >= rmul(wmul(rdiv(uint256(val), par), lot), cut));
+                require(bid >= rmul(wmul(rdiv(uint256(val), par), lot), cut), "Flipper/first-bid-too-low");
             }
         }
 
