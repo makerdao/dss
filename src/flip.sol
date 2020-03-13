@@ -112,9 +112,6 @@ contract Flipper is LibNote {
         z = mul(x, y) / WAD;
     }
     uint256 constant RAY = 10 ** 27;
-    function rmul(uint x, uint y) internal pure returns (uint z) {
-        z = mul(x, y) / RAY;
-    }
     function rdiv(uint x, uint y) internal pure returns (uint z) {
       z = mul(x, RAY) / y;
     }
@@ -173,7 +170,7 @@ contract Flipper is LibNote {
             (bytes32 val, bool has) = feed.peek();
             if (has) {
                 uint256 par = spot.par();
-                require(bid >= rmul(wmul(rdiv(uint256(val), par), lot), cut), "Flipper/first-bid-too-low");
+                require(bid >= mul(wmul(rdiv(uint256(val), par), lot), cut), "Flipper/first-bid-too-low");
             }
         }
 
