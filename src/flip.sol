@@ -126,7 +126,7 @@ contract Flipper is LibNote {
     }
     function file(bytes32 what, address data) external note auth {
         if (what == "spot") spot = SpotLike(data);
-        if (what == "feed") feed = FeedLike(data);
+        else if (what == "feed") feed = FeedLike(data);
         else revert("Flipper/file-unrecognized-param");
     }
 

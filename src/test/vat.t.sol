@@ -8,6 +8,8 @@ import {Cat} from '../cat.sol';
 import {Vow} from '../vow.sol';
 import {Jug} from '../jug.sol';
 import {GemJoin, ETHJoin, DaiJoin} from '../join.sol';
+import {Spotter} from '../spot.sol';
+
 
 import {Flipper} from './flip.t.sol';
 import {Flopper} from './flop.t.sol';
@@ -16,6 +18,18 @@ import {Flapper} from './flap.t.sol';
 
 contract Hevm {
     function warp(uint256) public;
+}
+
+contract Feed {
+    bytes32 public val;
+    bool public has;
+    constructor(bytes32 initVal, bool initHas) public {
+        val = initVal;
+        has = initHas;
+    }
+    function peek() external returns (bytes32, bool) {
+        return (val, has);
+    }
 }
 
 contract TestVat is Vat {
@@ -538,6 +552,8 @@ contract BiteTest is DSTest {
         vat.file("gold", "line", rad(1000 ether));
         vat.file("Line",         rad(1000 ether));
         flip = new Flipper(address(vat), "gold");
+        flip.file("spot", address(new Spotter(address(vat))));
+        flip.file("feed", address(new Feed(bytes32(uint256(1)), true)));
         flip.rely(address(cat));
         cat.file("gold", "flip", address(flip));
         cat.file("gold", "chop", ray(1 ether));

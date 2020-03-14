@@ -71,6 +71,19 @@ contract Usr {
     }
 }
 
+contract Feed {
+    bytes32 public val;
+    bool public has;
+    constructor(bytes32 initVal, bool initHas) public {
+        val = initVal;
+        has = initHas;
+    }
+    function peek() external returns (bytes32, bool) {
+        return (val, has);
+    }
+}
+
+
 contract EndTest is DSTest {
     Hevm hevm;
 
@@ -162,6 +175,9 @@ contract EndTest is DSTest {
         vat.rely(address(gemA));
 
         Flipper flip = new Flipper(address(vat), name);
+        flip.file("spot", address(spot));
+        // cut is zero so feed price is irrelevant (End doesn't rely on Flipper.tend anyway)
+        flip.file("feed", address(new Feed(bytes32(uint256(200 ether)), true)));
         vat.hope(address(flip));
         flip.rely(address(end));
         flip.rely(address(cat));

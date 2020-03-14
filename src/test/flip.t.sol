@@ -5,6 +5,7 @@ import {DSToken} from "ds-token/token.sol";
 
 import {Vat}     from "../vat.sol";
 import {Flipper} from "../flip.sol";
+import {Spotter} from "../spot.sol";
 
 contract Hevm {
     function warp(uint256) public;
@@ -78,11 +79,31 @@ contract Vat_ is Vat {
     }
 }
 
+contract Feed {
+    bytes32 public val;
+    bool public has;
+    constructor(bytes32 initVal, bool initHas) public {
+        val = initVal;
+        has = initHas;
+    }
+    function set_val(bytes32 newVal) external {
+        val = newVal;
+    }
+    function set_has(bool newHas) external {
+        has = newHas;
+    }
+    function peek() external returns (bytes32, bool) {
+        return (val, has);
+    }
+}
+
 contract FlipTest is DSTest {
     Hevm hevm;
 
     Vat_    vat;
     Flipper flip;
+    Spotter spot;
+    Feed    feed;
 
     address ali;
     address bob;
@@ -99,6 +120,12 @@ contract FlipTest is DSTest {
         vat.set_ilk("gems");
 
         flip = new Flipper(address(vat), "gems");
+
+        spot = new Spotter(address(vat));
+        flip.file("spot", address(spot));
+
+        feed = new Feed(bytes32(uint256(0)), true);
+        flip.file("feed", address(feed));
 
         ali = address(new Guy(flip));
         bob = address(new Guy(flip));
@@ -165,6 +192,56 @@ contract FlipTest is DSTest {
         assertEq(vat.dai_balance(ali), 199 ether);
         // gal receives payment
         assertEq(vat.dai_balance(gal),   1 ether);
+    }
+    function test_tend_nonzero_cut() public {
+        vat.mint(ali, 200 * 10**45 - 200 ether);
+        flip.file("cut", 5 * 10**26); // one half
+        feed.set_val(bytes32(uint256(200 ether)));
+        uint id = flip.kick({ lot: 1 ether
+                            , tab: 150 * 10**45
+                            , usr: usr
+                            , gal: gal
+                            , bid: 0
+                            });
+        Guy(ali).tend(id, 1 ether, 100 * 10**45);
+    }
+    function testFail_tend_nonzero_cut() public {
+        vat.mint(ali, 200 * 10**45 - 200 ether);
+        flip.file("cut", 5 * 10**26); // one half
+        feed.set_val(bytes32(uint256(200 ether)));
+        uint id = flip.kick({ lot: 1 ether
+                            , tab: 150 * 10**45
+                            , usr: usr
+                            , gal: gal
+                            , bid: 0
+                            });
+        Guy(ali).tend(id, 1 ether, 100 * 10**45 - 1);
+    }
+    function test_tend_nonzero_cut_nonzero_par() public {
+        vat.mint(ali, 200 * 10**45 - 200 ether);
+        flip.file("cut", 5 * 10**26); // one half
+        spot.file("par", 2 * 10**27); // 2 REF per DAI
+        feed.set_val(bytes32(uint256(200 ether)));
+        uint id = flip.kick({ lot: 1 ether
+                            , tab: 75 * 10**45
+                            , usr: usr
+                            , gal: gal
+                            , bid: 0
+                            });
+        Guy(ali).tend(id, 1 ether, 50 * 10**45);
+    }
+    function testFail_tend_nonzero_cut_nonzero_par() public {
+        vat.mint(ali, 200 * 10**45 - 200 ether);
+        flip.file("cut", 5 * 10**26); // one half
+        spot.file("par", 2 * 10**27); // 2 REF per DAI
+        feed.set_val(bytes32(uint256(200 ether)));
+        uint id = flip.kick({ lot: 1 ether
+                            , tab: 75 * 10**45
+                            , usr: usr
+                            , gal: gal
+                            , bid: 0
+                            });
+        Guy(ali).tend(id, 1 ether, 50 * 10**45 - 1);
     }
     function test_dent() public {
         uint id = flip.kick({ lot: 100 ether
