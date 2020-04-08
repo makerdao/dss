@@ -114,6 +114,15 @@ contract FlapTest is DSTest {
         // income is burned
         assertEq(gem.balanceOf(address(flap)),   0 ether);
     }
+    function test_tend_same_bidder() public {
+        uint id = flap.kick({ lot: 100 ether
+                            , bid: 0
+                            });
+        Guy(ali).tend(id, 100 ether, 190 ether);
+        assertEq(gem.balanceOf(ali), 10 ether);
+        Guy(ali).tend(id, 100 ether, 200 ether);
+        assertEq(gem.balanceOf(ali), 0);
+    }
     function test_beg() public {
         uint id = flap.kick({ lot: 100 ether
                             , bid: 0
