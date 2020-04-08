@@ -182,6 +182,21 @@ contract FlipTest is DSTest {
         assertEq(vat.dai_balance(ali),  150 ether);
         assertEq(vat.dai_balance(bob),  200 ether);
     }
+    function test_tend_dent_same_bidder() public {
+       uint id = flip.kick({ lot: 100 ether
+                            , tab: 200 ether
+                            , usr: usr
+                            , gal: gal
+                            , bid: 0
+                            });
+
+        assertEq(vat.dai_balance(ali), 200 ether);
+        Guy(ali).tend(id, 100 ether, 190 ether);
+        assertEq(vat.dai_balance(ali), 10 ether);
+        Guy(ali).tend(id, 100 ether, 200 ether);
+        assertEq(vat.dai_balance(ali), 0);
+        Guy(ali).dent(id, 80 ether, 200 ether);
+    }
     function test_beg() public {
         uint id = flip.kick({ lot: 100 ether
                             , tab: 50 ether

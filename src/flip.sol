@@ -138,10 +138,12 @@ contract Flipper is LibNote {
         require(bid >  bids[id].bid, "Flipper/bid-not-higher");
         require(mul(bid, ONE) >= mul(beg, bids[id].bid) || bid == bids[id].tab, "Flipper/insufficient-increase");
 
-        vat.move(msg.sender, bids[id].guy, bids[id].bid);
+        if (msg.sender != bids[id].guy) {
+            vat.move(msg.sender, bids[id].guy, bids[id].bid);
+            bids[id].guy = msg.sender;
+        }
         vat.move(msg.sender, bids[id].gal, bid - bids[id].bid);
 
-        bids[id].guy = msg.sender;
         bids[id].bid = bid;
         bids[id].tic = add(uint48(now), ttl);
     }
@@ -155,10 +157,12 @@ contract Flipper is LibNote {
         require(lot < bids[id].lot, "Flipper/lot-not-lower");
         require(mul(beg, lot) <= mul(bids[id].lot, ONE), "Flipper/insufficient-decrease");
 
-        vat.move(msg.sender, bids[id].guy, bid);
+        if (msg.sender != bids[id].guy) {
+            vat.move(msg.sender, bids[id].guy, bid);
+            bids[id].guy = msg.sender;
+        }
         vat.flux(ilk, address(this), bids[id].usr, bids[id].lot - lot);
 
-        bids[id].guy = msg.sender;
         bids[id].lot = lot;
         bids[id].tic = add(uint48(now), ttl);
     }

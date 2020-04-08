@@ -133,6 +133,16 @@ contract FlopTest is DSTest {
         // bob gets the winnings
         assertEq(gem.balanceOf(bob), 80 ether);
     }
+    function test_dent_same_bidder() public {
+        uint id = flop.kick({ lot: 200 ether   // or whatever high starting value
+                            , gal: gal
+                            , bid: 200 ether
+                            });
+
+        Guy(ali).dent(id, 100 ether, 200 ether);
+        assertEq(vat.dai(ali), 0);
+        Guy(ali).dent(id, 50 ether, 200 ether);
+    }
     function test_tick() public {
         // start an auction
         uint id = flop.kick({ lot: 200 ether   // or whatever high starting value
