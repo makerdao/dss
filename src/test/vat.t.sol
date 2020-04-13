@@ -659,8 +659,8 @@ contract BiteTest is DSTest {
         assertEq(vow.Ash(),  rad(10 ether));
         flop.dent(f1, 1000 ether, rad(10 ether));
         assertEq(vow.Woe(),  rad(90 ether));
-        assertEq(vow.Joy(),  rad(10 ether));
-        assertEq(vow.Ash(),  rad(10 ether));
+        assertEq(vow.Joy(),  rad( 0 ether));
+        assertEq(vow.Ash(),  rad( 0 ether));
 
         assertEq(gov.balanceOf(address(this)),  100 ether);
         hevm.warp(now + 4 hours);

@@ -26,6 +26,9 @@ contract VatLike {
 contract GemLike {
     function mint(address,uint) external;
 }
+contract VowLike {
+    function kiss(uint) external;
+}
 
 /*
    This thing creates gems on demand in return for dai.
@@ -134,6 +137,11 @@ contract Flopper is LibNote {
         require(mul(beg, lot) <= mul(bids[id].lot, ONE), "Flopper/insufficient-decrease");
 
         vat.move(msg.sender, bids[id].guy, bid);
+
+        // on first dent, clear Ash
+        if (bids[id].tic == 0) {
+            VowLike(bids[id].guy).kiss(bid);
+        }
 
         bids[id].guy = msg.sender;
         bids[id].lot = lot;
