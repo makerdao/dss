@@ -137,6 +137,39 @@ contract FlopTest is DSTest {
         assertEq(vat.dai(ali), 190 ether);
         // gal receives payment
         assertEq(vat.dai(gal),  10 ether);
+        assertEq(Gal(gal).Ash(), 0 ether);
+
+        Guy(bob).dent(id, 80 ether, 10 ether);
+        // bid taken from bidder
+        assertEq(vat.dai(bob), 190 ether);
+        // prev bidder refunded
+        assertEq(vat.dai(ali), 200 ether);
+        // gal receives no more
+        assertEq(vat.dai(gal), 10 ether);
+
+        hevm.warp(now + 5 weeks);
+        assertEq(gem.totalSupply(),  0 ether);
+        gem.setOwner(address(flop));
+        Guy(bob).deal(id);
+        // gems minted on demand
+        assertEq(gem.totalSupply(), 80 ether);
+        // bob gets the winnings
+        assertEq(gem.balanceOf(bob), 80 ether);
+    }
+
+    function test_dent_Ash_less_than_bid() public {
+        uint id = Gal(gal).kick(flop, /*lot*/ 200 ether, /*bid*/ 10 ether);
+        assertEq(vat.dai(gal),  0 ether);
+
+        Gal(gal).kiss(1 ether);
+        assertEq(Gal(gal).Ash(), 9 ether);
+
+        Guy(ali).dent(id, 100 ether, 10 ether);
+        // bid taken from bidder
+        assertEq(vat.dai(ali), 190 ether);
+        // gal receives payment
+        assertEq(vat.dai(gal),   10 ether);
+        assertEq(Gal(gal).Ash(), 0 ether);
 
         Guy(bob).dent(id, 80 ether, 10 ether);
         // bid taken from bidder

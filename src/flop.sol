@@ -27,6 +27,7 @@ contract GemLike {
     function mint(address,uint) external;
 }
 contract VowLike {
+    function Ash() public returns (uint);
     function kiss(uint) external;
 }
 
@@ -140,7 +141,12 @@ contract Flopper is LibNote {
 
         // on first dent, clear Ash
         if (bids[id].tic == 0) {
-            VowLike(bids[id].guy).kiss(bid);
+            uint Ash = VowLike(bids[id].guy).Ash();
+            if (Ash >= bid) {
+                VowLike(bids[id].guy).kiss(bid);
+            } else {
+                VowLike(bids[id].guy).kiss(Ash);
+            }
         }
 
         bids[id].guy = msg.sender;
