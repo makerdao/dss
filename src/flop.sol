@@ -103,7 +103,7 @@ contract Flopper is LibNote {
     function file(bytes32 what, uint data) external note auth {
         if (what == "beg") beg = data;
         else if (what == "pad") pad = data;
-        else if (what == "ttl") ttl = uint48(data);
+        else if (what == "ttl") { require(uint48(data) > 0); ttl = uint48(data); }
         else if (what == "tau") tau = uint48(data);
         else revert("Flopper/file-unrecognized-param");
     }
