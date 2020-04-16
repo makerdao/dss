@@ -3,8 +3,8 @@ os:
 language: nix
 before_install:
   - nix-env -iA nixpkgs.cachix
-  - cachix use dapp
+  - cachix use maker
   - git clone --recursive https://github.com/dapphub/dapptools $HOME/.dapp/dapptools
-  - nix-env -f https://github.com/makerdao/nixpkgs-pin/tarball/master -iA pkgsVersions.dapp-0_26_0.{solc,dapp}
+  - nix-env -f https://github.com/makerdao/makerpkgs/tarball/master -iA dappPkgsVersions.seth-0_8_4.dapp
 script:
   - dapp --use solc:0.5.12 test
