@@ -129,10 +129,12 @@ contract Flapper is LibNote {
         require(bid >  bids[id].bid, "Flapper/bid-not-higher");
         require(mul(bid, ONE) >= mul(beg, bids[id].bid), "Flapper/insufficient-increase");
 
-        gem.move(msg.sender, bids[id].guy, bids[id].bid);
+        if (msg.sender != bids[id].guy) {
+            gem.move(msg.sender, bids[id].guy, bids[id].bid);
+            bids[id].guy = msg.sender;
+        }
         gem.move(msg.sender, address(this), bid - bids[id].bid);
 
-        bids[id].guy = msg.sender;
         bids[id].bid = bid;
         bids[id].tic = add(uint48(now), ttl);
     }

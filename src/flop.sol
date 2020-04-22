@@ -140,7 +140,9 @@ contract Flopper is LibNote {
         require(lot <  bids[id].lot, "Flopper/lot-not-lower");
         require(mul(beg, lot) <= mul(bids[id].lot, ONE), "Flopper/insufficient-decrease");
 
-        vat.move(msg.sender, bids[id].guy, bid);
+        if (msg.sender != bids[id].guy) {
+            vat.move(msg.sender, bids[id].guy, bid);
+        }
 
         // on first dent, clear as much Ash as possible
         if (bids[id].tic == 0) {
