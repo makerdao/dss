@@ -142,15 +142,16 @@ contract Flopper is LibNote {
 
         if (msg.sender != bids[id].guy) {
             vat.move(msg.sender, bids[id].guy, bid);
+
+            // on first dent, clear as much Ash as possible
+            if (bids[id].tic == 0) {
+                uint Ash = VowLike(bids[id].guy).Ash();
+                VowLike(bids[id].guy).kiss(min(bid, Ash));
+            }
+
+            bids[id].guy = msg.sender;
         }
 
-        // on first dent, clear as much Ash as possible
-        if (bids[id].tic == 0) {
-            uint Ash = VowLike(bids[id].guy).Ash();
-            VowLike(bids[id].guy).kiss(min(bid, Ash));
-        }
-
-        bids[id].guy = msg.sender;
         bids[id].lot = lot;
         bids[id].tic = add(uint48(now), ttl);
     }
