@@ -26,6 +26,10 @@ contract VatLike {
 contract GemLike {
     function mint(address,uint) external;
 }
+contract VowLike {
+    function Ash() public returns (uint);
+    function kiss(uint) external;
+}
 
 /*
    This thing creates gems on demand in return for dai.
@@ -94,6 +98,9 @@ contract Flopper is LibNote {
     function mul(uint x, uint y) internal pure returns (uint z) {
         require(y == 0 || (z = x * y) / y == x);
     }
+    function min(uint x, uint y) internal pure returns (uint z) {
+        if (x > y) { z = y; } else { z = x; }
+    }
 
     // --- Admin ---
     function file(bytes32 what, uint data) external note auth {
@@ -135,6 +142,13 @@ contract Flopper is LibNote {
 
         if (msg.sender != bids[id].guy) {
             vat.move(msg.sender, bids[id].guy, bid);
+
+            // on first dent, clear as much Ash as possible
+            if (bids[id].tic == 0) {
+                uint Ash = VowLike(bids[id].guy).Ash();
+                VowLike(bids[id].guy).kiss(min(bid, Ash));
+            }
+
             bids[id].guy = msg.sender;
         }
 
