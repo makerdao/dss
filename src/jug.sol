@@ -4,8 +4,8 @@ import "./lib.sol";
 
 contract VatLike {
     function ilks(bytes32) external returns (
-        uint256 Art,   // wad
-        uint256 rate   // ray
+        uint256 Art,   // [wad]
+        uint256 rate   // [ray]
     );
     function fold(bytes32,address,int) external;
 }
@@ -22,14 +22,14 @@ contract Jug is LibNote {
 
     // --- Data ---
     struct Ilk {
-        uint256 duty;
-        uint256  rho;
+        uint256 duty;  // Stability Fee      [ray]
+        uint256  rho;  // Time of last drip  [seconds]
     }
 
     mapping (bytes32 => Ilk) public ilks;
-    VatLike                  public vat;
-    address                  public vow;
-    uint256                  public base;
+    VatLike                  public vat;  // CDP Engine
+    address                  public vow;  // Debt Engine
+    uint256                  public base; // Global Stability Fee [wad]
 
     // --- Init ---
     constructor(address vat_) public {
