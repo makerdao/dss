@@ -50,14 +50,14 @@ contract Flipper is LibNote {
 
     // --- Data ---
     struct Bid {
-        uint256 bid;  // dai paid          [rad]
-        uint256 lot;  // gems for sale     [wad]
+        uint256 bid;  // dai paid             [rad]
+        uint256 lot;  // gems for sale        [wad]
         address guy;  // high bidder
-        uint48  tic;  // expiry time
-        uint48  end;
+        uint48  tic;  // bid expiry time      [unix epoch time]
+        uint48  end;  // auction expiry time  [unix epoch time]
         address usr;
         address gal;
-        uint256 tab;  // total dai wanted  [rad]
+        uint256 tab;  // total dai wanted    [rad]
     }
 
     mapping (uint => Bid) public bids;
@@ -113,7 +113,7 @@ contract Flipper is LibNote {
 
         bids[id].bid = bid;
         bids[id].lot = lot;
-        bids[id].guy = msg.sender; // configurable??
+        bids[id].guy = msg.sender;  // configurable??
         bids[id].end = add(uint48(now), tau);
         bids[id].usr = usr;
         bids[id].gal = gal;

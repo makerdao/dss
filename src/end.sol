@@ -60,8 +60,8 @@ contract Flippy {
         uint256 bid,   // [rad]
         uint256 lot,   // [wad]
         address guy,
-        uint48  tic,
-        uint48  end,
+        uint48  tic,   // [unix epoch time]
+        uint48  end,   // [unix epoch time]
         address usr,
         address gal,
         uint256 tab    // [rad]
@@ -200,8 +200,8 @@ contract End is LibNote {
     Spotty   public spot;
 
     uint256  public live;  // Cage flag
-    uint256  public when;  // Time of cage
-    uint256  public wait;  // Processing Cooldown Length
+    uint256  public when;  // Time of cage                   [unix epoch time]
+    uint256  public wait;  // Processing Cooldown Length             [seconds]
     uint256  public debt;  // Total outstanding dai following processing [rad]
 
     mapping (bytes32 => uint256) public tag;  // Cage price              [ray]

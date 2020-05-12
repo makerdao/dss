@@ -54,7 +54,7 @@ contract Vow is LibNote {
     FlapLike public flapper;   // Surplus Auction House
     FlopLike public flopper;   // Debt Auction House
 
-    mapping (uint256 => uint256) public sin; // debt queue
+    mapping (uint256 => uint256) public sin;  // debt queue
     uint256 public Sin;   // Queued debt            [rad]
     uint256 public Ash;   // On-auction debt        [rad]
 

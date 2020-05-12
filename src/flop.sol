@@ -53,13 +53,13 @@ contract Flopper is LibNote {
         uint256 bid;  // dai paid      [rad]
         uint256 lot;  // gems for sale [wad]
         address guy;  // high bidder
-        uint48  tic;  // expiry time
-        uint48  end;
+        uint48  tic;  // bid expiry time      [unix epoch time]
+        uint48  end;  // auction expiry time  [unix epoch time]
     }
 
     mapping (uint => Bid) public bids;
 
-    VatLike  public   vat; // CDP Engine
+    VatLike  public   vat;  // CDP Engine
     GemLike  public   gem;
 
     uint256  constant ONE = 1.00E18;
@@ -68,8 +68,8 @@ contract Flopper is LibNote {
     uint48   public   ttl = 3 hours;  // 3 hours bid lifetime
     uint48   public   tau = 2 days;   // 2 days total auction length
     uint256  public kicks = 0;
-    uint256  public live;  // Access Flag
-    address  public vow;   // not used until shutdown
+    uint256  public live;             // Access Flag
+    address  public vow;              // not used until shutdown
 
     // --- Events ---
     event Kick(

@@ -49,16 +49,16 @@ contract Flapper is LibNote {
 
     // --- Data ---
     struct Bid {
-        uint256 bid;  // gems paid     [wad]
-        uint256 lot;  // dai for sale  [rad]
+        uint256 bid;  // gems paid            [wad]
+        uint256 lot;  // dai for sale         [rad]
         address guy;  // high bidder
-        uint48  tic;  // expiry time
-        uint48  end;
+        uint48  tic;  // bid expiry time      [unix epoch time]
+        uint48  end;  // auction expiry time  [unix epoch time]
     }
 
     mapping (uint => Bid) public bids;
 
-    VatLike  public   vat; // CDP Engine
+    VatLike  public   vat;  // CDP Engine
     GemLike  public   gem;
 
     uint256  constant ONE = 1.00E18;
@@ -107,7 +107,7 @@ contract Flapper is LibNote {
 
         bids[id].bid = bid;
         bids[id].lot = lot;
-        bids[id].guy = msg.sender; // configurable??
+        bids[id].guy = msg.sender;  // configurable??
         bids[id].end = add(uint48(now), tau);
 
         vat.move(msg.sender, address(this), lot);

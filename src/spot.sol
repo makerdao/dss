@@ -43,8 +43,8 @@ contract Spotter is LibNote {
 
     mapping (bytes32 => Ilk) public ilks;
 
-    VatLike public vat; // CDP Engine
-    uint256 public par; // ref per dai     [ray]
+    VatLike public vat;  // CDP Engine
+    uint256 public par;  // ref per dai [ray]
 
     uint256 public live;
 
