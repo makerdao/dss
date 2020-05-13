@@ -30,7 +30,7 @@ contract GemLike {
 /*
    This thing lets you sell some dai in return for gems.
 
- - `lot` dai for sale
+ - `lot` dai in return for bid
  - `bid` gems paid
  - `ttl` single bid lifetime
  - `beg` minimum bid increase
@@ -49,11 +49,11 @@ contract Flapper is LibNote {
 
     // --- Data ---
     struct Bid {
-        uint256 bid;  // gems paid            [wad]
-        uint256 lot;  // dai for sale         [rad]
+        uint256 bid;  // gems paid               [wad]
+        uint256 lot;  // dai in return for bid   [rad]
         address guy;  // high bidder
-        uint48  tic;  // bid expiry time      [unix epoch time]
-        uint48  end;  // auction expiry time  [unix epoch time]
+        uint48  tic;  // bid expiry time         [unix epoch time]
+        uint48  end;  // auction expiry time     [unix epoch time]
     }
 
     mapping (uint => Bid) public bids;
@@ -66,7 +66,7 @@ contract Flapper is LibNote {
     uint48   public   ttl = 3 hours;  // 3 hours bid duration
     uint48   public   tau = 2 days;   // 2 days total auction length
     uint256  public kicks = 0;
-    uint256  public live;  // Access Flag
+    uint256  public live;  // Shutdown Flag
 
     // --- Events ---
     event Kick(

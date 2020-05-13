@@ -58,14 +58,14 @@ contract Vow is LibNote {
     uint256 public Sin;   // Queued debt            [rad]
     uint256 public Ash;   // On-auction debt        [rad]
 
-    uint256 public wait;  // Flop delay
+    uint256 public wait;  // Flop delay             [seconds]
     uint256 public dump;  // Flop initial lot size  [wad]
     uint256 public sump;  // Flop fixed bid size    [rad]
 
     uint256 public bump;  // Flap fixed lot size    [rad]
     uint256 public hump;  // Surplus buffer         [rad]
 
-    uint256 public live;  // Access Flag
+    uint256 public live;  // Shutdown Flag
 
     // --- Init ---
     constructor(address vat_, address flapper_, address flopper_) public {
