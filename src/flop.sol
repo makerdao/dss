@@ -65,8 +65,8 @@ contract Flopper is LibNote {
     uint256  constant ONE = 1.00E18;
     uint256  public   beg = 1.05E18;  // 5% minimum bid increase
     uint256  public   pad = 1.50E18;  // 50% lot increase for tick
-    uint48   public   ttl = 3 hours;  // 3 hours bid lifetime
-    uint48   public   tau = 2 days;   // 2 days total auction length
+    uint48   public   ttl = 3 hours;  // 3 hours bid lifetime         [seconds]
+    uint48   public   tau = 2 days;   // 2 days total auction length  [seconds]
     uint256  public kicks = 0;
     uint256  public live;             // Shutdown Flag
     address  public vow;              // not used until shutdown

@@ -37,7 +37,7 @@ contract Spotter is LibNote {
 
     // --- Data ---
     struct Ilk {
-        PipLike pip;  // OSM
+        PipLike pip;  // Price Feed
         uint256 mat;  // Liquidation ratio [ray]
     }
 

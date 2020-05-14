@@ -56,9 +56,9 @@ contract Pot is LibNote {
     // --- Data ---
     mapping (address => uint256) public pie;  // Normalised Savings Dai [wad]
 
-    uint256 public Pie;   // Total Savings Dai     [wad]
-    uint256 public dsr;   // The Dai Savings Rate  [ray]
-    uint256 public chi;   // The Rate Accumulator  [ray]
+    uint256 public Pie;   // Total Normalised Savings Dai  [wad]
+    uint256 public dsr;   // The Dai Savings Rate          [ray]
+    uint256 public chi;   // The Rate Accumulator          [ray]
 
     VatLike public vat;   // CDP Engine
     address public vow;   // Debt Engine
