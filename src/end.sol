@@ -199,7 +199,7 @@ contract End is LibNote {
     PotLike  public pot;
     Spotty   public spot;
 
-    uint256  public live;  // Cage flag
+    uint256  public live;  // Active Flag
     uint256  public when;  // Time of cage                   [unix epoch time]
     uint256  public wait;  // Processing Cooldown Length             [seconds]
     uint256  public debt;  // Total outstanding dai following processing [rad]

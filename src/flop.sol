@@ -68,7 +68,7 @@ contract Flopper is LibNote {
     uint48   public   ttl = 3 hours;  // 3 hours bid lifetime         [seconds]
     uint48   public   tau = 2 days;   // 2 days total auction length  [seconds]
     uint256  public kicks = 0;
-    uint256  public live;             // Shutdown Flag
+    uint256  public live;             // Active Flag
     address  public vow;              // not used until shutdown
 
     // --- Events ---

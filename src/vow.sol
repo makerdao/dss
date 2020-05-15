@@ -65,7 +65,7 @@ contract Vow is LibNote {
     uint256 public bump;  // Flap fixed lot size    [rad]
     uint256 public hump;  // Surplus buffer         [rad]
 
-    uint256 public live;  // Shutdown Flag
+    uint256 public live;  // Active Flag
 
     // --- Init ---
     constructor(address vat_, address flapper_, address flopper_) public {

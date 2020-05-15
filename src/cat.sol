@@ -62,7 +62,7 @@ contract Cat is LibNote {
 
     mapping (bytes32 => Ilk) public ilks;
 
-    uint256 public live;  // Shutdown Flag
+    uint256 public live;  // Active Flag
     VatLike public vat;   // CDP Engine
     VowLike public vow;   // Debt Engine
 

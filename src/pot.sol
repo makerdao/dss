@@ -64,7 +64,7 @@ contract Pot is LibNote {
     address public vow;   // Debt Engine
     uint256 public rho;   // Time of last drip     [unix epoch time]
 
-    uint256 public live;  // Shutdown Flag
+    uint256 public live;  // Active Flag
 
     // --- Init ---
     constructor(address vat_) public {
