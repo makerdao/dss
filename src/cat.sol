@@ -26,13 +26,13 @@ contract Kicker {
 
 contract VatLike {
     function ilks(bytes32) external view returns (
-        uint256 Art,   // wad
-        uint256 rate,  // ray
-        uint256 spot   // ray
+        uint256 Art,   // [wad]
+        uint256 rate,  // [ray]
+        uint256 spot   // [ray]
     );
     function urns(bytes32,address) external view returns (
-        uint256 ink,   // wad
-        uint256 art    // wad
+        uint256 ink,   // [wad]
+        uint256 art    // [wad]
     );
     function grab(bytes32,address,address,address,int,int) external;
     function hope(address) external;
@@ -62,9 +62,9 @@ contract Cat is LibNote {
 
     mapping (bytes32 => Ilk) public ilks;
 
-    uint256 public live;
-    VatLike public vat;
-    VowLike public vow;
+    uint256 public live;  // Active Flag
+    VatLike public vat;   // CDP Engine
+    VowLike public vow;   // Debt Engine
 
     // --- Events ---
     event Bite(

@@ -54,17 +54,17 @@ contract Pot is LibNote {
     }
 
     // --- Data ---
-    mapping (address => uint256) public pie;  // user Savings Dai
+    mapping (address => uint256) public pie;  // Normalised Savings Dai [wad]
 
-    uint256 public Pie;  // total Savings Dai
-    uint256 public dsr;  // the Dai Savings Rate
-    uint256 public chi;  // the Rate Accumulator
+    uint256 public Pie;   // Total Normalised Savings Dai  [wad]
+    uint256 public dsr;   // The Dai Savings Rate          [ray]
+    uint256 public chi;   // The Rate Accumulator          [ray]
 
-    VatLike public vat;  // CDP engine
-    address public vow;  // debt engine
-    uint256 public rho;  // time of last drip
+    VatLike public vat;   // CDP Engine
+    address public vow;   // Debt Engine
+    uint256 public rho;   // Time of last drip     [unix epoch time]
 
-    uint256 public live;  // Access Flag
+    uint256 public live;  // Active Flag
 
     // --- Init ---
     constructor(address vat_) public {

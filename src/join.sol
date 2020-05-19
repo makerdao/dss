@@ -69,11 +69,11 @@ contract GemJoin is LibNote {
         _;
     }
 
-    VatLike public vat;
-    bytes32 public ilk;
+    VatLike public vat;   // CDP Engine
+    bytes32 public ilk;   // Collateral Type
     GemLike public gem;
     uint    public dec;
-    uint    public live;  // Access Flag
+    uint    public live;  // Active Flag
 
     constructor(address vat_, bytes32 ilk_, address gem_) public {
         wards[msg.sender] = 1;
@@ -109,9 +109,9 @@ contract ETHJoin is LibNote {
         _;
     }
 
-    VatLike public vat;
-    bytes32 public ilk;
-    uint    public live;  // Access Flag
+    VatLike public vat;   // CDP Engine
+    bytes32 public ilk;   // Collateral Type
+    uint    public live;  // Active Flag
 
     constructor(address vat_, bytes32 ilk_) public {
         wards[msg.sender] = 1;
@@ -144,9 +144,9 @@ contract DaiJoin is LibNote {
         _;
     }
 
-    VatLike public vat;
-    DSTokenLike public dai;
-    uint    public live;  // Access Flag
+    VatLike public vat;      // CDP Engine
+    DSTokenLike public dai;  // Stablecoin Token
+    uint    public live;     // Active Flag
 
     constructor(address vat_, address dai_) public {
         wards[msg.sender] = 1;

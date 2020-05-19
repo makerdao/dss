@@ -23,15 +23,15 @@ import "./lib.sol";
 contract VatLike {
     function dai(address) external view returns (uint256);
     function ilks(bytes32 ilk) external returns (
-        uint256 Art,
-        uint256 rate,
-        uint256 spot,
-        uint256 line,
-        uint256 dust
+        uint256 Art,   // [wad]
+        uint256 rate,  // [ray]
+        uint256 spot,  // [ray]
+        uint256 line,  // [rad]
+        uint256 dust   // [rad]
     );
     function urns(bytes32 ilk, address urn) external returns (
-        uint256 ink,
-        uint256 art
+        uint256 ink,   // [wad]
+        uint256 art    // [wad]
     );
     function debt() external returns (uint256);
     function move(address src, address dst, uint256 rad) external;
@@ -43,9 +43,9 @@ contract VatLike {
 }
 contract CatLike {
     function ilks(bytes32) external returns (
-        address flip,  // Liquidator
-        uint256 chop,  // Liquidation Penalty   [ray]
-        uint256 lump   // Liquidation Quantity  [rad]
+        address flip,
+        uint256 chop,  // [ray]
+        uint256 lump   // [rad]
     );
     function cage() external;
 }
@@ -57,14 +57,14 @@ contract VowLike {
 }
 contract Flippy {
     function bids(uint id) external view returns (
-        uint256 bid,
-        uint256 lot,
+        uint256 bid,   // [rad]
+        uint256 lot,   // [wad]
         address guy,
-        uint48  tic,
-        uint48  end,
+        uint48  tic,   // [unix epoch time]
+        uint48  end,   // [unix epoch time]
         address usr,
         address gal,
-        uint256 tab
+        uint256 tab    // [rad]
     );
     function yank(uint id) external;
 }
@@ -77,7 +77,7 @@ contract Spotty {
     function par() external view returns (uint256);
     function ilks(bytes32) external view returns (
         PipLike pip,
-        uint256 mat
+        uint256 mat    // [ray]
     );
     function cage() external;
 }
@@ -193,24 +193,24 @@ contract End is LibNote {
     }
 
     // --- Data ---
-    VatLike  public vat;
+    VatLike  public vat;   // CDP Engine
     CatLike  public cat;
-    VowLike  public vow;
+    VowLike  public vow;   // Debt Engine
     PotLike  public pot;
     Spotty   public spot;
 
-    uint256  public live;  // cage flag
-    uint256  public when;  // time of cage
-    uint256  public wait;  // processing cooldown length
-    uint256  public debt;  // total outstanding dai following processing [rad]
+    uint256  public live;  // Active Flag
+    uint256  public when;  // Time of cage                   [unix epoch time]
+    uint256  public wait;  // Processing Cooldown Length             [seconds]
+    uint256  public debt;  // Total outstanding dai following processing [rad]
 
-    mapping (bytes32 => uint256) public tag;  // cage price           [ray]
-    mapping (bytes32 => uint256) public gap;  // collateral shortfall [wad]
-    mapping (bytes32 => uint256) public Art;  // total debt per ilk   [wad]
-    mapping (bytes32 => uint256) public fix;  // final cash price     [ray]
+    mapping (bytes32 => uint256) public tag;  // Cage price              [ray]
+    mapping (bytes32 => uint256) public gap;  // Collateral shortfall    [wad]
+    mapping (bytes32 => uint256) public Art;  // Total debt per ilk      [wad]
+    mapping (bytes32 => uint256) public fix;  // Final cash price        [ray]
 
-    mapping (address => uint256)                      public bag;  // [wad]
-    mapping (bytes32 => mapping (address => uint256)) public out;  // [wad]
+    mapping (address => uint256)                      public bag;  //    [wad]
+    mapping (bytes32 => mapping (address => uint256)) public out;  //    [wad]
 
     // --- Init ---
     constructor() public {

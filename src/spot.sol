@@ -37,22 +37,22 @@ contract Spotter is LibNote {
 
     // --- Data ---
     struct Ilk {
-        PipLike pip;
-        uint256 mat;
+        PipLike pip;  // Price Feed
+        uint256 mat;  // Liquidation ratio [ray]
     }
 
     mapping (bytes32 => Ilk) public ilks;
 
-    VatLike public vat;
-    uint256 public par; // ref per dai
+    VatLike public vat;  // CDP Engine
+    uint256 public par;  // ref per dai [ray]
 
     uint256 public live;
 
     // --- Events ---
     event Poke(
       bytes32 ilk,
-      bytes32 val,
-      uint256 spot
+      bytes32 val,  // [wad]
+      uint256 spot  // [ray]
     );
 
     // --- Init ---

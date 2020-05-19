@@ -28,7 +28,7 @@ contract VatLike {
    This thing lets you flip some gems for a given amount of dai.
    Once the given amount of dai is raised, gems are forgone instead.
 
- - `lot` gems for sale
+ - `lot` gems in return for bid
  - `tab` total dai wanted
  - `bid` dai paid
  - `gal` receives dai income
@@ -50,14 +50,14 @@ contract Flipper is LibNote {
 
     // --- Data ---
     struct Bid {
-        uint256 bid;
-        uint256 lot;
+        uint256 bid;  // dai paid                 [rad]
+        uint256 lot;  // gems in return for bid   [wad]
         address guy;  // high bidder
-        uint48  tic;  // expiry time
-        uint48  end;
+        uint48  tic;  // bid expiry time          [unix epoch time]
+        uint48  end;  // auction expiry time      [unix epoch time]
         address usr;
         address gal;
-        uint256 tab;
+        uint256 tab;  // total dai wanted    [rad]
     }
 
     mapping (uint => Bid) public bids;
@@ -67,8 +67,8 @@ contract Flipper is LibNote {
 
     uint256 constant ONE = 1.00E18;
     uint256 public   beg = 1.05E18;  // 5% minimum bid increase
-    uint48  public   ttl = 3 hours;  // 3 hours bid duration
-    uint48  public   tau = 2 days;   // 2 days total auction length
+    uint48  public   ttl = 3 hours;  // 3 hours bid duration         [seconds]
+    uint48  public   tau = 2 days;   // 2 days total auction length  [seconds]
     uint256 public kicks = 0;
 
     // --- Events ---
@@ -113,7 +113,7 @@ contract Flipper is LibNote {
 
         bids[id].bid = bid;
         bids[id].lot = lot;
-        bids[id].guy = msg.sender; // configurable??
+        bids[id].guy = msg.sender;  // configurable??
         bids[id].end = add(uint48(now), tau);
         bids[id].usr = usr;
         bids[id].gal = gal;

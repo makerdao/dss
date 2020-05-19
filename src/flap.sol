@@ -30,7 +30,7 @@ contract GemLike {
 /*
    This thing lets you sell some dai in return for gems.
 
- - `lot` dai for sale
+ - `lot` dai in return for bid
  - `bid` gems paid
  - `ttl` single bid lifetime
  - `beg` minimum bid increase
@@ -49,24 +49,24 @@ contract Flapper is LibNote {
 
     // --- Data ---
     struct Bid {
-        uint256 bid;
-        uint256 lot;
+        uint256 bid;  // gems paid               [wad]
+        uint256 lot;  // dai in return for bid   [rad]
         address guy;  // high bidder
-        uint48  tic;  // expiry time
-        uint48  end;
+        uint48  tic;  // bid expiry time         [unix epoch time]
+        uint48  end;  // auction expiry time     [unix epoch time]
     }
 
     mapping (uint => Bid) public bids;
 
-    VatLike  public   vat;
+    VatLike  public   vat;  // CDP Engine
     GemLike  public   gem;
 
     uint256  constant ONE = 1.00E18;
     uint256  public   beg = 1.05E18;  // 5% minimum bid increase
-    uint48   public   ttl = 3 hours;  // 3 hours bid duration
-    uint48   public   tau = 2 days;   // 2 days total auction length
+    uint48   public   ttl = 3 hours;  // 3 hours bid duration         [seconds]
+    uint48   public   tau = 2 days;   // 2 days total auction length  [seconds]
     uint256  public kicks = 0;
-    uint256  public live;
+    uint256  public live;  // Active Flag
 
     // --- Events ---
     event Kick(
@@ -107,7 +107,7 @@ contract Flapper is LibNote {
 
         bids[id].bid = bid;
         bids[id].lot = lot;
-        bids[id].guy = msg.sender; // configurable??
+        bids[id].guy = msg.sender;  // configurable??
         bids[id].end = add(uint48(now), tau);
 
         vat.move(msg.sender, address(this), lot);
