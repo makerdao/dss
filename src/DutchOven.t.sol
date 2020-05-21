@@ -5,10 +5,10 @@ import "ds-test/test.sol";
 import "./DutchOven.sol";
 
 contract DutchOvenTest is DSTest {
-    DutchOven oven;
+    Oven oven;
 
     function setUp() public {
-        oven = new DutchOven();
+        oven = new Oven(address(0), bytes32("ilk"));
     }
 
     function testFail_basic_sanity() public {
