@@ -1,2 +1,2 @@
 # dutch-oven
-Auctions 2.0
+Collateral Auctions 2.0
