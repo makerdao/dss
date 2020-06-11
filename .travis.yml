@@ -1,6 +1,7 @@
 os:
   - linux
 language: nix
+nix: 2.3.6
 before_install:
   - nix-env -iA nixpkgs.cachix
   - cachix use maker
