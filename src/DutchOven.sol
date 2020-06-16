@@ -29,6 +29,10 @@ contract SpotLike {
     function ilks(bytes32) public returns (PipLike, uint256);
 }
 
+contract OvenCallee {
+    function ovenCall(uint256, uint256, bytes calldata) external;
+}
+
 contract Oven {
     // --- Auth ---
     mapping (address => uint) public wards;
@@ -61,6 +65,8 @@ contract Oven {
 
     uint256 bakes;
 
+    uint256 locked;
+
     // --- Events ---
     event Bake(
         uint256  id,
@@ -75,6 +81,13 @@ contract Oven {
         ilk = ilk_;
         cut = ONE;
         wards[msg.sender] = 1;
+    }
+
+    modifier lock {
+        require(locked == 0, "Oven/system-locked");
+        locked = 1;
+        _;
+        locked = 0;
     }
 
     // --- Administration ---
@@ -141,7 +154,7 @@ contract Oven {
     function bake(uint256 tab,  // debt
                   uint256 lot,  // collateral
                   address usr   // liquidated vault
-    ) public auth returns (uint256 id) { 
+    ) external auth returns (uint256 id) { 
         require(bakes < uint(-1), "Oven/overflow");
         id = ++bakes;
 
@@ -165,54 +178,68 @@ contract Oven {
     }
 
     // buy amt of collateral from auction indexed by id
-    function take(uint256 id,   // auction id
-                  uint256 amt,  // upper limit on amount of collateral to buy
-                  uint256 max   // maximum acceptable price (DAI / ETH)
-    ) public {
+    function take(uint256 id,           // auction id
+                  uint256 amt,          // upper limit on amount of collateral to buy
+                  uint256 max,          // maximum acceptable price (DAI / ETH)
+                  address who,          // who will receive the collateral and pay the debt
+                  bytes calldata data   // 
+    ) external lock {
         // read auction data
-        (uint256 tab, uint256 lot, address usr, uint96 tic, uint256 top) = this.loaves(id);
+        Loaf memory loaf = loaves[id];
 
         // compute current price
-        uint256 pay = price(tic, top);
+        uint256 pay = price(loaf.tic, loaf.top);
 
         // ensure price is acceptable to buyer
         require(pay <= max, "Oven/too-expensive");
 
         // purchase as much as possible, up to amt
-        uint256 slice = min(lot, amt);
+        uint256 slice = min(loaf.lot, amt);
 
         // DAI needed to buy a slice of this loaf
-        uint256 owe = slice * pay;
+        uint256 owe = mul(slice, pay);
 
         // don't collect more than tab of DAI
-        if (owe > tab) {
-            owe = tab;
+        if (owe > loaf.tab) {
+            owe = loaf.tab;
 
             // readjust slice
             slice = owe / pay;
         }
 
-        vat.move(msg.sender, vow, owe);
-        tab = sub(tab, owe);
+        // Calculate missing tab after operation
+        loaf.tab = sub(loaf.tab, owe);
+        require(loaf.tab <= dust, "Oven/dust");
 
-        vat.flux(ilk, address(this), msg.sender, slice);
-        lot = sub(lot, slice);
+        // Calculate remaining lot after operation
+        loaf.lot = sub(loaf.lot, slice);
+        // Send collateral to who
+        vat.flux(ilk, address(this), who, slice);
 
-        if (tab == 0) {
+        // Do external call (if defined)
+        if (data.length > 0) {
+            OvenCallee(who).ovenCall(owe, slice, data);
+        }
+
+        // Get DAI from who address
+        vat.move(who, vow, owe);
+
+        if (loaf.lot == 0) {
+            delete loaves[id];
+        } else if (loaf.tab == 0) {
             // should we return collateral incrementally instead?
-            vat.flux(ilk, address(this), usr, lot);
+            vat.flux(ilk, address(this), loaf.usr, loaf.lot);
             delete loaves[id];
         } else {
-            require(tab <= dust, "Oven/dust");
-            loaves[id].tab = tab;
-            loaves[id].lot = lot;
+            loaves[id].tab = loaf.tab;
+            loaves[id].lot = loaf.lot;
         }
 
         // emit event?
     }
 
     // returns the current price of the specified auction [ray]
-    function price(uint256 id) public returns (uint256) {
+    function price(uint256 id) external returns (uint256) {
         (,,, uint96 tic, uint256 top) = this.loaves(id);
         return price(tic, top);
     }
@@ -225,7 +252,7 @@ contract Oven {
     // --- Shutdown ---
 
     // cancel an auction during ES
-    function yank() public auth {
+    function yank() external auth {
         // TODO
     }
 }
