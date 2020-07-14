@@ -111,13 +111,15 @@ contract ETHJoin is LibNote {
 
     VatLike public vat;   // CDP Engine
     bytes32 public ilk;   // Collateral Type
-    uint    public live;  // Active Flag
+    uint256 public live;  // Active Flag
+    uint256 public dec;
 
     constructor(address vat_, bytes32 ilk_) public {
         wards[msg.sender] = 1;
         live = 1;
         vat = VatLike(vat_);
         ilk = ilk_;
+        dec = 18;
     }
     function cage() external note auth {
         live = 0;
@@ -144,15 +146,17 @@ contract DaiJoin is LibNote {
         _;
     }
 
-    VatLike public vat;      // CDP Engine
-    DSTokenLike public dai;  // Stablecoin Token
-    uint    public live;     // Active Flag
+    VatLike     public vat;      // CDP Engine
+    DSTokenLike public dai;      // Stablecoin Token
+    uint256     public live;     // Active Flag
+    uint256     public dec;
 
     constructor(address vat_, address dai_) public {
         wards[msg.sender] = 1;
         live = 1;
         vat = VatLike(vat_);
         dai = DSTokenLike(dai_);
+        dec = 18;
     }
     function cage() external note auth {
         live = 0;
