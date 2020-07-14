@@ -15,7 +15,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-pragma solidity ^0.5.12;
+pragma solidity >=0.5.12;
 
 import "./lib.sol";
 
@@ -38,7 +38,7 @@ import "./lib.sol";
 
 */
 
-contract VatLike {
+interface VatLike {
     function move(address,address,uint256) external;
     function suck(address,address,uint256) external;
 }

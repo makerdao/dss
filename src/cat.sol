@@ -15,16 +15,16 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-pragma solidity ^0.5.12;
+pragma solidity >=0.5.12;
 
 import "./lib.sol";
 
-contract Kicker {
+interface Kicker {
     function kick(address urn, address gal, uint tab, uint lot, uint bid)
-        public returns (uint);
+        external returns (uint);
 }
 
-contract VatLike {
+interface VatLike {
     function ilks(bytes32) external view returns (
         uint256 Art,   // [wad]
         uint256 rate,  // [ray]
@@ -39,7 +39,7 @@ contract VatLike {
     function nope(address) external;
 }
 
-contract VowLike {
+interface VowLike {
     function fess(uint) external;
 }
 

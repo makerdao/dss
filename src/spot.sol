@@ -13,15 +13,15 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-pragma solidity ^0.5.12;
+pragma solidity >=0.5.12;
 
 import "./lib.sol";
 
-contract VatLike {
+interface VatLike {
     function file(bytes32, bytes32, uint) external;
 }
 
-contract PipLike {
+interface PipLike {
     function peek() external returns (bytes32, bool);
 }
 

@@ -16,11 +16,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-pragma solidity ^0.5.12;
+pragma solidity >=0.5.12;
 
 import "./lib.sol";
 
-contract VatLike {
+interface VatLike {
     function dai(address) external view returns (uint256);
     function ilks(bytes32 ilk) external returns (
         uint256 Art,   // [wad]
@@ -41,7 +41,7 @@ contract VatLike {
     function suck(address u, address v, uint256 rad) external;
     function cage() external;
 }
-contract CatLike {
+interface CatLike {
     function ilks(bytes32) external returns (
         address flip,
         uint256 chop,  // [ray]
@@ -49,13 +49,13 @@ contract CatLike {
     );
     function cage() external;
 }
-contract PotLike {
+interface PotLike {
     function cage() external;
 }
-contract VowLike {
+interface VowLike {
     function cage() external;
 }
-contract Flippy {
+interface Flippy {
     function bids(uint id) external view returns (
         uint256 bid,   // [rad]
         uint256 lot,   // [wad]
@@ -69,11 +69,11 @@ contract Flippy {
     function yank(uint id) external;
 }
 
-contract PipLike {
+interface PipLike {
     function read() external view returns (bytes32);
 }
 
-contract Spotty {
+interface Spotty {
     function par() external view returns (uint256);
     function ilks(bytes32) external view returns (
         PipLike pip,

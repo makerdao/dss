@@ -15,23 +15,23 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-pragma solidity ^0.5.12;
+pragma solidity >=0.5.12;
 
 import "./lib.sol";
 
-contract FlopLike {
+interface FlopLike {
     function kick(address gal, uint lot, uint bid) external returns (uint);
     function cage() external;
     function live() external returns (uint);
 }
 
-contract FlapLike {
+interface FlapLike {
     function kick(uint lot, uint bid) external returns (uint);
     function cage(uint) external;
     function live() external returns (uint);
 }
 
-contract VatLike {
+interface VatLike {
     function dai (address) external view returns (uint);
     function sin (address) external view returns (uint);
     function heal(uint256) external;
