@@ -1,4 +1,4 @@
-pragma solidity ^0.5.12;
+pragma solidity >=0.5.12;
 
 import "ds-test/test.sol";
 
@@ -7,8 +7,8 @@ import {Flapper as Flap} from './flap.t.sol';
 import {TestVat as  Vat} from './vat.t.sol';
 import {Vow}     from '../vow.sol';
 
-contract Hevm {
-    function warp(uint256) public;
+interface Hevm {
+    function warp(uint256) external;
 }
 
 contract Gem {
@@ -59,7 +59,7 @@ contract VowTest is DSTest {
     function try_call(address addr, bytes calldata data) external returns (bool) {
         bytes memory _data = data;
         assembly {
-            let ok := call(gas, addr, 0, add(_data, 0x20), mload(_data), 0, 0)
+            let ok := call(gas(), addr, 0, add(_data, 0x20), mload(_data), 0, 0)
             let free := mload(0x40)
             mstore(free, ok)
             mstore(0x40, add(free, 32))

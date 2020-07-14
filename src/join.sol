@@ -15,22 +15,22 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-pragma solidity ^0.5.12;
+pragma solidity >=0.5.12;
 
 import "./lib.sol";
 
-contract GemLike {
-    function decimals() public view returns (uint);
+interface GemLike {
+    function decimals() external view returns (uint);
     function transfer(address,uint) external returns (bool);
     function transferFrom(address,address,uint) external returns (bool);
 }
 
-contract DSTokenLike {
+interface DSTokenLike {
     function mint(address,uint) external;
     function burn(address,uint) external;
 }
 
-contract VatLike {
+interface VatLike {
     function slip(bytes32,address,int) external;
     function move(address,address,uint) external;
 }

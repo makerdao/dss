@@ -1,4 +1,4 @@
-pragma solidity ^0.5.12;
+pragma solidity >=0.5.12;
 
 import "ds-test/test.sol";
 import "ds-token/token.sol";
@@ -14,8 +14,8 @@ import {Flopper} from './flop.t.sol';
 import {Flapper} from './flap.t.sol';
 
 
-contract Hevm {
-    function warp(uint256) public;
+interface Hevm {
+    function warp(uint256) external;
 }
 
 contract TestVat is Vat {
@@ -54,7 +54,7 @@ contract Usr {
     function try_call(address addr, bytes calldata data) external returns (bool) {
         bytes memory _data = data;
         assembly {
-            let ok := call(gas, addr, 0, add(_data, 0x20), mload(_data), 0, 0)
+            let ok := call(gas(), addr, 0, add(_data, 0x20), mload(_data), 0, 0)
             let free := mload(0x40)
             mstore(free, ok)
             mstore(0x40, add(free, 32))
@@ -431,7 +431,7 @@ contract JoinTest is DSTest {
     }
 }
 
-contract FlipLike {
+interface FlipLike {
     struct Bid {
         uint256 bid;
         uint256 lot;
@@ -442,7 +442,7 @@ contract FlipLike {
         address gal;
         uint256 tab;
     }
-    function bids(uint) public view returns (
+    function bids(uint) external view returns (
         uint256 bid,
         uint256 lot,
         address guy,

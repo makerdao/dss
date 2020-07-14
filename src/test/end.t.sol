@@ -16,7 +16,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-pragma solidity ^0.5.12;
+pragma solidity >=0.5.12;
 
 import "ds-test/test.sol";
 import "ds-token/token.sol";
@@ -33,8 +33,8 @@ import {GemJoin} from '../join.sol';
 import {End}  from '../end.sol';
 import {Spotter} from '../spot.sol';
 
-contract Hevm {
-    function warp(uint256) public;
+interface Hevm {
+    function warp(uint256) external;
 }
 
 contract Usr {
