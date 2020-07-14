@@ -63,7 +63,7 @@ contract Gal {
 contract Vatish is DSToken('') {
     uint constant ONE = 10 ** 27;
     function hope(address usr) public {
-         approve(usr);
+         approve(usr, uint(-1));
     }
     function dai(address usr) public view returns (uint) {
          return balanceOf(usr);
