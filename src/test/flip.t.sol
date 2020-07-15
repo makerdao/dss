@@ -1,7 +1,6 @@
 pragma solidity >=0.5.12;
 
 import "ds-test/test.sol";
-import {DSToken} from "ds-token/token.sol";
 
 import {Vat}     from "../vat.sol";
 import {Flipper} from "../flip.sol";
