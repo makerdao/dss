@@ -66,7 +66,7 @@ contract Vatish is DSToken('') {
          approve(usr, uint(-1));
     }
     function dai(address usr) public view returns (uint) {
-         return balanceOf(usr);
+         return balanceOf[usr];
     }
 }
 
