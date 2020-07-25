@@ -58,10 +58,16 @@ contract Oven {
         uint256 tab;  // dai to raise
         uint256 lot;  // eth to sell
         address usr;  // liquidated CDP
-        uint96  tic;  // auction start time
+        uint48  tic;  // auction start time
         uint256 top;  // starting price
     }
     mapping(uint256 => Loaf) public loaves;
+
+    struct Slice {
+        uint256 bid;    // bid amount
+        uint256 price;  // bid amount
+    }
+    mapping(uint256 => mapping (address => Slice)) public slices;
 
     uint256 bakes;
 
@@ -80,6 +86,7 @@ contract Oven {
         vat = VatLike(vat_);
         ilk = ilk_;
         cut = ONE;
+        step = 1;
         wards[msg.sender] = 1;
     }
 
@@ -101,25 +108,27 @@ contract Oven {
 
     // --- Math ---
     uint256 constant ONE = 10 ** 27;
+    // TODO(cmooney): make sure this was copied correctly
     function min(uint x, uint y) internal pure returns (uint z) {
         return x <= y ? x : y;
     }
     function sub(uint x, uint y) internal pure returns (uint z) {
-        z = x - uint(y);
-        require(y <= 0 || z <= x);
-        require(y >= 0 || z >= x);
+        require((z = x - y) <= x);
     }
+    // TODO(cmooney): make sure this was copied correctly
     function mul(uint x, uint y) internal pure returns (uint z) {
         require(y == 0 || (z = x * y) / y == x);
     }
+    // TODO(cmooney): make sure this was copied correctly
     function rmul(uint x, uint y) internal pure returns (uint z) {
-        z = x * y;
-        require(y == 0 || z / y == x);
+        require(y == 0 || (z = x * y) / y == x);
         z = z / ONE;
     }
+    // TODO(cmooney): make sure this was copied correctly
     function rdiv(uint x, uint y) internal pure returns (uint z) {
         z = mul(x, ONE) / y;
     }
+    // TODO(cmooney): make sure this was copied correctly
     // optimized version from dss PR #78
     function rpow(uint x, uint n, uint b) internal pure returns (uint z) {
         assembly {
@@ -165,7 +174,7 @@ contract Oven {
         loaves[id].tab = tab;
         loaves[id].lot = lot;
         loaves[id].usr = usr;
-        loaves[id].tic = uint96(now);
+        loaves[id].tic = uint48(now);
 
         // could get this from rmul(Vat.ilks(ilk).spot, Spotter.mat()) instead, but if mat has changed since the
         // last poke, the resulting value will be incorrect
@@ -197,14 +206,14 @@ contract Oven {
         uint256 slice = min(loaf.lot, amt);
 
         // DAI needed to buy a slice of this loaf
-        uint256 owe = mul(slice, pay);
+        uint256 owe = mul(slice, max);
 
         // don't collect more than tab of DAI
         if (owe > loaf.tab) {
             owe = loaf.tab;
 
             // readjust slice
-            slice = owe / pay;
+            slice = owe / max;
         }
 
         // Calculate missing tab after operation
@@ -240,12 +249,12 @@ contract Oven {
 
     // returns the current price of the specified auction [ray]
     function price(uint256 id) external returns (uint256) {
-        (,,, uint96 tic, uint256 top) = this.loaves(id);
+        (,,, uint48 tic, uint256 top) = this.loaves(id);
         return price(tic, top);
     }
 
     // returns the price adjusted for the amount of elapsed time since tic [ray]
-    function price(uint96 tic, uint256 top) public returns (uint256) {
+    function price(uint48 tic, uint256 top) public returns (uint256) {
         return rmul(top, rpow(cut, sub(now, uint256(tic)) / step, ONE));
     }
 
