@@ -53,6 +53,7 @@ contract Oven {
     uint256  public dust;  // minimum tab in an auction; read from Vat instead??? [rad]
     uint256  public step;  // length of time between price drops                  [seconds]
     uint256  public cut;   // per-step multiplicative decrease in price           [ray]
+    uint256  public bakes; // bake count
 
     struct Loaf {
         uint256 tab;  // dai to raise
@@ -63,15 +64,7 @@ contract Oven {
     }
     mapping(uint256 => Loaf) public loaves;
 
-    struct Slice {
-        uint256 bid;    // bid amount
-        uint256 price;  // bid amount
-    }
-    mapping(uint256 => mapping (address => Slice)) public slices;
-
-    uint256 bakes;
-
-    uint256 locked;
+    uint256 internal locked;
 
     // --- Events ---
     event Bake(
@@ -85,7 +78,7 @@ contract Oven {
     constructor(address vat_, bytes32 ilk_) public {
         vat = VatLike(vat_);
         ilk = ilk_;
-        cut = ONE;
+        cut = RAY;
         step = 1;
         wards[msg.sender] = 1;
     }
@@ -99,7 +92,7 @@ contract Oven {
 
     // --- Administration ---
     function file(bytes32 what, uint256 data) external {
-        if      (what ==  "cut") require((cut = data) <= ONE, "Oven/cut-greater-than-ONE");
+        if      (what ==  "cut") require((cut = data) <= RAY, "Oven/cut-gt-RAY");
         else if (what == "step") step = data;
         else if (what ==  "buf") buf  = data;
         else if (what == "dust") dust = data;
@@ -107,7 +100,8 @@ contract Oven {
     }
 
     // --- Math ---
-    uint256 constant ONE = 10 ** 27;
+    uint256 constant RAY = 10 ** 27;
+    uint256 constant BLN = 10 ** 9;
 
     function min(uint x, uint y) internal pure returns (uint z) {
         return x <= y ? x : y;
@@ -119,10 +113,10 @@ contract Oven {
         require(y == 0 || (z = x * y) / y == x);
     }
     function rmul(uint x, uint y) internal pure returns (uint z) {
-        z = mul(x, y) / ONE;
+        z = mul(x, y) / RAY;
     }
     function rdiv(uint x, uint y) internal pure returns (uint z) {
-        z = mul(x, ONE) / y;
+        z = mul(x, RAY) / y;
     }
     // optimized version from dss PR #78
     function rpow(uint x, uint n, uint b) internal pure returns (uint z) {
@@ -176,7 +170,7 @@ contract Oven {
         (PipLike pip, ) = spot.ilks(ilk);
         (bytes32 val, bool has) = pip.peek();
         require(has, "Oven/invalid-price");
-        loaves[id].top = rmul(rdiv(mul(uint256(val), 10 ** 9), spot.par()), buf);
+        loaves[id].top = rmul(rdiv(mul(uint256(val), BLN), spot.par()), buf);
 
         emit Bake(id, tab, lot, usr);
     }
@@ -250,7 +244,7 @@ contract Oven {
 
     // returns the price adjusted for the amount of elapsed time since tic [ray]
     function price(uint48 tic, uint256 top) public returns (uint256) {
-        return rmul(top, rpow(cut, sub(now, uint256(tic)) / step, ONE));
+        return rmul(top, rpow(cut, sub(now, uint256(tic)) / step, RAY));
     }
 
     // --- Shutdown ---
