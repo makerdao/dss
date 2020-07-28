@@ -108,27 +108,22 @@ contract Oven {
 
     // --- Math ---
     uint256 constant ONE = 10 ** 27;
-    // TODO(cmooney): make sure this was copied correctly
+
     function min(uint x, uint y) internal pure returns (uint z) {
         return x <= y ? x : y;
     }
     function sub(uint x, uint y) internal pure returns (uint z) {
         require((z = x - y) <= x);
     }
-    // TODO(cmooney): make sure this was copied correctly
     function mul(uint x, uint y) internal pure returns (uint z) {
         require(y == 0 || (z = x * y) / y == x);
     }
-    // TODO(cmooney): make sure this was copied correctly
     function rmul(uint x, uint y) internal pure returns (uint z) {
-        require(y == 0 || (z = x * y) / y == x);
-        z = z / ONE;
+        z = mul(x, y) / ONE;
     }
-    // TODO(cmooney): make sure this was copied correctly
     function rdiv(uint x, uint y) internal pure returns (uint z) {
         z = mul(x, ONE) / y;
     }
-    // TODO(cmooney): make sure this was copied correctly
     // optimized version from dss PR #78
     function rpow(uint x, uint n, uint b) internal pure returns (uint z) {
         assembly {
@@ -163,21 +158,21 @@ contract Oven {
     function bake(uint256 tab,  // debt
                   uint256 lot,  // collateral
                   address usr   // liquidated vault
-    ) external auth returns (uint256 id) { 
+    ) external auth returns (uint256 id) {
         require(bakes < uint(-1), "Oven/overflow");
         id = ++bakes;
 
         // Caller must hope on the Oven
         vat.flux(ilk, msg.sender, address(this), lot);
 
-        // TODO: require tab non-dusty? might get into an annoying situation where some CDPs cannot be liquidated
         loaves[id].tab = tab;
         loaves[id].lot = lot;
         loaves[id].usr = usr;
         loaves[id].tic = uint48(now);
 
-        // could get this from rmul(Vat.ilks(ilk).spot, Spotter.mat()) instead, but if mat has changed since the
-        // last poke, the resulting value will be incorrect
+        // could get this from rmul(Vat.ilks(ilk).spot, Spotter.mat()) instead,
+        // but if mat has changed since the last poke, the resulting value will
+        // be incorrect.
         (PipLike pip, ) = spot.ilks(ilk);
         (bytes32 val, bool has) = pip.peek();
         require(has, "Oven/invalid-price");
@@ -191,7 +186,7 @@ contract Oven {
                   uint256 amt,          // upper limit on amount of collateral to buy
                   uint256 max,          // maximum acceptable price (DAI / ETH)
                   address who,          // who will receive the collateral and pay the debt
-                  bytes calldata data   // 
+                  bytes calldata data   //
     ) external lock {
         // read auction data
         Loaf memory loaf = loaves[id];
