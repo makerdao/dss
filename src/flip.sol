@@ -153,7 +153,6 @@ contract Flipper is LibNote {
             bids[id].guy = msg.sender;
         }
         vat.move(msg.sender, bids[id].gal, bid - bids[id].bid);
-        cat.scoop(bid - bids[id].bid);
 
         bids[id].bid = bid;
         bids[id].tic = add(uint48(now), ttl);
@@ -179,6 +178,7 @@ contract Flipper is LibNote {
     }
     function deal(uint id) external note {
         require(bids[id].tic != 0 && (bids[id].tic < now || bids[id].end < now), "Flipper/not-finished");
+        cat.scoop(bids[id].tab);
         vat.flux(ilk, address(this), bids[id].guy, bids[id].lot);
         delete bids[id];
     }
@@ -186,9 +186,9 @@ contract Flipper is LibNote {
     function yank(uint id) external note auth {
         require(bids[id].guy != address(0), "Flipper/guy-not-set");
         require(bids[id].bid < bids[id].tab, "Flipper/already-dent-phase");
+        cat.scoop(bids[id].tab);
         vat.flux(ilk, address(this), msg.sender, bids[id].lot);
         vat.move(msg.sender, bids[id].guy, bids[id].bid);
-        cat.scoop(bids[id].bid);
         delete bids[id];
     }
 }

@@ -603,6 +603,34 @@ contract BiteTest is DSTest {
         assertEq(vat.balanceOf(address(vow)),  100 ether);
     }
 
+    // tests a partial lot liquidation because it would fill the literbox
+    function test_partial_litterbox() public {
+        // spot = tag / (par . mat)
+        // tag=5, mat=2
+        vat.file("gold", 'spot', ray(2.5 ether));
+        vat.frob("gold", me, me, me, 100 ether, 150 ether);
+
+        // tag=4, mat=2
+        vat.file("gold", 'spot', ray(1 ether));  // now unsafe
+
+        assertEq(ink("gold", address(this)), 100 ether);
+        assertEq(art("gold", address(this)), 150 ether);
+        assertEq(vow.Woe(), 0 ether);
+        assertEq(gem("gold", address(this)), 900 ether);
+
+        cat.file("box", rad(75 ether));           // => box limit 55
+        cat.file("gold", "lump", 500 ether);      // => try to bite everything
+        uint auction = cat.bite("gold", address(this));
+        assertEq(ink("gold", address(this)), 50 ether);
+        assertEq(art("gold", address(this)), 75 ether);
+        assertEq(vow.sin(now), rad(75 ether));
+        assertEq(gem("gold", address(this)), 900 ether);
+
+        assertEq(vat.balanceOf(address(vow)), 0 ether);
+        flip.tend(auction, 50 ether, rad( 1 ether));
+        flip.tend(auction, 50 ether, rad(75 ether));
+    }
+
     function test_floppy_bite() public {
         vat.file("gold", 'spot', ray(2.5 ether));
         vat.frob("gold", me, me, me, 40 ether, 100 ether);

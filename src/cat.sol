@@ -143,9 +143,6 @@ contract Cat is LibNote {
 
     // --- CDP Liquidation ---
     function bite(bytes32 ilk, address urn) external returns (uint id) {
-        // NOTE: because of stack-depth limits, we need to re-use num in this
-        // function.  At the start, num is spot, then later becomes lot.
-
         (, uint rate, uint spot) = vat.ilks(ilk);
         (uint ink, uint art) = vat.urns(ilk, urn);
 
@@ -166,10 +163,8 @@ contract Cat is LibNote {
         // Pick a fractional art that doesn't put us over box
         uint fart = min(
             art, rdiv((sub(box, litter) / ilkS.chop), rate)
-      //WAD=WAD, WAD       RAD, RAD     / RAY            / RAY
         );
         lot = min(lot, wmul(lot, wdiv(fart, art)));
-      //WAD       WAD, WAD
 
         require(lot <= 2**255 && fart <= 2**255, "Cat/overflow");
         vat.grab(ilk, urn, address(this), address(vow), -int(lot), -int(fart));
@@ -177,7 +172,6 @@ contract Cat is LibNote {
         // Accumulate litter in the box
         uint tab = rmul(mul(fart, rate), ilkS.chop);
         litter = add(litter, tab);
-      //RAD          RAD   , RAD  RAD WAD , RAY  , RAY
 
         vow.fess(mul(fart, rate));
         id = Kicker(ilkS.flip).kick({
