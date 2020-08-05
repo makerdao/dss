@@ -529,7 +529,7 @@ contract BiteTest is DSTest {
         // tag=4, mat=2
         vat.file("gold", 'spot', ray(2 ether));  // now unsafe
 
-        cat.file("gold", "lump", 50 ether);
+        cat.file("gold", "lump", rad(111 ether));
         cat.file("gold", "chop", ray(1.1 ether));
 
         uint auction = cat.bite("gold", address(this));
@@ -539,7 +539,7 @@ contract BiteTest is DSTest {
         // all debt goes to the vow
         assertEq(vow.Awe(), rad(100 ether));
         // auction is for all collateral
-        (, uint lot,,,,,, uint tab) = FlipLike(address(flip)).bids(auction);
+        (, uint lot,,,,,, uint tab) = flip.bids(auction);
         assertEq(lot,        40 ether);
         assertEq(tab,   rad(110 ether));
     }
@@ -550,7 +550,7 @@ contract BiteTest is DSTest {
         vat.file("gold", 'spot', ray(2 ether));  // now unsafe
 
         cat.file("gold", "chop", ray(1.1 ether));
-        cat.file("gold", "lump", 30 ether);
+        cat.file("gold", "lump", rad(82.5 ether));
 
         uint auction = cat.bite("gold", address(this));
         // the CDP is partially liquidated
@@ -578,7 +578,7 @@ contract BiteTest is DSTest {
         assertEq(vow.Woe(), 0 ether);
         assertEq(gem("gold", address(this)), 960 ether);
 
-        cat.file("gold", "lump", 100 ether);  // => bite everything
+        cat.file("gold", "lump", rad(200 ether));  // => bite everything
         uint auction = cat.bite("gold", address(this));
         assertEq(ink("gold", address(this)), 0);
         assertEq(art("gold", address(this)), 0);
@@ -618,8 +618,8 @@ contract BiteTest is DSTest {
         assertEq(vow.Woe(), 0 ether);
         assertEq(gem("gold", address(this)), 900 ether);
 
-        cat.file("box", rad(75 ether));           // => box limit 55
-        cat.file("gold", "lump", 500 ether);      // => try to bite everything
+        cat.file("box", rad(75 ether));             // => box limit 55
+        cat.file("gold", "lump", rad(100 ether));   // => try to bite everything
         uint auction = cat.bite("gold", address(this));
         assertEq(ink("gold", address(this)), 50 ether);
         assertEq(art("gold", address(this)), 75 ether);
@@ -636,7 +636,7 @@ contract BiteTest is DSTest {
         vat.frob("gold", me, me, me, 40 ether, 100 ether);
         vat.file("gold", 'spot', ray(2 ether));  // now unsafe
 
-        cat.file("gold", "lump", 100 ether);  // => bite everything
+        cat.file("gold", "lump", rad(200 ether));  // => bite everything
         assertEq(vow.sin(now), rad(  0 ether));
         cat.bite("gold", address(this));
         assertEq(vow.sin(now), rad(100 ether));

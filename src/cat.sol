@@ -57,7 +57,7 @@ contract Cat is LibNote {
     struct Ilk {
         address flip;  // Liquidator
         uint256 chop;  // Liquidation Penalty  [ray]
-        uint256 lump;  // Liquidation Quantity [wad]
+        uint256 lump;  // Liquidation Quantity [rad]
     }
 
     mapping (bytes32 => Ilk) public ilks;
@@ -105,18 +105,6 @@ contract Cat is LibNote {
     function mul(uint x, uint y) internal pure returns (uint z) {
         require(y == 0 || (z = x * y) / y == x);
     }
-    function wmul(uint x, uint y) internal pure returns (uint z) {
-        z = mul(x, y) / WAD;
-    }
-    function rmul(uint x, uint y) internal pure returns (uint z) {
-        z = mul(x, y) / RAY;
-    }
-    function wdiv(uint x, uint y) internal pure returns (uint z) {
-        z = mul(x, WAD) / y;
-    }
-    function rdiv(uint x, uint y) internal pure returns (uint z) {
-        z = mul(x, RAY) / y;
-    }
 
     // --- Administration ---
     function file(bytes32 what, address data) external note auth {
@@ -152,35 +140,28 @@ contract Cat is LibNote {
 
         Ilk memory ilkS = ilks[ilk];
 
-        uint lot = min(ink, ilkS.lump);
-        art = min(art, mul(lot, art) / ink);
-
-        //
-        //       ([box - litter] / chop)
-        // art = ----------------------
-        //               rate
-        //
-        // Pick a fractional art that doesn't put us over box
-        uint fart = min(
-            art, rdiv((sub(box, litter) / ilkS.chop), rate)
-        );
-        lot = min(lot, wmul(lot, wdiv(fart, art)));
+        uint limit = min(ilkS.lump, sub(box, litter));
+        uint fart = min(art, mul(limit / rate, RAY) / ilkS.chop);
+        uint lot = min(ink, mul(ink, fart) / art);
 
         require(lot <= 2**255 && fart <= 2**255, "Cat/overflow");
         vat.grab(ilk, urn, address(this), address(vow), -int(lot), -int(fart));
-
-        // Accumulate litter in the box
-        uint tab = rmul(mul(fart, rate), ilkS.chop);
-        litter = add(litter, tab);
-
         vow.fess(mul(fart, rate));
-        id = Kicker(ilkS.flip).kick({
-            urn: urn,
-            gal: address(vow),
-            tab: tab,
-            lot: lot,
-            bid: 0
-        });
+
+        { // Avoid stack too deep
+            // Accumulate litter in the box
+            // TODO: Review if we need to do / RAY first due possible overflow
+            uint tab = mul(mul(fart, rate), ilkS.chop) / RAY;
+            litter = add(litter, tab);
+
+            id = Kicker(ilkS.flip).kick({
+                urn: urn,
+                gal: address(vow),
+                tab: tab,
+                lot: lot,
+                bid: 0
+            });
+        }
 
         emit Bite(ilk, urn, lot, fart, mul(fart, rate), ilkS.flip, id);
     }

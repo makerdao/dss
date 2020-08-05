@@ -422,7 +422,8 @@ contract EndTest is DSTest {
         // get 1 dai from ali
         ali.move(address(ali), address(this), rad(1 ether));
         vat.hope(address(gold.flip));
-        gold.flip.tend(auction, 10 ether, rad(1 ether)); // bid 1 dai
+        (,uint lot,,,,,,) = gold.flip.bids(auction);
+        gold.flip.tend(auction, lot, rad(1 ether)); // bid 1 dai
         assertEq(dai(urn1), 14 ether);
 
         // collateral price is 5
