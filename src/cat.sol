@@ -146,17 +146,17 @@ contract Cat is LibNote {
         // NOTE: because of stack-depth limits, we need to re-use num in this
         // function.  At the start, num is spot, then later becomes lot.
 
-        // num is spot
-        (, uint rate, uint num) = vat.ilks(ilk);
+        (, uint rate, uint spot) = vat.ilks(ilk);
         (uint ink, uint art) = vat.urns(ilk, urn);
 
         require(live == 1, "Cat/not-live");
-        require(num > 0 && mul(ink, num) < mul(art, rate), "Cat/not-unsafe");
+        require(spot > 0 && mul(ink, spot) < mul(art, rate), "Cat/not-unsafe");
         require(litter < box, "Cat/liquidation-limit-hit");
 
-        // num is now lot
-        num = min(ink, ilks[ilk].lump);
-        art = min(art, mul(num, art) / ink);
+        Ilk memory ilkS = ilks[ilk];
+
+        uint lot = min(ink, ilkS.lump);
+        art = min(art, mul(lot, art) / ink);
 
         //
         //       ([box - litter] / chop)
@@ -165,29 +165,30 @@ contract Cat is LibNote {
         //
         // Pick a fractional art that doesn't put us over box
         uint fart = min(
-            art, rdiv((sub(box, litter) / ilks[ilk].chop), rate)
+            art, rdiv((sub(box, litter) / ilkS.chop), rate)
       //WAD=WAD, WAD       RAD, RAD     / RAY            / RAY
         );
-        num = min(num, wmul(num, wdiv(fart, art)));
+        lot = min(lot, wmul(lot, wdiv(fart, art)));
       //WAD       WAD, WAD
 
+        require(lot <= 2**255 && fart <= 2**255, "Cat/overflow");
+        vat.grab(ilk, urn, address(this), address(vow), -int(lot), -int(fart));
+
         // Accumulate litter in the box
-        litter = add(litter, rmul(mul(fart, rate), ilks[ilk].chop));
+        uint tab = rmul(mul(fart, rate), ilkS.chop);
+        litter = add(litter, tab);
       //RAD          RAD   , RAD  RAD WAD , RAY  , RAY
 
-        require(num <= 2**255 && fart <= 2**255, "Cat/overflow");
-        vat.grab(ilk, urn, address(this), address(vow), -int(num), -int(fart));
-
         vow.fess(mul(fart, rate));
-        id = Kicker(ilks[ilk].flip).kick({
+        id = Kicker(ilkS.flip).kick({
             urn: urn,
             gal: address(vow),
-            tab: rmul(mul(fart, rate), ilks[ilk].chop),
-            lot: num,
+            tab: tab,
+            lot: lot,
             bid: 0
         });
 
-        emit Bite(ilk, urn, num, fart, mul(fart, rate), ilks[ilk].flip, id);
+        emit Bite(ilk, urn, lot, fart, mul(fart, rate), ilkS.flip, id);
     }
 
     function scoop(uint poop) external note auth {
