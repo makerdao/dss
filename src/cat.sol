@@ -26,13 +26,13 @@ interface Kicker {
 
 interface VatLike {
     function ilks(bytes32) external view returns (
-        uint256 Art,   // [wad]
-        uint256 rate,  // [ray]
-        uint256 spot   // [ray]
+        uint256 Art,  // [wad]
+        uint256 rate, // [ray]
+        uint256 spot  // [ray]
     );
     function urns(bytes32,address) external view returns (
-        uint256 ink,   // [wad]
-        uint256 art    // [wad]
+        uint256 ink,  // [wad]
+        uint256 art   // [wad]
     );
     function grab(bytes32,address,address,address,int,int) external;
     function hope(address) external;
@@ -56,17 +56,17 @@ contract Cat is LibNote {
     // --- Data ---
     struct Ilk {
         address flip;  // Liquidator
-        uint256 chop;  // Liquidation Penalty   [ray]
-        uint256 lump;  // Liquidation Quantity  [wad]
+        uint256 chop;  // Liquidation Penalty  [ray]
+        uint256 lump;  // Liquidation Quantity [wad]
     }
 
     mapping (bytes32 => Ilk) public ilks;
 
-    uint256 public box;  // Max Dai out for liquidation [rad]
-    uint256 public litter;  // Balance of Dai out for liquidation [rad]
-    uint256 public live;  // Active Flag
-    VatLike public vat;   // CDP Engine
-    VowLike public vow;   // Debt Engine
+    uint256 public box;    // Max Dai out for liquidation        [rad]
+    uint256 public litter; // Balance of Dai out for liquidation [rad]
+    uint256 public live;   // Active Flag
+    VatLike public vat;    // CDP Engine
+    VowLike public vow;    // Debt Engine
 
     // --- Events ---
     event Bite(
@@ -88,10 +88,10 @@ contract Cat is LibNote {
     }
 
     // --- Math ---
+    uint constant MLN = 10 **  6;
     uint constant WAD = 10 ** 18;
     uint constant RAY = 10 ** 27;
     uint constant RAD = 10 ** 45;
-    uint constant MLN = 10 **  6;
 
     function min(uint x, uint y) internal pure returns (uint z) {
         if (x > y) { z = y; } else { z = x; }
@@ -163,15 +163,15 @@ contract Cat is LibNote {
         // art = ----------------------
         //               rate
         //
-        // pick a fractional art that doesn't put us over box
+        // Pick a fractional art that doesn't put us over box
         uint fart = min(
             art, rdiv((sub(box, litter) / ilks[ilk].chop), rate)
       //WAD=WAD, WAD       RAD, RAD     / RAY            / RAY
         );
         num = min(num, wmul(num, wdiv(fart, art)));
-      //WAD     WAD, WAD
+      //WAD       WAD, WAD
 
-        // accumulate litter in the box
+        // Accumulate litter in the box
         litter = add(litter, rmul(mul(fart, rate), ilks[ilk].chop));
       //RAD          RAD   , RAD  RAD WAD , RAY  , RAY
 
