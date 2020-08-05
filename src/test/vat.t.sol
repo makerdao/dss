@@ -595,7 +595,6 @@ contract BiteTest is DSTest {
         flip.dent(auction, 38 ether,  rad(100 ether));
         assertEq(vat.balanceOf(address(this)), 100 ether);
         assertEq(gem("gold", address(this)),   962 ether);
-        assertEq(gem("gold", address(this)),   962 ether);
         assertEq(vow.sin(now),     rad(100 ether));
 
         hevm.warp(now + 4 hours);
@@ -620,15 +619,36 @@ contract BiteTest is DSTest {
 
         cat.file("box", rad(75 ether));             // => box limit 55
         cat.file("gold", "lump", rad(100 ether));   // => try to bite everything
+        assertEq(cat.box(), rad(75 ether));
+        assertEq(cat.litter(), 0);
         uint auction = cat.bite("gold", address(this));
+        assertEq(cat.litter(), rad(75 ether));
         assertEq(ink("gold", address(this)), 50 ether);
         assertEq(art("gold", address(this)), 75 ether);
         assertEq(vow.sin(now), rad(75 ether));
         assertEq(gem("gold", address(this)), 900 ether);
 
-        assertEq(vat.balanceOf(address(vow)), 0 ether);
+        assertEq(vat.balanceOf(address(this)), 150 ether);
+        assertEq(vat.balanceOf(address(vow)),    0 ether);
         flip.tend(auction, 50 ether, rad( 1 ether));
+        assertEq(cat.litter(), rad(75 ether));
+        assertEq(vat.balanceOf(address(this)), 149 ether);
         flip.tend(auction, 50 ether, rad(75 ether));
+        assertEq(vat.balanceOf(address(this)), 75 ether);
+
+        assertEq(gem("gold", address(this)),  900 ether);
+        flip.dent(auction, 25 ether, rad(75 ether));
+        assertEq(cat.litter(), rad(75 ether));
+        assertEq(vat.balanceOf(address(this)), 75 ether);
+        assertEq(gem("gold", address(this)), 925 ether);
+        assertEq(vow.sin(now), rad(75 ether));
+
+        hevm.warp(now + 4 hours);
+        flip.deal(auction);
+        assertEq(cat.litter(), 0);
+        assertEq(gem("gold", address(this)),  950 ether);
+        assertEq(vat.balanceOf(address(this)), 75 ether);
+        assertEq(vat.balanceOf(address(vow)),  75 ether);
     }
 
     function test_floppy_bite() public {

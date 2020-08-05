@@ -138,10 +138,10 @@ contract Cat is LibNote {
         require(spot > 0 && mul(ink, spot) < mul(art, rate), "Cat/not-unsafe");
         require(litter < box, "Cat/liquidation-limit-hit");
 
-        Ilk memory ilkS = ilks[ilk];
+        Ilk memory milk = ilks[ilk];
 
-        uint limit = min(ilkS.lump, sub(box, litter));
-        uint fart = min(art, mul(limit / rate, RAY) / ilkS.chop);
+        uint limit = min(milk.lump, sub(box, litter));
+        uint fart = min(art, mul(limit / rate, RAY) / milk.chop);
         uint lot = min(ink, mul(ink, fart) / art);
 
         require(lot <= 2**255 && fart <= 2**255, "Cat/overflow");
@@ -151,10 +151,10 @@ contract Cat is LibNote {
         { // Avoid stack too deep
             // Accumulate litter in the box
             // TODO: Review if we need to do / RAY first due possible overflow
-            uint tab = mul(mul(fart, rate), ilkS.chop) / RAY;
+            uint tab = mul(mul(fart, rate), milk.chop) / RAY;
             litter = add(litter, tab);
 
-            id = Kicker(ilkS.flip).kick({
+            id = Kicker(milk.flip).kick({
                 urn: urn,
                 gal: address(vow),
                 tab: tab,
@@ -163,7 +163,7 @@ contract Cat is LibNote {
             });
         }
 
-        emit Bite(ilk, urn, lot, fart, mul(fart, rate), ilkS.flip, id);
+        emit Bite(ilk, urn, lot, fart, mul(fart, rate), milk.flip, id);
     }
 
     function scoop(uint poop) external note auth {
