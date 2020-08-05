@@ -161,10 +161,11 @@ contract EndTest is DSTest {
 
         vat.rely(address(gemA));
 
-        Flipper flip = new Flipper(address(vat), name);
+        Flipper flip = new Flipper(address(vat), address(cat), name);
         vat.hope(address(flip));
         flip.rely(address(end));
         flip.rely(address(cat));
+        cat.rely(address(flip));
         cat.file(name, "flip", address(flip));
         cat.file(name, "chop", ray(1 ether));
         cat.file(name, "lump", rad(15 ether));

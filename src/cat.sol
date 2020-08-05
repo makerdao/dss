@@ -62,6 +62,8 @@ contract Cat is LibNote {
 
     mapping (bytes32 => Ilk) public ilks;
 
+    uint256 public box;  // Max Dai out for liquidation [rad]
+    uint256 public litter;  // Balance of Dai out for liquidation [rad]
     uint256 public live;  // Active Flag
     VatLike public vat;   // CDP Engine
     VowLike public vow;   // Debt Engine
@@ -81,25 +83,48 @@ contract Cat is LibNote {
     constructor(address vat_) public {
         wards[msg.sender] = 1;
         vat = VatLike(vat_);
+        box = 10 * MLN * RAD;
         live = 1;
     }
 
     // --- Math ---
-    uint constant ONE = 10 ** 27;
+    uint constant WAD = 10 ** 18;
+    uint constant RAY = 10 ** 27;
+    uint constant RAD = 10 ** 45;
+    uint constant MLN = 10 **  6;
 
+    function min(uint x, uint y) internal pure returns (uint z) {
+        if (x > y) { z = y; } else { z = x; }
+    }
+    function add(uint x, uint y) internal pure returns (uint z) {
+        require((z = x + y) >= x);
+    }
+    function sub(uint x, uint y) internal pure returns (uint z) {
+        require((z = x - y) <= x);
+    }
     function mul(uint x, uint y) internal pure returns (uint z) {
         require(y == 0 || (z = x * y) / y == x);
     }
-    function rmul(uint x, uint y) internal pure returns (uint z) {
-        z = mul(x, y) / ONE;
+    function wmul(uint x, uint y) internal pure returns (uint z) {
+        z = mul(x, y) / WAD;
     }
-    function min(uint x, uint y) internal pure returns (uint z) {
-        if (x > y) { z = y; } else { z = x; }
+    function rmul(uint x, uint y) internal pure returns (uint z) {
+        z = mul(x, y) / RAY;
+    }
+    function wdiv(uint x, uint y) internal pure returns (uint z) {
+        z = mul(x, WAD) / y;
+    }
+    function rdiv(uint x, uint y) internal pure returns (uint z) {
+        z = mul(x, RAY) / y;
     }
 
     // --- Administration ---
     function file(bytes32 what, address data) external note auth {
         if (what == "vow") vow = VowLike(data);
+        else revert("Cat/file-unrecognized-param");
+    }
+    function file(bytes32 what, uint data) external note auth {
+        if (what == "box") box = data;
         else revert("Cat/file-unrecognized-param");
     }
     function file(bytes32 ilk, bytes32 what, uint data) external note auth {
@@ -118,27 +143,55 @@ contract Cat is LibNote {
 
     // --- CDP Liquidation ---
     function bite(bytes32 ilk, address urn) external returns (uint id) {
-        (, uint rate, uint spot) = vat.ilks(ilk);
+        // NOTE: because of stack-depth limits, we need to re-use num in this
+        // function.  At the start, num is spot, then later becomes lot.
+
+        // num is spot
+        (, uint rate, uint num) = vat.ilks(ilk);
         (uint ink, uint art) = vat.urns(ilk, urn);
 
         require(live == 1, "Cat/not-live");
-        require(spot > 0 && mul(ink, spot) < mul(art, rate), "Cat/not-unsafe");
+        require(num > 0 && mul(ink, num) < mul(art, rate), "Cat/not-unsafe");
+        require(litter < box, "Cat/liquidation-limit-hit");
 
-        uint lot = min(ink, ilks[ilk].lump);
-        art      = min(art, mul(lot, art) / ink);
+        // num is now lot
+        num = min(ink, ilks[ilk].lump);
+        art = min(art, mul(num, art) / ink);
 
-        require(lot <= 2**255 && art <= 2**255, "Cat/overflow");
-        vat.grab(ilk, urn, address(this), address(vow), -int(lot), -int(art));
+        //
+        //       ([box - litter] / chop)
+        // art = ----------------------
+        //               rate
+        //
+        // pick a fractional art that doesn't put us over box
+        uint fart = min(
+            art, rdiv((sub(box, litter) / ilks[ilk].chop), rate)
+      //WAD=WAD, WAD       RAD, RAD     / RAY            / RAY
+        );
+        num = min(num, wmul(num, wdiv(fart, art)));
+      //WAD     WAD, WAD
 
-        vow.fess(mul(art, rate));
-        id = Kicker(ilks[ilk].flip).kick({ urn: urn
-                                         , gal: address(vow)
-                                         , tab: rmul(mul(art, rate), ilks[ilk].chop)
-                                         , lot: lot
-                                         , bid: 0
-                                         });
+        // accumulate litter in the box
+        litter = add(litter, rmul(mul(fart, rate), ilks[ilk].chop));
+      //RAD          RAD   , RAD  RAD WAD , RAY  , RAY
 
-        emit Bite(ilk, urn, lot, art, mul(art, rate), ilks[ilk].flip, id);
+        require(num <= 2**255 && fart <= 2**255, "Cat/overflow");
+        vat.grab(ilk, urn, address(this), address(vow), -int(num), -int(fart));
+
+        vow.fess(mul(fart, rate));
+        id = Kicker(ilks[ilk].flip).kick({
+            urn: urn,
+            gal: address(vow),
+            tab: rmul(mul(fart, rate), ilks[ilk].chop),
+            lot: num,
+            bid: 0
+        });
+
+        emit Bite(ilk, urn, num, fart, mul(fart, rate), ilks[ilk].flip, id);
+    }
+
+    function scoop(uint poop) external note auth {
+        litter = sub(litter, poop);
     }
 
     function cage() external note auth {

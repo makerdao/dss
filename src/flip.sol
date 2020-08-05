@@ -24,6 +24,10 @@ interface VatLike {
     function flux(bytes32,address,address,uint) external;
 }
 
+contract CatLike {
+    function scoop(uint) external;
+}
+
 /*
    This thing lets you flip some gems for a given amount of dai.
    Once the given amount of dai is raised, gems are forgone instead.
@@ -62,8 +66,9 @@ contract Flipper is LibNote {
 
     mapping (uint => Bid) public bids;
 
-    VatLike public   vat;
-    bytes32 public   ilk;
+    CatLike public   cat;   // cat liquidation module
+    VatLike public   vat;   // vat core accounting
+    bytes32 public   ilk;   // collateral type
 
     uint256 constant ONE = 1.00E18;
     uint256 public   beg = 1.05E18;  // 5% minimum bid increase
@@ -82,8 +87,9 @@ contract Flipper is LibNote {
     );
 
     // --- Init ---
-    constructor(address vat_, bytes32 ilk_) public {
+    constructor(address vat_, address cat_, bytes32 ilk_) public {
         vat = VatLike(vat_);
+        cat = CatLike(cat_);
         ilk = ilk_;
         wards[msg.sender] = 1;
     }
@@ -101,6 +107,10 @@ contract Flipper is LibNote {
         if (what == "beg") beg = data;
         else if (what == "ttl") ttl = uint48(data);
         else if (what == "tau") tau = uint48(data);
+        else revert("Flipper/file-unrecognized-param");
+    }
+    function file(bytes32 what, address data) external note auth {
+        if (what == "cat") cat = CatLike(data);
         else revert("Flipper/file-unrecognized-param");
     }
 
@@ -143,6 +153,7 @@ contract Flipper is LibNote {
             bids[id].guy = msg.sender;
         }
         vat.move(msg.sender, bids[id].gal, bid - bids[id].bid);
+        cat.scoop(bid - bids[id].bid);
 
         bids[id].bid = bid;
         bids[id].tic = add(uint48(now), ttl);
@@ -177,6 +188,7 @@ contract Flipper is LibNote {
         require(bids[id].bid < bids[id].tab, "Flipper/already-dent-phase");
         vat.flux(ilk, address(this), msg.sender, bids[id].lot);
         vat.move(msg.sender, bids[id].guy, bids[id].bid);
+        cat.scoop(bids[id].bid);
         delete bids[id];
     }
 }

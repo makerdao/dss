@@ -3,6 +3,7 @@ pragma solidity >=0.5.12;
 import "ds-test/test.sol";
 
 import {Vat}     from "../vat.sol";
+import {Cat}     from "../cat.sol";
 import {Flipper} from "../flip.sol";
 
 interface Hevm {
@@ -61,6 +62,15 @@ contract Guy {
 
 contract Gal {}
 
+contract Cat_ is Cat {
+    uint256 constant public RAD = 10 ** 45;
+    uint256 constant public MLN = 10 **  6;
+
+    constructor(address vat_) Cat(vat_) public {
+        litter = 5 * MLN * RAD;
+    }
+}
+
 contract Vat_ is Vat {
     function mint(address usr, uint wad) public {
         dai[usr] += wad;
@@ -81,6 +91,7 @@ contract FlipTest is DSTest {
     Hevm hevm;
 
     Vat_    vat;
+    Cat_    cat;
     Flipper flip;
 
     address ali;
@@ -93,11 +104,13 @@ contract FlipTest is DSTest {
         hevm.warp(604411200);
 
         vat = new Vat_();
+        cat = new Cat_(address(vat));
 
         vat.init("gems");
         vat.set_ilk("gems");
 
-        flip = new Flipper(address(vat), "gems");
+        flip = new Flipper(address(vat), address(cat), "gems");
+        cat.rely(address(flip));
 
         ali = address(new Guy(flip));
         bob = address(new Guy(flip));

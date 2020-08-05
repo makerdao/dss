@@ -505,8 +505,9 @@ contract BiteTest is DSTest {
         vat.file("gold", "spot", ray(1 ether));
         vat.file("gold", "line", rad(1000 ether));
         vat.file("Line",         rad(1000 ether));
-        flip = new Flipper(address(vat), "gold");
+        flip = new Flipper(address(vat), address(cat), "gold");
         flip.rely(address(cat));
+        cat.rely(address(flip));
         cat.file("gold", "flip", address(flip));
         cat.file("gold", "chop", ray(1 ether));
 
