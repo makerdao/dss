@@ -99,6 +99,10 @@ contract FlipTest is DSTest {
     address gal;
     address usr = address(0xacab);
 
+    uint256 constant public RAY = 10 ** 27;
+    uint256 constant public RAD = 10 ** 45;
+    uint256 constant public MLN = 10 **  6;
+
     function setUp() public {
         hevm = Hevm(0x7109709ECfa91a80626fF3989D68f67F5b1DD12D);
         hevm.warp(604411200);
@@ -123,6 +127,9 @@ contract FlipTest is DSTest {
         vat.slip("gems", address(this), 1000 ether);
         vat.mint(ali, 200 ether);
         vat.mint(bob, 200 ether);
+    }
+    function rad(uint wad) internal pure returns (uint) {
+        return wad * 10 ** 27;
     }
     function test_kick() public {
         flip.kick({ lot: 100 ether
@@ -293,24 +300,33 @@ contract FlipTest is DSTest {
     }
     function test_yank_tend() public {
         uint id = flip.kick({ lot: 100 ether
-                            , tab: 50 ether
+                            , tab: rad(50 ether)
                             , usr: usr
                             , gal: gal
                             , bid: 0
                             });
 
         Guy(ali).tend(id, 100 ether, 1 ether);
+
         // bid taken from bidder
-        assertEq(vat.dai_balance(ali),   199 ether);
-        assertEq(vat.dai_balance(gal),     1 ether);
+        assertEq(vat.dai_balance(ali), 199 ether);
+        assertEq(vat.dai_balance(gal),   1 ether);
+
+        // we have some amount of litter in the box
+        assertEq(cat.litter(), 5 * MLN * RAD);
 
         vat.mint(address(this), 1 ether);
         flip.yank(id);
+
         // bid is refunded to bidder from caller
         assertEq(vat.dai_balance(ali),            200 ether);
         assertEq(vat.dai_balance(address(this)),    0 ether);
+
         // gems go to caller
         assertEq(vat.gem_balance(address(this)), 1000 ether);
+
+        // cat.scoop(tab) is called decrementing the litter accumulator
+        assertEq(cat.litter(), (5 * MLN * RAD) - rad(50 ether));
     }
     function test_yank_dent() public {
         uint id = flip.kick({ lot: 100 ether
@@ -319,11 +335,18 @@ contract FlipTest is DSTest {
                             , gal: gal
                             , bid: 0
                             });
+
+        // we have some amount of litter in the box
+        assertEq(cat.litter(), 5 * MLN * RAD);
+
         Guy(ali).tend(id, 100 ether,  1 ether);
         Guy(bob).tend(id, 100 ether, 50 ether);
         Guy(ali).dent(id,  95 ether, 50 ether);
 
         // cannot yank in the dent phase
         assertTrue(!Guy(ali).try_yank(id));
+
+        // we have same amount of litter in the box
+        assertEq(cat.litter(), 5 * MLN * RAD);
     }
 }

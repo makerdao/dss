@@ -57,6 +57,7 @@ contract Cat is LibNote {
     struct Ilk {
         address flip;  // Liquidator
         uint256 chop;  // Liquidation Penalty  [ray]
+        // TODO(cmooney): test me
         uint256 lump;  // Liquidation Quantity [rad]
     }
 
@@ -93,6 +94,7 @@ contract Cat is LibNote {
     uint256 constant RAY = 10 ** 27;
     uint256 constant RAD = 10 ** 45;
 
+    // TODO(cmooney): test me
     uint256 constant MAX_LUMP = uint256(-1) / RAY;
 
     function min(uint256 x, uint256 y) internal pure returns (uint256 z) {
@@ -113,12 +115,14 @@ contract Cat is LibNote {
         if (what == "vow") vow = VowLike(data);
         else revert("Cat/file-unrecognized-param");
     }
+    // TODO(cmooney): test me
     function file(bytes32 what, uint256 data) external note auth {
         if (what == "box") box = data;
         else revert("Cat/file-unrecognized-param");
     }
     function file(bytes32 ilk, bytes32 what, uint256 data) external note auth {
         if (what == "chop") ilks[ilk].chop = data;
+        // TODO(cmooney): test me
         else if (what == "lump" && data <= MAX_LUMP) ilks[ilk].lump = data;
         else revert("Cat/file-unrecognized-param");
     }
@@ -138,6 +142,7 @@ contract Cat is LibNote {
 
         require(live == 1, "Cat/not-live");
         require(spot > 0 && mul(ink, spot) < mul(art, rate), "Cat/not-unsafe");
+        // TODO(cmooney): test me
         require(litter < box, "Cat/liquidation-limit-hit");
 
         Ilk memory milk = ilks[ilk];

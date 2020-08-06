@@ -61,7 +61,7 @@ contract Flipper is LibNote {
         uint48  end;  // auction expiry time      [unix epoch time]
         address usr;
         address gal;
-        uint256 tab;  // total dai wanted    [rad]
+        uint256 tab;  // total dai wanted         [rad]
     }
 
     mapping (uint256 => Bid) public bids;
@@ -186,6 +186,7 @@ contract Flipper is LibNote {
     function yank(uint256 id) external note auth {
         require(bids[id].guy != address(0), "Flipper/guy-not-set");
         require(bids[id].bid < bids[id].tab, "Flipper/already-dent-phase");
+        // TODO(cmooney): test me
         cat.scoop(bids[id].tab);
         vat.flux(ilk, address(this), msg.sender, bids[id].lot);
         vat.move(msg.sender, bids[id].guy, bids[id].bid);
