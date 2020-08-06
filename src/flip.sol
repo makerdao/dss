@@ -64,7 +64,7 @@ contract Flipper is LibNote {
         uint256 tab;  // total dai wanted    [rad]
     }
 
-    mapping (uint => Bid) public bids;
+    mapping (uint256 => Bid) public bids;
 
     CatLike public   cat;   // cat liquidation module
     VatLike public   vat;   // vat core accounting
@@ -98,12 +98,12 @@ contract Flipper is LibNote {
     function add(uint48 x, uint48 y) internal pure returns (uint48 z) {
         require((z = x + y) >= x);
     }
-    function mul(uint x, uint y) internal pure returns (uint z) {
+    function mul(uint256 x, uint256 y) internal pure returns (uint256 z) {
         require(y == 0 || (z = x * y) / y == x);
     }
 
     // --- Admin ---
-    function file(bytes32 what, uint data) external note auth {
+    function file(bytes32 what, uint256 data) external note auth {
         if (what == "beg") beg = data;
         else if (what == "ttl") ttl = uint48(data);
         else if (what == "tau") tau = uint48(data);
@@ -115,8 +115,8 @@ contract Flipper is LibNote {
     }
 
     // --- Auction ---
-    function kick(address usr, address gal, uint tab, uint lot, uint bid)
-        public auth returns (uint id)
+    function kick(address usr, address gal, uint256 tab, uint256 lot, uint256 bid)
+        public auth returns (uint256 id)
     {
         require(kicks < uint(-1), "Flipper/overflow");
         id = ++kicks;
@@ -133,12 +133,12 @@ contract Flipper is LibNote {
 
         emit Kick(id, lot, bid, tab, usr, gal);
     }
-    function tick(uint id) external note {
+    function tick(uint256 id) external note {
         require(bids[id].end < now, "Flipper/not-finished");
         require(bids[id].tic == 0, "Flipper/bid-already-placed");
         bids[id].end = add(uint48(now), tau);
     }
-    function tend(uint id, uint lot, uint bid) external note {
+    function tend(uint256 id, uint256 lot, uint256 bid) external note {
         require(bids[id].guy != address(0), "Flipper/guy-not-set");
         require(bids[id].tic > now || bids[id].tic == 0, "Flipper/already-finished-tic");
         require(bids[id].end > now, "Flipper/already-finished-end");
@@ -157,7 +157,7 @@ contract Flipper is LibNote {
         bids[id].bid = bid;
         bids[id].tic = add(uint48(now), ttl);
     }
-    function dent(uint id, uint lot, uint bid) external note {
+    function dent(uint256 id, uint256 lot, uint256 bid) external note {
         require(bids[id].guy != address(0), "Flipper/guy-not-set");
         require(bids[id].tic > now || bids[id].tic == 0, "Flipper/already-finished-tic");
         require(bids[id].end > now, "Flipper/already-finished-end");
@@ -176,14 +176,14 @@ contract Flipper is LibNote {
         bids[id].lot = lot;
         bids[id].tic = add(uint48(now), ttl);
     }
-    function deal(uint id) external note {
+    function deal(uint256 id) external note {
         require(bids[id].tic != 0 && (bids[id].tic < now || bids[id].end < now), "Flipper/not-finished");
         cat.scoop(bids[id].tab);
         vat.flux(ilk, address(this), bids[id].guy, bids[id].lot);
         delete bids[id];
     }
 
-    function yank(uint id) external note auth {
+    function yank(uint256 id) external note auth {
         require(bids[id].guy != address(0), "Flipper/guy-not-set");
         require(bids[id].bid < bids[id].tab, "Flipper/already-dent-phase");
         cat.scoop(bids[id].tab);

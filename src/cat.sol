@@ -20,7 +20,7 @@ pragma solidity >=0.5.12;
 import "./lib.sol";
 
 interface Kicker {
-    function kick(address urn, address gal, uint tab, uint lot, uint bid)
+    function kick(address urn, address gal, uint256 tab, uint256 lot, uint256 bid)
         external returns (uint);
 }
 
@@ -88,23 +88,23 @@ contract Cat is LibNote {
     }
 
     // --- Math ---
-    uint constant MLN = 10 **  6;
-    uint constant WAD = 10 ** 18;
-    uint constant RAY = 10 ** 27;
-    uint constant RAD = 10 ** 45;
+    uint256 constant MLN = 10 **  6;
+    uint256 constant WAD = 10 ** 18;
+    uint256 constant RAY = 10 ** 27;
+    uint256 constant RAD = 10 ** 45;
 
-    uint constant MAX_LUMP = uint(-1) / RAY;
+    uint256 constant MAX_LUMP = uint(-1) / RAY;
 
-    function min(uint x, uint y) internal pure returns (uint z) {
+    function min(uint256 x, uint256 y) internal pure returns (uint256 z) {
         if (x > y) { z = y; } else { z = x; }
     }
-    function add(uint x, uint y) internal pure returns (uint z) {
+    function add(uint256 x, uint256 y) internal pure returns (uint256 z) {
         require((z = x + y) >= x);
     }
-    function sub(uint x, uint y) internal pure returns (uint z) {
+    function sub(uint256 x, uint256 y) internal pure returns (uint256 z) {
         require((z = x - y) <= x);
     }
-    function mul(uint x, uint y) internal pure returns (uint z) {
+    function mul(uint256 x, uint256 y) internal pure returns (uint256 z) {
         require(y == 0 || (z = x * y) / y == x);
     }
 
@@ -113,11 +113,11 @@ contract Cat is LibNote {
         if (what == "vow") vow = VowLike(data);
         else revert("Cat/file-unrecognized-param");
     }
-    function file(bytes32 what, uint data) external note auth {
+    function file(bytes32 what, uint256 data) external note auth {
         if (what == "box") box = data;
         else revert("Cat/file-unrecognized-param");
     }
-    function file(bytes32 ilk, bytes32 what, uint data) external note auth {
+    function file(bytes32 ilk, bytes32 what, uint256 data) external note auth {
         if (what == "chop") ilks[ilk].chop = data;
         else if (what == "lump" && data <= MAX_LUMP) ilks[ilk].lump = data;
         else revert("Cat/file-unrecognized-param");
@@ -132,9 +132,9 @@ contract Cat is LibNote {
     }
 
     // --- CDP Liquidation ---
-    function bite(bytes32 ilk, address urn) external returns (uint id) {
-        (, uint rate, uint spot) = vat.ilks(ilk);
-        (uint ink, uint art) = vat.urns(ilk, urn);
+    function bite(bytes32 ilk, address urn) external returns (uint256 id) {
+        (, uint256 rate, uint256 spot) = vat.ilks(ilk);
+        (uint256 ink, uint256 art) = vat.urns(ilk, urn);
 
         require(live == 1, "Cat/not-live");
         require(spot > 0 && mul(ink, spot) < mul(art, rate), "Cat/not-unsafe");
@@ -142,7 +142,7 @@ contract Cat is LibNote {
 
         Ilk memory milk = ilks[ilk];
 
-        uint limit = min(milk.lump, sub(box, litter));
+        uint256 limit = min(milk.lump, sub(box, litter));
         //   RAD   = RAD(RAD      , RAD(RAD, RAD   ))
         //
         //       limit / rate
@@ -150,9 +150,9 @@ contract Cat is LibNote {
         //           chop
         //
         // pick a fractional art that doesn't fill the box
-        uint fart = min(art, mul(limit, RAY) / rate / milk.chop);
+        uint256 fart = min(art, mul(limit, RAY) / rate / milk.chop);
         //   WAD  = WAD(WAD,WAD=(RAD  , RAY, RAY) / RAY      )
-        uint fink = min(ink, mul(ink, fart) / art);
+        uint256 fink = min(ink, mul(ink, fart) / art);
         //   WAD = WAD(WAD, WAD(WAD, WAD ) / WAD)
 
         require(fink <= 2**255 && fart <= 2**255, "Cat/overflow");
@@ -162,7 +162,7 @@ contract Cat is LibNote {
         { // Avoid stack too deep
             // Accumulate litter in the box
             // TODO: Review if we need to do / RAY first due possible overflow
-            uint tab = mul(mul(fart, rate), milk.chop) / RAY;
+            uint256 tab = mul(mul(fart, rate), milk.chop) / RAY;
             //   RAD =     RAD(WAD,   RAY), RAY      ) / RAY
             litter = add(litter, tab);
 
@@ -178,7 +178,7 @@ contract Cat is LibNote {
         emit Bite(ilk, urn, fink, fart, mul(fart, rate), milk.flip, id);
     }
 
-    function scoop(uint poop) external note auth {
+    function scoop(uint256 poop) external note auth {
         litter = sub(litter, poop);
     }
 
