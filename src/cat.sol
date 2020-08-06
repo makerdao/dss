@@ -93,6 +93,8 @@ contract Cat is LibNote {
     uint constant RAY = 10 ** 27;
     uint constant RAD = 10 ** 45;
 
+    uint constant MAX_LUMP = uint(-1) / RAY;
+
     function min(uint x, uint y) internal pure returns (uint z) {
         if (x > y) { z = y; } else { z = x; }
     }
@@ -117,7 +119,7 @@ contract Cat is LibNote {
     }
     function file(bytes32 ilk, bytes32 what, uint data) external note auth {
         if (what == "chop") ilks[ilk].chop = data;
-        else if (what == "lump") ilks[ilk].lump = data;
+        else if (what == "lump" && data <= MAX_LUMP) ilks[ilk].lump = data;
         else revert("Cat/file-unrecognized-param");
     }
     function file(bytes32 ilk, bytes32 what, address flip) external note auth {
@@ -141,29 +143,39 @@ contract Cat is LibNote {
         Ilk memory milk = ilks[ilk];
 
         uint limit = min(milk.lump, sub(box, litter));
-        uint fart = min(art, mul(limit / rate, RAY) / milk.chop);
-        uint lot = min(ink, mul(ink, fart) / art);
+        //   RAD   = RAD(RAD      , RAD(RAD, RAD   ))
+        //
+        //       limit / rate
+        // art = ------------
+        //           chop
+        //
+        // pick a fractional art that doesn't fill the box
+        uint fart = min(art, mul(limit, RAY) / rate / milk.chop);
+        //   WAD  = WAD(WAD,WAD=(RAD  , RAY, RAY) / RAY      )
+        uint fink = min(ink, mul(ink, fart) / art);
+        //   WAD = WAD(WAD, WAD(WAD, WAD ) / WAD)
 
-        require(lot <= 2**255 && fart <= 2**255, "Cat/overflow");
-        vat.grab(ilk, urn, address(this), address(vow), -int(lot), -int(fart));
+        require(fink <= 2**255 && fart <= 2**255, "Cat/overflow");
+        vat.grab(ilk, urn, address(this), address(vow), -int(fink), -int(fart));
         vow.fess(mul(fart, rate));
 
         { // Avoid stack too deep
             // Accumulate litter in the box
             // TODO: Review if we need to do / RAY first due possible overflow
             uint tab = mul(mul(fart, rate), milk.chop) / RAY;
+            //   RAD =     RAD(WAD,   RAY), RAY      ) / RAY
             litter = add(litter, tab);
 
             id = Kicker(milk.flip).kick({
                 urn: urn,
                 gal: address(vow),
                 tab: tab,
-                lot: lot,
+                lot: fink,
                 bid: 0
             });
         }
 
-        emit Bite(ilk, urn, lot, fart, mul(fart, rate), milk.flip, id);
+        emit Bite(ilk, urn, fink, fart, mul(fart, rate), milk.flip, id);
     }
 
     function scoop(uint poop) external note auth {
