@@ -21,7 +21,7 @@ import "./lib.sol";
 
 interface Kicker {
     function kick(address urn, address gal, uint256 tab, uint256 lot, uint256 bid)
-        external returns (uint);
+        external returns (uint256);
 }
 
 interface VatLike {
@@ -34,18 +34,18 @@ interface VatLike {
         uint256 ink,  // [wad]
         uint256 art   // [wad]
     );
-    function grab(bytes32,address,address,address,int,int) external;
+    function grab(bytes32,address,address,address,int256,int256) external;
     function hope(address) external;
     function nope(address) external;
 }
 
 interface VowLike {
-    function fess(uint) external;
+    function fess(uint256) external;
 }
 
 contract Cat is LibNote {
     // --- Auth ---
-    mapping (address => uint) public wards;
+    mapping (address => uint256) public wards;
     function rely(address usr) external note auth { wards[usr] = 1; }
     function deny(address usr) external note auth { wards[usr] = 0; }
     modifier auth {
@@ -93,7 +93,7 @@ contract Cat is LibNote {
     uint256 constant RAY = 10 ** 27;
     uint256 constant RAD = 10 ** 45;
 
-    uint256 constant MAX_LUMP = uint(-1) / RAY;
+    uint256 constant MAX_LUMP = uint256(-1) / RAY;
 
     function min(uint256 x, uint256 y) internal pure returns (uint256 z) {
         if (x > y) { z = y; } else { z = x; }
@@ -156,7 +156,7 @@ contract Cat is LibNote {
         //   WAD = WAD(WAD, WAD(WAD, WAD ) / WAD)
 
         require(fink <= 2**255 && fart <= 2**255, "Cat/overflow");
-        vat.grab(ilk, urn, address(this), address(vow), -int(fink), -int(fart));
+        vat.grab(ilk, urn, address(this), address(vow), -int256(fink), -int256(fart));
         vow.fess(mul(fart, rate));
 
         { // Avoid stack too deep

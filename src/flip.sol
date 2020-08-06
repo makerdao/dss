@@ -20,12 +20,12 @@ pragma solidity >=0.5.12;
 import "./lib.sol";
 
 interface VatLike {
-    function move(address,address,uint) external;
-    function flux(bytes32,address,address,uint) external;
+    function move(address,address,uint256) external;
+    function flux(bytes32,address,address,uint256) external;
 }
 
-contract CatLike {
-    function scoop(uint) external;
+interface CatLike {
+    function scoop(uint256) external;
 }
 
 /*
@@ -44,7 +44,7 @@ contract CatLike {
 
 contract Flipper is LibNote {
     // --- Auth ---
-    mapping (address => uint) public wards;
+    mapping (address => uint256) public wards;
     function rely(address usr) external note auth { wards[usr] = 1; }
     function deny(address usr) external note auth { wards[usr] = 0; }
     modifier auth {
@@ -118,7 +118,7 @@ contract Flipper is LibNote {
     function kick(address usr, address gal, uint256 tab, uint256 lot, uint256 bid)
         public auth returns (uint256 id)
     {
-        require(kicks < uint(-1), "Flipper/overflow");
+        require(kicks < uint256(-1), "Flipper/overflow");
         id = ++kicks;
 
         bids[id].bid = bid;
