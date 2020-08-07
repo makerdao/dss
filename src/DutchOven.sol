@@ -176,6 +176,8 @@ contract Oven {
     }
 
     // buy amt of collateral from auction indexed by id
+    // TODO: Evaluate usage of `max` and `pay` variables.
+    //       Consider using `pay` and `min`.
     function take(uint256 id,           // auction id
                   uint256 amt,          // upper limit on amount of collateral to buy
                   uint256 max,          // maximum acceptable price (DAI / ETH)
