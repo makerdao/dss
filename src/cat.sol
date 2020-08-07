@@ -57,7 +57,6 @@ contract Cat is LibNote {
     struct Ilk {
         address flip;  // Liquidator
         uint256 chop;  // Liquidation Penalty  [ray]
-        // TODO(cmooney): test me
         uint256 lump;  // Liquidation Quantity [rad]
     }
 
@@ -94,7 +93,6 @@ contract Cat is LibNote {
     uint256 constant RAY = 10 ** 27;
     uint256 constant RAD = 10 ** 45;
 
-    // TODO(cmooney): test me
     uint256 constant MAX_LUMP = uint256(-1) / RAY;
 
     function min(uint256 x, uint256 y) internal pure returns (uint256 z) {
@@ -115,14 +113,12 @@ contract Cat is LibNote {
         if (what == "vow") vow = VowLike(data);
         else revert("Cat/file-unrecognized-param");
     }
-    // TODO(cmooney): test me
     function file(bytes32 what, uint256 data) external note auth {
         if (what == "box") box = data;
         else revert("Cat/file-unrecognized-param");
     }
     function file(bytes32 ilk, bytes32 what, uint256 data) external note auth {
         if (what == "chop") ilks[ilk].chop = data;
-        // TODO(cmooney): test me
         else if (what == "lump" && data <= MAX_LUMP) ilks[ilk].lump = data;
         else revert("Cat/file-unrecognized-param");
     }
@@ -148,7 +144,7 @@ contract Cat is LibNote {
         Ilk memory milk = ilks[ilk];
 
         uint256 limit = min(milk.lump, sub(box, litter));
-        //   RAD   = RAD(RAD      , RAD(RAD, RAD   ))
+        //        RAD = RAD(RAD      , RAD(RAD, RAD   ))
         //
         //       limit / rate
         // art = ------------
@@ -156,9 +152,9 @@ contract Cat is LibNote {
         //
         // pick a fractional art that doesn't fill the box
         uint256 fart = min(art, mul(limit, RAY) / rate / milk.chop);
-        //   WAD  = WAD(WAD,WAD=(RAD  , RAY, RAY) / RAY      )
+        //       WAD = WAD(WAD,WAD=(RAD  , RAY, RAY) / RAY      )
         uint256 fink = min(ink, mul(ink, fart) / art);
-        //   WAD = WAD(WAD, WAD(WAD, WAD ) / WAD)
+        //       WAD = WAD(WAD, WAD(WAD, WAD ) / WAD)
 
         require(fink <= 2**255 && fart <= 2**255, "Cat/overflow");
         vat.grab(ilk, urn, address(this), address(vow), -int256(fink), -int256(fart));
@@ -168,8 +164,9 @@ contract Cat is LibNote {
             // Accumulate litter in the box
             // TODO: Review if we need to do / RAY first due possible overflow
             uint256 tab = mul(mul(fart, rate), milk.chop) / RAY;
-            //   RAD =     RAD(WAD,   RAY), RAY      ) / RAY
+            //      RAD =     RAD(WAD,   RAY), RAY      ) / RAY
             litter = add(litter, tab);
+            // RAD = RAD(RAD   , RAD)
 
             id = Kicker(milk.flip).kick({
                 urn: urn,

@@ -186,7 +186,6 @@ contract Flipper is LibNote {
     function yank(uint256 id) external note auth {
         require(bids[id].guy != address(0), "Flipper/guy-not-set");
         require(bids[id].bid < bids[id].tab, "Flipper/already-dent-phase");
-        // TODO(cmooney): test me
         cat.scoop(bids[id].tab);
         vat.flux(ilk, address(this), msg.sender, bids[id].lot);
         vat.move(msg.sender, bids[id].guy, bids[id].bid);
