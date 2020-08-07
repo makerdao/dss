@@ -138,7 +138,6 @@ contract Cat is LibNote {
 
         require(live == 1, "Cat/not-live");
         require(spot > 0 && mul(ink, spot) < mul(art, rate), "Cat/not-unsafe");
-        // TODO(cmooney): test me
         require(litter < box, "Cat/liquidation-limit-hit");
 
         Ilk memory milk = ilks[ilk];
