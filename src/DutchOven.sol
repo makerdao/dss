@@ -53,19 +53,18 @@ contract Oven {
     uint256  public dust;  // minimum tab in an auction; read from Vat instead??? [rad]
     uint256  public step;  // length of time between price drops                  [seconds]
     uint256  public cut;   // per-step multiplicative decrease in price           [ray]
+    uint256  public bakes; // bake count
 
     struct Loaf {
         uint256 tab;  // dai to raise
         uint256 lot;  // eth to sell
         address usr;  // liquidated CDP
-        uint96  tic;  // auction start time
+        uint48  tic;  // auction start time
         uint256 top;  // starting price
     }
     mapping(uint256 => Loaf) public loaves;
 
-    uint256 bakes;
-
-    uint256 locked;
+    uint256 internal locked;
 
     // --- Events ---
     event Bake(
@@ -79,7 +78,8 @@ contract Oven {
     constructor(address vat_, bytes32 ilk_) public {
         vat = VatLike(vat_);
         ilk = ilk_;
-        cut = ONE;
+        cut = RAY;
+        step = 1;
         wards[msg.sender] = 1;
     }
 
@@ -92,7 +92,7 @@ contract Oven {
 
     // --- Administration ---
     function file(bytes32 what, uint256 data) external {
-        if      (what ==  "cut") require((cut = data) <= ONE, "Oven/cut-greater-than-ONE");
+        if      (what ==  "cut") require((cut = data) <= RAY, "Oven/cut-gt-RAY");
         else if (what == "step") step = data;
         else if (what ==  "buf") buf  = data;
         else if (what == "dust") dust = data;
@@ -100,25 +100,23 @@ contract Oven {
     }
 
     // --- Math ---
-    uint256 constant ONE = 10 ** 27;
+    uint256 constant RAY = 10 ** 27;
+    uint256 constant BLN = 10 ** 9;
+
     function min(uint x, uint y) internal pure returns (uint z) {
         return x <= y ? x : y;
     }
     function sub(uint x, uint y) internal pure returns (uint z) {
-        z = x - uint(y);
-        require(y <= 0 || z <= x);
-        require(y >= 0 || z >= x);
+        require((z = x - y) <= x);
     }
     function mul(uint x, uint y) internal pure returns (uint z) {
         require(y == 0 || (z = x * y) / y == x);
     }
     function rmul(uint x, uint y) internal pure returns (uint z) {
-        z = x * y;
-        require(y == 0 || z / y == x);
-        z = z / ONE;
+        z = mul(x, y) / RAY;
     }
     function rdiv(uint x, uint y) internal pure returns (uint z) {
-        z = mul(x, ONE) / y;
+        z = mul(x, RAY) / y;
     }
     // optimized version from dss PR #78
     function rpow(uint x, uint n, uint b) internal pure returns (uint z) {
@@ -154,35 +152,37 @@ contract Oven {
     function bake(uint256 tab,  // debt
                   uint256 lot,  // collateral
                   address usr   // liquidated vault
-    ) external auth returns (uint256 id) { 
+    ) external auth returns (uint256 id) {
         require(bakes < uint(-1), "Oven/overflow");
         id = ++bakes;
 
         // Caller must hope on the Oven
         vat.flux(ilk, msg.sender, address(this), lot);
 
-        // TODO: require tab non-dusty? might get into an annoying situation where some CDPs cannot be liquidated
         loaves[id].tab = tab;
         loaves[id].lot = lot;
         loaves[id].usr = usr;
-        loaves[id].tic = uint96(now);
+        loaves[id].tic = uint48(now);
 
-        // could get this from rmul(Vat.ilks(ilk).spot, Spotter.mat()) instead, but if mat has changed since the
-        // last poke, the resulting value will be incorrect
+        // could get this from rmul(Vat.ilks(ilk).spot, Spotter.mat()) instead,
+        // but if mat has changed since the last poke, the resulting value will
+        // be incorrect.
         (PipLike pip, ) = spot.ilks(ilk);
         (bytes32 val, bool has) = pip.peek();
         require(has, "Oven/invalid-price");
-        loaves[id].top = rmul(rdiv(mul(uint256(val), 10 ** 9), spot.par()), buf);
+        loaves[id].top = rmul(rdiv(mul(uint256(val), BLN), spot.par()), buf);
 
         emit Bake(id, tab, lot, usr);
     }
 
     // buy amt of collateral from auction indexed by id
+    // TODO: Evaluate usage of `max` and `pay` variables.
+    //       Consider using `pay` and `min`.
     function take(uint256 id,           // auction id
                   uint256 amt,          // upper limit on amount of collateral to buy
                   uint256 max,          // maximum acceptable price (DAI / ETH)
                   address who,          // who will receive the collateral and pay the debt
-                  bytes calldata data   // 
+                  bytes calldata data   //
     ) external lock {
         // read auction data
         Loaf memory loaf = loaves[id];
@@ -197,14 +197,14 @@ contract Oven {
         uint256 slice = min(loaf.lot, amt);
 
         // DAI needed to buy a slice of this loaf
-        uint256 owe = mul(slice, pay);
+        uint256 owe = mul(slice, max);
 
         // don't collect more than tab of DAI
         if (owe > loaf.tab) {
             owe = loaf.tab;
 
             // readjust slice
-            slice = owe / pay;
+            slice = owe / max;
         }
 
         // Calculate missing tab after operation
@@ -240,13 +240,13 @@ contract Oven {
 
     // returns the current price of the specified auction [ray]
     function price(uint256 id) external returns (uint256) {
-        (,,, uint96 tic, uint256 top) = this.loaves(id);
+        (,,, uint48 tic, uint256 top) = this.loaves(id);
         return price(tic, top);
     }
 
     // returns the price adjusted for the amount of elapsed time since tic [ray]
-    function price(uint96 tic, uint256 top) public returns (uint256) {
-        return rmul(top, rpow(cut, sub(now, uint256(tic)) / step, ONE));
+    function price(uint48 tic, uint256 top) public returns (uint256) {
+        return rmul(top, rpow(cut, sub(now, uint256(tic)) / step, RAY));
     }
 
     // --- Shutdown ---
