@@ -83,13 +83,10 @@ contract Cat is LibNote {
     constructor(address vat_) public {
         wards[msg.sender] = 1;
         vat = VatLike(vat_);
-        box = 10 * MLN * RAD;
         live = 1;
     }
 
     // --- Math ---
-    uint256 constant MLN = 10 **  6;
-    uint256 constant WAD = 10 ** 18;
     uint256 constant RAY = 10 ** 27;
     uint256 constant RAD = 10 ** 45;
 
