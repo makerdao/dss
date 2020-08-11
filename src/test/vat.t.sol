@@ -16,6 +16,7 @@ import {Flapper} from './flap.t.sol';
 
 interface Hevm {
     function warp(uint256) external;
+    function store(address,bytes32,bytes32) external;
 }
 
 contract TestVat is Vat {
@@ -535,12 +536,47 @@ contract BiteTest is DSTest {
         assertEq(silverLump, rad(115792 ether));
     }
     function testFail_lump_too_large() public {
-        cat.file("gold", "lump", rad(115793 ether));
+        // 115792.089237316195423570985008687907853269984665640 * RAD + 1
+        cat.file("gold", "lump", uint256(-1) / 10 ** 27 + 1);
     }
     function test_cat_set_box() public {
         assertEq(cat.box(), rad((10 ether) * MLN));
         cat.file("box", rad((20 ether) * MLN));
         assertEq(cat.box(), rad((20 ether) * MLN));
+    }
+    function test_bite_max_lump() public {
+        uint256 MAX_LUMP = uint256(-1) / 10 ** 27;
+        cat.file("gold", "lump", MAX_LUMP);
+        cat.file("box", uint256(-1));
+
+        vat.file("Line", rad(300000 ether));
+        vat.file("gold", "line", rad(300000 ether));
+        vat.file("gold", 'spot', ray(205 ether));
+        vat.frob("gold", me, me, me, 1000 ether, 200000 ether);
+
+        vat.file("gold", 'spot', ray(2 ether));  // now unsafe
+
+        uint256 auction = cat.bite("gold", address(this));
+        (,,,,,,, uint256 tab) = flip.bids(auction);
+        assertEq(tab, MAX_LUMP / 10 ** 27 * 10 ** 27);
+    }
+    function testFail_bite_forced_over_max_lump() public {
+        uint256 MAX_LUMP = uint256(-1) / 10 ** 27;
+        hevm.store(
+            address(cat),
+            bytes32(uint256(keccak256(abi.encode(bytes32("gold"), uint256(1)))) + 2),
+            bytes32(MAX_LUMP + 1)
+        );
+        cat.file("box", uint256(-1));
+
+        vat.file("Line", rad(300000 ether));
+        vat.file("gold", "line", rad(300000 ether));
+        vat.file("gold", 'spot', ray(205 ether));
+        vat.frob("gold", me, me, me, 1000 ether, 200000 ether);
+
+        vat.file("gold", 'spot', ray(2 ether));  // now unsafe
+
+        cat.bite("gold", address(this));
     }
     function test_bite_under_lump() public {
         vat.file("gold", 'spot', ray(2.5 ether));
