@@ -96,6 +96,7 @@ contract EndTest is DSTest {
 
     uint constant WAD = 10 ** 18;
     uint constant RAY = 10 ** 27;
+    uint constant MLN = 10 ** 6;
 
     function ray(uint wad) internal pure returns (uint) {
         return wad * 10 ** 9;
@@ -169,6 +170,7 @@ contract EndTest is DSTest {
         cat.file(name, "flip", address(flip));
         cat.file(name, "chop", ray(1 ether));
         cat.file(name, "lump", rad(25000 ether));
+        cat.file("box", rad((10 ether) * MLN));
 
         ilks[name].pip = pip;
         ilks[name].gem = coin;
