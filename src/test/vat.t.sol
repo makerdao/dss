@@ -530,7 +530,7 @@ contract BiteTest is DSTest {
         (,, uint256 goldLump) = cat.ilks("gold");
         assertEq(goldLump, rad(115792 ether));
         cat.file("silver", "lump", rad(115792 ether));
-        (,, uint256 silverLump) = cat.ilks("gold");
+        (,, uint256 silverLump) = cat.ilks("silver");
         assertEq(silverLump, rad(115792 ether));
     }
     function testFail_lump_too_large() public {
