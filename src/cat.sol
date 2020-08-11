@@ -88,7 +88,6 @@ contract Cat is LibNote {
 
     // --- Math ---
     uint256 constant RAY = 10 ** 27;
-    uint256 constant RAD = 10 ** 45;
 
     uint256 constant MAX_LUMP = uint256(-1) / RAY;
 
