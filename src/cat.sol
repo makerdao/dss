@@ -139,29 +139,16 @@ contract Cat is LibNote {
         Ilk memory milk = ilks[ilk];
 
         uint256 limit = min(milk.lump, sub(box, litter));
-        //        RAD = RAD(RAD      , RAD(RAD, RAD   ))
-        //
-        //       limit / rate
-        // art = ------------
-        //           chop
-        //
-        // pick a fractional art that doesn't fill the box
         uint256 fart = min(art, mul(limit, RAY) / rate / milk.chop);
-        //       WAD = WAD(WAD,WAD=(RAD  , RAY, RAY) / RAY      )
         uint256 fink = min(ink, mul(ink, fart) / art);
-        //       WAD = WAD(WAD, WAD(WAD, WAD ) / WAD)
 
         require(fink <= 2**255 && fart <= 2**255, "Cat/overflow");
         vat.grab(ilk, urn, address(this), address(vow), -int256(fink), -int256(fart));
         vow.fess(mul(fart, rate));
 
         { // Avoid stack too deep
-            // Accumulate litter in the box
-            // TODO: Review if we need to do / RAY first due possible overflow
             uint256 tab = mul(mul(fart, rate), milk.chop) / RAY;
-            //      RAD =     RAD(WAD,   RAY), RAY      ) / RAY
             litter = add(litter, tab);
-            // RAD = RAD(RAD   , RAD)
 
             id = Kicker(milk.flip).kick({
                 urn: urn,
