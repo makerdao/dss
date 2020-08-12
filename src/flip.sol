@@ -66,15 +66,15 @@ contract Flipper is LibNote {
 
     mapping (uint256 => Bid) public bids;
 
-    VatLike public   vat;   // vat core accounting
-    bytes32 public   ilk;   // collateral type
-    CatLike public   cat;   // cat liquidation module
+    VatLike public   vat;            // vat core accounting
+    bytes32 public   ilk;            // collateral type
 
     uint256 constant ONE = 1.00E18;
     uint256 public   beg = 1.05E18;  // 5% minimum bid increase
     uint48  public   ttl = 3 hours;  // 3 hours bid duration         [seconds]
     uint48  public   tau = 2 days;   // 2 days total auction length  [seconds]
     uint256 public kicks = 0;
+    CatLike public   cat;            // cat liquidation module
 
     // --- Events ---
     event Kick(
