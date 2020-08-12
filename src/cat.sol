@@ -20,32 +20,32 @@ pragma solidity >=0.5.12;
 import "./lib.sol";
 
 interface Kicker {
-    function kick(address urn, address gal, uint tab, uint lot, uint bid)
-        external returns (uint);
+    function kick(address urn, address gal, uint256 tab, uint256 lot, uint256 bid)
+        external returns (uint256);
 }
 
 interface VatLike {
     function ilks(bytes32) external view returns (
-        uint256 Art,   // [wad]
-        uint256 rate,  // [ray]
-        uint256 spot   // [ray]
+        uint256 Art,  // [wad]
+        uint256 rate, // [ray]
+        uint256 spot  // [ray]
     );
     function urns(bytes32,address) external view returns (
-        uint256 ink,   // [wad]
-        uint256 art    // [wad]
+        uint256 ink,  // [wad]
+        uint256 art   // [wad]
     );
-    function grab(bytes32,address,address,address,int,int) external;
+    function grab(bytes32,address,address,address,int256,int256) external;
     function hope(address) external;
     function nope(address) external;
 }
 
 interface VowLike {
-    function fess(uint) external;
+    function fess(uint256) external;
 }
 
 contract Cat is LibNote {
     // --- Auth ---
-    mapping (address => uint) public wards;
+    mapping (address => uint256) public wards;
     function rely(address usr) external note auth { wards[usr] = 1; }
     function deny(address usr) external note auth { wards[usr] = 0; }
     modifier auth {
@@ -56,15 +56,17 @@ contract Cat is LibNote {
     // --- Data ---
     struct Ilk {
         address flip;  // Liquidator
-        uint256 chop;  // Liquidation Penalty   [ray]
-        uint256 lump;  // Liquidation Quantity  [wad]
+        uint256 chop;  // Liquidation Penalty  [ray]
+        uint256 lump;  // Liquidation Quantity [rad]
     }
 
     mapping (bytes32 => Ilk) public ilks;
 
-    uint256 public live;  // Active Flag
-    VatLike public vat;   // CDP Engine
-    VowLike public vow;   // Debt Engine
+    uint256 public live;   // Active Flag
+    VatLike public vat;    // CDP Engine
+    VowLike public vow;    // Debt Engine
+    uint256 public box;    // Max Dai out for liquidation        [rad]
+    uint256 public litter; // Balance of Dai out for liquidation [rad]
 
     // --- Events ---
     event Bite(
@@ -85,16 +87,21 @@ contract Cat is LibNote {
     }
 
     // --- Math ---
-    uint constant ONE = 10 ** 27;
+    uint256 constant RAY = 10 ** 27;
 
-    function mul(uint x, uint y) internal pure returns (uint z) {
-        require(y == 0 || (z = x * y) / y == x);
-    }
-    function rmul(uint x, uint y) internal pure returns (uint z) {
-        z = mul(x, y) / ONE;
-    }
-    function min(uint x, uint y) internal pure returns (uint z) {
+    uint256 constant MAX_LUMP = uint256(-1) / RAY;
+
+    function min(uint256 x, uint256 y) internal pure returns (uint256 z) {
         if (x > y) { z = y; } else { z = x; }
+    }
+    function add(uint256 x, uint256 y) internal pure returns (uint256 z) {
+        require((z = x + y) >= x);
+    }
+    function sub(uint256 x, uint256 y) internal pure returns (uint256 z) {
+        require((z = x - y) <= x);
+    }
+    function mul(uint256 x, uint256 y) internal pure returns (uint256 z) {
+        require(y == 0 || (z = x * y) / y == x);
     }
 
     // --- Administration ---
@@ -102,9 +109,13 @@ contract Cat is LibNote {
         if (what == "vow") vow = VowLike(data);
         else revert("Cat/file-unrecognized-param");
     }
-    function file(bytes32 ilk, bytes32 what, uint data) external note auth {
+    function file(bytes32 what, uint256 data) external note auth {
+        if (what == "box") box = data;
+        else revert("Cat/file-unrecognized-param");
+    }
+    function file(bytes32 ilk, bytes32 what, uint256 data) external note auth {
         if (what == "chop") ilks[ilk].chop = data;
-        else if (what == "lump") ilks[ilk].lump = data;
+        else if (what == "lump" && data <= MAX_LUMP) ilks[ilk].lump = data;
         else revert("Cat/file-unrecognized-param");
     }
     function file(bytes32 ilk, bytes32 what, address flip) external note auth {
@@ -117,28 +128,42 @@ contract Cat is LibNote {
     }
 
     // --- CDP Liquidation ---
-    function bite(bytes32 ilk, address urn) external returns (uint id) {
-        (, uint rate, uint spot) = vat.ilks(ilk);
-        (uint ink, uint art) = vat.urns(ilk, urn);
+    function bite(bytes32 ilk, address urn) external returns (uint256 id) {
+        (, uint256 rate, uint256 spot) = vat.ilks(ilk);
+        (uint256 ink, uint256 art) = vat.urns(ilk, urn);
 
         require(live == 1, "Cat/not-live");
         require(spot > 0 && mul(ink, spot) < mul(art, rate), "Cat/not-unsafe");
+        require(litter < box, "Cat/liquidation-limit-hit");
 
-        uint lot = min(ink, ilks[ilk].lump);
-        art      = min(art, mul(lot, art) / ink);
+        Ilk memory milk = ilks[ilk];
 
-        require(lot <= 2**255 && art <= 2**255, "Cat/overflow");
-        vat.grab(ilk, urn, address(this), address(vow), -int(lot), -int(art));
+        uint256 limit = min(milk.lump, sub(box, litter));
+        uint256 fart = min(art, mul(limit, RAY) / rate / milk.chop);
+        uint256 fink = min(ink, mul(ink, fart) / art);
 
-        vow.fess(mul(art, rate));
-        id = Kicker(ilks[ilk].flip).kick({ urn: urn
-                                         , gal: address(vow)
-                                         , tab: rmul(mul(art, rate), ilks[ilk].chop)
-                                         , lot: lot
-                                         , bid: 0
-                                         });
+        require(fink <= 2**255 && fart <= 2**255, "Cat/overflow");
+        vat.grab(ilk, urn, address(this), address(vow), -int256(fink), -int256(fart));
+        vow.fess(mul(fart, rate));
 
-        emit Bite(ilk, urn, lot, art, mul(art, rate), ilks[ilk].flip, id);
+        { // Avoid stack too deep
+            uint256 tab = mul(mul(fart, rate), milk.chop) / RAY;
+            litter = add(litter, tab);
+
+            id = Kicker(milk.flip).kick({
+                urn: urn,
+                gal: address(vow),
+                tab: tab,
+                lot: fink,
+                bid: 0
+            });
+        }
+
+        emit Bite(ilk, urn, fink, fart, mul(fart, rate), milk.flip, id);
+    }
+
+    function scoop(uint256 poop) external note auth {
+        litter = sub(litter, poop);
     }
 
     function cage() external note auth {
