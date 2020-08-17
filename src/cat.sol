@@ -28,7 +28,9 @@ interface VatLike {
     function ilks(bytes32) external view returns (
         uint256 Art,  // [wad]
         uint256 rate, // [ray]
-        uint256 spot  // [ray]
+        uint256 spot, // [ray]
+        uint256 line, // [rad]
+        uint256 dust  // [rad]
     );
     function urns(bytes32,address) external view returns (
         uint256 ink,  // [wad]
@@ -103,6 +105,11 @@ contract Cat is LibNote {
     function mul(uint256 x, uint256 y) internal pure returns (uint256 z) {
         require(y == 0 || (z = x * y) / y == x);
     }
+    function rmul(uint x, uint y) internal pure returns (uint z) {
+        z = x * y;
+        require(y == 0 || z / y == x);
+        z = z / RAY;
+    }
 
     // --- Administration ---
     function file(bytes32 what, address data) external note auth {
@@ -129,41 +136,56 @@ contract Cat is LibNote {
 
     // --- CDP Liquidation ---
     function bite(bytes32 ilk, address urn) external returns (uint256 id) {
-        (, uint256 rate, uint256 spot) = vat.ilks(ilk);
+        (,uint256 rate,,,uint256 dust) = vat.ilks(ilk);
         (uint256 ink, uint256 art) = vat.urns(ilk, urn);
 
         require(live == 1, "Cat/not-live");
-        require(spot > 0 && mul(ink, spot) < mul(art, rate), "Cat/not-unsafe");
-        require(litter < box, "Cat/liquidation-limit-hit");
+        { // prevent stack too deep for spot
+            (,,uint256 spot,,) = vat.ilks(ilk);
+            require(
+                spot > 0 && mul(ink, spot) < mul(art, rate), "Cat/not-unsafe"
+            );
+        }
+        // TODO(cmooney): test remaining space in litterbox if dusty
+        require(
+            litter < box && sub(box, litter) >= dust, "Cat/liquidation-limit-hit"
+        );
 
         Ilk memory milk = ilks[ilk];
 
         uint256 limit = min(milk.lump, sub(box, litter));
-        uint256 fart = min(art, mul(limit, RAY) / rate / milk.chop);
-        uint256 fink = min(ink, mul(ink, fart) / art);
+        uint256 dart  = min(art, mul(limit, RAY) / rate / milk.chop);
+        // TODO(cmooney): make sure test_partial_litterbox_multiple_bites()
+        // finds this.
+        if (art > dart && rmul(art - dart, rate) < dust) {
+            dart = art;
+        }
+        uint256 dink  = min(ink, mul(ink, dart) / art);
 
-        require(fink <= 2**255 && fart <= 2**255, "Cat/overflow");
-        vat.grab(ilk, urn, address(this), address(vow), -int256(fink), -int256(fart));
-        vow.fess(mul(fart, rate));
+        require(dink <= 2**255 && dart <= 2**255, "Cat/overflow");
+        vat.grab(
+            ilk, urn, address(this), address(vow), -int256(dink), -int256(dart)
+        );
+        vow.fess(mul(dart, rate));
 
         { // Avoid stack too deep
-            uint256 tab = mul(mul(fart, rate), milk.chop) / RAY;
+            uint256 tab = mul(mul(dart, rate), milk.chop) / RAY;
             litter = add(litter, tab);
 
             id = Kicker(milk.flip).kick({
                 urn: urn,
                 gal: address(vow),
                 tab: tab,
-                lot: fink,
+                lot: dink,
                 bid: 0
             });
         }
 
-        emit Bite(ilk, urn, fink, fart, mul(fart, rate), milk.flip, id);
+        emit Bite(ilk, urn, dink, dart, mul(dart, rate), milk.flip, id);
     }
 
-    function scoop(uint256 poop) external note auth {
-        litter = sub(litter, poop);
+    function claw(uint256 clump) external note auth {
+        litter = sub(litter, clump);
     }
 
     function cage() external note auth {

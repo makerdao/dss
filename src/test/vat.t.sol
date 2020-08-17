@@ -627,6 +627,7 @@ contract BiteTest is DSTest {
 
         // tag=4, mat=2
         vat.file("gold", 'spot', ray(2 ether));  // now unsafe
+        cat.file("gold", "chop", ray(1.1 ether));
 
         assertEq(ink("gold", address(this)),  40 ether);
         assertEq(art("gold", address(this)), 100 ether);
@@ -636,31 +637,29 @@ contract BiteTest is DSTest {
         cat.file("gold", "lump", rad(200 ether));  // => bite everything
         assertEq(cat.litter(), 0);
         uint auction = cat.bite("gold", address(this));
-        assertEq(cat.litter(), rad(100 ether));
+        assertEq(cat.litter(), rad(110 ether));
         assertEq(ink("gold", address(this)), 0);
         assertEq(art("gold", address(this)), 0);
         assertEq(vow.sin(now),   rad(100 ether));
         assertEq(gem("gold", address(this)), 960 ether);
 
         assertEq(vat.balanceOf(address(vow)),    0 ether);
-        flip.tend(auction, 40 ether,   rad(1 ether));
-        assertEq(cat.litter(), rad(100 ether));
-        flip.tend(auction, 40 ether, rad(100 ether));
-        assertEq(cat.litter(), rad(100 ether));
-
-        assertEq(vat.balanceOf(address(this)),   0 ether);
-        assertEq(gem("gold", address(this)),   960 ether);
         vat.mint(address(this), 100 ether);  // magic up some dai for bidding
-        flip.dent(auction, 38 ether,  rad(100 ether));
-        assertEq(cat.litter(), rad(100 ether));
-        assertEq(vat.balanceOf(address(this)), 100 ether);
+        flip.tend(auction, 40 ether,   rad(1 ether));
+        flip.tend(auction, 40 ether, rad(110 ether));
+
+        assertEq(vat.balanceOf(address(this)),  90 ether);
+        assertEq(gem("gold", address(this)),   960 ether);
+        flip.dent(auction, 38 ether,  rad(110 ether));
+        assertEq(vat.balanceOf(address(this)),  90 ether);
         assertEq(gem("gold", address(this)),   962 ether);
         assertEq(vow.sin(now),     rad(100 ether));
 
         hevm.warp(now + 4 hours);
+        assertEq(cat.litter(), rad(110 ether));
         flip.deal(auction);
         assertEq(cat.litter(), 0);
-        assertEq(vat.balanceOf(address(vow)),  100 ether);
+        assertEq(vat.balanceOf(address(vow)),  110 ether);
     }
 
     // tests a partial lot liquidation because it would fill the literbox
@@ -672,6 +671,7 @@ contract BiteTest is DSTest {
 
         // tag=4, mat=2
         vat.file("gold", 'spot', ray(1 ether));  // now unsafe
+        // cat.file("gold", "chop", ray(1.1 ether));
 
         assertEq(ink("gold", address(this)), 100 ether);
         assertEq(art("gold", address(this)), 150 ether);
@@ -683,7 +683,9 @@ contract BiteTest is DSTest {
         assertEq(cat.box(), rad(75 ether));
         assertEq(cat.litter(), 0);
         uint auction = cat.bite("gold", address(this));
-        assertEq(cat.litter(), rad(75 ether));
+        // (,,,,,,,uint tab) = flip.bids(auction);
+        // assertTrue(rad(75 ether) - cat.litter() < ray(3 ether));
+        // assertEq(cat.litter(), tab);
         assertEq(ink("gold", address(this)), 50 ether);
         assertEq(art("gold", address(this)), 75 ether);
         assertEq(vow.sin(now), rad(75 ether));

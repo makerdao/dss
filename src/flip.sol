@@ -25,7 +25,7 @@ interface VatLike {
 }
 
 interface CatLike {
-    function scoop(uint256) external;
+    function claw(uint256) external;
 }
 
 /*
@@ -66,7 +66,7 @@ contract Flipper is LibNote {
 
     mapping (uint256 => Bid) public bids;
 
-    VatLike public   vat;            // vat core accounting
+    VatLike public   vat;            // CDP Engine
     bytes32 public   ilk;            // collateral type
 
     uint256 constant ONE = 1.00E18;
@@ -178,7 +178,7 @@ contract Flipper is LibNote {
     }
     function deal(uint256 id) external note {
         require(bids[id].tic != 0 && (bids[id].tic < now || bids[id].end < now), "Flipper/not-finished");
-        cat.scoop(bids[id].tab);
+        cat.claw(bids[id].tab);
         vat.flux(ilk, address(this), bids[id].guy, bids[id].lot);
         delete bids[id];
     }
@@ -186,7 +186,7 @@ contract Flipper is LibNote {
     function yank(uint256 id) external note auth {
         require(bids[id].guy != address(0), "Flipper/guy-not-set");
         require(bids[id].bid < bids[id].tab, "Flipper/already-dent-phase");
-        cat.scoop(bids[id].tab);
+        cat.claw(bids[id].tab);
         vat.flux(ilk, address(this), msg.sender, bids[id].lot);
         vat.move(msg.sender, bids[id].guy, bids[id].bid);
         delete bids[id];
