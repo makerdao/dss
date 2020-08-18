@@ -169,7 +169,7 @@ contract EndTest is DSTest {
         cat.rely(address(flip));
         cat.file(name, "flip", address(flip));
         cat.file(name, "chop", ray(1 ether));
-        cat.file(name, "lump", rad(25000 ether));
+        cat.file(name, "dunk", rad(25000 ether));
         cat.file("box", rad((10 ether) * MLN));
 
         ilks[name].pip = pip;
