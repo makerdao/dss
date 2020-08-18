@@ -136,33 +136,28 @@ contract Cat is LibNote {
 
     // --- CDP Liquidation ---
     function bite(bytes32 ilk, address urn) external returns (uint256 id) {
-        (,uint256 rate,,,uint256 dust) = vat.ilks(ilk);
+        (,uint256 rate,uint256 spot,,uint256 dust) = vat.ilks(ilk);
         (uint256 ink, uint256 art) = vat.urns(ilk, urn);
 
         require(live == 1, "Cat/not-live");
-        { // prevent stack too deep for spot
-            (,,uint256 spot,,) = vat.ilks(ilk);
-            require(
-                spot > 0 && mul(ink, spot) < mul(art, rate), "Cat/not-unsafe"
-            );
-        }
-        // TODO(cmooney): test remaining space in litterbox if dusty
-        require(
-            litter < box && sub(box, litter) >= dust, "Cat/liquidation-limit-hit"
-        );
+        require(spot > 0 && mul(ink, spot) < mul(art, rate), "Cat/not-unsafe");
 
         Ilk memory milk = ilks[ilk];
+        uint256 dart;
+        {
+            uint256 room = sub(box, litter);
 
-        uint256 limit = min(milk.dunk, sub(box, litter));
-        uint256 dart  = min(art, mul(limit, RAY) / rate / milk.chop);
-        // TODO(cmooney): make sure test_partial_litterbox_multiple_bites()
-        // finds this.
-        if (art > dart && rmul(art - dart, rate) < dust) {
-            dart = art;
+            // TODO(cmooney): test remaining space in litterbox if dusty
+            require(litter < box && room >= dust, "Cat/liquidation-limit-hit");
+
+            dart = min(art, mul(min(milk.dunk, room), RAY) / rate / milk.chop);
         }
-        uint256 dink  = min(ink, mul(ink, dart) / art);
+
+        uint256 dink = min(ink, mul(ink, dart) / art);
 
         require(dink <= 2**255 && dart <= 2**255, "Cat/overflow");
+
+        // This may leave the CDP in a dusty state
         vat.grab(
             ilk, urn, address(this), address(vow), -int256(dink), -int256(dart)
         );
@@ -184,8 +179,8 @@ contract Cat is LibNote {
         emit Bite(ilk, urn, dink, dart, mul(dart, rate), milk.flip, id);
     }
 
-    function claw(uint256 clump) external note auth {
-        litter = sub(litter, clump);
+    function claw(uint256 rad) external note auth {
+        litter = sub(litter, rad);
     }
 
     function cage() external note auth {
