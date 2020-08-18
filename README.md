@@ -1,6 +1,6 @@
 # Multi Collateral Dai
 [![Build Status](https://travis-ci.com/makerdao/dss.svg?branch=master)](https://travis-ci.com/makerdao/dss)
-[![codecov](https://codecov.io/gh/makerdao/dss/branch/master/graph/badge.svg)](hhttps://codecov.io/gh/makerdao/dss)
+[![codecov](https://codecov.io/gh/makerdao/dss/branch/master/graph/badge.svg)](https://codecov.io/gh/makerdao/dss)
 
 This repository contains the core smart contract code for Multi
 Collateral Dai. This is a high level description of the system, assuming
