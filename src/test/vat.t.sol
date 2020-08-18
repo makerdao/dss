@@ -527,26 +527,26 @@ contract BiteTest is DSTest {
         me = address(this);
     }
 
-    function test_set_lump_multiple_ilks() public {
-        cat.file("gold",   "lump", rad(115792 ether));
+    function test_set_dunk_multiple_ilks() public {
+        cat.file("gold",   "dunk", rad(115792 ether));
         (,, uint256 goldLump) = cat.ilks("gold");
         assertEq(goldLump, rad(115792 ether));
-        cat.file("silver", "lump", rad(115792 ether));
+        cat.file("silver", "dunk", rad(115792 ether));
         (,, uint256 silverLump) = cat.ilks("silver");
         assertEq(silverLump, rad(115792 ether));
     }
-    function testFail_lump_too_large() public {
+    function testFail_dunk_too_large() public {
         // 115792.089237316195423570985008687907853269984665640 * RAD + 1
-        cat.file("gold", "lump", uint256(-1) / 10 ** 27 + 1);
+        cat.file("gold", "dunk", uint256(-1) / 10 ** 27 + 1);
     }
     function test_cat_set_box() public {
         assertEq(cat.box(), rad((10 ether) * MLN));
         cat.file("box", rad((20 ether) * MLN));
         assertEq(cat.box(), rad((20 ether) * MLN));
     }
-    function test_bite_max_lump() public {
+    function test_bite_max_dunk() public {
         uint256 MAX_LUMP = uint256(-1) / 10 ** 27;
-        cat.file("gold", "lump", MAX_LUMP);
+        cat.file("gold", "dunk", MAX_LUMP);
         cat.file("box", uint256(-1));
 
         vat.file("Line", rad(300000 ether));
@@ -560,7 +560,7 @@ contract BiteTest is DSTest {
         (,,,,,,, uint256 tab) = flip.bids(auction);
         assertEq(tab, MAX_LUMP / 10 ** 27 * 10 ** 27);
     }
-    function testFail_bite_forced_over_max_lump() public {
+    function testFail_bite_forced_over_max_dunk() public {
         uint256 MAX_LUMP = uint256(-1) / 10 ** 27;
         hevm.store(
             address(cat),
@@ -578,13 +578,13 @@ contract BiteTest is DSTest {
 
         cat.bite("gold", address(this));
     }
-    function test_bite_under_lump() public {
+    function test_bite_under_dunk() public {
         vat.file("gold", 'spot', ray(2.5 ether));
         vat.frob("gold", me, me, me, 40 ether, 100 ether);
         // tag=4, mat=2
         vat.file("gold", 'spot', ray(2 ether));  // now unsafe
 
-        cat.file("gold", "lump", rad(111 ether));
+        cat.file("gold", "dunk", rad(111 ether));
         cat.file("gold", "chop", ray(1.1 ether));
 
         uint auction = cat.bite("gold", address(this));
@@ -598,14 +598,14 @@ contract BiteTest is DSTest {
         assertEq(lot,        40 ether);
         assertEq(tab,   rad(110 ether));
     }
-    function test_bite_over_lump() public {
+    function test_bite_over_dunk() public {
         vat.file("gold", 'spot', ray(2.5 ether));
         vat.frob("gold", me, me, me, 40 ether, 100 ether);
         // tag=4, mat=2
         vat.file("gold", 'spot', ray(2 ether));  // now unsafe
 
         cat.file("gold", "chop", ray(1.1 ether));
-        cat.file("gold", "lump", rad(82.5 ether));
+        cat.file("gold", "dunk", rad(82.5 ether));
 
         uint auction = cat.bite("gold", address(this));
         // the CDP is partially liquidated
@@ -634,7 +634,7 @@ contract BiteTest is DSTest {
         assertEq(vow.Woe(), 0 ether);
         assertEq(gem("gold", address(this)), 960 ether);
 
-        cat.file("gold", "lump", rad(200 ether));  // => bite everything
+        cat.file("gold", "dunk", rad(200 ether));  // => bite everything
         assertEq(cat.litter(), 0);
         uint auction = cat.bite("gold", address(this));
         assertEq(cat.litter(), rad(110 ether));
@@ -679,7 +679,7 @@ contract BiteTest is DSTest {
         assertEq(gem("gold", address(this)), 900 ether);
 
         cat.file("box", rad(75 ether));
-        cat.file("gold", "lump", rad(100 ether));
+        cat.file("gold", "dunk", rad(100 ether));
         assertEq(cat.box(), rad(75 ether));
         assertEq(cat.litter(), 0);
         uint auction = cat.bite("gold", address(this));
@@ -730,7 +730,7 @@ contract BiteTest is DSTest {
         assertEq(gem("gold", address(this)), 900 ether);
 
         cat.file("box", rad(75 ether));
-        cat.file("gold", "lump", rad(100 ether));
+        cat.file("gold", "dunk", rad(100 ether));
         assertEq(cat.box(), rad(75 ether));
         assertEq(cat.litter(), 0);
         cat.bite("gold", address(this));
@@ -760,7 +760,7 @@ contract BiteTest is DSTest {
         assertEq(gem("gold", address(this)), 900 ether);
 
         cat.file("box", rad(75 ether));
-        cat.file("gold", "lump", rad(100 ether));
+        cat.file("gold", "dunk", rad(100 ether));
         assertEq(cat.box(), rad(75 ether));
         assertEq(cat.litter(), 0);
         uint auction = cat.bite("gold", address(this));
@@ -832,7 +832,7 @@ contract BiteTest is DSTest {
         vat.frob("gold", me, me, me, 40 ether, 100 ether);
         vat.file("gold", 'spot', ray(2 ether));  // now unsafe
 
-        cat.file("gold", "lump", rad(200 ether));  // => bite everything
+        cat.file("gold", "dunk", rad(200 ether));  // => bite everything
         assertEq(vow.sin(now), rad(  0 ether));
         cat.bite("gold", address(this));
         assertEq(vow.sin(now), rad(100 ether));

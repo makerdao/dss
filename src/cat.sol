@@ -59,7 +59,7 @@ contract Cat is LibNote {
     struct Ilk {
         address flip;  // Liquidator
         uint256 chop;  // Liquidation Penalty  [ray]
-        uint256 lump;  // Liquidation Quantity [rad]
+        uint256 dunk;  // Liquidation Quantity [rad]
     }
 
     mapping (bytes32 => Ilk) public ilks;
@@ -91,7 +91,7 @@ contract Cat is LibNote {
     // --- Math ---
     uint256 constant RAY = 10 ** 27;
 
-    uint256 constant MAX_LUMP = uint256(-1) / RAY;
+    uint256 constant MAX_DUNK = uint256(-1) / RAY;
 
     function min(uint256 x, uint256 y) internal pure returns (uint256 z) {
         if (x > y) { z = y; } else { z = x; }
@@ -122,7 +122,7 @@ contract Cat is LibNote {
     }
     function file(bytes32 ilk, bytes32 what, uint256 data) external note auth {
         if (what == "chop") ilks[ilk].chop = data;
-        else if (what == "lump" && data <= MAX_LUMP) ilks[ilk].lump = data;
+        else if (what == "dunk" && data <= MAX_DUNK) ilks[ilk].dunk = data;
         else revert("Cat/file-unrecognized-param");
     }
     function file(bytes32 ilk, bytes32 what, address flip) external note auth {
@@ -153,7 +153,7 @@ contract Cat is LibNote {
 
         Ilk memory milk = ilks[ilk];
 
-        uint256 limit = min(milk.lump, sub(box, litter));
+        uint256 limit = min(milk.dunk, sub(box, litter));
         uint256 dart  = min(art, mul(limit, RAY) / rate / milk.chop);
         // TODO(cmooney): make sure test_partial_litterbox_multiple_bites()
         // finds this.
