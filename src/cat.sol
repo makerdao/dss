@@ -20,7 +20,7 @@ pragma solidity >=0.5.12;
 import "./lib.sol";
 
 interface Kicker {
-    function kick(address urn, address gal, uint256 tab, uint256 lot, uint256 bid)
+    function kick(address urn, address gal, uint256 tab, uint256 lot, uint256 bid, uint256 bar)
         external returns (uint256);
 }
 
@@ -136,11 +136,16 @@ contract Cat is LibNote {
 
     // --- CDP Liquidation ---
     function bite(bytes32 ilk, address urn) external returns (uint256 id) {
-        (,uint256 rate,uint256 spot,,uint256 dust) = vat.ilks(ilk);
-        (uint256 ink, uint256 art) = vat.urns(ilk, urn);
-
         require(live == 1, "Cat/not-live");
-        require(spot > 0 && mul(ink, spot) < mul(art, rate), "Cat/not-unsafe");
+
+        (uint256 ink, uint256 art) = vat.urns(ilk, urn);
+        uint256 rate;
+        uint256 dust;
+        {
+            uint256 spot;
+            (, rate, spot,, dust) = vat.ilks(ilk);
+            require(spot > 0 && mul(ink, spot) < mul(art, rate), "Cat/not-unsafe");
+        }
 
         Ilk memory milk = ilks[ilk];
         uint256 dart;
@@ -150,7 +155,7 @@ contract Cat is LibNote {
             // TODO(cmooney): test remaining space in litterbox if dusty
             require(litter < box && room >= dust, "Cat/liquidation-limit-hit");
 
-            dart = min(art, mul(min(milk.dunk, room), RAY) / rate / milk.chop);
+            dart = min(art, min(milk.dunk, room) / rate);
         }
 
         uint256 dink = min(ink, mul(ink, dart) / art);
@@ -161,22 +166,22 @@ contract Cat is LibNote {
         vat.grab(
             ilk, urn, address(this), address(vow), -int256(dink), -int256(dart)
         );
-        vow.fess(mul(dart, rate));
 
         { // Avoid stack too deep
-            uint256 tab = mul(mul(dart, rate), milk.chop) / RAY;
+            uint256 tab = mul(dart, rate);
+            vow.fess(tab);
             litter = add(litter, tab);
 
             id = Kicker(milk.flip).kick({
                 urn: urn,
                 gal: address(vow),
-                tab: tab,
+                tab: rmul(tab, milk.chop),
                 lot: dink,
-                bid: 0
+                bid: 0,
+                bar: tab
             });
+            emit Bite(ilk, urn, dink, dart, tab, milk.flip, id);
         }
-
-        emit Bite(ilk, urn, dink, dart, mul(dart, rate), milk.flip, id);
     }
 
     function claw(uint256 rad) external note auth {

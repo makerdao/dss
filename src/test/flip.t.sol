@@ -137,6 +137,7 @@ contract FlipTest is DSTest {
                   , usr: usr
                   , gal: gal
                   , bid: 0
+                  , bar: 50 ether
                   });
     }
     function testFail_tend_empty() public {
@@ -149,6 +150,7 @@ contract FlipTest is DSTest {
                             , usr: usr
                             , gal: gal
                             , bid: 0
+                            , bar: 50 ether
                             });
 
         Guy(ali).tend(id, 100 ether, 1 ether);
@@ -176,6 +178,7 @@ contract FlipTest is DSTest {
                             , usr: usr
                             , gal: gal
                             , bid: 0
+                            , bar: 50 ether
                             });
         hevm.warp(now + 5 hours);
 
@@ -191,6 +194,7 @@ contract FlipTest is DSTest {
                             , usr: usr
                             , gal: gal
                             , bid: 0
+                            , bar: 50 ether
                             });
         Guy(ali).tend(id, 100 ether,  1 ether);
         Guy(bob).tend(id, 100 ether, 50 ether);
@@ -207,6 +211,7 @@ contract FlipTest is DSTest {
                             , usr: usr
                             , gal: gal
                             , bid: 0
+                            , bar: 200 ether
                             });
 
         assertEq(vat.dai_balance(ali), 200 ether);
@@ -222,6 +227,7 @@ contract FlipTest is DSTest {
                             , usr: usr
                             , gal: gal
                             , bid: 0
+                            , bar: 50 ether
                             });
         assertTrue( Guy(ali).try_tend(id, 100 ether, 1.00 ether));
         assertTrue(!Guy(bob).try_tend(id, 100 ether, 1.01 ether));
@@ -243,6 +249,7 @@ contract FlipTest is DSTest {
                             , usr: usr
                             , gal: gal
                             , bid: 0
+                            , bar: 50 ether
                             });
 
         // only after ttl
@@ -256,6 +263,7 @@ contract FlipTest is DSTest {
                             , usr: usr
                             , gal: gal
                             , bid: 0
+                            , bar: 50 ether
                             });
 
         // or after end
@@ -272,6 +280,7 @@ contract FlipTest is DSTest {
                             , usr: usr
                             , gal: gal
                             , bid: 0
+                            , bar: 50 ether
                             });
         // check no tick
         assertTrue(!Guy(ali).try_tick(id));
@@ -291,6 +300,7 @@ contract FlipTest is DSTest {
                             , usr: usr
                             , gal: gal
                             , bid: 0
+                            , bar: 50 ether
                             });
         assertTrue(!Guy(ali).try_deal(id));
         hevm.warp(now + 2 weeks);
@@ -304,6 +314,7 @@ contract FlipTest is DSTest {
                             , usr: usr
                             , gal: gal
                             , bid: 0
+                            , bar: rad(50 ether)
                             });
 
         Guy(ali).tend(id, 100 ether, 1 ether);
@@ -334,6 +345,7 @@ contract FlipTest is DSTest {
                             , usr: usr
                             , gal: gal
                             , bid: 0
+                            , bar: 50 ether
                             });
 
         // we have some amount of litter in the box
