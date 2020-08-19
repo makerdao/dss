@@ -188,7 +188,7 @@ contract Cat is LibNote {
 
     function claw(uint256 id) external note auth {
         litter = sub(litter, tabs[msg.sender][id]);
-        tabs[msg.sender][id] = 0;
+        delete tabs[msg.sender][id];
     }
 
     function cage() external note auth {
