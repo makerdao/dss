@@ -20,7 +20,7 @@ pragma solidity >=0.5.12;
 import "./lib.sol";
 
 interface Kicker {
-    function kick(address urn, address gal, uint256 tab, uint256 lot, uint256 bid, uint256 bar)
+    function kick(address urn, address gal, uint256 tab, uint256 lot, uint256 bid)
         external returns (uint256);
 }
 
@@ -69,6 +69,8 @@ contract Cat is LibNote {
     VowLike public vow;    // Debt Engine
     uint256 public box;    // Max Dai out for liquidation        [rad]
     uint256 public litter; // Balance of Dai out for liquidation [rad]
+
+    mapping (address => mapping (uint256 => uint256)) public tabs;  // per-contract per-auction dai to recapitalize [rad]
 
     // --- Events ---
     event Bite(
@@ -177,15 +179,16 @@ contract Cat is LibNote {
                 gal: address(vow),
                 tab: rmul(tab, milk.chop),
                 lot: dink,
-                bid: 0,
-                bar: tab
+                bid: 0
             });
+            tabs[milk.flip][id] = tab;
             emit Bite(ilk, urn, dink, dart, tab, milk.flip, id);
         }
     }
 
-    function claw(uint256 rad) external note auth {
-        litter = sub(litter, rad);
+    function claw(uint256 id) external note auth {
+        litter = sub(litter, tabs[msg.sender][id]);
+        tabs[msg.sender][id] = 0;
     }
 
     function cage() external note auth {

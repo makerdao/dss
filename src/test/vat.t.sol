@@ -534,7 +534,7 @@ contract BiteTest is DSTest {
         vat.file("gold", 'spot', ray(2 ether));  // now unsafe
 
         uint256 auction = cat.bite("gold", address(this));
-        (,,,,,,, uint256 tab,) = flip.bids(auction);
+        (,,,,,,, uint256 tab) = flip.bids(auction);
         assertEq(tab, MAX_LUMP / 10 ** 27 * 10 ** 27);
     }
     function testFail_bite_forced_over_max_dunk() public {
@@ -574,7 +574,7 @@ contract BiteTest is DSTest {
         // all debt goes to the vow
         assertEq(vow.Awe(), rad(100 ether));
         // auction is for all collateral
-        (, uint lot,,,,,, uint tab,) = flip.bids(auction);
+        (, uint lot,,,,,, uint tab) = flip.bids(auction);
         assertEq(lot,        40 ether);
         assertEq(tab,   rad(110 ether));
     }
@@ -597,10 +597,11 @@ contract BiteTest is DSTest {
         assertEq(vow.Awe(), rad(82.5 ether));
 
         // auction is for a fraction of the collateral
-        (, uint lot,,,,,, uint tab, uint bar) = flip.bids(auction);
+        (, uint lot,,,,,, uint tab) = flip.bids(auction);
         assertEq(lot,     33    ether);
         assertEq(tab, rad(90.75 ether));
-        assertEq(bar, rad(82.5  ether));
+
+        assertEq(cat.tabs(address(flip), auction), rad(82.5  ether));
     }
 
     function test_happy_bite() public {

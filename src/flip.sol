@@ -61,8 +61,7 @@ contract Flipper is LibNote {
         uint48  end;  // auction expiry time      [unix epoch time]
         address usr;
         address gal;
-        uint256 tab;  // total dai wanted          [rad]
-        uint256 bar;  // dai needed to cancel debt [rad]
+        uint256 tab;  // total dai wanted         [rad]
     }
 
     mapping (uint256 => Bid) public bids;
@@ -116,7 +115,7 @@ contract Flipper is LibNote {
     }
 
     // --- Auction ---
-    function kick(address usr, address gal, uint256 tab, uint256 lot, uint256 bid, uint256 bar)
+    function kick(address usr, address gal, uint256 tab, uint256 lot, uint256 bid)
         public auth returns (uint256 id)
     {
         require(kicks < uint256(-1), "Flipper/overflow");
@@ -129,7 +128,6 @@ contract Flipper is LibNote {
         bids[id].usr = usr;
         bids[id].gal = gal;
         bids[id].tab = tab;
-        bids[id].bar = bar;
 
         vat.flux(ilk, msg.sender, address(this), lot);
 
@@ -180,7 +178,7 @@ contract Flipper is LibNote {
     }
     function deal(uint256 id) external note {
         require(bids[id].tic != 0 && (bids[id].tic < now || bids[id].end < now), "Flipper/not-finished");
-        cat.claw(bids[id].bar);
+        cat.claw(id);
         vat.flux(ilk, address(this), bids[id].guy, bids[id].lot);
         delete bids[id];
     }
@@ -188,7 +186,7 @@ contract Flipper is LibNote {
     function yank(uint256 id) external note auth {
         require(bids[id].guy != address(0), "Flipper/guy-not-set");
         require(bids[id].bid < bids[id].tab, "Flipper/already-dent-phase");
-        cat.claw(bids[id].tab);
+        cat.claw(id);
         vat.flux(ilk, address(this), msg.sender, bids[id].lot);
         vat.move(msg.sender, bids[id].guy, bids[id].bid);
         delete bids[id];

@@ -66,8 +66,11 @@ contract Cat_ is Cat {
     uint256 constant public RAD = 10 ** 45;
     uint256 constant public MLN = 10 **  6;
 
-    constructor(address vat_) Cat(vat_) public {
-        litter = 5 * MLN * RAD;
+    constructor(address vat_) Cat(vat_) public {}
+
+    function insert_tab(address flip, uint id, uint tab) public {
+        tabs[flip][id] = tab;
+        litter = litter + tab;
     }
 }
 
@@ -137,7 +140,6 @@ contract FlipTest is DSTest {
                   , usr: usr
                   , gal: gal
                   , bid: 0
-                  , bar: 50 ether
                   });
     }
     function testFail_tend_empty() public {
@@ -150,7 +152,6 @@ contract FlipTest is DSTest {
                             , usr: usr
                             , gal: gal
                             , bid: 0
-                            , bar: 50 ether
                             });
 
         Guy(ali).tend(id, 100 ether, 1 ether);
@@ -178,7 +179,6 @@ contract FlipTest is DSTest {
                             , usr: usr
                             , gal: gal
                             , bid: 0
-                            , bar: 50 ether
                             });
         hevm.warp(now + 5 hours);
 
@@ -194,7 +194,6 @@ contract FlipTest is DSTest {
                             , usr: usr
                             , gal: gal
                             , bid: 0
-                            , bar: 50 ether
                             });
         Guy(ali).tend(id, 100 ether,  1 ether);
         Guy(bob).tend(id, 100 ether, 50 ether);
@@ -211,7 +210,6 @@ contract FlipTest is DSTest {
                             , usr: usr
                             , gal: gal
                             , bid: 0
-                            , bar: 200 ether
                             });
 
         assertEq(vat.dai_balance(ali), 200 ether);
@@ -227,7 +225,6 @@ contract FlipTest is DSTest {
                             , usr: usr
                             , gal: gal
                             , bid: 0
-                            , bar: 50 ether
                             });
         assertTrue( Guy(ali).try_tend(id, 100 ether, 1.00 ether));
         assertTrue(!Guy(bob).try_tend(id, 100 ether, 1.01 ether));
@@ -249,7 +246,6 @@ contract FlipTest is DSTest {
                             , usr: usr
                             , gal: gal
                             , bid: 0
-                            , bar: 50 ether
                             });
 
         // only after ttl
@@ -263,7 +259,6 @@ contract FlipTest is DSTest {
                             , usr: usr
                             , gal: gal
                             , bid: 0
-                            , bar: 50 ether
                             });
 
         // or after end
@@ -280,7 +275,6 @@ contract FlipTest is DSTest {
                             , usr: usr
                             , gal: gal
                             , bid: 0
-                            , bar: 50 ether
                             });
         // check no tick
         assertTrue(!Guy(ali).try_tick(id));
@@ -300,7 +294,6 @@ contract FlipTest is DSTest {
                             , usr: usr
                             , gal: gal
                             , bid: 0
-                            , bar: 50 ether
                             });
         assertTrue(!Guy(ali).try_deal(id));
         hevm.warp(now + 2 weeks);
@@ -314,8 +307,8 @@ contract FlipTest is DSTest {
                             , usr: usr
                             , gal: gal
                             , bid: 0
-                            , bar: rad(50 ether)
                             });
+        cat.insert_tab(address(flip), id, rad(50 ether));
 
         Guy(ali).tend(id, 100 ether, 1 ether);
 
@@ -323,8 +316,9 @@ contract FlipTest is DSTest {
         assertEq(vat.dai_balance(ali), 199 ether);
         assertEq(vat.dai_balance(gal),   1 ether);
 
-        // we have some amount of litter in the box
-        assertEq(cat.litter(), 5 * MLN * RAD);
+        // we have litter associated with this auction
+        assertEq(cat.litter(), rad(50 ether));
+        assertEq(cat.tabs(address(flip), id), rad(50 ether));
 
         vat.mint(address(this), 1 ether);
         flip.yank(id);
@@ -336,8 +330,8 @@ contract FlipTest is DSTest {
         // gems go to caller
         assertEq(vat.gem_balance(address(this)), 1000 ether);
 
-        // cat.scoop(tab) is called decrementing the litter accumulator
-        assertEq(cat.litter(), (5 * MLN * RAD) - rad(50 ether));
+        // cat.claw(id) is called decrementing the litter accumulator
+        assertEq(cat.litter(), 0);
     }
     function test_yank_dent() public {
         uint id = flip.kick({ lot: 100 ether
@@ -345,11 +339,12 @@ contract FlipTest is DSTest {
                             , usr: usr
                             , gal: gal
                             , bid: 0
-                            , bar: 50 ether
                             });
+        cat.insert_tab(address(flip), id + 1, rad(100 ether));
 
-        // we have some amount of litter in the box
-        assertEq(cat.litter(), 5 * MLN * RAD);
+        // we have litter (but not for this auction)
+        assertEq(cat.litter(), rad(100 ether));
+        assertEq(cat.tabs(address(flip), id), 0);
 
         Guy(ali).tend(id, 100 ether,  1 ether);
         Guy(bob).tend(id, 100 ether, 50 ether);
@@ -359,6 +354,6 @@ contract FlipTest is DSTest {
         assertTrue(!Guy(ali).try_yank(id));
 
         // we have same amount of litter in the box
-        assertEq(cat.litter(), 5 * MLN * RAD);
+        assertEq(cat.litter(), rad(100 ether));
     }
 }
