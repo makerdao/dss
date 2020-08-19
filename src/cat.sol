@@ -152,6 +152,7 @@ contract Cat is LibNote {
 
             dart = min(art, mul(min(milk.dunk, room), RAY) / rate / milk.chop);
         }
+        require(dart > 0, "Cat/null-auction");
 
         uint256 dink = min(ink, mul(ink, dart) / art);
 
