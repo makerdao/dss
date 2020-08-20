@@ -827,6 +827,61 @@ contract BiteTest is DSTest {
         assertEq(vat.balanceOf(address(vow)),  150 ether);
     }
 
+    function testFail_null_auctions_realistic_values() public {
+        vat.file("gold", "dust", rad(100 ether));
+        vat.file("gold", "spot", ray(2.5 ether));
+        vat.file("gold", "line", rad(2000 ether));
+        vat.file("Line",         rad(2000 ether));
+        vat.fold("gold", address(vow), int256(ray(0.25 ether)));
+        vat.frob("gold", me, me, me, 800 ether, 2000 ether);
+
+        vat.file("gold", 'spot', ray(1 ether));  // now unsafe
+
+        // slightly contrived value to leave tiny amount of room post-liquidation
+        cat.file("box", rad(1130 ether) + 1);  
+        cat.file("gold", "dunk", rad(1130 ether));
+        cat.file("gold", "chop", ray(1.13 ether));
+        cat.bite("gold", me);
+        assertEq(cat.litter(), rad(1130 ether));
+        uint room = cat.box() - cat.litter();
+        assertEq(room, 1);
+        (, uint256 rate,,,) = vat.ilks("gold");
+        (, uint256 chop,) = cat.ilks("gold");
+        assertEq(room * ray(1 ether) / rate / chop, 0);
+
+        // Biting any non-zero amount of debt would overflow the box,
+        // so this should revert and not create a null auction.
+        // In this case we're protected by the dustiness check on room.
+        cat.bite("gold", me);
+    }
+
+    function testFail_null_auctions_artificial_values() public {
+        // artificially tiny dust value, e.g. due to misconfiguration
+        vat.file("dust", "dust", 1);
+        vat.file("gold", "spot", ray(2.5 ether));
+        vat.frob("gold", me, me, me, 100 ether, 200 ether);
+
+        vat.file("gold", 'spot', ray(1 ether));  // now unsafe
+
+        // contrived value to leave tiny amount of room post-liquidation
+        cat.file("box", rad(113 ether) + 2);
+        cat.file("gold", "dunk", rad(113  ether));
+        cat.file("gold", "chop", ray(1.13 ether));
+        cat.bite("gold", me);
+        assertEq(cat.litter(), rad(113 ether));
+        uint room = cat.box() - cat.litter();
+        assertEq(room, 2);
+        (, uint256 rate,,,) = vat.ilks("gold");
+        (, uint256 chop,) = cat.ilks("gold");
+        assertEq(room * ray(1 ether) / rate / chop, 0);
+
+        // Biting any non-zero amount of debt would overflow the box,
+        // so this should revert and not create a null auction.
+        // The dustiness check on room doesn't apply here, so additional
+        // logic is needed to make this test pass.
+        cat.bite("gold", me);
+    }
+
     function test_floppy_bite() public {
         vat.file("gold", 'spot', ray(2.5 ether));
         vat.frob("gold", me, me, me, 40 ether, 100 ether);
