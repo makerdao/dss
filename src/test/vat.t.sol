@@ -789,7 +789,7 @@ contract BiteTest is DSTest {
         assertEq(vat.balanceOf(address(vow)),  150 ether);
     }
 
-    function testFail_null_auctions_realistic_values() public {
+    function testFail_null_auctions_art_realistic_values() public {
         vat.file("gold", "dust", rad(100 ether));
         vat.file("gold", "spot", ray(2.5 ether));
         vat.file("gold", "line", rad(2000 ether));
@@ -817,7 +817,7 @@ contract BiteTest is DSTest {
         cat.bite("gold", me);
     }
 
-    function testFail_null_auctions_artificial_values() public {
+    function testFail_null_auctions_art_artificial_values() public {
         // artificially tiny dust value, e.g. due to misconfiguration
         vat.file("dust", "dust", 1);
         vat.file("gold", "spot", ray(2.5 ether));
@@ -841,6 +841,18 @@ contract BiteTest is DSTest {
         // so this should revert and not create a null auction.
         // The dustiness check on room doesn't apply here, so additional
         // logic is needed to make this test pass.
+        cat.bite("gold", me);
+    }
+
+    function testFail_null_auctions_ilk_artificial_values() public {
+        // we're going to make 1 wei of ink worth 250
+        vat.file("gold", "spot", ray(250 ether) * 1 ether);
+        cat.file("gold", "dunk", rad(50 ether));
+        vat.frob("gold", me, me, me, 1, 100 ether);
+
+        vat.file("gold", 'spot', 1);  // massive price crash, now unsafe
+
+        // This should leave us with 0 dink value, and fail
         cat.bite("gold", me);
     }
 
