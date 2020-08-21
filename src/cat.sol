@@ -58,7 +58,7 @@ contract Cat is LibNote {
     // --- Data ---
     struct Ilk {
         address flip;  // Liquidator
-        uint256 chop;  // Liquidation Penalty  [ray]
+        uint256 chop;  // Liquidation Penalty  [wad]
         uint256 dunk;  // Liquidation Quantity [rad]
     }
 
@@ -89,9 +89,7 @@ contract Cat is LibNote {
     }
 
     // --- Math ---
-    uint256 constant RAY = 10 ** 27;
-
-    uint256 constant MAX_DUNK = uint256(-1) / RAY;
+    uint256 constant WAD = 10 ** 18;
 
     function min(uint256 x, uint256 y) internal pure returns (uint256 z) {
         if (x > y) { z = y; } else { z = x; }
@@ -105,11 +103,6 @@ contract Cat is LibNote {
     function mul(uint256 x, uint256 y) internal pure returns (uint256 z) {
         require(y == 0 || (z = x * y) / y == x);
     }
-    function rmul(uint x, uint y) internal pure returns (uint z) {
-        z = x * y;
-        require(y == 0 || z / y == x);
-        z = z / RAY;
-    }
 
     // --- Administration ---
     function file(bytes32 what, address data) external note auth {
@@ -122,7 +115,7 @@ contract Cat is LibNote {
     }
     function file(bytes32 ilk, bytes32 what, uint256 data) external note auth {
         if (what == "chop") ilks[ilk].chop = data;
-        else if (what == "dunk" && data <= MAX_DUNK) ilks[ilk].dunk = data;
+        else if (what == "dunk") ilks[ilk].dunk = data;
         else revert("Cat/file-unrecognized-param");
     }
     function file(bytes32 ilk, bytes32 what, address flip) external note auth {
@@ -147,10 +140,10 @@ contract Cat is LibNote {
         {
             uint256 room = sub(box, litter);
 
-            // TODO(cmooney): test remaining space in litterbox if dusty
+            // test whether the remaining space in the litterbox is dusty
             require(litter < box && room >= dust, "Cat/liquidation-limit-hit");
 
-            dart = min(art, mul(min(milk.dunk, room), RAY) / rate / milk.chop);
+            dart = min(art, mul(min(milk.dunk, room), WAD) / rate / milk.chop);
         }
         require(dart > 0, "Cat/null-auction");
 
@@ -165,7 +158,9 @@ contract Cat is LibNote {
         vow.fess(mul(dart, rate));
 
         { // Avoid stack too deep
-            uint256 tab = mul(mul(dart, rate), milk.chop) / RAY;
+            // This calcuation will overflow if dart*rate exceeds ~10^14,
+            // i.e. the maximum dunk is roughly 100 trillion DAI.
+            uint256 tab = mul(mul(dart, rate), milk.chop) / WAD;
             litter = add(litter, tab);
 
             id = Kicker(milk.flip).kick({
