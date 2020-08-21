@@ -800,7 +800,7 @@ contract BiteTest is DSTest {
         vat.file("gold", 'spot', ray(1 ether));  // now unsafe
 
         // slightly contrived value to leave tiny amount of room post-liquidation
-        cat.file("box", rad(1130 ether) + 1);  
+        cat.file("box", rad(1130 ether) + 1);
         cat.file("gold", "dunk", rad(1130 ether));
         cat.file("gold", "chop", 1.13 ether);
         cat.bite("gold", me);
@@ -842,6 +842,52 @@ contract BiteTest is DSTest {
         // The dustiness check on room doesn't apply here, so additional
         // logic is needed to make this test pass.
         cat.bite("gold", me);
+    }
+
+    function testFail_null_spot_value() public {
+        // spot = tag / (par . mat)
+        // tag=5, mat=2
+        vat.file("gold", 'spot', ray(2.5 ether));
+        vat.frob("gold", me, me, me, 100 ether, 150 ether);
+
+        vat.file("gold", 'spot', ray(1 ether));  // now unsafe
+
+        assertEq(ink("gold", address(this)), 100 ether);
+        assertEq(art("gold", address(this)), 150 ether);
+        assertEq(vow.Woe(), 0 ether);
+        assertEq(gem("gold", address(this)), 900 ether);
+
+        cat.file("gold", "dunk", rad(75 ether));
+        assertEq(cat.litter(), 0);
+        cat.bite("gold", address(this));
+        assertEq(cat.litter(), rad(75 ether));
+        assertEq(ink("gold", address(this)), 50 ether);
+        assertEq(art("gold", address(this)), 75 ether);
+        assertEq(vow.sin(now), rad(75 ether));
+        assertEq(gem("gold", address(this)), 900 ether);
+
+        vat.file("gold", 'spot', 0);
+
+        // this should fail because spot is 0
+        cat.bite("gold", address(this));
+    }
+
+    function testFail_vault_is_safe() public {
+        // spot = tag / (par . mat)
+        // tag=5, mat=2
+        vat.file("gold", 'spot', ray(2.5 ether));
+        vat.frob("gold", me, me, me, 100 ether, 150 ether);
+
+        assertEq(ink("gold", address(this)), 100 ether);
+        assertEq(art("gold", address(this)), 150 ether);
+        assertEq(vow.Woe(), 0 ether);
+        assertEq(gem("gold", address(this)), 900 ether);
+
+        cat.file("gold", "dunk", rad(75 ether));
+        assertEq(cat.litter(), 0);
+
+        // this should fail because the vault is safe
+        cat.bite("gold", address(this));
     }
 
     function test_floppy_bite() public {
