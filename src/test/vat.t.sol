@@ -728,7 +728,7 @@ contract BiteTest is DSTest {
         assertEq(cat.box(), rad(100 ether));
         assertEq(cat.litter(), 0);
         cat.bite("gold", address(this));
-        assertEq(cat.litter(), rad(80 ether + 1)); // Room is now dusty
+        assertEq(cat.litter(), rad(80 ether + 1)); // room is now dusty
         assertEq(ink("gold", address(this)), 0 ether);
         assertEq(art("gold", address(this)), 0 ether);
         assertEq(vow.sin(now), rad(80 ether + 1));
@@ -747,7 +747,7 @@ contract BiteTest is DSTest {
         assertEq(vow.Woe(), 0 ether);
         assertEq(gem("gold", address(this)), 850 ether);
 
-        assertTrue(cat.box() - cat.litter() < rad(20 ether)); // Room < dust
+        assertTrue(cat.box() - cat.litter() < rad(20 ether)); // room < dust
 
         // // this bite puts us over the litterbox
         cat.bite("gold", address(this));
