@@ -148,8 +148,8 @@ contract Cat is LibNote {
 
         uint256 dink = min(ink, mul(ink, dart) / art);
 
-        require(dart > 0 && dink > 0, "Cat/null-auction");
-        require(dink <= 2**255 && dart <= 2**255, "Cat/overflow");
+        require(dart >  0      && dink >  0     , "Cat/null-auction");
+        require(dart <= 2**255 && dink <= 2**255, "Cat/overflow"    );
 
         // This may leave the CDP in a dusty state
         vat.grab(
