@@ -856,6 +856,23 @@ contract BiteTest is DSTest {
         cat.bite("gold", me);
     }
 
+    function testFail_null_auctions_dink_artificial_values_2() public {
+        vat.file("gold", "spot", ray(2000 ether));
+        vat.file("gold", "line", rad(20000 ether));
+        vat.file("Line",         rad(20000 ether));
+        vat.frob("gold", me, me, me, 10 ether, 15000 ether);
+
+        cat.file("box", rad(1000000 ether));  // plenty of room
+
+        // misconfigured dunk (e.g. precision factor incorrect in spell)
+        cat.file("gold", "dunk", rad(100));
+
+        vat.file("gold", 'spot', ray(1000 ether));  // now unsafe
+
+        // This should leave us with 0 dink value, and fail
+        cat.bite("gold", me);
+    }
+
     function testFail_null_spot_value() public {
         // spot = tag / (par . mat)
         // tag=5, mat=2
