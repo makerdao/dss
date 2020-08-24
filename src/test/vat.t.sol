@@ -528,12 +528,12 @@ contract BiteTest is DSTest {
     }
 
     function test_set_dunk_multiple_ilks() public {
-        cat.file("gold",   "dunk", rad(115792 ether));
-        (,, uint256 goldLump) = cat.ilks("gold");
-        assertEq(goldLump, rad(115792 ether));
-        cat.file("silver", "dunk", rad(115792 ether));
-        (,, uint256 silverLump) = cat.ilks("silver");
-        assertEq(silverLump, rad(115792 ether));
+        cat.file("gold",   "dunk", rad(111111 ether));
+        (,, uint256 goldDunk) = cat.ilks("gold");
+        assertEq(goldDunk, rad(111111 ether));
+        cat.file("silver", "dunk", rad(222222 ether));
+        (,, uint256 silverDunk) = cat.ilks("silver");
+        assertEq(silverDunk, rad(222222 ether));
     }
     function test_cat_set_box() public {
         assertEq(cat.box(), rad((10 ether) * MLN));
@@ -703,6 +703,53 @@ contract BiteTest is DSTest {
         assertEq(gem("gold", address(this)), 900 ether);
 
         // this bite puts us over the litterbox
+        cat.bite("gold", address(this));
+    }
+
+    // Tests for multiple bites where second bite has a dusty amount for room
+    function testFail_dusty_litterbox() public {
+        // spot = tag / (par . mat)
+        // tag=5, mat=2
+        vat.file("gold", 'spot', ray(2.5 ether));
+        vat.frob("gold", me, me, me, 50 ether, 80 ether + 1);
+
+        // tag=4, mat=2
+        vat.file("gold", 'spot', ray(1 ether));  // now unsafe
+
+        assertEq(ink("gold", address(this)), 50 ether);
+        assertEq(art("gold", address(this)), 80 ether + 1);
+        assertEq(vow.Woe(), 0 ether);
+        assertEq(gem("gold", address(this)), 950 ether);
+
+        cat.file("box",  rad(100 ether));
+        vat.file("gold", "dust", rad(20 ether));
+        cat.file("gold", "dunk", rad(100 ether));
+
+        assertEq(cat.box(), rad(100 ether));
+        assertEq(cat.litter(), 0);
+        cat.bite("gold", address(this));
+        assertEq(cat.litter(), rad(80 ether + 1)); // room is now dusty
+        assertEq(ink("gold", address(this)), 0 ether);
+        assertEq(art("gold", address(this)), 0 ether);
+        assertEq(vow.sin(now), rad(80 ether + 1));
+        assertEq(gem("gold", address(this)), 950 ether);
+
+        // spot = tag / (par . mat)
+        // tag=5, mat=2
+        vat.file("gold", 'spot', ray(2.5 ether));
+        vat.frob("gold", me, me, me, 100 ether, 150 ether);
+
+        // tag=4, mat=2
+        vat.file("gold", 'spot', ray(1 ether));  // now unsafe
+
+        assertEq(ink("gold", address(this)), 100 ether);
+        assertEq(art("gold", address(this)), 150 ether);
+        assertEq(vow.Woe(), 0 ether);
+        assertEq(gem("gold", address(this)), 850 ether);
+
+        assertTrue(cat.box() - cat.litter() < rad(20 ether)); // room < dust
+
+        // // this bite puts us over the litterbox
         cat.bite("gold", address(this));
     }
 
