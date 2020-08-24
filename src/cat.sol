@@ -145,11 +145,11 @@ contract Cat is LibNote {
 
             dart = min(art, mul(min(milk.dunk, room), WAD) / rate / milk.chop);
         }
-        require(dart > 0, "Cat/null-auction");
 
         uint256 dink = min(ink, mul(ink, dart) / art);
 
-        require(dink <= 2**255 && dart <= 2**255, "Cat/overflow");
+        require(dart >  0      && dink >  0     , "Cat/null-auction");
+        require(dart <= 2**255 && dink <= 2**255, "Cat/overflow"    );
 
         // This may leave the CDP in a dusty state
         vat.grab(
