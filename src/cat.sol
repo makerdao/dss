@@ -28,7 +28,9 @@ interface VatLike {
     function ilks(bytes32) external view returns (
         uint256 Art,  // [wad]
         uint256 rate, // [ray]
-        uint256 spot  // [ray]
+        uint256 spot, // [ray]
+        uint256 line, // [rad]
+        uint256 dust  // [rad]
     );
     function urns(bytes32,address) external view returns (
         uint256 ink,  // [wad]
@@ -56,8 +58,8 @@ contract Cat is LibNote {
     // --- Data ---
     struct Ilk {
         address flip;  // Liquidator
-        uint256 chop;  // Liquidation Penalty  [ray]
-        uint256 lump;  // Liquidation Quantity [rad]
+        uint256 chop;  // Liquidation Penalty  [wad]
+        uint256 dunk;  // Liquidation Quantity [rad]
     }
 
     mapping (bytes32 => Ilk) public ilks;
@@ -87,9 +89,7 @@ contract Cat is LibNote {
     }
 
     // --- Math ---
-    uint256 constant RAY = 10 ** 27;
-
-    uint256 constant MAX_LUMP = uint256(-1) / RAY;
+    uint256 constant WAD = 10 ** 18;
 
     function min(uint256 x, uint256 y) internal pure returns (uint256 z) {
         if (x > y) { z = y; } else { z = x; }
@@ -115,7 +115,7 @@ contract Cat is LibNote {
     }
     function file(bytes32 ilk, bytes32 what, uint256 data) external note auth {
         if (what == "chop") ilks[ilk].chop = data;
-        else if (what == "lump" && data <= MAX_LUMP) ilks[ilk].lump = data;
+        else if (what == "dunk") ilks[ilk].dunk = data;
         else revert("Cat/file-unrecognized-param");
     }
     function file(bytes32 ilk, bytes32 what, address flip) external note auth {
@@ -129,41 +129,54 @@ contract Cat is LibNote {
 
     // --- CDP Liquidation ---
     function bite(bytes32 ilk, address urn) external returns (uint256 id) {
-        (, uint256 rate, uint256 spot) = vat.ilks(ilk);
+        (,uint256 rate,uint256 spot,,uint256 dust) = vat.ilks(ilk);
         (uint256 ink, uint256 art) = vat.urns(ilk, urn);
 
         require(live == 1, "Cat/not-live");
         require(spot > 0 && mul(ink, spot) < mul(art, rate), "Cat/not-unsafe");
-        require(litter < box, "Cat/liquidation-limit-hit");
 
         Ilk memory milk = ilks[ilk];
+        uint256 dart;
+        {
+            uint256 room = sub(box, litter);
 
-        uint256 limit = min(milk.lump, sub(box, litter));
-        uint256 fart = min(art, mul(limit, RAY) / rate / milk.chop);
-        uint256 fink = min(ink, mul(ink, fart) / art);
+            // test whether the remaining space in the litterbox is dusty
+            require(litter < box && room >= dust, "Cat/liquidation-limit-hit");
 
-        require(fink <= 2**255 && fart <= 2**255, "Cat/overflow");
-        vat.grab(ilk, urn, address(this), address(vow), -int256(fink), -int256(fart));
-        vow.fess(mul(fart, rate));
+            dart = min(art, mul(min(milk.dunk, room), WAD) / rate / milk.chop);
+        }
+
+        uint256 dink = min(ink, mul(ink, dart) / art);
+
+        require(dart >  0      && dink >  0     , "Cat/null-auction");
+        require(dart <= 2**255 && dink <= 2**255, "Cat/overflow"    );
+
+        // This may leave the CDP in a dusty state
+        vat.grab(
+            ilk, urn, address(this), address(vow), -int256(dink), -int256(dart)
+        );
+        vow.fess(mul(dart, rate));
 
         { // Avoid stack too deep
-            uint256 tab = mul(mul(fart, rate), milk.chop) / RAY;
+            // This calcuation will overflow if dart*rate exceeds ~10^14,
+            // i.e. the maximum dunk is roughly 100 trillion DAI.
+            uint256 tab = mul(mul(dart, rate), milk.chop) / WAD;
             litter = add(litter, tab);
 
             id = Kicker(milk.flip).kick({
                 urn: urn,
                 gal: address(vow),
                 tab: tab,
-                lot: fink,
+                lot: dink,
                 bid: 0
             });
         }
 
-        emit Bite(ilk, urn, fink, fart, mul(fart, rate), milk.flip, id);
+        emit Bite(ilk, urn, dink, dart, mul(dart, rate), milk.flip, id);
     }
 
-    function scoop(uint256 poop) external note auth {
-        litter = sub(litter, poop);
+    function claw(uint256 rad) external note auth {
+        litter = sub(litter, rad);
     }
 
     function cage() external note auth {
