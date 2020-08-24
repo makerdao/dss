@@ -689,6 +689,17 @@ contract BiteTest is DSTest {
         assertEq(vow.Woe(), 0 ether);
         assertEq(gem("gold", address(this)), 900 ether);
 
+        // To check this yourself, use the following rate calculation (example 8%):
+        //
+        // $ bc -l <<< 'scale=27; e( l(1.08)/(60 * 60 * 24 * 365) )'
+        uint256 EIGHT_PCT = 1000000002440418608258400030;
+        jug.file("gold", "duty", EIGHT_PCT);
+        hevm.warp(now + 10 days);
+        jug.drip("gold");
+        (, uint rate,,,) = vat.ilks("gold");
+
+        uint vowBalance = vat.dai(address(vow)); // Balance updates after vat.fold is called from jug
+
         cat.file("box", rad(75 ether));
         cat.file("gold", "dunk", rad(100 ether));
         assertEq(cat.box(), rad(75 ether));
@@ -699,16 +710,16 @@ contract BiteTest is DSTest {
         assertTrue(cat.box() - cat.litter() < ray(1 ether)); // Rounding error to fill box
         assertEq(cat.litter(), tab);                         // tab = 74.9999... RAD
 
-        uint256 dart = rad(75 ether) * WAD / RAY / 1.13 ether; // room / rate / chop
+        uint256 dart = rad(75 ether) * WAD / rate / 1.13 ether; // room / rate / chop
         uint256 dink = 100 ether * dart / 150 ether;
 
         assertEq(ink("gold", address(this)), 100 ether - dink); // Taken in vat.grab
         assertEq(art("gold", address(this)), 150 ether - dart); // Taken in vat.grab
-        assertEq(vow.sin(now), rad(dart));                      // dart * rate
+        assertEq(vow.sin(now), dart * rate);               
         assertEq(gem("gold", address(this)), 900 ether);
 
         assertEq(vat.dai(address(this)), rad(150 ether));
-        assertEq(vat.dai(address(vow)),    0 ether);
+        assertEq(vat.dai(address(vow)),  vowBalance);
         flip.tend(auction, dink, rad( 1 ether));
         assertEq(cat.litter(), tab);
         assertEq(vat.dai(address(this)), rad(149 ether));
@@ -720,14 +731,14 @@ contract BiteTest is DSTest {
         assertEq(cat.litter(), tab);
         assertEq(vat.dai(address(this)), rad(150 ether) - tab);
         assertEq(gem("gold", address(this)), 900 ether + (dink - 25 ether));
-        assertEq(vow.sin(now), rad(dart));
+        assertEq(vow.sin(now), dart * rate);
 
         hevm.warp(now + 4 hours);
         flip.deal(auction);
         assertEq(cat.litter(), 0);
         assertEq(gem("gold", address(this)),  900 ether + dink); // (flux another 25 wad into gem)
         assertEq(vat.dai(address(this)), rad(150 ether) - tab);  
-        assertEq(vat.dai(address(vow)),  tab);
+        assertEq(vat.dai(address(vow)),  vowBalance + tab);
     }
 
     // tests a partial lot liquidation that fill litterbox
