@@ -710,18 +710,18 @@ contract BiteTest is DSTest {
         assertEq(vow.sin(now), rad(dart));                      // dart * rate
         assertEq(gem("gold", address(this)), 900 ether);
 
-        assertEq(vat.balanceOf(address(this)), 150 ether);
-        assertEq(vat.balanceOf(address(vow)),    0 ether);
+        assertEq(vat.dai(address(this)), rad(150 ether));
+        assertEq(vat.dai(address(vow)),    0 ether);
         flip.tend(auction, dink, rad( 1 ether));
         assertEq(cat.litter(), tab);
-        assertEq(vat.balanceOf(address(this)), 149 ether);
+        assertEq(vat.dai(address(this)), rad(149 ether));
         flip.tend(auction, dink, tab);
-        assertEq(vat.balanceOf(address(this)), 75 ether);
+        assertEq(vat.dai(address(this)), rad(150 ether) - tab);
 
         assertEq(gem("gold", address(this)),  900 ether);
         flip.dent(auction, 25 ether, tab);
         assertEq(cat.litter(), tab);
-        assertEq(vat.balanceOf(address(this)), 75 ether);
+        assertEq(vat.dai(address(this)), rad(150 ether) - tab);
         assertEq(gem("gold", address(this)), 900 ether + (dink - 25 ether));
         assertEq(vow.sin(now), rad(dart));
 
@@ -729,8 +729,8 @@ contract BiteTest is DSTest {
         flip.deal(auction);
         assertEq(cat.litter(), 0);
         assertEq(gem("gold", address(this)),  900 ether + dink); // (flux another 25 wad into gem)
-        assertEq(vat.balanceOf(address(this)), 75 ether);        // 150 - 74.99999 rounds to 75
-        assertEq(vat.balanceOf(address(vow)),  tab / RAY);
+        assertEq(vat.dai(address(this)), rad(150 ether) - tab);  
+        assertEq(vat.dai(address(vow)),  tab);
     }
 
     // tests a partial lot liquidation that fill litterbox
