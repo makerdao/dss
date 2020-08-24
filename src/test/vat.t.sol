@@ -443,6 +443,9 @@ contract BiteTest is DSTest {
     address me;
 
     uint256 constant MLN = 10 ** 6;
+    uint256 constant WAD = 10 ** 18;
+    uint256 constant RAY = 10 ** 27;
+    uint256 constant RAD = 10 ** 45;
 
     function try_frob(bytes32 ilk, int ink, int art) public returns (bool ok) {
         string memory sig = "frob(bytes32,address,address,address,int256,int256)";
@@ -633,7 +636,6 @@ contract BiteTest is DSTest {
 
         // tag=4, mat=2
         vat.file("gold", 'spot', ray(1 ether));  // now unsafe
-        // cat.file("gold", "chop", 1.1 ether);
 
         assertEq(ink("gold", address(this)), 100 ether);
         assertEq(art("gold", address(this)), 150 ether);
@@ -645,9 +647,7 @@ contract BiteTest is DSTest {
         assertEq(cat.box(), rad(75 ether));
         assertEq(cat.litter(), 0);
         uint auction = cat.bite("gold", address(this));
-        // (,,,,,,,uint tab) = flip.bids(auction);
-        // assertTrue(rad(75 ether) - cat.litter() < ray(3 ether));
-        // assertEq(cat.litter(), tab);
+
         assertEq(ink("gold", address(this)), 50 ether);
         assertEq(art("gold", address(this)), 75 ether);
         assertEq(vow.sin(now), rad(75 ether));
@@ -674,6 +674,63 @@ contract BiteTest is DSTest {
         assertEq(gem("gold", address(this)),  950 ether);
         assertEq(vat.balanceOf(address(this)), 75 ether);
         assertEq(vat.balanceOf(address(vow)),  75 ether);
+    }
+
+    // tests a partial lot liquidation because it would fill the literbox
+    function test_partial_litterbox_realistic_values() public {
+        // spot = tag / (par . mat)
+        // tag=5, mat=2
+        vat.file("gold", 'spot', ray(2.5 ether));
+        vat.frob("gold", me, me, me, 100 ether, 150 ether);
+
+        // tag=4, mat=2
+        vat.file("gold", 'spot', ray(1 ether));  // now unsafe
+        cat.file("gold", "chop", 1.13 ether);
+
+        assertEq(ink("gold", address(this)), 100 ether);
+        assertEq(art("gold", address(this)), 150 ether);
+        assertEq(vow.Woe(), 0 ether);
+        assertEq(gem("gold", address(this)), 900 ether);
+
+        cat.file("box", rad(75 ether));
+        cat.file("gold", "dunk", rad(100 ether));
+        assertEq(cat.box(), rad(75 ether));
+        assertEq(cat.litter(), 0);
+        uint auction = cat.bite("gold", address(this));
+        (,,,,,,,uint tab) = flip.bids(auction);
+
+        assertTrue(cat.box() - cat.litter() < ray(1 ether)); // Rounding error to fill box
+        assertEq(cat.litter(), tab);                         // tab = 74.9999... RAD
+
+        uint256 dart = rad(75 ether) * WAD / RAY / 1.13 ether; // room / rate / chop
+        uint256 dink = 100 ether * dart / 150 ether;
+
+        assertEq(ink("gold", address(this)), 100 ether - dink); // Taken in vat.grab
+        assertEq(art("gold", address(this)), 150 ether - dart); // Taken in vat.grab
+        assertEq(vow.sin(now), rad(dart));                      // dart * rate
+        assertEq(gem("gold", address(this)), 900 ether);
+
+        assertEq(vat.balanceOf(address(this)), 150 ether);
+        assertEq(vat.balanceOf(address(vow)),    0 ether);
+        flip.tend(auction, dink, rad( 1 ether));
+        assertEq(cat.litter(), tab);
+        assertEq(vat.balanceOf(address(this)), 149 ether);
+        flip.tend(auction, dink, tab);
+        assertEq(vat.balanceOf(address(this)), 75 ether);
+
+        assertEq(gem("gold", address(this)),  900 ether);
+        flip.dent(auction, 25 ether, tab);
+        assertEq(cat.litter(), tab);
+        assertEq(vat.balanceOf(address(this)), 75 ether);
+        assertEq(gem("gold", address(this)), 900 ether + (dink - 25 ether));
+        assertEq(vow.sin(now), rad(dart));
+
+        hevm.warp(now + 4 hours);
+        flip.deal(auction);
+        assertEq(cat.litter(), 0);
+        assertEq(gem("gold", address(this)),  900 ether + dink); // (flux another 25 wad into gem)
+        assertEq(vat.balanceOf(address(this)), 75 ether);        // 150 - 74.99999 rounds to 75
+        assertEq(vat.balanceOf(address(vow)),  tab / RAY);
     }
 
     // tests a partial lot liquidation that fill litterbox
