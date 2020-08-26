@@ -160,7 +160,7 @@ contract Cat is LibNote {
         { // Avoid stack too deep
             // This calcuation will overflow if dart*rate exceeds ~10^14,
             // i.e. the maximum dunk is roughly 100 trillion DAI.
-            uint256 tab = mul(mul(dart, rate), milk.chop) / WAD;
+            uint256 tab = scratch(ilk,dart);
             litter = add(litter, tab);
 
             id = Kicker(milk.flip).kick({
@@ -181,5 +181,12 @@ contract Cat is LibNote {
 
     function cage() external note auth {
         live = 0;
+    }
+
+    // returns the tab amount for a given dart
+    function scratch(bytes32 ilk, uint dart) public view returns(uint tab){
+        (,uint256 rate,,,) = vat.ilks(ilk);
+        Ilk memory milk = ilks[ilk];
+        tab = mul(mul(dart, rate), milk.chop) / WAD;
     }
 }
