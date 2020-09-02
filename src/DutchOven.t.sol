@@ -8,7 +8,7 @@ contract DutchOvenTest is DSTest {
     Oven oven;
 
     function setUp() public {
-        oven = new Oven(address(0), bytes32("ilk"));
+        oven = new Oven(address(0), address(0), bytes32("ilk"));
     }
 
     function testFail_basic_sanity() public {

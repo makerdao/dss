@@ -29,6 +29,10 @@ contract SpotLike {
     function ilks(bytes32) public returns (PipLike, uint256);
 }
 
+contract DogLike {
+    function digs(uint) external;
+}
+
 contract OvenCallee {
     function ovenCall(uint256, uint256, bytes calldata) external;
 }
@@ -48,6 +52,7 @@ contract Oven {
 
     address  public vow;   // recipient of dai raised in auctions
     VatLike  public vat;   // Core CDP Engine
+    DogLike  public dog;   // Dog liquidation module
     SpotLike public spot;  // Spotter
     uint256  public buf;   // multiplicative factor to increase starting price    [ray]
     uint256  public dust;  // minimum tab in an auction; read from Vat instead??? [rad]
@@ -75,8 +80,9 @@ contract Oven {
     );
 
     // --- Init ---
-    constructor(address vat_, bytes32 ilk_) public {
+    constructor(address vat_, address dog_, bytes32 ilk_) public {
         vat = VatLike(vat_);
+        dog = DogLike(dog_);
         ilk = ilk_;
         cut = RAY;
         step = 1;
@@ -96,6 +102,10 @@ contract Oven {
         else if (what == "step") step = data;
         else if (what ==  "buf") buf  = data;
         else if (what == "dust") dust = data;
+        else revert("Oven/file-unrecognized-param");
+    }
+    function file(bytes32 what, address data) external /* note */ auth {
+        if (what == "dog") dog = DogLike(data);
         else revert("Oven/file-unrecognized-param");
     }
 
@@ -223,6 +233,9 @@ contract Oven {
 
         // Get DAI from who address
         vat.move(who, vow, owe);
+
+        // give the dog a bone: removes Dai out for liquidation from accumulator
+        dog.digs(owe);
 
         if (loaf.lot == 0) {
             delete loaves[id];
