@@ -48,24 +48,26 @@ contract Oven {
     }
 
     // --- Data ---
-    bytes32  public ilk;   // collateral type of this Oven
+    bytes32  public ilk;   // Collateral type of this Oven
 
-    address  public vow;   // recipient of dai raised in auctions
+    address  public vow;   // Recipient of dai raised in auctions
     VatLike  public vat;   // Core CDP Engine
     DogLike  public dog;   // Dog liquidation module
     SpotLike public spot;  // Spotter
-    uint256  public buf;   // multiplicative factor to increase starting price    [ray]
-    uint256  public dust;  // minimum tab in an auction; read from Vat instead??? [rad]
-    uint256  public step;  // length of time between price drops                  [seconds]
-    uint256  public cut;   // per-step multiplicative decrease in price           [ray]
-    uint256  public bakes; // bake count
+    uint256  public buf;   // Multiplicative factor to increase starting price    [ray]
+    uint256  public dust;  // Minimum tab in an auction; read from Vat instead??? [rad]
+    uint256  public step;  // Length of time between price drops                  [seconds]
+    uint256  public cut;   // Per-step multiplicative decrease in price           [ray]
+    uint256  public tail;  // Time elapsed before auction reset                   [seconds]
+    uint256  public cusp;  // Percentage drop before auction reset                [ray]
+    uint256  public bakes; // Bake count
 
     struct Loaf {
-        uint256 tab;  // dai to raise
-        uint256 lot;  // eth to sell
-        address usr;  // liquidated CDP
-        uint48  tic;  // auction start time
-        uint256 top;  // starting price
+        uint256 tab;  // Dai to raise
+        uint256 lot;  // ETH to sell
+        address usr;  // Liquidated CDP
+        uint48  tic;  // Auction start time
+        uint256 top;  // Starting price
     }
     mapping(uint256 => Loaf) public loaves;
 
@@ -73,6 +75,13 @@ contract Oven {
 
     // --- Events ---
     event Bake(
+        uint256  id,
+        uint256 tab,
+        uint256 lot,
+        address indexed usr
+    );
+
+    event Warm(
         uint256  id,
         uint256 tab,
         uint256 lot,
@@ -99,9 +108,11 @@ contract Oven {
     // --- Administration ---
     function file(bytes32 what, uint256 data) external {
         if      (what ==  "cut") require((cut = data) <= RAY, "Oven/cut-gt-RAY");
-        else if (what == "step") step = data;
         else if (what ==  "buf") buf  = data;
+        else if (what == "step") step = data;
         else if (what == "dust") dust = data;
+        else if (what == "tail") tail = data; // Time elapsed    before auction reset
+        else if (what == "cusp") cusp = data; // Percentage drop before auction reset
         else revert("Oven/file-unrecognized-param");
     }
     function file(bytes32 what, address data) external /* note */ auth {
@@ -128,7 +139,7 @@ contract Oven {
     function rdiv(uint x, uint y) internal pure returns (uint z) {
         z = mul(x, RAY) / y;
     }
-    // optimized version from dss PR #78
+    // Optimized version from dss PR #78
     function rpow(uint x, uint n, uint b) internal pure returns (uint z) {
         assembly {
             switch n case 0 { z := b }
@@ -174,7 +185,7 @@ contract Oven {
         loaves[id].usr = usr;
         loaves[id].tic = uint48(now);
 
-        // could get this from rmul(Vat.ilks(ilk).spot, Spotter.mat()) instead,
+        // Could get this from rmul(Vat.ilks(ilk).spot, Spotter.mat()) instead,
         // but if mat has changed since the last poke, the resulting value will
         // be incorrect.
         (PipLike pip, ) = spot.ilks(ilk);
@@ -185,7 +196,28 @@ contract Oven {
         emit Bake(id, tab, lot, usr);
     }
 
-    // buy amt of collateral from auction indexed by id
+    // Reset an auction
+    function warm(uint256 id) external { 
+        // Read auction data
+        Loaf memory loaf = loaves[id];
+        require(loaf.tab > 0, "Oven/not-running-auction");
+
+        // Check that auction needs reset
+        require(sub(now, loaf.tic) > tail || rdiv(pay, loaf.top) < cusp, "Oven/cannot-reset");
+        
+        loaves[id].tic = uint96(now);
+
+        // Could get this from rmul(Vat.ilks(ilk).spot, Spotter.mat()) instead, but if mat has changed since the
+        // last poke, the resulting value will be incorrect
+        (PipLike pip, ) = spot.ilks(ilk);
+        (bytes32 val, bool has) = pip.peek();
+        require(has, "Oven/invalid-price");
+        loaves[id].top = rmul(rdiv(mul(uint256(val), 10 ** 9), spot.par()), buf);
+
+        emit Warm(id, loaves[id].tab, loaves[id].lot, loaves[id].usr);
+    }
+
+    // Buy amt of collateral from auction indexed by id
     // TODO: Evaluate usage of `max` and `pay` variables.
     //       Consider using `pay` and `min`.
     function take(uint256 id,           // auction id
@@ -194,26 +226,30 @@ contract Oven {
                   address who,          // who will receive the collateral and pay the debt
                   bytes calldata data   //
     ) external lock {
-        // read auction data
+        // Read auction data
         Loaf memory loaf = loaves[id];
+        require(loaf.tab > 0, "Oven/not-running-auction");
 
-        // compute current price
+        // Compute current price
         uint256 pay = price(loaf.tic, loaf.top);
 
-        // ensure price is acceptable to buyer
+        // Check that auction doesn't need reset
+        require(sub(now, loaf.tic) <= tail && rdiv(pay, loaf.top) >= cusp, "Oven/needs-reset");
+
+        // Ensure price is acceptable to buyer
         require(pay <= max, "Oven/too-expensive");
 
-        // purchase as much as possible, up to amt
+        // Purchase as much as possible, up to amt
         uint256 slice = min(loaf.lot, amt);
 
         // DAI needed to buy a slice of this loaf
         uint256 owe = mul(slice, max);
 
-        // don't collect more than tab of DAI
+        // Don't collect more than tab of DAI
         if (owe > loaf.tab) {
             owe = loaf.tab;
 
-            // readjust slice
+            // Readjust slice
             slice = owe / max;
         }
 
@@ -240,7 +276,7 @@ contract Oven {
         if (loaf.lot == 0) {
             delete loaves[id];
         } else if (loaf.tab == 0) {
-            // should we return collateral incrementally instead?
+            // Should we return collateral incrementally instead?
             vat.flux(ilk, address(this), loaf.usr, loaf.lot);
             delete loaves[id];
         } else {
@@ -248,23 +284,23 @@ contract Oven {
             loaves[id].lot = loaf.lot;
         }
 
-        // emit event?
+        // Emit event?
     }
 
-    // returns the current price of the specified auction [ray]
+    // Returns the current price of the specified auction [ray]
     function price(uint256 id) external returns (uint256) {
         (,,, uint48 tic, uint256 top) = this.loaves(id);
         return price(tic, top);
     }
 
-    // returns the price adjusted for the amount of elapsed time since tic [ray]
+    // Returns the price adjusted for the amount of elapsed time since tic [ray]
     function price(uint48 tic, uint256 top) public returns (uint256) {
         return rmul(top, rpow(cut, sub(now, uint256(tic)) / step, RAY));
     }
 
     // --- Shutdown ---
 
-    // cancel an auction during ES
+    // Cancel an auction during ES
     function yank() external auth {
         // TODO
     }
