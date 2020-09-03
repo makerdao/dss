@@ -37,6 +37,10 @@ contract OvenCallee {
     function ovenCall(uint256, uint256, bytes calldata) external;
 }
 
+contract Abacus {
+    function price(uint256, uint256) external view returns (uint256);
+}
+
 contract Oven {
     // --- Auth ---
     mapping (address => uint) public wards;
@@ -54,6 +58,7 @@ contract Oven {
     VatLike  public vat;   // Core CDP Engine
     DogLike  public dog;   // Dog liquidation module
     SpotLike public spot;  // Spotter
+    Abacus   public calc;  // Helper contract to calculate current price of an auction
     uint256  public buf;   // Multiplicative factor to increase starting price    [ray]
     uint256  public dust;  // Minimum tab in an auction; read from Vat instead??? [rad]
     uint256  public step;  // Length of time between price drops                  [seconds]
@@ -63,11 +68,11 @@ contract Oven {
     uint256  public bakes; // Bake count
 
     struct Loaf {
-        uint256 tab;  // Dai to raise
-        uint256 lot;  // ETH to sell
+        uint256 tab;  // Dai to raise       [rad]
+        uint256 lot;  // ETH to sell        [wad]
         address usr;  // Liquidated CDP
-        uint48  tic;  // Auction start time
-        uint256 top;  // Starting price
+        uint96  tic;  // Auction start time
+        uint256 top;  // Starting price     [ray]
     }
     mapping(uint256 => Loaf) public loaves;
 
@@ -115,8 +120,10 @@ contract Oven {
         else if (what == "cusp") cusp = data; // Percentage drop before auction reset
         else revert("Oven/file-unrecognized-param");
     }
-    function file(bytes32 what, address data) external /* note */ auth {
-        if (what == "dog") dog = DogLike(data);
+    function file(bytes32 what, address data) external auth {
+        if      (what ==  "dog") dog  = DogLike(data);
+        else if (what ==  "vow") vow  = data;
+        else if (what == "calc") calc = Abacus(data);
         else revert("Oven/file-unrecognized-param");
     }
 
@@ -170,8 +177,8 @@ contract Oven {
     // --- Auction ---
 
     // start an auction
-    function bake(uint256 tab,  // debt
-                  uint256 lot,  // collateral
+    function bake(uint256 tab,  // debt             [rad]
+                  uint256 lot,  // collateral       [wad]
                   address usr   // liquidated vault
     ) external auth returns (uint256 id) {
         require(bakes < uint(-1), "Oven/overflow");
@@ -183,7 +190,7 @@ contract Oven {
         loaves[id].tab = tab;
         loaves[id].lot = lot;
         loaves[id].usr = usr;
-        loaves[id].tic = uint48(now);
+        loaves[id].tic = uint96(now);
 
         // Could get this from rmul(Vat.ilks(ilk).spot, Spotter.mat()) instead,
         // but if mat has changed since the last poke, the resulting value will
@@ -201,6 +208,9 @@ contract Oven {
         // Read auction data
         Loaf memory loaf = loaves[id];
         require(loaf.tab > 0, "Oven/not-running-auction");
+
+        // Compute current price [ray]
+        uint256 pay = calc.price(loaf.top, loaf.tic);
 
         // Check that auction needs reset
         require(sub(now, loaf.tic) > tail || rdiv(pay, loaf.top) < cusp, "Oven/cannot-reset");
@@ -221,8 +231,8 @@ contract Oven {
     // TODO: Evaluate usage of `max` and `pay` variables.
     //       Consider using `pay` and `min`.
     function take(uint256 id,           // auction id
-                  uint256 amt,          // upper limit on amount of collateral to buy
-                  uint256 max,          // maximum acceptable price (DAI / ETH)
+                  uint256 amt,          // upper limit on amount of collateral to buy       [wad]
+                  uint256 max,          // maximum acceptable price (DAI / ETH)             [ray]
                   address who,          // who will receive the collateral and pay the debt
                   bytes calldata data   //
     ) external lock {
@@ -230,8 +240,8 @@ contract Oven {
         Loaf memory loaf = loaves[id];
         require(loaf.tab > 0, "Oven/not-running-auction");
 
-        // Compute current price
-        uint256 pay = price(loaf.tic, loaf.top);
+        // Compute current price [ray]
+        uint256 pay = calc.price(loaf.top, loaf.tic);
 
         // Check that auction doesn't need reset
         require(sub(now, loaf.tic) <= tail && rdiv(pay, loaf.top) >= cusp, "Oven/needs-reset");
@@ -285,17 +295,6 @@ contract Oven {
         }
 
         // Emit event?
-    }
-
-    // Returns the current price of the specified auction [ray]
-    function price(uint256 id) external returns (uint256) {
-        (,,, uint48 tic, uint256 top) = this.loaves(id);
-        return price(tic, top);
-    }
-
-    // Returns the price adjusted for the amount of elapsed time since tic [ray]
-    function price(uint48 tic, uint256 top) public returns (uint256) {
-        return rmul(top, rpow(cut, sub(now, uint256(tic)) / step, RAY));
     }
 
     // --- Shutdown ---
