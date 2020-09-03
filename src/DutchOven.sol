@@ -217,9 +217,9 @@ contract Oven {
             slice = owe / max;
         }
 
-        // Calculate missing tab after operation
+        // Calculate remaining tab after operation
         loaf.tab = sub(loaf.tab, owe);
-        require(loaf.tab <= dust, "Oven/dust");
+        require(loaf.tab == 0 || loaf.tab >= dust, "Oven/dust");
 
         // Calculate remaining lot after operation
         loaf.lot = sub(loaf.lot, slice);
