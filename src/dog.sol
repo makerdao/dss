@@ -47,8 +47,8 @@ interface VowLike {
 contract Dog /* is LibNote */ {
     // --- Auth ---
     mapping (address => uint) public wards;
-    function rely(address usr) external /* note */ auth { wards[usr] = 1; }
-    function deny(address usr) external /* note */ auth { wards[usr] = 0; }
+    function rely(address usr) public /* note */ auth { wards[usr] = 1; }
+    function deny(address usr) public /* note */ auth { wards[usr] = 0; }
     modifier auth {
         require(wards[msg.sender] == 1, "Dog/not-authorized");
         _;
@@ -118,8 +118,10 @@ contract Dog /* is LibNote */ {
     function file(bytes32 ilk, bytes32 what, address oven) external /* note */ auth {
         if (what == "oven") {
             vat.nope(ilks[ilk].oven);
+            deny(ilks[ilk].oven);
             ilks[ilk].oven = oven;
             vat.hope(oven);
+            rely(oven);
         }
         else revert("Dog/file-unrecognized-param");
     }
