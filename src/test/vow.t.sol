@@ -133,7 +133,7 @@ contract VowTest is DSTest {
         uint tic = now;
         vow.fess(100 ether);
         assertTrue(!try_flog(tic) );
-        hevm.warp(now + tic + 100 seconds);
+        hevm.warp(tic + 100 seconds);
         assertTrue( try_flog(tic) );
     }
 
