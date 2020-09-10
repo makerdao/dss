@@ -2,7 +2,7 @@ pragma solidity ^0.5.12;
 
 import "ds-test/test.sol";
 
-import "./DutchOven.sol";
+import "./oven.sol";
 import "./abaci.sol";
 
 contract Hevm {
@@ -38,16 +38,16 @@ contract DutchOvenTest is DSTest {
     }
 
     function checkExpDecrease(
-        StairstepExponentialDecrease calc, 
-        uint cut, 
-        uint step, 
-        uint top, 
-        uint tic, 
+        StairstepExponentialDecrease calc,
+        uint cut,
+        uint step,
+        uint top,
+        uint tic,
         uint percentDecrease,
         uint testTime,
         uint tolerance
-    ) 
-        public 
+    )
+        public
     {
         uint256 price;
         uint256 lastPrice;
@@ -70,10 +70,10 @@ contract DutchOvenTest is DSTest {
             // Tolerance calculation
             if (testPrice >= price) { diff = testPrice - price; }
             else                    { diff = price - testPrice; }
-            // Precision is lost as price goes higher (can only get 10^27 max precision). 
+            // Precision is lost as price goes higher (can only get 10^27 max precision).
             // E.g., top = 50m => Expected: 16338200015683006288456874400625678
             //                    Actual:   16338200015683006288456874350000000
-            assertTrue(diff <= tolerance); 
+            assertTrue(diff <= tolerance);
         }
     }
 
@@ -87,10 +87,10 @@ contract DutchOvenTest is DSTest {
 
 
         /*** Extreme high collateral price ($50m) ***/
-    
+
         uint256 tolerance = 100000000; // Tolerance scales with price
-        uint256 top =       50000000 * RAY; 
-        
+        uint256 top =       50000000 * RAY;
+
         // 1.1234567890% decrease every 1 second
         // TODO: Check if there's a cleaner way to do this. I was getting rational_const errors.
         percentDecrease = 1.1234567890E27 / 100;
@@ -119,9 +119,9 @@ contract DutchOvenTest is DSTest {
 
 
         /*** Extreme low collateral price ($0.0000001) ***/
-        
+
         tolerance = 1; // Lowest tolerance is 1e-27
-        top = 1 * RAY / 10000000; 
+        top = 1 * RAY / 10000000;
 
         // 1.1234567890% decrease every 1 second
         percentDecrease = 1.1234567890E27 / 100;

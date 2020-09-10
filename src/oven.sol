@@ -52,22 +52,24 @@ contract Oven {
     }
 
     // --- Data ---
-    bytes32  public ilk;   // Collateral type of this Oven
+    bytes32   public ilk;     // Collateral type of this Oven
 
-    address  public vow;   // Recipient of dai raised in auctions
-    VatLike  public vat;   // Core CDP Engine
-    DogLike  public dog;   // Dog liquidation module
-    SpotLike public spot;  // Spotter
-    Abacus   public calc;  // Helper contract to calculate current price of an auction
-    uint256  public buf;   // Multiplicative factor to increase starting price    [ray]
-    uint256  public dust;  // Minimum tab in an auction; read from Vat instead??? [rad]
-    uint256  public step;  // Length of time between price drops                  [seconds]
-    uint256  public cut;   // Per-step multiplicative decrease in price           [ray]
-    uint256  public tail;  // Time elapsed before auction reset                   [seconds]
-    uint256  public cusp;  // Percentage drop before auction reset                [ray]
-    uint256  public bakes; // Bake count
+    address   public vow;     // Recipient of dai raised in auctions
+    VatLike   public vat;     // Core CDP Engine
+    DogLike   public dog;     // Dog liquidation module
+    SpotLike  public spot;    // Spotter
+    Abacus    public calc;    // Helper contract to calculate current price of an auction
+    uint256   public buf;     // Multiplicative factor to increase starting price    [ray]
+    uint256   public dust;    // Minimum tab in an auction; read from Vat instead??? [rad]
+    uint256   public step;    // Length of time between price drops                  [seconds]
+    uint256   public cut;     // Per-step multiplicative decrease in price           [ray]
+    uint256   public tail;    // Time elapsed before auction reset                   [seconds]
+    uint256   public cusp;    // Percentage drop before auction reset                [ray]
+    uint256   public bakes;   // Bake count
+    uint256[] public baking;  // Array of current auctions
 
     struct Loaf {
+        uint256 pos;  // Index in baking array
         uint256 tab;  // Dai to raise       [rad]
         uint256 lot;  // ETH to sell        [wad]
         address usr;  // Liquidated CDP
@@ -182,11 +184,14 @@ contract Oven {
                   address usr   // liquidated vault
     ) external auth returns (uint256 id) {
         require(bakes < uint(-1), "Oven/overflow");
+
         id = ++bakes;
+        uint256 _count = baking.push(id);
 
         // Caller must hope on the Oven
         vat.flux(ilk, msg.sender, address(this), lot);
 
+        loaves[id].pos = _count - 1;
         loaves[id].tab = tab;
         loaves[id].lot = lot;
         loaves[id].usr = usr;
@@ -204,7 +209,7 @@ contract Oven {
     }
 
     // Reset an auction
-    function warm(uint256 id) external { 
+    function warm(uint256 id) external {
         // Read auction data
         Loaf memory loaf = loaves[id];
         require(loaf.tab > 0, "Oven/not-running-auction");
@@ -214,7 +219,7 @@ contract Oven {
 
         // Check that auction needs reset
         require(sub(now, loaf.tic) > tail || rdiv(pay, loaf.top) < cusp, "Oven/cannot-reset");
-        
+
         loaves[id].tic = uint96(now);
 
         // Could get this from rmul(Vat.ilks(ilk).spot, Spotter.mat()) instead, but if mat has changed since the
@@ -284,17 +289,41 @@ contract Oven {
         dog.digs(owe);
 
         if (loaf.lot == 0) {
-            delete loaves[id];
+            _remove(id);
         } else if (loaf.tab == 0) {
             // Should we return collateral incrementally instead?
             vat.flux(ilk, address(this), loaf.usr, loaf.lot);
-            delete loaves[id];
+            _remove(id);
         } else {
             loaves[id].tab = loaf.tab;
             loaves[id].lot = loaf.lot;
         }
 
-        // Emit event?
+        // emit event?
+    }
+
+    function _remove(uint256 id) internal {
+        uint256 _index     = loaves[id].pos;
+        uint256 _move      = baking[baking.length - 1];
+        baking[_index]     = _move;
+        loaves[_move].pos  = _index;
+        baking.pop();
+        delete loaves[id];
+    }
+
+    // The number of active auctions
+    function count() external view returns (uint256) {
+        return baking.length;
+    }
+
+    // Return an array of the live auction id's
+    function list() external view returns (uint256[] memory) {
+        return baking;
+    }
+
+    // Returns auction id for a live auction in the active auction array
+    function getId(uint256 idx) external returns (uint256) {
+        return baking[idx];
     }
 
     // --- Shutdown ---
