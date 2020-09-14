@@ -107,22 +107,16 @@ contract Dog /* is LibNote */ {
         if (what == "vow") vow = VowLike(data);
         else revert("Dog/file-unrecognized-param");
     }
-    function file(bytes32 what, uint data) external /* note */ auth {
+    function file(bytes32 what, uint256 data) external /* note */ auth {
         if (what == "hole") hole = data;
         else revert("Dog/file-unrecognized-param");
     }
-    function file(bytes32 ilk, bytes32 what, uint data) external /* note */ auth {
+    function file(bytes32 ilk, bytes32 what, uint256 data) external /* note */ auth {
         if (what == "chop") ilks[ilk].chop = data;
         else revert("Dog/file-unrecognized-param");
     }
     function file(bytes32 ilk, bytes32 what, address oven) external /* note */ auth {
-        if (what == "oven") {
-            vat.nope(ilks[ilk].oven);
-            deny(ilks[ilk].oven);
-            ilks[ilk].oven = oven;
-            vat.hope(oven);
-            rely(oven);
-        }
+        if (what == "oven") ilks[ilk].oven = oven;
         else revert("Dog/file-unrecognized-param");
     }
 
@@ -142,8 +136,8 @@ contract Dog /* is LibNote */ {
 
             uint256 room = sub(hole, dirt);
 
-            // test whether the remaining space in the hole is dusty
-            require(dirt < hole && room >= dust, "Dog/liquidation-limit-hit");
+            // Test whether the remaining space in the hole is dusty
+            require(room > 0 && room >= dust, "Dog/liquidation-limit-hit");
 
             dart = min(art, mul(room, WAD) / rate / milk.chop);
         }
@@ -155,7 +149,7 @@ contract Dog /* is LibNote */ {
 
         // This may leave the CDP in a dusty state
         vat.grab(
-            ilk, urn, address(this), address(vow), -int256(dink), -int256(dart)
+            ilk, urn, milk.oven, address(vow), -int256(dink), -int256(dart)
         );
         
         uint256 due = mul(dart, rate);
@@ -176,7 +170,7 @@ contract Dog /* is LibNote */ {
         emit Bark(ilk, urn, dink, dart, due, milk.oven, id);
     }
 
-    function digs(uint rad) external /* note */ auth {
+    function digs(uint256 rad) external /* note */ auth {
         dirt = sub(dirt, rad);
     }
 

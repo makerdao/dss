@@ -13,30 +13,30 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-pragma solidity ^0.5.12;
+pragma solidity >=0.5.12;
 
-contract VatLike {
+interface VatLike {
     function hope(address) external;
 }
 
-contract GemJoinLike {
+interface GemJoinLike {
     function dec() external view returns (uint256);
     function gem() external view returns (TokenLike);
     function exit(address, uint256) external;
 }
 
-contract DaiJoinLike {
+interface DaiJoinLike {
     function dai() external view returns (TokenLike);
     function vat() external view returns (VatLike);
     function join(address, uint256) external;
 }
 
-contract TokenLike {
+interface TokenLike {
     function approve(address, uint256) external;
     function transfer(address, uint256) external;
 }
 
-contract OtcLike {
+interface OtcLike {
     function buyAllAmount(address, uint256, address, uint256) external returns (uint256);
     function sellAllAmount(address, uint256, address, uint256) external returns (uint256);
 }
@@ -49,29 +49,33 @@ contract CalleeMakerOtc {
 
     uint256         public constant RAY = 10 ** 27;
 
-    constructor(address otc_, address oven_, address daiJoin_) public {
+    function setUp(address otc_, address oven_, address daiJoin_) internal {
         otc = OtcLike(otc_);
         daiJoin = DaiJoinLike(daiJoin_);
         dai = daiJoin.dai();
 
         daiJoin.vat().hope(oven_);
 
-        dai.approve(daiJoin_, uint(-1));
+        dai.approve(daiJoin_, uint256(-1));
     }
 
-    function _fromWad(address gemJoin, uint256 wad) internal returns (uint256 amt) {
+    function _fromWad(address gemJoin, uint256 wad) internal view returns (uint256 amt) {
         amt = wad / 10 ** (18 - GemJoinLike(gemJoin).dec());
     }
 }
 
 contract CalleeMakerOtcDai is CalleeMakerOtc {
+    constructor(address otc_, address oven_, address daiJoin_) public {
+        setUp(otc_, oven_, daiJoin_);
+    }
+
     function ovenCall(
         uint256 daiAmt,         // Dai amount to payback[rad]
         uint256 gemAmt,         // Gem amount received [wad]
         bytes calldata data     // Extra data needed (gemJoin)
     ) external {
         // Get address to send remaining DAI, gemJoin adapter and minProfit in DAI to make
-        (address to, address gemJoin, uint minProfit) = abi.decode(data, (address, address, uint256));
+        (address to, address gemJoin, uint256 minProfit) = abi.decode(data, (address, address, uint256));
 
         // Convert gem amount to token precision
         gemAmt = _fromWad(gemJoin, gemAmt);
@@ -101,13 +105,17 @@ contract CalleeMakerOtcDai is CalleeMakerOtc {
 }
 
 contract CalleeMakerOtcGem is CalleeMakerOtc {
+    constructor(address otc_, address oven_, address daiJoin_) public {
+        setUp(otc_, oven_, daiJoin_);
+    }
+
     function ovenCall(
         uint256 daiAmt,         // Dai amount to payback[rad]
         uint256 gemAmt,         // Gem amount received [wad]
         bytes calldata data     // Extra data needed (gemJoin)
     ) external {
         // Get address to send remaining Gem, gemJoin adapter and minProfit in Gem to make
-        (address to, address gemJoin, uint minProfit) = abi.decode(data, (address, address, uint256));
+        (address to, address gemJoin, uint256 minProfit) = abi.decode(data, (address, address, uint256));
 
         // Convert gem amount to token precision
         gemAmt = _fromWad(gemJoin, gemAmt);
@@ -136,4 +144,3 @@ contract CalleeMakerOtcGem is CalleeMakerOtc {
         gem.transfer(to, gemAmt - gemSold);
     }
 }
-

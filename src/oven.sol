@@ -13,37 +13,37 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-pragma solidity ^0.5.12;
+pragma solidity >=0.5.12;
 
-contract VatLike {
-    function move(address,address,uint) external;
-    function flux(bytes32,address,address,uint) external;
+interface VatLike {
+    function move(address,address,uint256) external;
+    function flux(bytes32,address,address,uint256) external;
 }
 
-contract PipLike {
+interface PipLike {
     function peek() external returns (bytes32, bool);
 }
 
-contract SpotLike {
-    function par() public returns (uint256);
-    function ilks(bytes32) public returns (PipLike, uint256);
+interface SpotLike {
+    function par() external returns (uint256);
+    function ilks(bytes32) external returns (PipLike, uint256);
 }
 
-contract DogLike {
-    function digs(uint) external;
+interface DogLike {
+    function digs(uint256) external;
 }
 
-contract OvenCallee {
+interface OvenCallee {
     function ovenCall(uint256, uint256, bytes calldata) external;
 }
 
-contract Abacus {
+interface Abacus {
     function price(uint256, uint256) external view returns (uint256);
 }
 
 contract Oven {
     // --- Auth ---
-    mapping (address => uint) public wards;
+    mapping (address => uint256) public wards;
     function rely(address usr) external /* note */ auth { wards[usr] = 1; }
     function deny(address usr) external /* note */ auth { wards[usr] = 0; }
     modifier auth {
@@ -96,13 +96,15 @@ contract Oven {
     );
 
     // --- Init ---
-    constructor(address vat_, address dog_, bytes32 ilk_) public {
+    constructor(address vat_, address spot_, address dog_, bytes32 ilk_) public {
         vat = VatLike(vat_);
+        spot = SpotLike(spot_);
         dog = DogLike(dog_);
         ilk = ilk_;
         cut = RAY;
         step = 1;
         wards[msg.sender] = 1;
+        buf = RAY;
     }
 
     modifier lock {
@@ -114,9 +116,7 @@ contract Oven {
 
     // --- Administration ---
     function file(bytes32 what, uint256 data) external {
-        if      (what ==  "cut") require((cut = data) <= RAY, "Oven/cut-gt-RAY");
-        else if (what ==  "buf") buf  = data;
-        else if (what == "step") step = data;
+        if      (what ==  "buf") buf  = data;
         else if (what == "dust") dust = data;
         else if (what == "tail") tail = data; // Time elapsed    before auction reset
         else if (what == "cusp") cusp = data; // Percentage drop before auction reset
@@ -133,47 +133,20 @@ contract Oven {
     uint256 constant RAY = 10 ** 27;
     uint256 constant BLN = 10 ** 9;
 
-    function min(uint x, uint y) internal pure returns (uint z) {
+    function min(uint256 x, uint256 y) internal pure returns (uint256 z) {
         return x <= y ? x : y;
     }
-    function sub(uint x, uint y) internal pure returns (uint z) {
+    function sub(uint256 x, uint256 y) internal pure returns (uint256 z) {
         require((z = x - y) <= x);
     }
-    function mul(uint x, uint y) internal pure returns (uint z) {
+    function mul(uint256 x, uint256 y) internal pure returns (uint256 z) {
         require(y == 0 || (z = x * y) / y == x);
     }
-    function rmul(uint x, uint y) internal pure returns (uint z) {
+    function rmul(uint256 x, uint256 y) internal pure returns (uint256 z) {
         z = mul(x, y) / RAY;
     }
-    function rdiv(uint x, uint y) internal pure returns (uint z) {
+    function rdiv(uint256 x, uint256 y) internal pure returns (uint256 z) {
         z = mul(x, RAY) / y;
-    }
-    // Optimized version from dss PR #78
-    function rpow(uint x, uint n, uint b) internal pure returns (uint z) {
-        assembly {
-            switch n case 0 { z := b }
-            default {
-                switch x case 0 { z := 0 }
-                default {
-                    switch mod(n, 2) case 0 { z := b } default { z := x }
-                    let half := div(b, 2)  // for rounding.
-                    for { n := div(n, 2) } n { n := div(n,2) } {
-                        let xx := mul(x, x)
-                        if shr(128, x) { revert(0,0) }
-                        let xxRound := add(xx, half)
-                        if lt(xxRound, xx) { revert(0,0) }
-                        x := div(xxRound, b)
-                        if mod(n,2) {
-                            let zx := mul(z, x)
-                            if and(iszero(iszero(x)), iszero(eq(div(zx, x), z))) { revert(0,0) }
-                            let zxRound := add(zx, half)
-                            if lt(zxRound, zx) { revert(0,0) }
-                            z := div(zxRound, b)
-                        }
-                    }
-                }
-            }
-        }
     }
 
     // --- Auction ---
@@ -183,15 +156,12 @@ contract Oven {
                   uint256 lot,  // collateral       [wad]
                   address usr   // liquidated vault
     ) external auth returns (uint256 id) {
-        require(bakes < uint(-1), "Oven/overflow");
-
+        require(bakes < uint256(-1), "Oven/overflow");
         id = ++bakes;
-        uint256 _count = baking.push(id);
+        baking.push(id);
 
-        // Caller must hope on the Oven
-        vat.flux(ilk, msg.sender, address(this), lot);
+        loaves[id].pos = baking.length - 1;
 
-        loaves[id].pos = _count - 1;
         loaves[id].tab = tab;
         loaves[id].lot = lot;
         loaves[id].usr = usr;
@@ -215,11 +185,11 @@ contract Oven {
         require(loaf.tab > 0, "Oven/not-running-auction");
 
         // Compute current price [ray]
-        uint256 pay = calc.price(loaf.top, loaf.tic);
+        uint256 price = calc.price(loaf.top, loaf.tic);
 
         // Check that auction needs reset
-        require(sub(now, loaf.tic) > tail || rdiv(pay, loaf.top) < cusp, "Oven/cannot-reset");
-
+        require(sub(now, loaf.tic) > tail || rdiv(price, loaf.top) < cusp, "Oven/cannot-reset");
+        
         loaves[id].tic = uint96(now);
 
         // Could get this from rmul(Vat.ilks(ilk).spot, Spotter.mat()) instead, but if mat has changed since the
@@ -233,39 +203,37 @@ contract Oven {
     }
 
     // Buy amt of collateral from auction indexed by id
-    // TODO: Evaluate usage of `max` and `pay` variables.
-    //       Consider using `pay` and `min`.
-    function take(uint256 id,           // auction id
-                  uint256 amt,          // upper limit on amount of collateral to buy       [wad]
-                  uint256 max,          // maximum acceptable price (DAI / ETH)             [ray]
-                  address who,          // who will receive the collateral and pay the debt
-                  bytes calldata data   //
+    function take(uint256 id,           // Auction id
+                  uint256 amt,          // Upper limit on amount of collateral to buy       [wad]
+                  uint256 pay,          // Bid price (DAI / ETH)                            [ray]
+                  address who,          // Who will receive the collateral and pay the debt
+                  bytes calldata data   
     ) external lock {
         // Read auction data
         Loaf memory loaf = loaves[id];
         require(loaf.tab > 0, "Oven/not-running-auction");
 
         // Compute current price [ray]
-        uint256 pay = calc.price(loaf.top, loaf.tic);
+        uint256 price = calc.price(loaf.top, loaf.tic);
 
         // Check that auction doesn't need reset
-        require(sub(now, loaf.tic) <= tail && rdiv(pay, loaf.top) >= cusp, "Oven/needs-reset");
+        require(sub(now, loaf.tic) <= tail && rdiv(price, loaf.top) >= cusp, "Oven/needs-reset");
 
         // Ensure price is acceptable to buyer
-        require(pay <= max, "Oven/too-expensive");
+        require(pay >= price, "Oven/too-expensive");
 
         // Purchase as much as possible, up to amt
         uint256 slice = min(loaf.lot, amt);
 
         // DAI needed to buy a slice of this loaf
-        uint256 owe = mul(slice, max);
+        uint256 owe = mul(slice, pay);
 
         // Don't collect more than tab of DAI
         if (owe > loaf.tab) {
             owe = loaf.tab;
 
             // Readjust slice
-            slice = owe / max;
+            slice = owe / pay;
         }
 
         // Calculate remaining tab after operation
@@ -285,7 +253,7 @@ contract Oven {
         // Get DAI from who address
         vat.move(who, vow, owe);
 
-        // give the dog a bone: removes Dai out for liquidation from accumulator
+        // Removes Dai out for liquidation from accumulator
         dog.digs(owe);
 
         if (loaf.lot == 0) {
@@ -322,7 +290,7 @@ contract Oven {
     }
 
     // Returns auction id for a live auction in the active auction array
-    function getId(uint256 idx) external returns (uint256) {
+    function getId(uint256 idx) external view returns (uint256) {
         return baking[idx];
     }
 

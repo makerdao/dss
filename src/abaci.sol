@@ -13,7 +13,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-pragma solidity ^0.5.12;
+pragma solidity >=0.5.12;
 
 // interface Abacus {
 //     // 1st arg: initial price           [ray]
@@ -25,7 +25,7 @@ pragma solidity ^0.5.12;
 contract LinearDecrease /* is Abacus */ {
 
     // --- Auth ---
-    mapping (address => uint) public wards;
+    mapping (address => uint256) public wards;
     function rely(address usr) external /* note */ auth { wards[usr] = 1; }
     function deny(address usr) external /* note */ auth { wards[usr] = 0; }
     modifier auth {
@@ -49,13 +49,13 @@ contract LinearDecrease /* is Abacus */ {
 
     // --- Math ---
     uint256 constant RAY = 10 ** 27;
-    function add(uint x, uint y) internal pure returns (uint z) {
+    function add(uint256 x, uint256 y) internal pure returns (uint256 z) {
         require((z = x + y) >= x);
     }
-    function mul(uint x, uint y) internal pure returns (uint z) {
+    function mul(uint256 x, uint256 y) internal pure returns (uint256 z) {
         require(y == 0 || (z = x * y) / y == x);
     }
-    function rmul(uint x, uint y) internal pure returns (uint z) {
+    function rmul(uint256 x, uint256 y) internal pure returns (uint256 z) {
         z = x * y;
         require(y == 0 || z / y == x);
         z = z / RAY;
@@ -71,7 +71,7 @@ contract LinearDecrease /* is Abacus */ {
 contract StairstepExponentialDecrease /* is Abacus */ {
 
     // --- Auth ---
-    mapping (address => uint) public wards;
+    mapping (address => uint256) public wards;
     function rely(address usr) external /* note */ auth { wards[usr] = 1; }
     function deny(address usr) external /* note */ auth { wards[usr] = 0; }
     modifier auth {
@@ -92,25 +92,25 @@ contract StairstepExponentialDecrease /* is Abacus */ {
 
     // --- Administration ---
     function file(bytes32 what, uint256 data) external auth {
-        if      (what ==  "cut") cut  = data;
+        if      (what ==  "cut") require((cut = data) <= RAY, "Oven/cut-gt-RAY");
         else if (what == "step") step = data;
         else revert("StairstepExponentialDecrease/file-unrecognized-param");
     }
 
     // --- Math ---
     uint256 constant RAY = 10 ** 27;
-    function sub(uint x, uint y) internal pure returns (uint z) {
-        z = x - uint(y);
+    function sub(uint256 x, uint256 y) internal pure returns (uint256 z) {
+        z = x - uint256(y);
         require(y <= 0 || z <= x);
         require(y >= 0 || z >= x);
     }
-    function rmul(uint x, uint y) internal pure returns (uint z) {
+    function rmul(uint256 x, uint256 y) internal pure returns (uint256 z) {
         z = x * y;
         require(y == 0 || z / y == x);
         z = z / RAY;
     }
     // optimized version from dss PR #78
-    function rpow(uint x, uint n, uint b) internal pure returns (uint z) {
+    function rpow(uint256 x, uint256 n, uint256 b) internal pure returns (uint256 z) {
         assembly {
             switch n case 0 { z := b }
             default {
