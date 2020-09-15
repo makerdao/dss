@@ -8,7 +8,7 @@ import {Spotter} from "dss/spot.sol";
 import {Vow}     from "dss/vow.sol";
 import {GemJoin} from "dss/join.sol";
 
-import {Oven} from "./oven.sol";
+import {Clipper} from "./clip.sol";
 import "./abaci.sol";
 import "./dog.sol";
 
@@ -45,14 +45,14 @@ contract TestVow is Vow {
 }
 
 contract Guy {
-    Oven oven;
+    Clipper clip;
 
-    constructor(Oven oven_) public {
-        oven = oven_;
+    constructor(Clipper clip_) public {
+        clip = clip_;
     }
 
     function hope(address usr) public {
-        Vat(address(oven.vat())).hope(usr);
+        Vat(address(clip.vat())).hope(usr);
     }
 
     function take(
@@ -64,7 +64,7 @@ contract Guy {
     ) 
         external 
     {
-        oven.take({
+        clip.take({
             id: id,
             amt: amt,
             pay: pay,
@@ -74,7 +74,7 @@ contract Guy {
     }
 }
 
-contract DutchOvenTest is DSTest {
+contract DutchClipperTest is DSTest {
     Hevm hevm;
 
     TestVat vat;
@@ -85,7 +85,7 @@ contract DutchOvenTest is DSTest {
 
     GemJoin gemA;
 
-    Oven    oven;
+    Clipper clip;
 
     DSToken gov;
     DSToken gold;
@@ -121,25 +121,25 @@ contract DutchOvenTest is DSTest {
         calc.file(bytes32("cut"),  ray(0.01 ether)); // 1% decrease
         calc.file(bytes32("step"), 1);               // Decrease every 1 second
 
-        oven.file(bytes32("buf"),  ray(1.25 ether)); // 25% Initial price buffer
-        oven.file(bytes32("dust"), rad(20   ether)); // $20 dust
-        oven.file(bytes32("calc"), address(calc));   // File price contract
-        oven.file(bytes32("cusp"), ray(0.3 ether));  // 70% drop before reset
-        oven.file(bytes32("tail"), 3600);            // 1 hour before reset
+        clip.file(bytes32("buf"),  ray(1.25 ether)); // 25% Initial price buffer
+        clip.file(bytes32("dust"), rad(20   ether)); // $20 dust
+        clip.file(bytes32("calc"), address(calc));   // File price contract
+        clip.file(bytes32("cusp"), ray(0.3 ether));  // 70% drop before reset
+        clip.file(bytes32("tail"), 3600);            // 1 hour before reset
 
         (ink, art) = vat.urns(ilk, me);
         assertEq(ink, 40 ether);
         assertEq(art, 100 ether);
 
-        assertEq(oven.bakes(), 0);
+        assertEq(clip.kicks(), 0);
         dog.bark(ilk, me);
-        assertEq(oven.bakes(), 1);
+        assertEq(clip.kicks(), 1);
 
         (ink, art) = vat.urns(ilk, me);
         assertEq(ink, 0);
         assertEq(art, 0);
 
-        (pos, tab, lot, usr, tic, top) = oven.loaves(1);
+        (pos, tab, lot, usr, tic, top) = clip.sales(1);
         assertEq(pos, 0);
         assertEq(tab, rad(110 ether));
         assertEq(lot, 40 ether);
@@ -205,15 +205,15 @@ contract DutchOvenTest is DSTest {
         vat.file(ilk, "line", rad(1000 ether));
         vat.file("Line",         rad(1000 ether));
 
-        oven = new Oven(address(vat), address(spot), address(dog), ilk);
-        oven.rely(address(dog));
+        clip = new Clipper(address(vat), address(spot), address(dog), ilk);
+        clip.rely(address(dog));
 
-        dog.file(ilk, "oven", address(oven));
+        dog.file(ilk, "clip", address(clip));
         dog.file(ilk, "chop", 1.1 ether); // 10% chop
         dog.file("hole", rad(1000 ether));
-        dog.rely(address(oven));
+        dog.rely(address(clip));
 
-        vat.rely(address(oven));
+        vat.rely(address(clip));
 
         gold.approve(address(vat));
 
@@ -226,11 +226,11 @@ contract DutchOvenTest is DSTest {
         pip.poke(bytes32(uint256(4 ether))); // Spot = $2
         spot.poke(ilk);          // Now unsafe
 
-        ali = address(new Guy(oven));
-        bob = address(new Guy(oven));
+        ali = address(new Guy(clip));
+        bob = address(new Guy(clip));
 
-        Guy(ali).hope(address(oven));
-        Guy(bob).hope(address(oven));
+        Guy(ali).hope(address(clip));
+        Guy(bob).hope(address(clip));
 
         vat.mint(address(ali), rad(1000 ether));
         vat.mint(address(bob), rad(1000 ether));
@@ -398,7 +398,7 @@ contract DutchOvenTest is DSTest {
         assertEq(price, 0);
     }
     
-    function test_bake() public {
+    function test_kick() public {
         uint256 pos;
         uint256 tab;
         uint256 lot;
@@ -408,8 +408,8 @@ contract DutchOvenTest is DSTest {
         uint256 ink;
         uint256 art;
 
-        assertEq(oven.bakes(), 0);
-        (pos, tab, lot, usr, tic, top) = oven.loaves(1);
+        assertEq(clip.kicks(), 0);
+        (pos, tab, lot, usr, tic, top) = clip.sales(1);
         assertEq(pos, 0);
         assertEq(tab, 0);
         assertEq(lot, 0);
@@ -423,8 +423,8 @@ contract DutchOvenTest is DSTest {
 
         dog.bark(ilk, me);
 
-        assertEq(oven.bakes(), 1);
-        (pos, tab, lot, usr, tic, top) = oven.loaves(1);
+        assertEq(clip.kicks(), 1);
+        (pos, tab, lot, usr, tic, top) = clip.sales(1);
         assertEq(pos, 0);
         assertEq(tab, rad(110 ether));
         assertEq(lot, 40 ether);
@@ -445,7 +445,7 @@ contract DutchOvenTest is DSTest {
         pip.poke(bytes32(uint256(4 ether))); // Spot = $2
         spot.poke(ilk);          // Now unsafe
 
-        (pos, tab, lot, usr, tic, top) = oven.loaves(2);
+        (pos, tab, lot, usr, tic, top) = clip.sales(2);
         assertEq(pos, 0);
         assertEq(tab, 0);
         assertEq(lot, 0);
@@ -454,12 +454,12 @@ contract DutchOvenTest is DSTest {
         assertEq(top, 0);
         assertEq(vat.gem(ilk, me), 920 ether);
 
-        oven.file(bytes32("buf"),  ray(1.25 ether)); // 25% Initial price buffer
+        clip.file(bytes32("buf"),  ray(1.25 ether)); // 25% Initial price buffer
 
         dog.bark(ilk, me);
 
-        assertEq(oven.bakes(), 2);
-        (pos, tab, lot, usr, tic, top) = oven.loaves(2);
+        assertEq(clip.kicks(), 2);
+        (pos, tab, lot, usr, tic, top) = clip.sales(2);
         assertEq(pos, 1);
         assertEq(tab, rad(110 ether));
         assertEq(lot, 40 ether);
@@ -488,7 +488,7 @@ contract DutchOvenTest is DSTest {
         assertEq(vat.gem(ilk, me),  978 ether); // 960 + (40 - 22) returned to usr
 
         // Assert auction ends
-        (uint256 pos, uint256 tab, uint256 lot, address usr, uint256 tic, uint256 top) = oven.loaves(1);
+        (uint256 pos, uint256 tab, uint256 lot, address usr, uint256 tic, uint256 top) = clip.sales(1);
         assertEq(pos, 0);
         assertEq(tab, 0);
         assertEq(lot, 0);
@@ -512,7 +512,7 @@ contract DutchOvenTest is DSTest {
         assertEq(vat.gem(ilk, me), 978 ether);  // 960 + (40 - 22) returned to usr
 
         // Assert auction ends
-        (uint256 pos, uint256 tab, uint256 lot, address usr, uint256 tic, uint256 top) = oven.loaves(1);
+        (uint256 pos, uint256 tab, uint256 lot, address usr, uint256 tic, uint256 top) = clip.sales(1);
         assertEq(pos, 0);
         assertEq(tab, 0);
         assertEq(lot, 0);
@@ -536,7 +536,7 @@ contract DutchOvenTest is DSTest {
         assertEq(vat.gem(ilk, me), 960 ether);  // Collateral not returned (yet)
 
         // Assert auction DOES NOT end
-        (uint256 pos, uint256 tab, uint256 lot, address usr, uint256 tic, uint256 top) = oven.loaves(1);
+        (uint256 pos, uint256 tab, uint256 lot, address usr, uint256 tic, uint256 top) = clip.sales(1);
         assertEq(pos, 0);
         assertEq(tab, rad(55 ether));  // 110 - 5 * 11 
         assertEq(lot, 29 ether);       // 40 - 11
@@ -546,7 +546,7 @@ contract DutchOvenTest is DSTest {
     }   
 
     function testFail_take_bid_too_low() public takeSetup {
-        // Bid so max (= 4) < price (= top = 5) (fails with "Oven/too-expensive")
+        // Bid so max (= 4) < price (= top = 5) (fails with "Clipper/too-expensive")
         Guy(ali).take({
             id:  1,
             amt: 22 ether,
@@ -557,7 +557,7 @@ contract DutchOvenTest is DSTest {
     }   
 
     function testFail_take_bid_creates_dust() public takeSetup {
-        // Bid so owe (= (22 - 1wei) * 5 = 110 RAD - 1) < tab (= 110 RAD) (fails with "Oven/dust")
+        // Bid so owe (= (22 - 1wei) * 5 = 110 RAD - 1) < tab (= 110 RAD) (fails with "Clipper/dust")
         Guy(ali).take({
             id:  1,
             amt: 22 ether - 1,
@@ -589,7 +589,7 @@ contract DutchOvenTest is DSTest {
         assertEq(vat.gem(ilk, me), 960 ether);  // Collateral not returned (yet)
 
         // Assert auction DOES NOT end
-        (pos, tab, lot, usr, tic, top) = oven.loaves(1);
+        (pos, tab, lot, usr, tic, top) = clip.sales(1);
         assertEq(pos, 0);
         assertEq(tab, rad(60 ether));  // 110 - 5 * 10 
         assertEq(lot, 30 ether);       // 40 - 10
@@ -608,7 +608,7 @@ contract DutchOvenTest is DSTest {
         });
 
         // Assert auction is over
-        (pos, tab, lot, usr, tic, top) = oven.loaves(1);
+        (pos, tab, lot, usr, tic, top) = clip.sales(1);
         assertEq(pos, 0);
         assertEq(tab, 0);
         assertEq(lot, 0 * WAD);

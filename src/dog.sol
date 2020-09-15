@@ -19,8 +19,8 @@ pragma solidity >=0.5.12;
 
 // import "./lib.sol";
 
-interface OvenLike {
-    function bake(uint256 tab, uint256 lot, address usr) external returns (uint256);
+interface ClipperLike {
+    function kick(uint256 tab, uint256 lot, address usr) external returns (uint256);
 }
 
 interface VatLike {
@@ -56,7 +56,7 @@ contract Dog /* is LibNote */ {
 
     // --- Data ---
     struct Ilk {
-        address oven;  // Liquidator
+        address clip;  // Liquidator
         uint256 chop;  // Liquidation Penalty  [wad]
     }
 
@@ -75,7 +75,7 @@ contract Dog /* is LibNote */ {
       uint256 ink,
       uint256 art,
       uint256 tab,
-      address oven,
+      address clip,
       uint256 id
     );
 
@@ -115,8 +115,8 @@ contract Dog /* is LibNote */ {
         if (what == "chop") ilks[ilk].chop = data;
         else revert("Dog/file-unrecognized-param");
     }
-    function file(bytes32 ilk, bytes32 what, address oven) external /* note */ auth {
-        if (what == "oven") ilks[ilk].oven = oven;
+    function file(bytes32 ilk, bytes32 what, address clip) external /* note */ auth {
+        if (what == "clip") ilks[ilk].clip = clip;
         else revert("Dog/file-unrecognized-param");
     }
 
@@ -149,7 +149,7 @@ contract Dog /* is LibNote */ {
 
         // This may leave the CDP in a dusty state
         vat.grab(
-            ilk, urn, milk.oven, address(vow), -int256(dink), -int256(dart)
+            ilk, urn, milk.clip, address(vow), -int256(dink), -int256(dart)
         );
         
         uint256 due = mul(dart, rate);
@@ -160,14 +160,14 @@ contract Dog /* is LibNote */ {
             uint256 tab = mul(due, milk.chop) / WAD;
             dirt = add(dirt, tab);
 
-            id = OvenLike(milk.oven).bake({
+            id = ClipperLike(milk.clip).kick({
                 tab: tab,
                 lot: dink,
                 usr: urn
             });
         }
 
-        emit Bark(ilk, urn, dink, dart, due, milk.oven, id);
+        emit Bark(ilk, urn, dink, dart, due, milk.clip, id);
     }
 
     function digs(uint256 rad) external /* note */ auth {

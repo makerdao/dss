@@ -49,12 +49,12 @@ contract CalleeMakerOtc {
 
     uint256         public constant RAY = 10 ** 27;
 
-    function setUp(address otc_, address oven_, address daiJoin_) internal {
+    function setUp(address otc_, address clip_, address daiJoin_) internal {
         otc = OtcLike(otc_);
         daiJoin = DaiJoinLike(daiJoin_);
         dai = daiJoin.dai();
 
-        daiJoin.vat().hope(oven_);
+        daiJoin.vat().hope(clip_);
 
         dai.approve(daiJoin_, uint256(-1));
     }
@@ -65,11 +65,11 @@ contract CalleeMakerOtc {
 }
 
 contract CalleeMakerOtcDai is CalleeMakerOtc {
-    constructor(address otc_, address oven_, address daiJoin_) public {
-        setUp(otc_, oven_, daiJoin_);
+    constructor(address otc_, address clip_, address daiJoin_) public {
+        setUp(otc_, clip_, daiJoin_);
     }
 
-    function ovenCall(
+    function clipperCall(
         uint256 daiAmt,         // Dai amount to payback[rad]
         uint256 gemAmt,         // Gem amount received [wad]
         bytes calldata data     // Extra data needed (gemJoin)
@@ -105,11 +105,11 @@ contract CalleeMakerOtcDai is CalleeMakerOtc {
 }
 
 contract CalleeMakerOtcGem is CalleeMakerOtc {
-    constructor(address otc_, address oven_, address daiJoin_) public {
-        setUp(otc_, oven_, daiJoin_);
+    constructor(address otc_, address clip_, address daiJoin_) public {
+        setUp(otc_, clip_, daiJoin_);
     }
 
-    function ovenCall(
+    function clipperCall(
         uint256 daiAmt,         // Dai amount to payback[rad]
         uint256 gemAmt,         // Gem amount received [wad]
         bytes calldata data     // Extra data needed (gemJoin)

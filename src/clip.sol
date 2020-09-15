@@ -33,55 +33,56 @@ interface DogLike {
     function digs(uint256) external;
 }
 
-interface OvenCallee {
-    function ovenCall(uint256, uint256, bytes calldata) external;
+interface ClipperCallee {
+    function clipperCall(uint256, uint256, bytes calldata) external;
 }
 
-interface Abacus {
+interface AbacusLike {
     function price(uint256, uint256) external view returns (uint256);
 }
 
-contract Oven {
+contract Clipper {
     // --- Auth ---
     mapping (address => uint256) public wards;
     function rely(address usr) external /* note */ auth { wards[usr] = 1; }
     function deny(address usr) external /* note */ auth { wards[usr] = 0; }
     modifier auth {
-        require(wards[msg.sender] == 1, "Oven/not-authorized");
+        require(wards[msg.sender] == 1, "Clipper/not-authorized");
         _;
     }
 
     // --- Data ---
-    bytes32   public ilk;     // Collateral type of this Oven
+    bytes32 public ilk;  // Collateral type of this Clipper
 
-    address   public vow;     // Recipient of dai raised in auctions
-    VatLike   public vat;     // Core CDP Engine
-    DogLike   public dog;     // Dog liquidation module
-    SpotLike  public spot;    // Spotter
-    Abacus    public calc;    // Helper contract to calculate current price of an auction
-    uint256   public buf;     // Multiplicative factor to increase starting price    [ray]
-    uint256   public dust;    // Minimum tab in an auction; read from Vat instead??? [rad]
-    uint256   public step;    // Length of time between price drops                  [seconds]
-    uint256   public cut;     // Per-step multiplicative decrease in price           [ray]
-    uint256   public tail;    // Time elapsed before auction reset                   [seconds]
-    uint256   public cusp;    // Percentage drop before auction reset                [ray]
-    uint256   public bakes;   // Bake count
-    uint256[] public baking;  // Array of current auctions
+    address    public vow;   // Recipient of dai raised in auctions
+    VatLike    public vat;   // Core CDP Engine
+    DogLike    public dog;   // Liquidation module
+    SpotLike   public spot;  // Collateral price module
+    AbacusLike public calc;  // Current price calculator
 
-    struct Loaf {
-        uint256 pos;  // Index in baking array
+    uint256 public buf;   // Multiplicative factor to increase starting price  [ray]
+    // TODO: read from the Vat instead?
+    uint256 public dust;  // Minimum tab in an auction;                        [rad]
+    uint256 public tail;  // Time elapsed before auction reset                 [seconds]
+    uint256 public cusp;  // Percentage drop before auction reset              [ray]
+
+    uint256   public kicks;   // Total auctions
+    uint256[] public active;  // Array of active auction ids
+
+    struct Sale {
+        uint256 pos;  // Index in active array
         uint256 tab;  // Dai to raise       [rad]
         uint256 lot;  // ETH to sell        [wad]
         address usr;  // Liquidated CDP
         uint96  tic;  // Auction start time
         uint256 top;  // Starting price     [ray]
     }
-    mapping(uint256 => Loaf) public loaves;
+    mapping(uint256 => Sale) public sales;
 
     uint256 internal locked;
 
     // --- Events ---
-    event Bake(
+    event Kick(
         uint256  id,
         uint256 tab,
         uint256 lot,
@@ -97,18 +98,18 @@ contract Oven {
 
     // --- Init ---
     constructor(address vat_, address spot_, address dog_, bytes32 ilk_) public {
-        vat = VatLike(vat_);
+        vat  = VatLike(vat_);
         spot = SpotLike(spot_);
-        dog = DogLike(dog_);
-        ilk = ilk_;
-        cut = RAY;
-        step = 1;
+        dog  = DogLike(dog_);
+        ilk  = ilk_;
+        buf  = RAY;
+
         wards[msg.sender] = 1;
-        buf = RAY;
     }
 
+    // --- Synchronization ---
     modifier lock {
-        require(locked == 0, "Oven/system-locked");
+        require(locked == 0, "Clipper/system-locked");
         locked = 1;
         _;
         locked = 0;
@@ -120,13 +121,13 @@ contract Oven {
         else if (what == "dust") dust = data;
         else if (what == "tail") tail = data; // Time elapsed    before auction reset
         else if (what == "cusp") cusp = data; // Percentage drop before auction reset
-        else revert("Oven/file-unrecognized-param");
+        else revert("Clipper/file-unrecognized-param");
     }
     function file(bytes32 what, address data) external auth {
         if      (what ==  "dog") dog  = DogLike(data);
         else if (what ==  "vow") vow  = data;
-        else if (what == "calc") calc = Abacus(data);
-        else revert("Oven/file-unrecognized-param");
+        else if (what == "calc") calc = AbacusLike(data);
+        else revert("Clipper/file-unrecognized-param");
     }
 
     // --- Math ---
@@ -152,54 +153,54 @@ contract Oven {
     // --- Auction ---
 
     // start an auction
-    function bake(uint256 tab,  // debt             [rad]
-                  uint256 lot,  // collateral       [wad]
-                  address usr   // liquidated vault
+    function kick(uint256 tab,  // Debt             [rad]
+                  uint256 lot,  // Collateral       [wad]
+                  address usr   // Liquidated CDP
     ) external auth returns (uint256 id) {
-        require(bakes < uint256(-1), "Oven/overflow");
-        id = ++bakes;
-        baking.push(id);
+        require(kicks < uint256(-1), "Clipper/overflow");
+        id = ++kicks;
+        active.push(id);
 
-        loaves[id].pos = baking.length - 1;
+        sales[id].pos = active.length - 1;
 
-        loaves[id].tab = tab;
-        loaves[id].lot = lot;
-        loaves[id].usr = usr;
-        loaves[id].tic = uint96(now);
+        sales[id].tab = tab;
+        sales[id].lot = lot;
+        sales[id].usr = usr;
+        sales[id].tic = uint96(now);
 
         // Could get this from rmul(Vat.ilks(ilk).spot, Spotter.mat()) instead,
         // but if mat has changed since the last poke, the resulting value will
         // be incorrect.
         (PipLike pip, ) = spot.ilks(ilk);
         (bytes32 val, bool has) = pip.peek();
-        require(has, "Oven/invalid-price");
-        loaves[id].top = rmul(rdiv(mul(uint256(val), BLN), spot.par()), buf);
+        require(has, "Clipper/invalid-price");
+        sales[id].top = rmul(rdiv(mul(uint256(val), BLN), spot.par()), buf);
 
-        emit Bake(id, tab, lot, usr);
+        emit Kick(id, tab, lot, usr);
     }
 
     // Reset an auction
     function warm(uint256 id) external {
         // Read auction data
-        Loaf memory loaf = loaves[id];
-        require(loaf.tab > 0, "Oven/not-running-auction");
+        Sale memory sale = sales[id];
+        require(sale.tab > 0, "Clipper/not-running-auction");
 
         // Compute current price [ray]
-        uint256 price = calc.price(loaf.top, loaf.tic);
+        uint256 price = calc.price(sale.top, sale.tic);
 
         // Check that auction needs reset
-        require(sub(now, loaf.tic) > tail || rdiv(price, loaf.top) < cusp, "Oven/cannot-reset");
+        require(sub(now, sale.tic) > tail || rdiv(price, sale.top) < cusp, "Clipper/cannot-reset");
         
-        loaves[id].tic = uint96(now);
+        sales[id].tic = uint96(now);
 
         // Could get this from rmul(Vat.ilks(ilk).spot, Spotter.mat()) instead, but if mat has changed since the
         // last poke, the resulting value will be incorrect
         (PipLike pip, ) = spot.ilks(ilk);
         (bytes32 val, bool has) = pip.peek();
-        require(has, "Oven/invalid-price");
-        loaves[id].top = rmul(rdiv(mul(uint256(val), 10 ** 9), spot.par()), buf);
+        require(has, "Clipper/invalid-price");
+        sales[id].top = rmul(rdiv(mul(uint256(val), 10 ** 9), spot.par()), buf);
 
-        emit Warm(id, loaves[id].tab, loaves[id].lot, loaves[id].usr);
+        emit Warm(id, sales[id].tab, sales[id].lot, sales[id].usr);
     }
 
     // Buy amt of collateral from auction indexed by id
@@ -210,44 +211,44 @@ contract Oven {
                   bytes calldata data   
     ) external lock {
         // Read auction data
-        Loaf memory loaf = loaves[id];
-        require(loaf.tab > 0, "Oven/not-running-auction");
+        Sale memory sale = sales[id];
+        require(sale.tab > 0, "Clipper/not-running-auction");
 
         // Compute current price [ray]
-        uint256 price = calc.price(loaf.top, loaf.tic);
+        uint256 price = calc.price(sale.top, sale.tic);
 
         // Check that auction doesn't need reset
-        require(sub(now, loaf.tic) <= tail && rdiv(price, loaf.top) >= cusp, "Oven/needs-reset");
+        require(sub(now, sale.tic) <= tail && rdiv(price, sale.top) >= cusp, "Clipper/needs-reset");
 
         // Ensure price is acceptable to buyer
-        require(pay >= price, "Oven/too-expensive");
+        require(pay >= price, "Clipper/too-expensive");
 
         // Purchase as much as possible, up to amt
-        uint256 slice = min(loaf.lot, amt);
+        uint256 slice = min(sale.lot, amt);
 
-        // DAI needed to buy a slice of this loaf
+        // DAI needed to buy a slice of this sale
         uint256 owe = mul(slice, pay);
 
         // Don't collect more than tab of DAI
-        if (owe > loaf.tab) {
-            owe = loaf.tab;
+        if (owe > sale.tab) {
+            owe = sale.tab;
 
             // Readjust slice
             slice = owe / pay;
         }
 
         // Calculate remaining tab after operation
-        loaf.tab = sub(loaf.tab, owe);
-        require(loaf.tab == 0 || loaf.tab >= dust, "Oven/dust");
+        sale.tab = sub(sale.tab, owe);
+        require(sale.tab == 0 || sale.tab >= dust, "Clipper/dust");
 
         // Calculate remaining lot after operation
-        loaf.lot = sub(loaf.lot, slice);
+        sale.lot = sub(sale.lot, slice);
         // Send collateral to who
         vat.flux(ilk, address(this), who, slice);
 
         // Do external call (if defined)
         if (data.length > 0) {
-            OvenCallee(who).ovenCall(owe, slice, data);
+            ClipperCallee(who).clipperCall(owe, slice, data);
         }
 
         // Get DAI from who address
@@ -256,42 +257,42 @@ contract Oven {
         // Removes Dai out for liquidation from accumulator
         dog.digs(owe);
 
-        if (loaf.lot == 0) {
+        if (sale.lot == 0) {
             _remove(id);
-        } else if (loaf.tab == 0) {
+        } else if (sale.tab == 0) {
             // Should we return collateral incrementally instead?
-            vat.flux(ilk, address(this), loaf.usr, loaf.lot);
+            vat.flux(ilk, address(this), sale.usr, sale.lot);
             _remove(id);
         } else {
-            loaves[id].tab = loaf.tab;
-            loaves[id].lot = loaf.lot;
+            sales[id].tab = sale.tab;
+            sales[id].lot = sale.lot;
         }
 
         // emit event?
     }
 
     function _remove(uint256 id) internal {
-        uint256 _index     = loaves[id].pos;
-        uint256 _move      = baking[baking.length - 1];
-        baking[_index]     = _move;
-        loaves[_move].pos  = _index;
-        baking.pop();
-        delete loaves[id];
+        uint256 _index   = sales[id].pos;
+        uint256 _move    = active[active.length - 1];
+        active[_index]   = _move;
+        sales[_move].pos = _index;
+        active.pop();
+        delete sales[id];
     }
 
     // The number of active auctions
     function count() external view returns (uint256) {
-        return baking.length;
+        return active.length;
     }
 
     // Return an array of the live auction id's
     function list() external view returns (uint256[] memory) {
-        return baking;
+        return active;
     }
 
     // Returns auction id for a live auction in the active auction array
     function getId(uint256 idx) external view returns (uint256) {
-        return baking[idx];
+        return active[idx];
     }
 
     // --- Shutdown ---
