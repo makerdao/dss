@@ -1,16 +1,17 @@
 pragma solidity >=0.5.12;
 
 import "ds-test/test.sol";
-import "ds-value/value.sol";
 import "ds-token/token.sol";
-import {Vat}     from "dss/vat.sol";
-import {Spotter} from "dss/spot.sol";
-import {Vow}     from "dss/vow.sol";
-import {GemJoin} from "dss/join.sol";
+import "ds-value/value.sol";
 
-import {Clipper} from "./clip.sol";
-import "./abaci.sol";
-import "./dog.sol";
+import {Vat}     from "../vat.sol";
+import {Spotter} from "../spot.sol";
+import {Vow}     from "../vow.sol";
+import {GemJoin} from "../join.sol";
+
+import {Clipper} from "../clip.sol";
+import "../abaci.sol";
+import "../dog.sol";
 
 interface Hevm {
     function warp(uint256) external;
