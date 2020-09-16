@@ -1,6 +1,3 @@
-[submodule "lib/ds-value"]
-	path = lib/ds-value
-	url = https://github.com/dapphub/ds-value
 [submodule "lib/dss"]
 	path = lib/dss
 	url = https://github.com/dapphub/dss
