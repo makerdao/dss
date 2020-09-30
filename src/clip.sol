@@ -30,7 +30,7 @@ interface SpotLike {
 }
 
 interface DogLike {
-    function digs(uint256) external;
+    function digs(bytes32, uint256) external;
 }
 
 interface ClipperCallee {
@@ -255,7 +255,7 @@ contract Clipper {
         vat.move(who, vow, owe);
 
         // Removes Dai out for liquidation from accumulator
-        dog.digs(owe);
+        dog.digs(ilk, owe);
 
         if (sale.lot == 0) {
             _remove(id);

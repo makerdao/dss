@@ -58,6 +58,8 @@ contract Dog /* is LibNote */ {
     struct Ilk {
         address clip;  // Liquidator
         uint256 chop;  // Liquidation Penalty  [wad]
+        uint256 hole;  // Max DAI needed to cover debt+fees of active auctions per ilk [rad]
+        uint256 dirt;  // Amt DAI needed to cover debt+fees of active auctions per ilk [rad]
     }
 
     mapping (bytes32 => Ilk) public ilks;
@@ -65,8 +67,8 @@ contract Dog /* is LibNote */ {
     uint256 public live;  // Active Flag
     VatLike public vat;   // CDP Engine
     VowLike public vow;   // Debt Engine
-    uint256 public hole;  // Max DAI needed to cover debt+fees of active auctions [rad]
-    uint256 public dirt;  // Amt DAI needed to cover debt+fees of active auctions [rad]
+    uint256 public Hole;  // Max DAI needed to cover debt+fees of active auctions [rad]
+    uint256 public Dirt;  // Amt DAI needed to cover debt+fees of active auctions [rad]
 
     // --- Events ---
     event Bark(
@@ -108,11 +110,12 @@ contract Dog /* is LibNote */ {
         else revert("Dog/file-unrecognized-param");
     }
     function file(bytes32 what, uint256 data) external /* note */ auth {
-        if (what == "hole") hole = data;
+        if (what == "Hole") Hole = data;
         else revert("Dog/file-unrecognized-param");
     }
     function file(bytes32 ilk, bytes32 what, uint256 data) external /* note */ auth {
         if (what == "chop") ilks[ilk].chop = data;
+        else if (what == "hole") ilks[ilk].hole = data;
         else revert("Dog/file-unrecognized-param");
     }
     function file(bytes32 ilk, bytes32 what, address clip) external /* note */ auth {
@@ -134,9 +137,9 @@ contract Dog /* is LibNote */ {
             (,rate, spot,, dust) = vat.ilks(ilk);
             require(spot > 0 && mul(ink, spot) < mul(art, rate), "Dog/not-unsafe");
 
-            uint256 room = sub(hole, dirt);
+            uint256 room = min(sub(Hole, Dirt), sub(milk.hole, milk.dirt));
 
-            // Test whether the remaining space in the hole is dusty
+            // Test whether the remaining space in the Hole is dusty
             require(room > 0 && room >= dust, "Dog/liquidation-limit-hit");
 
             dart = min(art, mul(room, WAD) / rate / milk.chop);
@@ -158,7 +161,8 @@ contract Dog /* is LibNote */ {
         {   // Avoid stack too deep
             // This calcuation will overflow if dart*rate exceeds ~10^14
             uint256 tab = mul(due, milk.chop) / WAD;
-            dirt = add(dirt, tab);
+            Dirt = add(Dirt, tab);
+            ilks[ilk].dirt = add(milk.dirt, tab);
 
             id = ClipperLike(milk.clip).kick({
                 tab: tab,
@@ -170,8 +174,9 @@ contract Dog /* is LibNote */ {
         emit Bark(ilk, urn, dink, dart, due, milk.clip, id);
     }
 
-    function digs(uint256 rad) external /* note */ auth {
-        dirt = sub(dirt, rad);
+    function digs(bytes32 ilk, uint256 rad) external /* note */ auth {
+        Dirt = sub(Dirt, rad);
+        ilks[ilk].dirt = sub(ilks[ilk].dirt, rad);
     }
 
     function cage() external /* note */ auth {
