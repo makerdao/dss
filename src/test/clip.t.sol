@@ -7,7 +7,6 @@ import "ds-value/value.sol";
 import {Vat}     from "../vat.sol";
 import {Spotter} from "../spot.sol";
 import {Vow}     from "../vow.sol";
-import {GemJoin} from "../join.sol";
 
 import {Clipper} from "../clip.sol";
 import "../abaci.sol";
@@ -16,33 +15,6 @@ import "../dog.sol";
 interface Hevm {
     function warp(uint256) external;
     function store(address,bytes32,bytes32) external;
-}
-interface PipLike {
-    function peek() external returns (bytes32, bool);
-    function poke(bytes32) external;
-}
-
-contract TestVat is Vat {
-    function mint(address usr, uint256 rad) public {
-        dai[usr] += rad;
-    }
-}
-
-contract TestVow is Vow {
-    constructor(address vat, address flapper, address flopper)
-        public Vow(vat, flapper, flopper) {}
-    // Total deficit
-    function Awe() public view returns (uint256) {
-        return vat.sin(address(this));
-    }
-    // Total surplus
-    function Joy() public view returns (uint256) {
-        return vat.dai(address(this));
-    }
-    // Unqueued, pre-auction debt
-    function Woe() public view returns (uint256) {
-        return sub(sub(Awe(), Sin), Ash);
-    }
 }
 
 contract Guy {
@@ -78,18 +50,13 @@ contract Guy {
 contract DutchClipperTest is DSTest {
     Hevm hevm;
 
-    TestVat vat;
+    Vat     vat;
     Dog     dog;
     Spotter spot;
-    TestVow vow;
+    Vow     vow;
     DSValue pip;
 
-    GemJoin gemA;
-
     Clipper clip;
-
-    DSToken gov;
-    DSToken gold;
 
     address me;
 
@@ -169,32 +136,22 @@ contract DutchClipperTest is DSTest {
 
         me = address(this);
 
-        gov = new DSToken('GOV');
-        gov.mint(100 ether);
-
-        vat = new TestVat();
+        vat = new Vat();
         vat = vat;
 
         spot = new Spotter(address(vat));
         vat.rely(address(spot));
 
-        vow = new TestVow(address(vat), address(0), address(0));
+        vow = new Vow(address(vat), address(0), address(0));
 
         dog = new Dog(address(vat));
         dog.file("vow", address(vow));
         vat.rely(address(dog));
         vow.rely(address(dog));
 
-        gold = new DSToken("GEM");
-        gold.mint(1000 ether);
-
-
         vat.init(ilk);
 
-        gemA = new GemJoin(address(vat), ilk, address(gold));
-        vat.rely(address(gemA));
-        gold.approve(address(gemA));
-        gemA.join(me, 1000 ether);
+        vat.slip(ilk, me, 1000 ether);
 
         pip = new DSValue();
         pip.poke(bytes32(uint256(5 ether))); // Spot = $2.5
@@ -203,8 +160,8 @@ contract DutchClipperTest is DSTest {
         spot.file(ilk, bytes32("mat"), ray(2 ether)); // 100% liquidation ratio for easier test calcs
         spot.poke(ilk);
 
-        vat.file(ilk, "line", rad(1000 ether));
-        vat.file("Line",         rad(1000 ether));
+        vat.file(ilk, "line", rad(10000 ether));
+        vat.file("Line",      rad(10000 ether));
 
         clip = new Clipper(address(vat), address(spot), address(dog), ilk);
         clip.rely(address(dog));
@@ -215,8 +172,6 @@ contract DutchClipperTest is DSTest {
         dog.rely(address(clip));
 
         vat.rely(address(clip));
-
-        gold.approve(address(vat));
 
         assertEq(vat.gem(ilk, me), 1000 ether);
         assertEq(vat.dai(me), 0);  
@@ -233,8 +188,8 @@ contract DutchClipperTest is DSTest {
         Guy(ali).hope(address(clip));
         Guy(bob).hope(address(clip));
 
-        vat.mint(address(ali), rad(1000 ether));
-        vat.mint(address(bob), rad(1000 ether));
+        vat.suck(address(0), address(ali), rad(1000 ether));
+        vat.suck(address(0), address(bob), rad(1000 ether));
     }
 
     function checkExpDecrease(
