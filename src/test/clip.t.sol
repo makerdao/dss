@@ -623,4 +623,51 @@ contract DutchClipperTest is DSTest {
         uint256 lotReturn = 30 ether - (rad(60 ether) / ray(4 ether));       // lot - loaf.tab / max = 15
         assertEq(vat.gem(ilk, me), 960 ether + lotReturn);                   // Collateral returned (10 WAD)
     } 
+
+    function test_stop() public {
+        clip.stop();
+    }
+
+    function testFail_stop() public {
+        clip.stop();
+        clip.stop();
+    }
+
+    function test_start() public {
+        clip.stop();
+        clip.start();
+    }
+
+    function testFail_start() public {
+        clip.start();
+    }
+
+    function testFail_stopped_kick() public {
+        uint256 pos;
+        uint256 tab;
+        uint256 lot;
+        address usr;
+        uint96  tic;
+        uint256 top;
+        uint256 ink;
+        uint256 art;
+
+        assertEq(clip.kicks(), 0);
+        (pos, tab, lot, usr, tic, top) = clip.sales(1);
+        assertEq(pos, 0);
+        assertEq(tab, 0);
+        assertEq(lot, 0);
+        assertEq(usr, address(0));
+        assertEq(uint256(tic), 0);
+        assertEq(top, 0);
+        assertEq(vat.gem(ilk, me), 960 ether);
+        (ink, art) = vat.urns(ilk, me);
+        assertEq(ink, 40 ether);
+        assertEq(art, 100 ether);
+
+        clip.stop();
+
+        dog.bark(ilk, me);
+    }
+
 }
