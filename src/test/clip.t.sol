@@ -59,7 +59,7 @@ contract Guy {
     function take(
         uint256 id,           
         uint256 amt,          
-        uint256 pay,         
+        uint256 max,         
         address who,   
         bytes calldata data
     ) 
@@ -68,14 +68,14 @@ contract Guy {
         clip.take({
             id: id,
             amt: amt,
-            pay: pay,
+            max: max,
             who: who,
             data: data
         });
     }
 }
 
-contract DutchClipperTest is DSTest {
+contract ClipperTest is DSTest {
     Hevm hevm;
 
     TestVat vat;
@@ -479,7 +479,7 @@ contract DutchClipperTest is DSTest {
         Guy(ali).take({
             id:  1,
             amt: 25 ether,
-            pay: ray(5 ether),
+            max: ray(5 ether),
             who: address(ali),
             data: ''
         });
@@ -503,7 +503,7 @@ contract DutchClipperTest is DSTest {
         Guy(ali).take({
             id:  1,
             amt: 22 ether,
-            pay: ray(5 ether),
+            max: ray(5 ether),
             who: address(ali),
             data: ''
         });
@@ -527,7 +527,7 @@ contract DutchClipperTest is DSTest {
         Guy(ali).take({
             id:  1,
             amt: 11 ether,     // Half of tab at $110
-            pay: ray(5 ether),
+            max: ray(5 ether),
             who: address(ali),
             data: ''
         });
@@ -551,7 +551,7 @@ contract DutchClipperTest is DSTest {
         Guy(ali).take({
             id:  1,
             amt: 22 ether,
-            pay: ray(4 ether),
+            max: ray(4 ether),
             who: address(ali),
             data: ''
         });
@@ -562,7 +562,7 @@ contract DutchClipperTest is DSTest {
         Guy(ali).take({
             id:  1,
             amt: 22 ether - 1,
-            pay: ray(5 ether),
+            max: ray(5 ether),
             who: address(ali),
             data: ''
         });
@@ -580,7 +580,7 @@ contract DutchClipperTest is DSTest {
         Guy(ali).take({
             id:  1,
             amt: 10 ether,     
-            pay: ray(5 ether),
+            max: ray(5 ether),
             who: address(ali),
             data: ''
         });
@@ -600,10 +600,11 @@ contract DutchClipperTest is DSTest {
 
         hevm.warp(now + 30); 
 
+        uint256 price = clip.calc().price(top, tic);
         Guy(bob).take({
             id:  1,
             amt: 30 ether,     // Buy the rest of the lot 
-            pay: ray(4 ether), // 5 * 0.99 ** 30 = 3.698501866941401 RAY => max > pay
+            max: ray(4 ether), // 5 * 0.99 ** 30 = 3.698501866941401 RAY => max > price
             who: address(bob),
             data: ''
         });
@@ -617,10 +618,11 @@ contract DutchClipperTest is DSTest {
         assertEq(uint256(tic), 0);
         assertEq(top, 0);
 
-        assertEq(vat.gem(ilk, bob), 15 ether);  // Didn't take whole lot
-        assertEq(vat.dai(bob), rad(940 ether)); // Paid rest of tab (60)
+        uint256 expectedGem = (RAY * 60 ether) / price;  // tab / price
+        assertEq(vat.gem(ilk, bob), expectedGem);        // Didn't take whole lot
+        assertEq(vat.dai(bob), rad(940 ether));          // Paid rest of tab (60)
 
-        uint256 lotReturn = 30 ether - (rad(60 ether) / ray(4 ether));       // lot - loaf.tab / max = 15
-        assertEq(vat.gem(ilk, me), 960 ether + lotReturn);                   // Collateral returned (10 WAD)
+        uint256 lotReturn = 30 ether - expectedGem;         // lot - loaf.tab / max = 15
+        assertEq(vat.gem(ilk, me), 960 ether + lotReturn);  // Collateral returned (10 WAD)
     } 
 }

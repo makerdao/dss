@@ -206,7 +206,7 @@ contract Clipper {
     // Buy amt of collateral from auction indexed by id
     function take(uint256 id,           // Auction id
                   uint256 amt,          // Upper limit on amount of collateral to buy       [wad]
-                  uint256 pay,          // Bid price (DAI / ETH)                            [ray]
+                  uint256 max,          // maximum acceptable price (DAI / ETH)             [ray]
                   address who,          // Who will receive the collateral and pay the debt
                   bytes calldata data   
     ) external lock {
@@ -221,20 +221,20 @@ contract Clipper {
         require(sub(now, sale.tic) <= tail && rdiv(price, sale.top) >= cusp, "Clipper/needs-reset");
 
         // Ensure price is acceptable to buyer
-        require(pay >= price, "Clipper/too-expensive");
+        require(max >= price, "Clipper/too-expensive");
 
         // Purchase as much as possible, up to amt
         uint256 slice = min(sale.lot, amt);
 
         // DAI needed to buy a slice of this sale
-        uint256 owe = mul(slice, pay);
+        uint256 owe = mul(slice, price);
 
         // Don't collect more than tab of DAI
         if (owe > sale.tab) {
             owe = sale.tab;
 
             // Readjust slice
-            slice = owe / pay;
+            slice = owe / price;
         }
 
         // Calculate remaining tab after operation
