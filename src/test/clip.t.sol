@@ -146,7 +146,6 @@ contract ClipperTest is DSTest {
         me = address(this);
 
         vat = new Vat();
-        vat = vat;
 
         spot = new Spotter(address(vat));
         vat.rely(address(spot));
@@ -503,7 +502,7 @@ contract ClipperTest is DSTest {
 
         (, uint256 rate,,,) = vat.ilks(ilk);
 
-        assertEq(lot, 40 ether * (tab * 1 ether / rate / chop) / 100 ether);
+        assertEq(lot, 40 ether * (tab * WAD / rate / chop) / 100 ether);
         assertEq(tab, rad(75 ether) - ray(0.2 ether)); // 0.2 RAY rounding error
 
         assertEq(_ink(ilk, me), 40 ether - lot);
@@ -530,8 +529,8 @@ contract ClipperTest is DSTest {
 
         (, uint256 rate,,,) = vat.ilks(ilk);
 
-        assertEq(lot, 40 ether * (tab * 1 ether / rate / chop) / 100 ether);
-        assertEq(tab, rad(75 ether) - 0.2 * 10 ** 27); // 2* 10 ** 26 rounding error
+        assertEq(lot, 40 ether * (tab * WAD / rate / chop) / 100 ether);
+        assertEq(tab, rad(75 ether) - ray(0.2 ether)); // 0.2 RAY rounding error
 
         assertEq(_ink(ilk, me), 40 ether - lot);
         assertEq(_art(ilk, me), 100 ether - tab * WAD / rate / chop);
