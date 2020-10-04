@@ -260,7 +260,6 @@ contract Clipper {
         if (sale.lot == 0) {
             _remove(id);
         } else if (sale.tab == 0) {
-            // Should we return collateral incrementally instead?
             vat.flux(ilk, address(this), sale.usr, sale.lot);
             _remove(id);
         } else {
