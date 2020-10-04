@@ -205,10 +205,10 @@ contract Clipper {
 
     // Buy amt of collateral from auction indexed by id
     function take(uint256 id,           // Auction id
-                  uint256 amt,          // Upper limit on amount of collateral to buy       [wad]
-                  uint256 max,          // maximum acceptable price (DAI / ETH)             [ray]
-                  address who,          // Who will receive the collateral and pay the debt
-                  bytes calldata data   
+                  uint256 amt,          // Upper limit on amount of collateral to buy  [wad]
+                  uint256 max,          // maximum acceptable price (DAI / collateral) [ray]
+                  address who,          // Receiver of collateral, payer of DAI, and external call address
+                  bytes calldata data   // Data to pass in external call; if length 0, no call is done
     ) external lock {
         // Read auction data
         Sale memory sale = sales[id];
