@@ -89,7 +89,7 @@ contract Clipper {
         address indexed usr
     );
 
-    event Warm(
+    event Redo(
         uint256  id,
         uint256 tab,
         uint256 lot,
@@ -200,7 +200,7 @@ contract Clipper {
         require(has, "Clipper/invalid-price");
         sales[id].top = rmul(rdiv(mul(uint256(val), 10 ** 9), spot.par()), buf);
 
-        emit Warm(id, sales[id].tab, sales[id].lot, sales[id].usr);
+        emit Redo(id, sales[id].tab, sales[id].lot, sales[id].usr);
     }
 
     // Buy amt of collateral from auction indexed by id
