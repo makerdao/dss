@@ -180,7 +180,7 @@ contract Clipper {
     }
 
     // Reset an auction
-    function warm(uint256 id) external {
+    function redo(uint256 id) external {
         // Read auction data
         Sale memory sale = sales[id];
         require(sale.tab > 0, "Clipper/not-running-auction");
