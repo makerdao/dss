@@ -89,6 +89,13 @@ contract Clipper {
         address indexed usr
     );
 
+    event Take(
+        uint256  id,
+        uint256 tab,
+        uint256 lot,
+        address indexed   usr
+    );
+
     event Redo(
         uint256  id,
         uint256 tab,
@@ -267,7 +274,7 @@ contract Clipper {
             sales[id].lot = sale.lot;
         }
 
-        // emit event?
+        emit Take(id, sale.tab, sale.lot, sale.usr);
     }
 
     function _remove(uint256 id) internal {
