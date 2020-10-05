@@ -7,7 +7,6 @@ import "ds-value/value.sol";
 import {Vat}     from "../vat.sol";
 import {Spotter} from "../spot.sol";
 import {Vow}     from "../vow.sol";
-import {GemJoin} from "../join.sol";
 
 import {Clipper} from "../clip.sol";
 import "../abaci.sol";
@@ -16,33 +15,6 @@ import "../dog.sol";
 interface Hevm {
     function warp(uint256) external;
     function store(address,bytes32,bytes32) external;
-}
-interface PipLike {
-    function peek() external returns (bytes32, bool);
-    function poke(bytes32) external;
-}
-
-contract TestVat is Vat {
-    function mint(address usr, uint256 rad) public {
-        dai[usr] += rad;
-    }
-}
-
-contract TestVow is Vow {
-    constructor(address vat, address flapper, address flopper)
-        public Vow(vat, flapper, flopper) {}
-    // Total deficit
-    function Awe() public view returns (uint256) {
-        return vat.sin(address(this));
-    }
-    // Total surplus
-    function Joy() public view returns (uint256) {
-        return vat.dai(address(this));
-    }
-    // Unqueued, pre-auction debt
-    function Woe() public view returns (uint256) {
-        return sub(sub(Awe(), Sin), Ash);
-    }
 }
 
 contract Guy {
@@ -78,18 +50,13 @@ contract Guy {
 contract ClipperTest is DSTest {
     Hevm hevm;
 
-    TestVat vat;
+    Vat     vat;
     Dog     dog;
     Spotter spot;
-    TestVow vow;
+    Vow     vow;
     DSValue pip;
 
-    GemJoin gemA;
-
     Clipper clip;
-
-    DSToken gov;
-    DSToken gold;
 
     address me;
 
@@ -108,6 +75,15 @@ contract ClipperTest is DSTest {
 
     uint256 constant startTime = 604411200; // Used to avoid issues with `now`
 
+    function _ink(bytes32 ilk_, address urn_) internal view returns (uint256) {
+        (uint256 ink_,) = vat.urns(ilk_, urn_);
+        return ink_;
+    }
+    function _art(bytes32 ilk_, address urn_) internal view returns (uint256) {
+        (,uint256 art_) = vat.urns(ilk_, urn_);
+        return art_;
+    }
+
     modifier takeSetup {
         uint256 pos;
         uint256 tab;
@@ -119,14 +95,14 @@ contract ClipperTest is DSTest {
         uint256 art;
 
         StairstepExponentialDecrease calc = new StairstepExponentialDecrease();
-        calc.file(bytes32("cut"),  ray(0.01 ether)); // 1% decrease
-        calc.file(bytes32("step"), 1);               // Decrease every 1 second
+        calc.file("cut",  ray(0.01 ether)); // 1% decrease
+        calc.file("step", 1);               // Decrease every 1 second
 
-        clip.file(bytes32("buf"),  ray(1.25 ether)); // 25% Initial price buffer
-        clip.file(bytes32("dust"), rad(20   ether)); // $20 dust
-        clip.file(bytes32("calc"), address(calc));   // File price contract
-        clip.file(bytes32("cusp"), ray(0.3 ether));  // 70% drop before reset
-        clip.file(bytes32("tail"), 3600);            // 1 hour before reset
+        clip.file("buf",  ray(1.25 ether)); // 25% Initial price buffer
+        clip.file("dust", rad(20   ether)); // $20 dust
+        clip.file("calc", address(calc));   // File price contract
+        clip.file("cusp", ray(0.3 ether));  // 70% drop before reset
+        clip.file("tail", 3600);            // 1 hour before reset
 
         (ink, art) = vat.urns(ilk, me);
         assertEq(ink, 40 ether);
@@ -169,54 +145,42 @@ contract ClipperTest is DSTest {
 
         me = address(this);
 
-        gov = new DSToken('GOV');
-        gov.mint(100 ether);
-
-        vat = new TestVat();
-        vat = vat;
+        vat = new Vat();
 
         spot = new Spotter(address(vat));
         vat.rely(address(spot));
 
-        vow = new TestVow(address(vat), address(0), address(0));
+        vow = new Vow(address(vat), address(0), address(0));
 
         dog = new Dog(address(vat));
         dog.file("vow", address(vow));
         vat.rely(address(dog));
         vow.rely(address(dog));
 
-        gold = new DSToken("GEM");
-        gold.mint(1000 ether);
-
-
         vat.init(ilk);
 
-        gemA = new GemJoin(address(vat), ilk, address(gold));
-        vat.rely(address(gemA));
-        gold.approve(address(gemA));
-        gemA.join(me, 1000 ether);
+        vat.slip(ilk, me, 1000 ether);
 
         pip = new DSValue();
         pip.poke(bytes32(uint256(5 ether))); // Spot = $2.5
 
-        spot.file(ilk, bytes32("pip"), address(pip));
-        spot.file(ilk, bytes32("mat"), ray(2 ether)); // 100% liquidation ratio for easier test calcs
+        spot.file(ilk, "pip", address(pip));
+        spot.file(ilk, "mat", ray(2 ether)); // 100% liquidation ratio for easier test calcs
         spot.poke(ilk);
 
-        vat.file(ilk, "line", rad(1000 ether));
-        vat.file("Line",         rad(1000 ether));
+        vat.file(ilk, "line", rad(10000 ether));
+        vat.file("Line",      rad(10000 ether));
 
         clip = new Clipper(address(vat), address(spot), address(dog), ilk);
         clip.rely(address(dog));
 
         dog.file(ilk, "clip", address(clip));
         dog.file(ilk, "chop", 1.1 ether); // 10% chop
-        dog.file("hole", rad(1000 ether));
+        dog.file(ilk, "hole", rad(1000 ether));
+        dog.file("Hole", rad(1000 ether));
         dog.rely(address(clip));
 
         vat.rely(address(clip));
-
-        gold.approve(address(vat));
 
         assertEq(vat.gem(ilk, me), 1000 ether);
         assertEq(vat.dai(me), 0);  
@@ -233,8 +197,8 @@ contract ClipperTest is DSTest {
         Guy(ali).hope(address(clip));
         Guy(bob).hope(address(clip));
 
-        vat.mint(address(ali), rad(1000 ether));
-        vat.mint(address(bob), rad(1000 ether));
+        vat.suck(address(0), address(ali), rad(1000 ether));
+        vat.suck(address(0), address(bob), rad(1000 ether));
     }
 
     function checkExpDecrease(
@@ -473,6 +437,109 @@ contract ClipperTest is DSTest {
         assertEq(art, 0 ether);
     }
 
+    function test_Hole_hole() public {
+        assertEq(dog.Dirt(), 0);
+        (,,, uint256 dirt) = dog.ilks(ilk);
+        assertEq(dirt, 0);
+
+        dog.bark(ilk, me);
+
+        (, uint256 tab,,,,) = clip.sales(1);
+
+        assertEq(dog.Dirt(), tab);
+        (,,, dirt) = dog.ilks(ilk);
+        assertEq(dirt, tab);
+
+        bytes32 ilk2 = "silver";
+        Clipper clip2 = new Clipper(address(vat), address(spot), address(dog), ilk2);
+        clip2.rely(address(dog));
+
+        dog.file(ilk2, "clip", address(clip2));
+        dog.file(ilk2, "chop", 1.1 ether);
+        dog.file(ilk2, "hole", rad(1000 ether));
+        dog.rely(address(clip2));
+
+        vat.init(ilk2);
+        vat.rely(address(clip2));
+        vat.file(ilk2, "line", rad(100 ether));
+
+        vat.slip(ilk2, me, 40 ether);
+
+        DSValue pip2 = new DSValue();
+        pip2.poke(bytes32(uint256(5 ether))); // Spot = $2.5
+
+        spot.file(ilk2, "pip", address(pip2));
+        spot.file(ilk2, "mat", ray(2 ether));
+        spot.poke(ilk2);
+        vat.frob(ilk2, me, me, me, 40 ether, 100 ether);
+        pip2.poke(bytes32(uint256(4 ether))); // Spot = $2
+        spot.poke(ilk2);
+
+        dog.bark(ilk2, me);
+
+        (, uint256 tab2,,,,) = clip2.sales(1);
+
+        assertEq(dog.Dirt(), tab + tab2);
+        (,,, dirt) = dog.ilks(ilk);
+        (,,, uint256 dirt2) = dog.ilks(ilk2);
+        assertEq(dirt, tab);
+        assertEq(dirt2, tab2);
+    }
+
+    function test_partial_liquidation_Hole_limit() public {
+        dog.file("Hole", rad(75 ether));
+
+        assertEq(_ink(ilk, me), 40 ether);
+        assertEq(_art(ilk, me), 100 ether);
+
+        assertEq(dog.Dirt(), 0);
+        (,uint256 chop,, uint256 dirt) = dog.ilks(ilk);
+        assertEq(dirt, 0);
+
+        dog.bark(ilk, me);
+
+        (, uint256 tab, uint256 lot,,,) = clip.sales(1);
+
+        (, uint256 rate,,,) = vat.ilks(ilk);
+
+        assertEq(lot, 40 ether * (tab * WAD / rate / chop) / 100 ether);
+        assertEq(tab, rad(75 ether) - ray(0.2 ether)); // 0.2 RAY rounding error
+
+        assertEq(_ink(ilk, me), 40 ether - lot);
+        assertEq(_art(ilk, me), 100 ether - tab * WAD / rate / chop);
+
+        assertEq(dog.Dirt(), tab);
+        (,,, dirt) = dog.ilks(ilk);
+        assertEq(dirt, tab);
+    }
+
+    function test_partial_liquidation_hole_limit() public {
+        dog.file(ilk, "hole", rad(75 ether));
+
+        assertEq(_ink(ilk, me), 40 ether);
+        assertEq(_art(ilk, me), 100 ether);
+
+        assertEq(dog.Dirt(), 0);
+        (,uint256 chop,, uint256 dirt) = dog.ilks(ilk);
+        assertEq(dirt, 0);
+
+        dog.bark(ilk, me);
+
+        (, uint256 tab, uint256 lot,,,) = clip.sales(1);
+
+        (, uint256 rate,,,) = vat.ilks(ilk);
+
+        assertEq(lot, 40 ether * (tab * WAD / rate / chop) / 100 ether);
+        assertEq(tab, rad(75 ether) - ray(0.2 ether)); // 0.2 RAY rounding error
+
+        assertEq(_ink(ilk, me), 40 ether - lot);
+        assertEq(_art(ilk, me), 100 ether - tab * WAD / rate / chop);
+
+        assertEq(dog.Dirt(), tab);
+        (,,, dirt) = dog.ilks(ilk);
+        assertEq(dirt, tab);
+    }
+
     function test_take_over_tab() public takeSetup {
         // Bid so owe (= 25 * 5 = 125 RAD) > tab (= 110 RAD)
         // Readjusts slice to be tab/top = 25
@@ -481,7 +548,7 @@ contract ClipperTest is DSTest {
             amt: 25 ether,
             max: ray(5 ether),
             who: address(ali),
-            data: ''
+            data: ""
         });
 
         assertEq(vat.gem(ilk, ali), 22 ether);  // Didn't take whole lot
@@ -505,7 +572,7 @@ contract ClipperTest is DSTest {
             amt: 22 ether,
             max: ray(5 ether),
             who: address(ali),
-            data: ''
+            data: ""
         });
 
         assertEq(vat.gem(ilk, ali), 22 ether);  // Didn't take whole lot
@@ -529,7 +596,7 @@ contract ClipperTest is DSTest {
             amt: 11 ether,     // Half of tab at $110
             max: ray(5 ether),
             who: address(ali),
-            data: ''
+            data: ""
         });
 
         assertEq(vat.gem(ilk, ali), 11 ether);  // Didn't take whole lot
@@ -553,7 +620,7 @@ contract ClipperTest is DSTest {
             amt: 22 ether,
             max: ray(4 ether),
             who: address(ali),
-            data: ''
+            data: ""
         });
     }   
 
@@ -564,7 +631,7 @@ contract ClipperTest is DSTest {
             amt: 22 ether - 1,
             max: ray(5 ether),
             who: address(ali),
-            data: ''
+            data: ""
         });
     }   
 
@@ -582,7 +649,7 @@ contract ClipperTest is DSTest {
             amt: 10 ether,     
             max: ray(5 ether),
             who: address(ali),
-            data: ''
+            data: ""
         });
 
         assertEq(vat.gem(ilk, ali), 10 ether);  // Didn't take whole lot
@@ -606,7 +673,7 @@ contract ClipperTest is DSTest {
             amt: 30 ether,     // Buy the rest of the lot 
             max: ray(4 ether), // 5 * 0.99 ** 30 = 3.698501866941401 RAY => max > price
             who: address(bob),
-            data: ''
+            data: ""
         });
 
         // Assert auction is over
