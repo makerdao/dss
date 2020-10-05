@@ -89,7 +89,14 @@ contract Clipper {
         address indexed usr
     );
 
-    event Warm(
+    event Take(
+        uint256  id,
+        uint256 tab,
+        uint256 lot,
+        address indexed usr
+    );
+
+    event Redo(
         uint256  id,
         uint256 tab,
         uint256 lot,
@@ -180,7 +187,7 @@ contract Clipper {
     }
 
     // Reset an auction
-    function warm(uint256 id) external {
+    function redo(uint256 id) external {
         // Read auction data
         Sale memory sale = sales[id];
         require(sale.tab > 0, "Clipper/not-running-auction");
@@ -200,15 +207,15 @@ contract Clipper {
         require(has, "Clipper/invalid-price");
         sales[id].top = rmul(rdiv(mul(uint256(val), 10 ** 9), spot.par()), buf);
 
-        emit Warm(id, sales[id].tab, sales[id].lot, sales[id].usr);
+        emit Redo(id, sales[id].tab, sales[id].lot, sales[id].usr);
     }
 
     // Buy amt of collateral from auction indexed by id
     function take(uint256 id,           // Auction id
-                  uint256 amt,          // Upper limit on amount of collateral to buy       [wad]
-                  uint256 max,          // maximum acceptable price (DAI / ETH)             [ray]
-                  address who,          // Who will receive the collateral and pay the debt
-                  bytes calldata data   
+                  uint256 amt,          // Upper limit on amount of collateral to buy  [wad]
+                  uint256 max,          // Maximum acceptable price (DAI / collateral) [ray]
+                  address who,          // Receiver of collateral, payer of DAI, and external call address
+                  bytes calldata data   // Data to pass in external call; if length 0, no call is done
     ) external lock {
         // Read auction data
         Sale memory sale = sales[id];
@@ -260,7 +267,6 @@ contract Clipper {
         if (sale.lot == 0) {
             _remove(id);
         } else if (sale.tab == 0) {
-            // Should we return collateral incrementally instead?
             vat.flux(ilk, address(this), sale.usr, sale.lot);
             _remove(id);
         } else {
@@ -268,7 +274,7 @@ contract Clipper {
             sales[id].lot = sale.lot;
         }
 
-        // emit event?
+        emit Take(id, sale.tab, sale.lot, sale.usr);
     }
 
     function _remove(uint256 id) internal {
