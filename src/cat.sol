@@ -157,7 +157,7 @@ contract Cat is LibNote {
         vat.grab(
             ilk, urn, address(this), address(vow), -int256(dink), -int256(dart)
         );
-        vow.fess(milk.wait, mul(dart, rate));
+        vow.fess(add(now, milk.wait), mul(dart, rate));
 
         { // Avoid stack too deep
             // This calcuation will overflow if dart*rate exceeds ~10^14,
