@@ -137,8 +137,9 @@ contract Dog /* is LibNote */ {
             (,rate, spot,, dust) = vat.ilks(ilk);
             require(spot > 0 && mul(ink, spot) < mul(art, rate), "Dog/not-unsafe");
 
-            // Get the minimum value between the remaining space
-            // in the general Hole and the collateral hole
+            // Get the minimum value between: 
+            // 1) Remaining space in the general Hole 
+            // 2) Remaining space in the collateral hole
             uint256 room = min(sub(Hole, Dirt), sub(milk.hole, milk.dirt));
 
             // Verify there is room and it is not dusty
