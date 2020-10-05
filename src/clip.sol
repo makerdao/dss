@@ -93,7 +93,7 @@ contract Clipper {
         uint256  id,
         uint256 tab,
         uint256 lot,
-        address indexed   usr
+        address indexed usr
     );
 
     event Redo(
@@ -213,7 +213,7 @@ contract Clipper {
     // Buy amt of collateral from auction indexed by id
     function take(uint256 id,           // Auction id
                   uint256 amt,          // Upper limit on amount of collateral to buy  [wad]
-                  uint256 max,          // maximum acceptable price (DAI / collateral) [ray]
+                  uint256 max,          // Maximum acceptable price (DAI / collateral) [ray]
                   address who,          // Receiver of collateral, payer of DAI, and external call address
                   bytes calldata data   // Data to pass in external call; if length 0, no call is done
     ) external lock {
