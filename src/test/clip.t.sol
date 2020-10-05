@@ -692,4 +692,136 @@ contract ClipperTest is DSTest {
         uint256 lotReturn = 30 ether - expectedGem;         // lot - loaf.tab / max = 15
         assertEq(vat.gem(ilk, me), 960 ether + lotReturn);  // Collateral returned (10 WAD)
     } 
+
+    function testFail_auction_reset_tail() public {
+        LinearDecrease calc = new LinearDecrease();
+        calc.file(bytes32("tau"), 36000);   // 10 hours till zero is reached (used to test tail)  
+
+        clip.file("buf",  ray(1.25 ether)); // 25% Initial price buffer
+        clip.file("dust", rad(20   ether)); // $20 dust
+        clip.file("calc", address(calc));   // File price contract
+        clip.file("cusp", ray(0.3 ether));  // 70% drop before reset
+        clip.file("tail", 3600);            // 1 hour before reset
+
+        assertEq(clip.kicks(), 0);
+        dog.bark(ilk, me);
+        assertEq(clip.kicks(), 1);
+
+        hevm.warp(now + 3600 seconds);
+        clip.redo(1);
+    }
+
+    function test_auction_reset_tail() public {
+        LinearDecrease calc = new LinearDecrease();
+        calc.file(bytes32("tau"), 36000);   // 10 hours till zero is reached (used to test tail)  
+
+        clip.file("buf",  ray(1.25 ether)); // 25% Initial price buffer
+        clip.file("dust", rad(20   ether)); // $20 dust
+        clip.file("calc", address(calc));   // File price contract
+        clip.file("cusp", ray(0.3 ether));  // 70% drop before reset
+        clip.file("tail", 3600);            // 1 hour before reset
+
+        assertEq(clip.kicks(), 0);
+        dog.bark(ilk, me);
+        assertEq(clip.kicks(), 1);
+
+        pip.poke(bytes32(uint256(3 ether))); // Spot = $1.50 (update price before reset is called)
+
+        (,,,, uint96 tic_before, uint256 top_before) = clip.sales(1);
+        assertEq(uint256(tic_before), startTime);
+        assertEq(top_before, ray(5 ether)); // $4 spot + 25% buffer = $5 (wasn't affected by poke)
+        
+        hevm.warp(startTime + 3601 seconds);
+        clip.redo(1);
+        
+        (,,,, uint96 tic_after, uint256 top_after) = clip.sales(1);
+        assertEq(uint256(tic_after), startTime + 3601 seconds);     // (now)
+        assertEq(top_after, ray(3.75 ether)); // $3 spot + 25% buffer = $5 (used most recent OSM price)
+    }
+
+    function testFail_auction_reset_cusp() public {
+        LinearDecrease calc = new LinearDecrease();
+        calc.file(bytes32("tau"), 3600);    // 1 hours till zero is reached (used to test cusp)  
+
+        clip.file("buf",  ray(1.25 ether)); // 25% Initial price buffer
+        clip.file("dust", rad(20   ether)); // $20 dust
+        clip.file("calc", address(calc));   // File price contract
+        clip.file("cusp", ray(0.5 ether));  // 50% drop before reset
+        clip.file("tail", 3600);            // 1 hour before reset (used to test cusp)
+
+        assertEq(clip.kicks(), 0);
+        dog.bark(ilk, me);
+        assertEq(clip.kicks(), 1);
+
+        hevm.warp(now + 1800 seconds);      // 50% drop after 30min, price is at "cusp"
+        clip.redo(1);
+    }
+
+    function test_auction_reset_cusp() public {
+        LinearDecrease calc = new LinearDecrease();
+        calc.file(bytes32("tau"), 3600);    // 1 hours till zero is reached (used to test cusp)  
+
+        clip.file("buf",  ray(1.25 ether)); // 25% Initial price buffer
+        clip.file("dust", rad(20   ether)); // $20 dust
+        clip.file("calc", address(calc));   // File price contract
+        clip.file("cusp", ray(0.5 ether));  // 50% drop before reset
+        clip.file("tail", 3600);            // 1 hour before reset (used to test cusp)
+
+        assertEq(clip.kicks(), 0);
+        dog.bark(ilk, me);
+        assertEq(clip.kicks(), 1);
+
+        pip.poke(bytes32(uint256(3 ether))); // Spot = $1.50 (update price before reset is called)
+
+        (,,,, uint96 tic_before, uint256 top_before) = clip.sales(1);
+        assertEq(uint256(tic_before), startTime);
+        assertEq(top_before, ray(5 ether)); // $4 spot + 25% buffer = $5 (wasn't affected by poke)
+        
+        hevm.warp(startTime + 1801 seconds); // Price goes below 50% "cusp" after 30min01sec
+        clip.redo(1);
+        
+        (,,,, uint96 tic_after, uint256 top_after) = clip.sales(1);
+        assertEq(uint256(tic_after), startTime + 1801 seconds);     // (now)
+        assertEq(top_after, ray(3.75 ether)); // $3 spot + 25% buffer = $5 (used most recent OSM price)
+    }
+
+    function testFail_auction_reset_tail_twice() public {
+        LinearDecrease calc = new LinearDecrease();
+        calc.file(bytes32("tau"), 36000);   // 10 hours till zero is reached (used to test tail)  
+
+        clip.file("buf",  ray(1.25 ether)); // 25% Initial price buffer
+        clip.file("dust", rad(20   ether)); // $20 dust
+        clip.file("calc", address(calc));   // File price contract
+        clip.file("cusp", ray(0.3 ether));  // 70% drop before reset
+        clip.file("tail", 3600);            // 1 hour before reset
+
+        assertEq(clip.kicks(), 0);
+        dog.bark(ilk, me);
+        assertEq(clip.kicks(), 1);
+        
+        hevm.warp(startTime + 3601 seconds);
+        clip.redo(1);
+
+        clip.redo(1);
+    }
+
+    function testFail_auction_reset_cusp_twice() public {
+        LinearDecrease calc = new LinearDecrease();
+        calc.file(bytes32("tau"), 3600);    // 1 hours till zero is reached (used to test cusp)  
+
+        clip.file("buf",  ray(1.25 ether)); // 25% Initial price buffer
+        clip.file("dust", rad(20   ether)); // $20 dust
+        clip.file("calc", address(calc));   // File price contract
+        clip.file("cusp", ray(0.5 ether));  // 50% drop before reset
+        clip.file("tail", 3600);            // 1 hour before reset (used to test cusp)
+
+        assertEq(clip.kicks(), 0);
+        dog.bark(ilk, me);
+        assertEq(clip.kicks(), 1);
+        
+        hevm.warp(startTime + 1801 seconds); // Price goes below 50% "cusp" after 30min01sec
+        clip.redo(1);
+
+        clip.redo(1);
+    }
 }
