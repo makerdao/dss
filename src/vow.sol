@@ -54,11 +54,11 @@ contract Vow is LibNote {
     FlapLike public flapper;   // Surplus Auction House
     FlopLike public flopper;   // Debt Auction House
 
-    mapping (uint256 => uint256) public sin;  // debt queue
+    mapping (uint256 => mapping (uint256 => uint256)) public sin;  // debt queue
+
     uint256 public Sin;   // Queued debt            [rad]
     uint256 public Ash;   // On-auction debt        [rad]
 
-    uint256 public wait;  // Flop delay             [seconds]
     uint256 public dump;  // Flop initial lot size  [wad]
     uint256 public sump;  // Flop fixed bid size    [rad]
 
@@ -109,15 +109,15 @@ contract Vow is LibNote {
     }
 
     // Push to debt-queue
-    function fess(uint tab) external note auth {
-        sin[now] = add(sin[now], tab);
+    function fess(uint wait, uint tab) external note auth {
+        sin[wait][now] = add(sin[wait][now], tab);
         Sin = add(Sin, tab);
     }
     // Pop from debt-queue
-    function flog(uint era) external note {
+    function flog(uint wait, uint era) external note {
         require(add(era, wait) <= now, "Vow/wait-not-finished");
-        Sin = sub(Sin, sin[era]);
-        sin[era] = 0;
+        Sin = sub(Sin, sin[wait][era]);
+        sin[wait][era] = 0;
     }
 
     // Debt settlement
