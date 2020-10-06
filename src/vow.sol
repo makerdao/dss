@@ -113,7 +113,7 @@ contract Vow is LibNote {
         Sin = add(Sin, tab);
     }
     // Pop from debt-queue
-    function flog(uint wait, uint era) external note {
+    function flog(uint era) external note {
         require(era <= now, "Vow/wait-not-finished");
         Sin = sub(Sin, sin[era]);
         sin[era] = 0;
