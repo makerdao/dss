@@ -718,18 +718,18 @@ contract ClipperTest is DSTest {
 
         pip.poke(bytes32(uint256(3 ether))); // Spot = $1.50 (update price before reset is called)
 
-        (,,,, uint96 tic_before, uint256 top_before) = clip.sales(1);
-        assertEq(uint256(tic_before), startTime);
-        assertEq(top_before, ray(5 ether)); // $4 spot + 25% buffer = $5 (wasn't affected by poke)
+        (,,,, uint96 ticBefore, uint256 topBefore) = clip.sales(1);
+        assertEq(uint256(ticBefore), startTime);
+        assertEq(topBefore, ray(5 ether)); // $4 spot + 25% buffer = $5 (wasn't affected by poke)
         
         hevm.warp(startTime + 3600 seconds);
         assertTrue(!try_redo(1));
         hevm.warp(startTime + 3601 seconds);
         assertTrue( try_redo(1));
         
-        (,,,, uint96 tic_after, uint256 top_after) = clip.sales(1);
-        assertEq(uint256(tic_after), startTime + 3601 seconds);     // (now)
-        assertEq(top_after, ray(3.75 ether)); // $3 spot + 25% buffer = $5 (used most recent OSM price)
+        (,,,, uint96 ticAfter, uint256 topAfter) = clip.sales(1);
+        assertEq(uint256(ticAfter), startTime + 3601 seconds);     // (now)
+        assertEq(topAfter, ray(3.75 ether)); // $3 spot + 25% buffer = $5 (used most recent OSM price)
     }
 
     function test_auction_reset_cusp() public {
@@ -737,18 +737,18 @@ contract ClipperTest is DSTest {
 
         pip.poke(bytes32(uint256(3 ether))); // Spot = $1.50 (update price before reset is called)
 
-        (,,,, uint96 tic_before, uint256 top_before) = clip.sales(1);
-        assertEq(uint256(tic_before), startTime);
-        assertEq(top_before, ray(5 ether)); // $4 spot + 25% buffer = $5 (wasn't affected by poke)
+        (,,,, uint96 ticBefore, uint256 topBefore) = clip.sales(1);
+        assertEq(uint256(ticBefore), startTime);
+        assertEq(topBefore, ray(5 ether)); // $4 spot + 25% buffer = $5 (wasn't affected by poke)
         
         hevm.warp(startTime + 1800 seconds);
         assertTrue(!try_redo(1));
         hevm.warp(startTime + 1801 seconds);
         assertTrue( try_redo(1));
         
-        (,,,, uint96 tic_after, uint256 top_after) = clip.sales(1);
-        assertEq(uint256(tic_after), startTime + 1801 seconds);     // (now)
-        assertEq(top_after, ray(3.75 ether)); // $3 spot + 25% buffer = $5 (used most recent OSM price)
+        (,,,, uint96 ticAfter, uint256 topAfter) = clip.sales(1);
+        assertEq(uint256(ticAfter), startTime + 1801 seconds);     // (now)
+        assertEq(topAfter, ray(3.75 ether)); // $3 spot + 25% buffer = $3.75 (used most recent OSM price)
     }
 
     function testFail_auction_reset_tail_twice() public {
