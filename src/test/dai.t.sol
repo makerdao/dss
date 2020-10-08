@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 /// erc20.t.sol -- test for erc20.sol
 
 // Copyright (C) 2015-2019  DappHub, LLC

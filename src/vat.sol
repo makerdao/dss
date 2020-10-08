@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 /// vat.sol -- Dai CDP database
 
 // Copyright (C) 2018 Rain <rainbreak@riseup.net>

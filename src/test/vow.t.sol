@@ -130,11 +130,12 @@ contract VowTest is DSTest {
         vow.file('wait', uint(100 seconds));
         assertEq(vow.wait(), 100 seconds);
 
-        uint tic = now;
-        vow.fess(100 ether);
-        assertTrue(!try_flog(tic) );
-        hevm.warp(now + tic + 100 seconds);
-        assertTrue( try_flog(tic) );
+        uint tic = now;                                                                                                                                                       
+        vow.fess(100 ether);                                                     
+        hevm.warp(tic + 99 seconds);                                             
+        assertTrue(!try_flog(tic) );                                             
+        hevm.warp(tic + 100 seconds);                                            
+        assertTrue( try_flog(tic) ); 
     }
 
     function test_no_reflop() public {

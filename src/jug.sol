@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 /// jug.sol -- Dai Lending Rate
 
 // Copyright (C) 2018 Rain <rainbreak@riseup.net>

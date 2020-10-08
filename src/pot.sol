@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 /// pot.sol -- Dai Savings Rate
 
 // Copyright (C) 2018 Rain <rainbreak@riseup.net>
