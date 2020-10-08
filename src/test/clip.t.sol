@@ -246,7 +246,7 @@ contract ClipperTest is DSTest {
         uint256 tic = now; // Start of auction
         uint256 percentDecrease;
         uint256 step;
-        uint256 testTime = 3600 seconds;
+        uint256 testTime = 10 minutes;
 
 
         /*** Extreme high collateral price ($50m) ***/
@@ -692,4 +692,80 @@ contract ClipperTest is DSTest {
         uint256 lotReturn = 30 ether - expectedGem;         // lot - loaf.tab / max = 15
         assertEq(vat.gem(ilk, me), 960 ether + lotReturn);  // Collateral returned (10 WAD)
     } 
+
+    function auctionResetSetup(uint256 tau) internal {
+        LinearDecrease calc = new LinearDecrease();
+        calc.file(bytes32("tau"), tau);     // tau hours till zero is reached (used to test tail)  
+
+        clip.file("buf",  ray(1.25 ether)); // 25% Initial price buffer
+        clip.file("dust", rad(20   ether)); // $20 dust
+        clip.file("calc", address(calc));   // File price contract
+        clip.file("cusp", ray(0.5 ether));  // 50% drop before reset
+        clip.file("tail", 3600);            // 1 hour before reset
+
+        assertEq(clip.kicks(), 0);
+        dog.bark(ilk, me);
+        assertEq(clip.kicks(), 1);
+    }
+
+    function try_redo(uint256 id) internal returns (bool ok) {
+        string memory sig = "redo(uint256)";
+        (ok,) = address(clip).call(abi.encodeWithSignature(sig, id));
+    }
+
+    function test_auction_reset_tail() public {
+        auctionResetSetup(10 hours); // 10 hours till zero is reached (used to test tail) 
+
+        pip.poke(bytes32(uint256(3 ether))); // Spot = $1.50 (update price before reset is called)
+
+        (,,,, uint96 ticBefore, uint256 topBefore) = clip.sales(1);
+        assertEq(uint256(ticBefore), startTime);
+        assertEq(topBefore, ray(5 ether)); // $4 spot + 25% buffer = $5 (wasn't affected by poke)
+        
+        hevm.warp(startTime + 3600 seconds);
+        assertTrue(!try_redo(1));
+        hevm.warp(startTime + 3601 seconds);
+        assertTrue( try_redo(1));
+        
+        (,,,, uint96 ticAfter, uint256 topAfter) = clip.sales(1);
+        assertEq(uint256(ticAfter), startTime + 3601 seconds);     // (now)
+        assertEq(topAfter, ray(3.75 ether)); // $3 spot + 25% buffer = $5 (used most recent OSM price)
+    }
+
+    function test_auction_reset_cusp() public {
+        auctionResetSetup(1 hours); // 1 hour till zero is reached (used to test cusp) 
+
+        pip.poke(bytes32(uint256(3 ether))); // Spot = $1.50 (update price before reset is called)
+
+        (,,,, uint96 ticBefore, uint256 topBefore) = clip.sales(1);
+        assertEq(uint256(ticBefore), startTime);
+        assertEq(topBefore, ray(5 ether)); // $4 spot + 25% buffer = $5 (wasn't affected by poke)
+        
+        hevm.warp(startTime + 1800 seconds);
+        assertTrue(!try_redo(1));
+        hevm.warp(startTime + 1801 seconds);
+        assertTrue( try_redo(1));
+        
+        (,,,, uint96 ticAfter, uint256 topAfter) = clip.sales(1);
+        assertEq(uint256(ticAfter), startTime + 1801 seconds);     // (now)
+        assertEq(topAfter, ray(3.75 ether)); // $3 spot + 25% buffer = $3.75 (used most recent OSM price)
+    }
+
+    function testFail_auction_reset_tail_twice() public {
+        auctionResetSetup(10 hours); // 10 hours till zero is reached (used to test tail) 
+        
+        hevm.warp(startTime + 3601 seconds);
+        clip.redo(1);
+
+        clip.redo(1);
+    }
+
+    function testFail_auction_reset_cusp_twice() public {
+        auctionResetSetup(1 hours); // 1 hour till zero is reached (used to test cusp) 
+        
+        hevm.warp(startTime + 1801 seconds); // Price goes below 50% "cusp" after 30min01sec
+        clip.redo(1);
+
+        clip.redo(1);
+    }
 }
