@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 /// flip.sol -- Collateral auction
 
 // Copyright (C) 2018 Rain <rainbreak@riseup.net>
