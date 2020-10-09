@@ -768,37 +768,4 @@ contract ClipperTest is DSTest {
 
         clip.redo(1);
     }
-
-    function test_setBreaker() public {
-        clip.setBreaker(1);
-        assertEq(clip.stopped(), 1);
-    }
-
-    function testFail_stopped_kick() public {
-        uint256 pos;
-        uint256 tab;
-        uint256 lot;
-        address usr;
-        uint96  tic;
-        uint256 top;
-        uint256 ink;
-        uint256 art;
-
-        assertEq(clip.kicks(), 0);
-        (pos, tab, lot, usr, tic, top) = clip.sales(1);
-        assertEq(pos, 0);
-        assertEq(tab, 0);
-        assertEq(lot, 0);
-        assertEq(usr, address(0));
-        assertEq(uint256(tic), 0);
-        assertEq(top, 0);
-        assertEq(vat.gem(ilk, me), 960 ether);
-        (ink, art) = vat.urns(ilk, me);
-        assertEq(ink, 40 ether);
-        assertEq(art, 100 ether);
-
-        clip.setBreaker(1);
-
-        dog.bark(ilk, me);
-    }
 }
