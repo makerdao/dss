@@ -81,7 +81,12 @@ contract Clipper {
 
     uint256 internal locked;
 
-    bool stopped;
+    // Levels for circuit breaker
+    // 0: no breaker
+    // 1: no new kick()
+    // 2: no new warm() or take()
+    // 3: yank() can be called
+    uint256 public stopped = 0;
 
     // --- Events ---
     event Kick(
@@ -117,8 +122,8 @@ contract Clipper {
         locked = 0;
     }
 
-    modifier isStopped(bool which) {
-        require(stopped == which, "Clipper/stopped-incorrect");
+    modifier isStopped(uint256 level, bool which) {
+        require(stopped < level == which, "Clipper/stopped-incorrect");
         _;
     }
 
@@ -163,7 +168,7 @@ contract Clipper {
     function kick(uint256 tab,  // Debt             [rad]
                   uint256 lot,  // Collateral       [wad]
                   address usr   // Liquidated CDP
-    ) external auth isStopped(false) returns (uint256 id) {
+    ) external auth isStopped(1, true) returns (uint256 id) {
         require(kicks < uint256(-1), "Clipper/overflow");
         id = ++kicks;
         active.push(id);
@@ -187,7 +192,7 @@ contract Clipper {
     }
 
     // Reset an auction
-    function warm(uint256 id) isStopped(false) external {
+    function warm(uint256 id) isStopped(2, true) external {
         // Read auction data
         Sale memory sale = sales[id];
         require(sale.tab > 0, "Clipper/not-running-auction");
@@ -216,7 +221,7 @@ contract Clipper {
                   uint256 pay,          // Bid price (DAI / ETH)                            [ray]
                   address who,          // Who will receive the collateral and pay the debt
                   bytes calldata data   
-    ) external lock isStopped(false) {
+    ) external lock isStopped(2, true) {
         // Read auction data
         Sale memory sale = sales[id];
         require(sale.tab > 0, "Clipper/not-running-auction");
@@ -304,16 +309,12 @@ contract Clipper {
 
     // --- Shutdown ---
 
-    function stop() external auth isStopped(false) {
-        stopped = true;
-    }
-
-    function start() external auth isStopped(true) {
-        stopped = false;
+    function setBreaker(uint256 level) external auth {
+        stopped = level;
     }
 
     // Cancel an auction during ES
-    function yank() external auth {
+    function yank() external auth isStopped(3, false) {
         // TODO
     }
 }

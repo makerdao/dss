@@ -624,22 +624,9 @@ contract DutchClipperTest is DSTest {
         assertEq(vat.gem(ilk, me), 960 ether + lotReturn);                   // Collateral returned (10 WAD)
     } 
 
-    function test_stop() public {
-        clip.stop();
-    }
-
-    function testFail_stop() public {
-        clip.stop();
-        clip.stop();
-    }
-
-    function test_start() public {
-        clip.stop();
-        clip.start();
-    }
-
-    function testFail_start() public {
-        clip.start();
+    function test_setBreaker() public {
+        clip.setBreaker(1);
+        assertEq(clip.stopped(), 1);
     }
 
     function testFail_stopped_kick() public {
@@ -665,7 +652,7 @@ contract DutchClipperTest is DSTest {
         assertEq(ink, 40 ether);
         assertEq(art, 100 ether);
 
-        clip.stop();
+        clip.setBreaker(1);
 
         dog.bark(ilk, me);
     }
