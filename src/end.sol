@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 /// end.sol -- global settlement engine
 
 // Copyright (C) 2018 Rain <rainbreak@riseup.net>

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 // Copyright (C) 2020 Maker Ecosystem Growth Holdings, INC.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -30,7 +32,7 @@ interface SpotLike {
 }
 
 interface DogLike {
-    function digs(uint256) external;
+    function digs(bytes32, uint256) external;
 }
 
 interface ClipperCallee {
@@ -96,7 +98,14 @@ contract Clipper {
         address indexed usr
     );
 
-    event Warm(
+    event Take(
+        uint256  id,
+        uint256 tab,
+        uint256 lot,
+        address indexed usr
+    );
+
+    event Redo(
         uint256  id,
         uint256 tab,
         uint256 lot,
@@ -192,7 +201,7 @@ contract Clipper {
     }
 
     // Reset an auction
-    function warm(uint256 id) isStopped(2, true) external {
+    function redo(uint256 id) external isStopped(2, true) {
         // Read auction data
         Sale memory sale = sales[id];
         require(sale.tab > 0, "Clipper/not-running-auction");
@@ -212,16 +221,16 @@ contract Clipper {
         require(has, "Clipper/invalid-price");
         sales[id].top = rmul(rdiv(mul(uint256(val), 10 ** 9), spot.par()), buf);
 
-        emit Warm(id, sales[id].tab, sales[id].lot, sales[id].usr);
+        emit Redo(id, sales[id].tab, sales[id].lot, sales[id].usr);
     }
 
     // Buy amt of collateral from auction indexed by id
     function take(uint256 id,           // Auction id
-                  uint256 amt,          // Upper limit on amount of collateral to buy       [wad]
-                  uint256 pay,          // Bid price (DAI / ETH)                            [ray]
-                  address who,          // Who will receive the collateral and pay the debt
-                  bytes calldata data   
-    ) external lock isStopped(2, true) {
+                  uint256 amt,          // Upper limit on amount of collateral to buy  [wad]
+                  uint256 max,          // Maximum acceptable price (DAI / collateral) [ray]
+                  address who,          // Receiver of collateral, payer of DAI, and external call address
+                  bytes calldata data   // Data to pass in external call; if length 0, no call is done
+    ) external isStopped(2, true) lock {
         // Read auction data
         Sale memory sale = sales[id];
         require(sale.tab > 0, "Clipper/not-running-auction");
@@ -233,20 +242,20 @@ contract Clipper {
         require(sub(now, sale.tic) <= tail && rdiv(price, sale.top) >= cusp, "Clipper/needs-reset");
 
         // Ensure price is acceptable to buyer
-        require(pay >= price, "Clipper/too-expensive");
+        require(max >= price, "Clipper/too-expensive");
 
         // Purchase as much as possible, up to amt
         uint256 slice = min(sale.lot, amt);
 
         // DAI needed to buy a slice of this sale
-        uint256 owe = mul(slice, pay);
+        uint256 owe = mul(slice, price);
 
         // Don't collect more than tab of DAI
         if (owe > sale.tab) {
             owe = sale.tab;
 
             // Readjust slice
-            slice = owe / pay;
+            slice = owe / price;
         }
 
         // Calculate remaining tab after operation
@@ -267,12 +276,11 @@ contract Clipper {
         vat.move(who, vow, owe);
 
         // Removes Dai out for liquidation from accumulator
-        dog.digs(owe);
+        dog.digs(ilk, owe);
 
         if (sale.lot == 0) {
             _remove(id);
         } else if (sale.tab == 0) {
-            // Should we return collateral incrementally instead?
             vat.flux(ilk, address(this), sale.usr, sale.lot);
             _remove(id);
         } else {
@@ -280,7 +288,7 @@ contract Clipper {
             sales[id].lot = sale.lot;
         }
 
-        // emit event?
+        emit Take(id, sale.tab, sale.lot, sale.usr);
     }
 
     function _remove(uint256 id) internal {

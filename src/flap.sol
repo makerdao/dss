@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 /// flap.sol -- Surplus auction
 
 // Copyright (C) 2018 Rain <rainbreak@riseup.net>
