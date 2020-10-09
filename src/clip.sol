@@ -83,6 +83,13 @@ contract Clipper {
 
     uint256 internal locked;
 
+    // Levels for circuit breaker
+    // 0: no breaker
+    // 1: no new kick()
+    // 2: no new warm() or take()
+    // 3: yank() can be called
+    uint256 public stopped = 0;
+
     // --- Events ---
     event Kick(
         uint256  id,
@@ -122,6 +129,11 @@ contract Clipper {
         locked = 1;
         _;
         locked = 0;
+    }
+
+    modifier isStopped(uint256 level, bool which) {
+        require(stopped < level == which, "Clipper/stopped-incorrect");
+        _;
     }
 
     // --- Administration ---
@@ -165,7 +177,7 @@ contract Clipper {
     function kick(uint256 tab,  // Debt             [rad]
                   uint256 lot,  // Collateral       [wad]
                   address usr   // Liquidated CDP
-    ) external auth returns (uint256 id) {
+    ) external auth isStopped(1, true) returns (uint256 id) {
         require(kicks < uint256(-1), "Clipper/overflow");
         id = ++kicks;
         active.push(id);
@@ -189,7 +201,7 @@ contract Clipper {
     }
 
     // Reset an auction
-    function redo(uint256 id) external {
+    function redo(uint256 id) external isStopped(2, true) {
         // Read auction data
         Sale memory sale = sales[id];
         require(sale.tab > 0, "Clipper/not-running-auction");
@@ -218,7 +230,7 @@ contract Clipper {
                   uint256 max,          // Maximum acceptable price (DAI / collateral) [ray]
                   address who,          // Receiver of collateral, payer of DAI, and external call address
                   bytes calldata data   // Data to pass in external call; if length 0, no call is done
-    ) external lock {
+    ) external isStopped(2, true) lock {
         // Read auction data
         Sale memory sale = sales[id];
         require(sale.tab > 0, "Clipper/not-running-auction");
@@ -305,8 +317,12 @@ contract Clipper {
 
     // --- Shutdown ---
 
+    function setBreaker(uint256 level) external auth {
+        stopped = level;
+    }
+
     // Cancel an auction during ES
-    function yank() external auth {
+    function yank() external auth isStopped(3, false) {
         // TODO
     }
 }
