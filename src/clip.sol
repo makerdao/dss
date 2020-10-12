@@ -83,6 +83,12 @@ contract Clipper {
 
     uint256 internal locked;
 
+    // Levels for circuit breaker
+    // 0: no breaker
+    // 1: no new kick()
+    // 2: no new warm() or take()
+    uint256 public stopped = 0;
+
     // --- Events ---
     event Kick(
         uint256  id,
