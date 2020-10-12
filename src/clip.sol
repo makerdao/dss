@@ -87,7 +87,6 @@ contract Clipper {
     // 0: no breaker
     // 1: no new kick()
     // 2: no new warm() or take()
-    // 3: yank() can be called
     uint256 public stopped = 0;
 
     // --- Events ---
@@ -322,7 +321,7 @@ contract Clipper {
     }
 
     // Cancel an auction during ES
-    function yank() external auth isStopped(3, false) {
+    function yank() external auth {
         // TODO
     }
 }
