@@ -866,15 +866,4 @@ contract ClipperTest is DSTest {
         hevm.warp(startTime + 3601 seconds);
         assertTrue( try_redo(1));
     }
-
-    // does nothing but we can still test the breaker works
-    function test_yank() public {
-        clip.setBreaker(3);
-        clip.yank();
-    }
-
-    function testFail_yank() public {
-        clip.setBreaker(2);
-        clip.yank();
-    }
 }
