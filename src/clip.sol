@@ -130,6 +130,11 @@ contract Clipper {
         locked = 0;
     }
 
+    modifier isStopped(uint256 level, bool which) {
+        require(stopped < level == which, "Clipper/stopped-incorrect");
+        _;
+    }
+
     // --- Administration ---
     function file(bytes32 what, uint256 data) external {
         if      (what ==  "buf") buf  = data;
@@ -171,7 +176,7 @@ contract Clipper {
     function kick(uint256 tab,  // Debt             [rad]
                   uint256 lot,  // Collateral       [wad]
                   address usr   // Liquidated CDP
-    ) external auth returns (uint256 id) {
+    ) external auth isStopped(1, true) returns (uint256 id) {
         require(kicks < uint256(-1), "Clipper/overflow");
         id = ++kicks;
         active.push(id);
@@ -195,7 +200,7 @@ contract Clipper {
     }
 
     // Reset an auction
-    function redo(uint256 id) external {
+    function redo(uint256 id) external isStopped(2, true) {
         // Read auction data
         Sale memory sale = sales[id];
         require(sale.tab > 0, "Clipper/not-running-auction");
@@ -224,7 +229,7 @@ contract Clipper {
                   uint256 max,          // Maximum acceptable price (DAI / collateral) [ray]
                   address who,          // Receiver of collateral, payer of DAI, and external call address
                   bytes calldata data   // Data to pass in external call; if length 0, no call is done
-    ) external lock {
+    ) external lock isStopped(2, true) {
         // Read auction data
         Sale memory sale = sales[id];
         require(sale.tab > 0, "Clipper/not-running-auction");
@@ -310,7 +315,10 @@ contract Clipper {
     }
 
     // --- Shutdown ---
-
+    function setBreaker(uint256 level) external auth {
+        stopped = level;
+    }
+    
     // Cancel an auction during ES
     function yank() external auth {
         // TODO
