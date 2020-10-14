@@ -95,14 +95,15 @@ contract ClipperTest is DSTest {
         uint256 art;
 
         StairstepExponentialDecrease calc = new StairstepExponentialDecrease();
-        calc.file("cut",  ray(0.01 ether)); // 1% decrease
-        calc.file("step", 1);               // Decrease every 1 second
+        calc.file("cut",  ray(0.01 ether));   // 1% decrease
+        calc.file("step", 1);                 // Decrease every 1 second
 
-        clip.file("buf",  ray(1.25 ether)); // 25% Initial price buffer
-        clip.file("dust", rad(20   ether)); // $20 dust
-        clip.file("calc", address(calc));   // File price contract
-        clip.file("cusp", ray(0.3 ether));  // 70% drop before reset
-        clip.file("tail", 3600);            // 1 hour before reset
+        vat.file(ilk, "dust", rad(20 ether)); // $20 dust
+
+        clip.file("buf",  ray(1.25 ether));   // 25% Initial price buffer
+        clip.file("calc", address(calc));     // File price contract
+        clip.file("cusp", ray(0.3 ether));    // 70% drop before reset
+        clip.file("tail", 3600);              // 1 hour before reset
 
         (ink, art) = vat.urns(ilk, me);
         assertEq(ink, 40 ether);
@@ -695,13 +696,14 @@ contract ClipperTest is DSTest {
 
     function auctionResetSetup(uint256 tau) internal {
         LinearDecrease calc = new LinearDecrease();
-        calc.file(bytes32("tau"), tau);     // tau hours till zero is reached (used to test tail)  
+        calc.file(bytes32("tau"), tau);       // tau hours till zero is reached (used to test tail)  
 
-        clip.file("buf",  ray(1.25 ether)); // 25% Initial price buffer
-        clip.file("dust", rad(20   ether)); // $20 dust
-        clip.file("calc", address(calc));   // File price contract
-        clip.file("cusp", ray(0.5 ether));  // 50% drop before reset
-        clip.file("tail", 3600);            // 1 hour before reset
+        vat.file(ilk, "dust", rad(20 ether)); // $20 dust
+
+        clip.file("buf",  ray(1.25 ether));   // 25% Initial price buffer
+        clip.file("calc", address(calc));     // File price contract
+        clip.file("cusp", ray(0.5 ether));    // 50% drop before reset
+        clip.file("tail", 3600);              // 1 hour before reset
 
         assertEq(clip.kicks(), 0);
         dog.bark(ilk, me);
