@@ -768,4 +768,102 @@ contract ClipperTest is DSTest {
 
         clip.redo(1);
     }
+
+    function test_setBreaker() public {
+        clip.setBreaker(1);
+        assertEq(clip.stopped(), 1);
+    }
+
+    function testFail_stopped_kick() public {
+        uint256 pos;
+        uint256 tab;
+        uint256 lot;
+        address usr;
+        uint96  tic;
+        uint256 top;
+        uint256 ink;
+        uint256 art;
+
+        assertEq(clip.kicks(), 0);
+        (pos, tab, lot, usr, tic, top) = clip.sales(1);
+        assertEq(pos, 0);
+        assertEq(tab, 0);
+        assertEq(lot, 0);
+        assertEq(usr, address(0));
+        assertEq(uint256(tic), 0);
+        assertEq(top, 0);
+        assertEq(vat.gem(ilk, me), 960 ether);
+        (ink, art) = vat.urns(ilk, me);
+        assertEq(ink, 40 ether);
+        assertEq(art, 100 ether);
+
+        clip.setBreaker(1);
+
+        dog.bark(ilk, me);
+    }
+
+    // At a stopped == 1 we are ok to take
+    function test_stopped_take() public takeSetup {
+        clip.setBreaker(1);
+        // Bid so owe (= 25 * 5 = 125 RAD) > tab (= 110 RAD)
+        // Readjusts slice to be tab/top = 25
+        Guy(ali).take({
+            id:  1,
+            amt: 25 ether,
+            max: ray(5 ether),
+            who: address(ali),
+            data: ""
+        });
+    }
+
+    function testFail_stopped_take() public takeSetup {
+        clip.setBreaker(2);
+        // Bid so owe (= 25 * 5 = 125 RAD) > tab (= 110 RAD)
+        // Readjusts slice to be tab/top = 25
+        Guy(ali).take({
+            id:  1,
+            amt: 25 ether,
+            max: ray(5 ether),
+            who: address(ali),
+            data: ""
+        });
+    }
+
+    function test_stopped_auction_reset_tail() public {
+        auctionResetSetup(10 hours); // 10 hours till zero is reached (used to test tail) 
+
+        clip.setBreaker(1);
+
+        pip.poke(bytes32(uint256(3 ether))); // Spot = $1.50 (update price before reset is called)
+
+        (,,,, uint96 ticBefore, uint256 topBefore) = clip.sales(1);
+        assertEq(uint256(ticBefore), startTime);
+        assertEq(topBefore, ray(5 ether)); // $4 spot + 25% buffer = $5 (wasn't affected by poke)
+        
+        hevm.warp(startTime + 3600 seconds);
+        assertTrue(!try_redo(1));
+        hevm.warp(startTime + 3601 seconds);
+        assertTrue( try_redo(1));
+        
+        (,,,, uint96 ticAfter, uint256 topAfter) = clip.sales(1);
+        assertEq(uint256(ticAfter), startTime + 3601 seconds);     // (now)
+        assertEq(topAfter, ray(3.75 ether)); // $3 spot + 25% buffer = $5 (used most recent OSM price)
+    }
+
+    function testFail_stopped_auction_reset_tail() public {
+        clip.setBreaker(2);
+
+        auctionResetSetup(10 hours); // 10 hours till zero is reached (used to test tail) 
+
+        pip.poke(bytes32(uint256(3 ether))); // Spot = $1.50 (update price before reset is called)
+
+        (,,,, uint96 ticBefore, uint256 topBefore) = clip.sales(1);
+        assertEq(uint256(ticBefore), startTime);
+        assertEq(topBefore, ray(5 ether)); // $4 spot + 25% buffer = $5 (wasn't affected by poke)
+        
+        hevm.warp(startTime + 3600 seconds);
+        assertTrue(!try_redo(1));
+        hevm.warp(startTime + 3601 seconds);
+        assertTrue( try_redo(1));
+    }
 }
