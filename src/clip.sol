@@ -20,6 +20,7 @@ pragma solidity >=0.5.12;
 interface VatLike {
     function move(address,address,uint256) external;
     function flux(bytes32,address,address,uint256) external;
+    function ilks(bytes32) external returns (uint256, uint256, uint256, uint256, uint256);
 }
 
 interface PipLike {
@@ -63,8 +64,6 @@ contract Clipper {
     AbacusLike public calc;  // Current price calculator
 
     uint256 public buf;   // Multiplicative factor to increase starting price  [ray]
-    // TODO: read from the Vat instead?
-    uint256 public dust;  // Minimum tab in an auction;                        [rad]
     uint256 public tail;  // Time elapsed before auction reset                 [seconds]
     uint256 public cusp;  // Percentage drop before auction reset              [ray]
 
@@ -138,7 +137,6 @@ contract Clipper {
     // --- Administration ---
     function file(bytes32 what, uint256 data) external {
         if      (what ==  "buf") buf  = data;
-        else if (what == "dust") dust = data;
         else if (what == "tail") tail = data; // Time elapsed    before auction reset
         else if (what == "cusp") cusp = data; // Percentage drop before auction reset
         else revert("Clipper/file-unrecognized-param");
@@ -259,6 +257,7 @@ contract Clipper {
 
         // Calculate remaining tab after operation
         sale.tab = sub(sale.tab, owe);
+        (,,,, uint256 dust) = vat.ilks(ilk);
         require(sale.tab == 0 || sale.tab >= dust, "Clipper/dust");
 
         // Calculate remaining lot after operation
