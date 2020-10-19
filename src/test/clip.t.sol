@@ -181,6 +181,7 @@ contract ClipperTest is DSTest {
         dog.file(ilk, "chop", 1.1 ether); // 10% chop
         dog.file(ilk, "hole", rad(1000 ether));
         dog.file("Hole", rad(1000 ether));
+        dog.file("tip",  rad(100 ether));
         dog.rely(address(clip));
 
         vat.rely(address(clip));
@@ -391,6 +392,7 @@ contract ClipperTest is DSTest {
         assertEq(uint256(tic), 0);
         assertEq(top, 0);
         assertEq(vat.gem(ilk, me), 960 ether);
+        assertEq(vat.dai(me), rad(100 ether)); 
         (ink, art) = vat.urns(ilk, me);
         assertEq(ink, 40 ether);
         assertEq(art, 100 ether);
@@ -406,6 +408,7 @@ contract ClipperTest is DSTest {
         assertEq(uint256(tic), now);
         assertEq(top, ray(4 ether));
         assertEq(vat.gem(ilk, me), 960 ether);
+        assertEq(vat.dai(me), rad(200 ether)); // Paid "tip" amount of DAI for calling bark()
         (ink, art) = vat.urns(ilk, me);
         assertEq(ink, 0 ether);
         assertEq(art, 0 ether);
@@ -441,6 +444,7 @@ contract ClipperTest is DSTest {
         assertEq(uint256(tic), now);
         assertEq(top, ray(5 ether));
         assertEq(vat.gem(ilk, me), 920 ether);
+        assertEq(vat.dai(me), rad(400 ether)); // Paid "tip" amount of DAI for calling bark() (balance was 300 before bark)
         (ink, art) = vat.urns(ilk, me);
         assertEq(ink, 0 ether);
         assertEq(art, 0 ether);

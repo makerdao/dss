@@ -38,6 +38,7 @@ interface VatLike {
         uint256 art   // [wad]
     );
     function grab(bytes32,address,address,address,int256,int256) external;
+    function suck(address,address,uint256) external;
     function hope(address) external;
     function nope(address) external;
 }
@@ -69,6 +70,7 @@ contract Dog is LibNote {
     uint256 public live;  // Active Flag
     VatLike public vat;   // CDP Engine
     VowLike public vow;   // Debt Engine
+    uint256 public tip;   // Keeper liquidation incentive                         [rad]
     uint256 public Hole;  // Max DAI needed to cover debt+fees of active auctions [rad]
     uint256 public Dirt;  // Amt DAI needed to cover debt+fees of active auctions [rad]
 
@@ -113,6 +115,7 @@ contract Dog is LibNote {
     }
     function file(bytes32 what, uint256 data) external note auth {
         if (what == "Hole") Hole = data;
+        else if (what == "tip") tip = data;
         else revert("Dog/file-unrecognized-param");
     }
     function file(bytes32 ilk, bytes32 what, uint256 data) external note auth {
@@ -179,6 +182,8 @@ contract Dog is LibNote {
                 usr: urn
             });
         }
+
+        vat.suck(address(vow), msg.sender, tip);
 
         emit Bark(ilk, urn, dink, dart, due, milk.clip, id);
     }
