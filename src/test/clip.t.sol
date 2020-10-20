@@ -363,6 +363,12 @@ contract ClipperTest is DSTest {
         price = calc.price(top, tic);
         assertEq(price, 0);
     }
+
+    function test_get_chop() public {
+        uint256 chop = dog.chop(ilk);
+        (, uint256 chop2,,) = dog.ilks(ilk);
+        assertEq(chop, chop2);
+    }
     
     function test_kick() public {
         uint256 pos;
