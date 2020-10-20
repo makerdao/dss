@@ -98,8 +98,6 @@ contract ClipperTest is DSTest {
         calc.file("cut",  ray(0.01 ether));   // 1% decrease
         calc.file("step", 1);                 // Decrease every 1 second
 
-        vat.file(ilk, "dust", rad(20 ether)); // $20 dust
-
         clip.file("buf",  ray(1.25 ether));   // 25% Initial price buffer
         clip.file("calc", address(calc));     // File price contract
         clip.file("cusp", ray(0.3 ether));    // 70% drop before reset
@@ -169,6 +167,7 @@ contract ClipperTest is DSTest {
         spot.file(ilk, "mat", ray(2 ether)); // 100% liquidation ratio for easier test calcs
         spot.poke(ilk);
 
+        vat.file(ilk, "dust", rad(20 ether)); // $20 dust
         vat.file(ilk, "line", rad(10000 ether));
         vat.file("Line",      rad(10000 ether));
 
@@ -436,6 +435,57 @@ contract ClipperTest is DSTest {
         (ink, art) = vat.urns(ilk, me);
         assertEq(ink, 0 ether);
         assertEq(art, 0 ether);
+    }
+
+    function try_bark(bytes32 ilk, address urn) internal returns (bool ok) {
+        string memory sig = "bark(bytes32,address)";
+        (ok,) = address(dog).call(abi.encodeWithSignature(sig, ilk, urn));
+    }
+
+    function test_bark_leaves_dust() public {
+        uint256 pos;
+        uint256 tab;
+        uint256 lot;
+        address usr;
+        uint96  tic;
+        uint256 top;
+        uint256 ink;
+        uint256 art;
+
+        dog.file(ilk, "hole", rad(80 ether) + ray(1 ether)); // Makes room = 80 WAD + 1 wei
+        dog.file(ilk, "chop", 1 ether); // 0% chop (for precise calculations)
+
+        assertEq(clip.kicks(), 0);
+        (pos, tab, lot, usr, tic, top) = clip.sales(1);
+        assertEq(pos, 0);
+        assertEq(tab, 0);
+        assertEq(lot, 0);
+        assertEq(usr, address(0));
+        assertEq(uint256(tic), 0);
+        assertEq(top, 0);
+        assertEq(vat.gem(ilk, me), 960 ether);
+        (ink, art) = vat.urns(ilk, me);
+        assertEq(ink, 40 ether);
+        assertEq(art, 100 ether);
+
+        assertTrue(!try_bark(ilk, me)); // art - dart = 100 - (80 + 1 wei) < dust (= 20)
+
+        dog.file(ilk, "hole", rad(80 ether)); // Makes room = 80 WAD
+
+        assertTrue( try_bark(ilk, me)); // art - dart = 100 - 80 == dust (= 20)
+
+        assertEq(clip.kicks(), 1);
+        (pos, tab, lot, usr, tic, top) = clip.sales(1);
+        assertEq(pos, 0);
+        assertEq(tab, rad(80 ether)); // No chop
+        assertEq(lot, 32 ether);
+        assertEq(usr, me);
+        assertEq(uint256(tic), now);
+        assertEq(top, ray(4 ether));
+        assertEq(vat.gem(ilk, me), 960 ether);
+        (ink, art) = vat.urns(ilk, me);
+        assertEq(ink, 8 ether);
+        assertEq(art, 20 ether);
     }
 
     function test_Hole_hole() public {
