@@ -255,6 +255,7 @@ contract Clipper {
         } else {  // owe < sale.tab
             // Calculate remaining tab after operation
             sale.tab = sale.tab - owe;  // safe since owe < sale.tab
+            (,,,, uint256 dust) = vat.ilks(ilk);
             require(sale.tab >= dust, "Clipper/dust");
         }
 
