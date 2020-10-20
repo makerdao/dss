@@ -45,6 +45,10 @@ contract Guy {
             data: data
         });
     }
+
+    function bark(Dog dog, bytes32 ilk, address urn) external {
+        dog.bark(ilk, urn);
+    }
 }
 
 contract ClipperTest is DSTest {
@@ -392,12 +396,12 @@ contract ClipperTest is DSTest {
         assertEq(uint256(tic), 0);
         assertEq(top, 0);
         assertEq(vat.gem(ilk, me), 960 ether);
-        assertEq(vat.dai(me), rad(100 ether)); 
+        assertEq(vat.dai(ali), rad(1000 ether));
         (ink, art) = vat.urns(ilk, me);
         assertEq(ink, 40 ether);
         assertEq(art, 100 ether);
 
-        dog.bark(ilk, me);
+        Guy(ali).bark(dog, ilk, me);
 
         assertEq(clip.kicks(), 1);
         (pos, tab, lot, usr, tic, top) = clip.sales(1);
@@ -408,7 +412,7 @@ contract ClipperTest is DSTest {
         assertEq(uint256(tic), now);
         assertEq(top, ray(4 ether));
         assertEq(vat.gem(ilk, me), 960 ether);
-        assertEq(vat.dai(me), rad(200 ether)); // Paid "tip" amount of DAI for calling bark()
+        assertEq(vat.dai(ali), rad(1100 ether)); // Paid "tip" amount of DAI for calling bark()
         (ink, art) = vat.urns(ilk, me);
         assertEq(ink, 0 ether);
         assertEq(art, 0 ether);
@@ -433,7 +437,7 @@ contract ClipperTest is DSTest {
 
         clip.file(bytes32("buf"),  ray(1.25 ether)); // 25% Initial price buffer
 
-        dog.bark(ilk, me);
+        Guy(ali).bark(dog, ilk, me);
 
         assertEq(clip.kicks(), 2);
         (pos, tab, lot, usr, tic, top) = clip.sales(2);
@@ -444,7 +448,7 @@ contract ClipperTest is DSTest {
         assertEq(uint256(tic), now);
         assertEq(top, ray(5 ether));
         assertEq(vat.gem(ilk, me), 920 ether);
-        assertEq(vat.dai(me), rad(400 ether)); // Paid "tip" amount of DAI for calling bark() (balance was 300 before bark)
+        assertEq(vat.dai(ali), rad(1200 ether)); // Paid "tip" amount of DAI for calling bark()
         (ink, art) = vat.urns(ilk, me);
         assertEq(ink, 0 ether);
         assertEq(art, 0 ether);
