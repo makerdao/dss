@@ -125,6 +125,8 @@ contract Dog /* is LibNote */ {
         else revert("Dog/file-unrecognized-param");
     }
 
+    function chop(bytes32 ilk) public view returns (uint256) { return ilks[ilk].chop; }
+
     // --- CDP Liquidation: all bark and no bite ---
     function bark(bytes32 ilk, address urn) external returns (uint256 id) {
         require(live == 1, "Dog/not-live");
