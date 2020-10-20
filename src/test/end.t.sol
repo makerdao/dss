@@ -26,9 +26,11 @@ import "ds-value/value.sol";
 
 import {Vat}  from '../vat.sol';
 import {Cat}  from '../cat.sol';
+import {Dog}  from '../dog.sol';
 import {Vow}  from '../vow.sol';
 import {Pot}  from '../pot.sol';
 import {Flipper} from '../flip.sol';
+import {Clipper} from '../clip.sol';
 import {Flapper} from '../flap.sol';
 import {Flopper} from '../flop.sol';
 import {GemJoin} from '../join.sol';
@@ -81,6 +83,7 @@ contract EndTest is DSTest {
     Vow   vow;
     Pot   pot;
     Cat   cat;
+    Dog   dog;
 
     Spotter spot;
 
@@ -89,6 +92,7 @@ contract EndTest is DSTest {
         DSToken gem;
         GemJoin gemA;
         Flipper flip;
+        Clipper clip;
     }
 
     mapping (bytes32 => Ilk) ilks;
@@ -174,10 +178,21 @@ contract EndTest is DSTest {
         cat.file(name, "dunk", rad(25000 ether));
         cat.file("box", rad((10 ether) * MLN));
 
+        Clipper clip = new Clipper(address(vat), address(spot), address(dog), name);
+        vat.hope(address(clip));
+        clip.rely(address(end));
+        clip.rely(address(dog));
+        dog.rely(address(clip));
+        dog.file(name, "clip", address(clip));
+        dog.file(name, "chop", 1.1 ether);
+        dog.file(name, "hole", rad(25000 ether));
+        dog.file("Hole", rad((25000 ether)));
+
         ilks[name].pip = pip;
         ilks[name].gem = coin;
         ilks[name].gemA = gemA;
         ilks[name].flip = flip;
+        ilks[name].clip = clip;
 
         return ilks[name];
     }
@@ -204,6 +219,11 @@ contract EndTest is DSTest {
         vat.rely(address(cat));
         vow.rely(address(cat));
 
+        dog = new Dog(address(vat));
+        dog.file("vow", address(vow));
+        vat.rely(address(dog));
+        vow.rely(address(dog));
+
         spot = new Spotter(address(vat));
         vat.file("Line",         rad(1000 ether));
         vat.rely(address(spot));
@@ -211,6 +231,7 @@ contract EndTest is DSTest {
         end = new End();
         end.file("vat", address(vat));
         end.file("cat", address(cat));
+        end.file("dog", address(dog));
         end.file("vow", address(vow));
         end.file("pot", address(pot));
         end.file("spot", address(spot));
@@ -220,6 +241,7 @@ contract EndTest is DSTest {
         spot.rely(address(end));
         pot.rely(address(end));
         cat.rely(address(end));
+        dog.rely(address(end));
         flap.rely(address(vow));
         flop.rely(address(vow));
     }

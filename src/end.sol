@@ -51,6 +51,15 @@ interface CatLike {
     );
     function cage() external;
 }
+interface DogLike {
+    function ilks(bytes32) external returns (
+        address clip,
+        uint256 chop,
+        uint256 hole,
+        uint256 dirt
+    );
+    function cage() external;
+}
 interface PotLike {
     function cage() external;
 }
@@ -69,6 +78,17 @@ interface Flippy {
         uint256 tab    // [rad]
     );
     function yank(uint id) external;
+}
+interface Clippy {
+    function sales(uint id) external view returns (
+        uint256 pos,
+        uint256 tab,
+        uint256 lot,
+        address usr,
+        uint96  tic,
+        uint256 top
+    );
+    function yank() external;
 }
 
 interface PipLike {
@@ -197,6 +217,7 @@ contract End is LibNote {
     // --- Data ---
     VatLike  public vat;   // CDP Engine
     CatLike  public cat;
+    DogLike  public dog;
     VowLike  public vow;   // Debt Engine
     PotLike  public pot;
     Spotty   public spot;
@@ -251,6 +272,7 @@ contract End is LibNote {
         require(live == 1, "End/not-live");
         if (what == "vat")  vat = VatLike(data);
         else if (what == "cat")  cat = CatLike(data);
+        else if (what == "dog")  dog = DogLike(data);
         else if (what == "vow")  vow = VowLike(data);
         else if (what == "pot")  pot = PotLike(data);
         else if (what == "spot") spot = Spotty(data);
@@ -269,6 +291,7 @@ contract End is LibNote {
         when = now;
         vat.cage();
         cat.cage();
+        dog.cage();
         vow.cage();
         spot.cage();
         pot.cage();
@@ -281,6 +304,25 @@ contract End is LibNote {
         (PipLike pip,) = spot.ilks(ilk);
         // par is a ray, pip returns a wad
         tag[ilk] = wdiv(spot.par(), uint(pip.read()));
+    }
+
+    function swip(bytes32 ilk, uint256 id) external note {
+        require(tag[ilk] != 0, "End/tag-ilk-not-defined");
+
+        (address clipV,,,) = dog.ilks(ilk);
+        Clippy clip = Clippy(clipV);
+        (, uint rate,,,) = vat.ilks(ilk);
+        (uint pos, uint256 tab, uint256 lot, address usr,,) = clip.sales(id);
+        
+        // only need to suck tab to vow, there's no bids
+        vat.suck(address(vow), address(vow),  tab);
+        // need to actually define yank
+        clip.yank();
+
+        uint art = tab / rate;
+        Art[ilk] = add(Art[ilk], art);
+        require(int(lot) >= 0 && int(art) >= 0, "End/overflow");
+        vat.grab(ilk, usr, address(this), address(vow), int(lot), int(art));
     }
 
     function skip(bytes32 ilk, uint256 id) external note {
