@@ -3,10 +3,12 @@ pragma solidity >=0.5.12;
 import "ds-test/test.sol";
 import "ds-token/token.sol";
 import "ds-value/value.sol";
+import "ds-math/math.sol";
 
 import {Vat}     from "../vat.sol";
 import {Spotter} from "../spot.sol";
 import {Vow}     from "../vow.sol";
+import {Jug}     from "../jug.sol";
 
 import {Clipper} from "../clip.sol";
 import "../abaci.sol";
@@ -55,6 +57,7 @@ contract ClipperTest is DSTest {
     Spotter spot;
     Vow     vow;
     DSValue pip;
+    Jug     jug;
 
     Clipper clip;
 
@@ -137,6 +140,9 @@ contract ClipperTest is DSTest {
     function rad(uint256 wad) internal pure returns (uint256) {
         return wad * 10 ** 27;
     }
+    function mul(uint256 x, uint256 y) internal pure returns (uint256 z) {
+        require(y == 0 || (z = x * y) / y == x);
+    }
 
     function setUp() public {
         hevm = Hevm(address(CHEAT_CODE));
@@ -156,7 +162,11 @@ contract ClipperTest is DSTest {
         vat.rely(address(dog));
         vow.rely(address(dog));
 
+        jug = new Jug(address(vat));
+        vat.rely(address(jug));
+
         vat.init(ilk);
+        jug.init(ilk);
 
         vat.slip(ilk, me, 1000 ether);
 
@@ -478,6 +488,58 @@ contract ClipperTest is DSTest {
         (pos, tab, lot, usr, tic, top) = clip.sales(1);
         assertEq(pos, 0);
         assertEq(tab, rad(80 ether)); // No chop
+        assertEq(lot, 32 ether);
+        assertEq(usr, me);
+        assertEq(uint256(tic), now);
+        assertEq(top, ray(4 ether));
+        assertEq(vat.gem(ilk, me), 960 ether);
+        (ink, art) = vat.urns(ilk, me);
+        assertEq(ink, 8 ether);
+        assertEq(art, 20 ether);
+    }
+
+    function test_bark_leaves_dust_rate() public {
+        uint256 pos;
+        uint256 tab;
+        uint256 lot;
+        address usr;
+        uint96  tic;
+        uint256 top;
+        uint256 ink;
+        uint256 art;
+
+        jug.file(ilk, "duty", 1000000001243680656318820312);
+        hevm.warp(now + 1 days);
+        jug.drip(ilk);
+        (, uint256 rate,,,) = vat.ilks(ilk);
+
+        dog.file(ilk, "hole", mul(80 ether + 1, rate)); // Makes room = 80 WAD + 1 wei in normalized debt
+        dog.file(ilk, "chop", 1 ether);                 // 0% chop (for precise calculations)
+        vat.file(ilk, "dust", mul(20 ether, rate));     // $20 in normalized debt (multiplied by rate for testing)
+        
+        assertEq(clip.kicks(), 0);
+        (pos, tab, lot, usr, tic, top) = clip.sales(1);
+        assertEq(pos, 0);
+        assertEq(tab, 0);
+        assertEq(lot, 0);
+        assertEq(usr, address(0));
+        assertEq(uint256(tic), 0);
+        assertEq(top, 0);
+        assertEq(vat.gem(ilk, me), 960 ether);
+        (ink, art) = vat.urns(ilk, me);
+        assertEq(ink, 40 ether);
+        assertEq(art, 100 ether);
+
+        assertTrue(!try_bark(ilk, me)); // (art - dart) * rate = (100 - 80) * rate < dust (= 20 * rate)
+
+        dog.file(ilk, "hole", mul(80 ether, rate)); // Makes room = 80 WAD + 1 wei in normalized debt
+
+        assertTrue( try_bark(ilk, me)); // art - dart = 100 - 80 == dust (= 20 * rate)
+
+        assertEq(clip.kicks(), 1);
+        (pos, tab, lot, usr, tic, top) = clip.sales(1);
+        assertEq(pos, 0);
+        assertEq(tab, mul(80 ether, rate)); // No chop
         assertEq(lot, 32 ether);
         assertEq(usr, me);
         assertEq(uint256(tic), now);
