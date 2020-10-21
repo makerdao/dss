@@ -529,11 +529,11 @@ contract ClipperTest is DSTest {
         assertEq(ink, 40 ether);
         assertEq(art, 100 ether);
 
-        assertTrue(!try_bark(ilk, me)); // (art - dart) * rate = (100 - 80) * rate < dust (= 20 * rate)
+        assertTrue(!try_bark(ilk, me)); // (art - dart) * rate = (100 - (80 + 1 wei)) * rate < dust (= 20 * rate)
 
         dog.file(ilk, "hole", mul(80 ether, rate)); // Makes room = 80 WAD + 1 wei in normalized debt
 
-        assertTrue( try_bark(ilk, me)); // art - dart = 100 - 80 == dust (= 20 * rate)
+        assertTrue( try_bark(ilk, me)); // (art - dart) * rate = (100 - 80) == dust (= 20 * rate)
 
         assertEq(clip.kicks(), 1);
         (pos, tab, lot, usr, tic, top) = clip.sales(1);
