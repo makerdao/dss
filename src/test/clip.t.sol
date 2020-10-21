@@ -3,7 +3,6 @@ pragma solidity >=0.5.12;
 import "ds-test/test.sol";
 import "ds-token/token.sol";
 import "ds-value/value.sol";
-import "ds-math/math.sol";
 
 import {Vat}     from "../vat.sol";
 import {Spotter} from "../spot.sol";
