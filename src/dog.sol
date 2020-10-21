@@ -151,7 +151,7 @@ contract Dog /* is LibNote */ {
             dart = min(art, mul(room, WAD) / rate / milk.chop);
 
             // Verify that CDP is not left in a dusty state
-            require(dart == art || mul(art - dart, RAY) >= dust, "Dog/leaves-dust");
+            require(dart == art || mul(art - dart, rate) >= dust, "Dog/leaves-dust");
         }
 
         uint256 dink = min(ink, mul(ink, dart) / art);
