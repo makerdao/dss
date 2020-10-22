@@ -505,6 +505,85 @@ contract EndTest is DSTest {
         assertEq(balanceOf("gold", address(gold.gemA)), 0);
     }
 
+    // -- Scenario where there is one collateralised CDP
+    // -- undergoing auction at the time of cage
+    function test_cage_swip() public {
+        Ilk memory gold = init_collateral("gold");
+
+        Usr ali = new Usr(vat, end);
+
+        // make a CDP:
+        address urn1 = address(ali);
+        gold.gemA.join(urn1, 10 ether);
+        ali.frob("gold", urn1, urn1, urn1, 10 ether, 15 ether);
+        // this urn has 0 gem, 10 ink, 15 tab, 15 dai
+
+        vat.file("gold", "spot", ray(1 ether));     // now unsafe
+
+        uint auction = dog.bark("gold", urn1);  // CDP liquidated
+        assertEq(vat.vice(), rad(15 ether));    // now there is sin
+        // get 1 dai from ali
+        ali.move(address(ali), address(this), rad(1 ether));
+        vat.hope(address(gold.clip));
+        (,, uint256 lot,,,) = gold.clip.sales(auction);
+        // gold.clip.tend(auction, lot, rad(1 ether)); // bid 1 dai
+        assertEq(dai(urn1), 14 ether);
+        assertEq(lot, 2);
+
+        // collateral price is 5
+        gold.pip.poke(bytes32(5 * WAD));
+        end.cage();
+        end.cage("gold");
+
+        end.swip("gold", auction);
+        // // assertEq(dai(address(this)), 1 ether);       // bid refunded
+        // // vat.move(address(this), urn1, rad(1 ether)); // return 1 dai to ali
+        assertEq(dai(address(this)), 1);
+
+        end.skim("gold", urn1);
+
+        // // local checks:
+        // assertEq(art("gold", urn1), 0);
+        // assertEq(ink("gold", urn1), 7 ether);
+        // assertEq(vat.sin(address(vow)), rad(30 ether));
+
+        // // balance the vow
+        // vow.heal(min(vat.dai(address(vow)), vat.sin(address(vow))));
+        // // global checks:
+        // assertEq(vat.debt(), rad(15 ether));
+        // assertEq(vat.vice(), rad(15 ether));
+
+        // // CDP closing
+        // ali.free("gold");
+        // assertEq(ink("gold", urn1), 0);
+        // assertEq(gem("gold", urn1), 7 ether);
+        // ali.exit(gold.gemA, address(this), 7 ether);
+
+        // hevm.warp(now + 1 hours);
+        // end.thaw();
+        // end.flow("gold");
+        // assertTrue(end.fix("gold") != 0);
+
+        // // dai redemption
+        // ali.hope(address(end));
+        // ali.pack(15 ether);
+        // vow.heal(rad(15 ether));
+
+        // // global checks:
+        // assertEq(vat.debt(), 0);
+        // assertEq(vat.vice(), 0);
+
+        // ali.cash("gold", 15 ether);
+
+        // // local checks:
+        // assertEq(dai(urn1), 0);
+        // assertEq(gem("gold", urn1), 3 ether);
+        // ali.exit(gold.gemA, address(this), 3 ether);
+
+        // assertEq(gem("gold", address(end)), 0);
+        // assertEq(balanceOf("gold", address(gold.gemA)), 0);
+    }
+
     // -- Scenario where there is one over-collateralised CDP
     // -- and there is a deficit in the Vow
     function test_cage_collateralised_deficit() public {

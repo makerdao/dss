@@ -88,7 +88,7 @@ interface Clippy {
         uint96  tic,
         uint256 top
     );
-    function yank() external;
+    function yank(bytes32 ilk, uint256 id) external;
 }
 
 interface PipLike {
@@ -312,12 +312,11 @@ contract End is LibNote {
         (address clipV,,,) = dog.ilks(ilk);
         Clippy clip = Clippy(clipV);
         (, uint rate,,,) = vat.ilks(ilk);
-        (uint pos, uint256 tab, uint256 lot, address usr,,) = clip.sales(id);
+        (, uint256 tab, uint256 lot, address usr,,) = clip.sales(id);
         
         // only need to suck tab to vow, there's no bids
         vat.suck(address(vow), address(vow),  tab);
-        // need to actually define yank
-        clip.yank();
+        clip.yank(ilk, id);
 
         uint art = tab / rate;
         Art[ilk] = add(Art[ilk], art);
