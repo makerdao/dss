@@ -150,6 +150,9 @@ contract Dog /* is LibNote */ {
             require(room > 0 && room >= dust, "Dog/liquidation-limit-hit");
 
             dart = min(art, mul(room, WAD) / rate / milk.chop);
+
+            // Verify that CDP is not left in a dusty state
+            require(dart == art || mul(art - dart, rate) >= dust, "Dog/leaves-dust");
         }
 
         uint256 dink = min(ink, mul(ink, dart) / art);
@@ -157,7 +160,6 @@ contract Dog /* is LibNote */ {
         require(dink > 0, "Dog/null-auction");
         require(dart <= 2**255 && dink <= 2**255, "Dog/overflow");
 
-        // This may leave the CDP in a dusty state
         vat.grab(
             ilk, urn, milk.clip, address(vow), -int256(dink), -int256(dart)
         );
