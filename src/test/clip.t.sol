@@ -7,7 +7,6 @@ import "ds-value/value.sol";
 import {Vat}     from "../vat.sol";
 import {Spotter} from "../spot.sol";
 import {Vow}     from "../vow.sol";
-import {Jug}     from "../jug.sol";
 
 import {Clipper} from "../clip.sol";
 import "../abaci.sol";
@@ -56,7 +55,6 @@ contract ClipperTest is DSTest {
     Spotter spot;
     Vow     vow;
     DSValue pip;
-    Jug     jug;
 
     Clipper clip;
 
@@ -161,11 +159,7 @@ contract ClipperTest is DSTest {
         vat.rely(address(dog));
         vow.rely(address(dog));
 
-        jug = new Jug(address(vat));
-        vat.rely(address(jug));
-
         vat.init(ilk);
-        jug.init(ilk);
 
         vat.slip(ilk, me, 1000 ether);
 
@@ -507,10 +501,9 @@ contract ClipperTest is DSTest {
         uint256 ink;
         uint256 art;
 
-        jug.file(ilk, "duty", 1000000001243680656318820312);
-        hevm.warp(now + 1 days);
-        jug.drip(ilk);
+        vat.fold(ilk, address(vow), int256(ray(0.02 ether)));
         (, uint256 rate,,,) = vat.ilks(ilk);
+        assertEq(rate, ray(1.02 ether));
 
         dog.file(ilk, "hole", mul(80 ether + 1, rate)); // Makes room = 80 WAD + 1 wei in normalized debt
         dog.file(ilk, "chop", 1 ether);                 // 0% chop (for precise calculations)
