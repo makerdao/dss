@@ -17,6 +17,8 @@
 
 pragma solidity >=0.5.12;
 
+import "./lib.sol";
+
 interface VatLike {
     function move(address,address,uint256) external;
     function flux(bytes32,address,address,uint256) external;
@@ -44,11 +46,11 @@ interface AbacusLike {
     function price(uint256, uint256) external view returns (uint256);
 }
 
-contract Clipper {
+contract Clipper is LibNote {
     // --- Auth ---
     mapping (address => uint256) public wards;
-    function rely(address usr) external /* note */ auth { wards[usr] = 1; }
-    function deny(address usr) external /* note */ auth { wards[usr] = 0; }
+    function rely(address usr) external note auth { wards[usr] = 1; }
+    function deny(address usr) external note auth { wards[usr] = 0; }
     modifier auth {
         require(wards[msg.sender] == 1, "Clipper/not-authorized");
         _;
@@ -135,13 +137,13 @@ contract Clipper {
     }
 
     // --- Administration ---
-    function file(bytes32 what, uint256 data) external {
+    function file(bytes32 what, uint256 data) external note auth {
         if      (what ==  "buf") buf  = data;
         else if (what == "tail") tail = data; // Time elapsed    before auction reset
         else if (what == "cusp") cusp = data; // Percentage drop before auction reset
         else revert("Clipper/file-unrecognized-param");
     }
-    function file(bytes32 what, address data) external auth {
+    function file(bytes32 what, address data) external note auth {
         if      (what ==  "dog") dog  = DogLike(data);
         else if (what ==  "vow") vow  = data;
         else if (what == "calc") calc = AbacusLike(data);
@@ -174,7 +176,7 @@ contract Clipper {
     function kick(uint256 tab,  // Debt             [rad]
                   uint256 lot,  // Collateral       [wad]
                   address usr   // Liquidated CDP
-    ) external auth isStopped(1) returns (uint256 id) {
+    ) external note auth isStopped(1) returns (uint256 id) {
         require(kicks < uint256(-1), "Clipper/overflow");
         id = ++kicks;
         active.push(id);
@@ -198,7 +200,7 @@ contract Clipper {
     }
 
     // Reset an auction
-    function redo(uint256 id) external isStopped(2) {
+    function redo(uint256 id) external note isStopped(2) {
         // Read auction data
         Sale memory sale = sales[id];
         require(sale.tab > 0, "Clipper/not-running-auction");
@@ -227,7 +229,7 @@ contract Clipper {
                   uint256 max,          // Maximum acceptable price (DAI / collateral) [ray]
                   address who,          // Receiver of collateral, payer of DAI, and external call address
                   bytes calldata data   // Data to pass in external call; if length 0, no call is done
-    ) external lock isStopped(2) {
+    ) external note lock isStopped(2) {
         // Read auction data
         Sale memory sale = sales[id];
         require(sale.tab > 0, "Clipper/not-running-auction");
@@ -314,12 +316,12 @@ contract Clipper {
     }
 
     // --- Shutdown ---
-    function setBreaker(uint256 level) external auth {
+    function setBreaker(uint256 level) external note auth {
         stopped = level;
     }
 
     // Cancel an auction during ES
-    function yank() external auth {
+    function yank() external note auth {
         // TODO
     }
 }

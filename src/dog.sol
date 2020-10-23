@@ -19,7 +19,7 @@
 
 pragma solidity >=0.5.12;
 
-// import "./lib.sol";
+import "./lib.sol";
 
 interface ClipperLike {
     function kick(uint256 tab, uint256 lot, address usr) external returns (uint256);
@@ -45,12 +45,12 @@ interface VatLike {
 interface VowLike {
     function fess(uint256) external;
 }
-// TODO: should we remove LibNote and replace with custom events
-contract Dog /* is LibNote */ {
+
+contract Dog is LibNote {
     // --- Auth ---
     mapping (address => uint) public wards;
-    function rely(address usr) public /* note */ auth { wards[usr] = 1; }
-    function deny(address usr) public /* note */ auth { wards[usr] = 0; }
+    function rely(address usr) public note auth { wards[usr] = 1; }
+    function deny(address usr) public note auth { wards[usr] = 0; }
     modifier auth {
         require(wards[msg.sender] == 1, "Dog/not-authorized");
         _;
@@ -107,20 +107,20 @@ contract Dog /* is LibNote */ {
     }
 
     // --- Administration ---
-    function file(bytes32 what, address data) external /* note */ auth {
+    function file(bytes32 what, address data) external note auth {
         if (what == "vow") vow = VowLike(data);
         else revert("Dog/file-unrecognized-param");
     }
-    function file(bytes32 what, uint256 data) external /* note */ auth {
+    function file(bytes32 what, uint256 data) external note auth {
         if (what == "Hole") Hole = data;
         else revert("Dog/file-unrecognized-param");
     }
-    function file(bytes32 ilk, bytes32 what, uint256 data) external /* note */ auth {
+    function file(bytes32 ilk, bytes32 what, uint256 data) external note auth {
         if (what == "chop") ilks[ilk].chop = data;
         else if (what == "hole") ilks[ilk].hole = data;
         else revert("Dog/file-unrecognized-param");
     }
-    function file(bytes32 ilk, bytes32 what, address clip) external /* note */ auth {
+    function file(bytes32 ilk, bytes32 what, address clip) external note auth {
         if (what == "clip") ilks[ilk].clip = clip;
         else revert("Dog/file-unrecognized-param");
     }
@@ -128,7 +128,7 @@ contract Dog /* is LibNote */ {
     function chop(bytes32 ilk) public view returns (uint256) { return ilks[ilk].chop; }
 
     // --- CDP Liquidation: all bark and no bite ---
-    function bark(bytes32 ilk, address urn) external returns (uint256 id) {
+    function bark(bytes32 ilk, address urn) external note returns (uint256 id) {
         require(live == 1, "Dog/not-live");
 
         (uint256 ink, uint256 art) = vat.urns(ilk, urn);
@@ -183,12 +183,12 @@ contract Dog /* is LibNote */ {
         emit Bark(ilk, urn, dink, dart, due, milk.clip, id);
     }
 
-    function digs(bytes32 ilk, uint256 rad) external /* note */ auth {
+    function digs(bytes32 ilk, uint256 rad) external note auth {
         Dirt = sub(Dirt, rad);
         ilks[ilk].dirt = sub(ilks[ilk].dirt, rad);
     }
 
-    function cage() external /* note */ auth {
+    function cage() external note auth {
         live = 0;
     }
 }
