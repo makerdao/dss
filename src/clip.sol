@@ -92,21 +92,26 @@ contract Clipper is LibNote {
 
     // --- Events ---
     event Kick(
-        uint256  id,
+        uint256 indexed id,
+        uint256 top,
         uint256 tab,
         uint256 lot,
         address indexed usr
     );
 
     event Take(
-        uint256  id,
+        uint256 indexed id, 
+        uint256 max,
+        uint256 price,
+        uint256 owe,
         uint256 tab,
         uint256 lot,
         address indexed usr
     );
 
     event Redo(
-        uint256  id,
+        uint256 indexed id,
+        uint256 top,
         uint256 tab,
         uint256 lot,
         address indexed usr
@@ -196,7 +201,7 @@ contract Clipper is LibNote {
         require(has, "Clipper/invalid-price");
         sales[id].top = rmul(rdiv(mul(uint256(val), BLN), spot.par()), buf);
 
-        emit Kick(id, tab, lot, usr);
+        emit Kick(id, sales[id].top, tab, lot, usr);
     }
 
     // Reset an auction
@@ -220,7 +225,7 @@ contract Clipper is LibNote {
         require(has, "Clipper/invalid-price");
         sales[id].top = rmul(rdiv(mul(uint256(val), 10 ** 9), spot.par()), buf);
 
-        emit Redo(id, sales[id].tab, sales[id].lot, sales[id].usr);
+        emit Redo(id, sales[id].top, sales[id].tab, sales[id].lot, sales[id].usr);
     }
 
     // Buy amt of collateral from auction indexed by id
@@ -288,7 +293,7 @@ contract Clipper is LibNote {
             sales[id].lot = sale.lot;
         }
 
-        emit Take(id, sale.tab, sale.lot, sale.usr);
+        emit Take(id, max, price, owe, sale.tab, sale.lot, sale.usr);
     }
 
     function _remove(uint256 id) internal {
