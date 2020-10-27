@@ -249,26 +249,26 @@ contract Clipper is LibNote {
         require(max >= price, "Clipper/too-expensive");
 
         // Purchase as much as possible, up to amt
-        uint256 slice = min(sale.lot, amt);
+        uint256 slice = min(sale.lot, amt);  // slice <= lot
 
         // DAI needed to buy a slice of this sale
         uint256 owe = mul(slice, price);
 
         // Don't collect more than tab of DAI
-        if (owe > sale.tab) {
-            owe = sale.tab;
-
-            // Readjust slice
-            slice = owe / price;
+        if (owe >= sale.tab) {
+            owe = sale.tab;       // owe' <= owe
+            slice = owe / price;  // Adjust slice; slice' = owe' / price <= owe / price == slice <= lot
+            sale.tab = 0;         // Zero tab left, auction will be deleted
+        } else {  // owe < sale.tab
+            // Calculate remaining tab after operation
+            sale.tab = sale.tab - owe;  // safe since owe < sale.tab
+            (,,,, uint256 dust) = vat.ilks(ilk);
+            require(sale.tab >= dust, "Clipper/dust");
         }
 
-        // Calculate remaining tab after operation
-        sale.tab = sub(sale.tab, owe);
-        (,,,, uint256 dust) = vat.ilks(ilk);
-        require(sale.tab == 0 || sale.tab >= dust, "Clipper/dust");
-
         // Calculate remaining lot after operation
-        sale.lot = sub(sale.lot, slice);
+        sale.lot = sale.lot - slice;  // safe because: slice <= lot
+
         // Send collateral to who
         vat.flux(ilk, address(this), who, slice);
 
