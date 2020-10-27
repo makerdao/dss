@@ -181,7 +181,7 @@ contract Clipper is LibNote {
     function kick(uint256 tab,  // Debt             [rad]
                   uint256 lot,  // Collateral       [wad]
                   address usr   // Liquidated CDP
-    ) external note auth isStopped(1) returns (uint256 id) {
+    ) external auth isStopped(1) returns (uint256 id) {
         require(kicks < uint256(-1), "Clipper/overflow");
         id = ++kicks;
         active.push(id);
@@ -205,7 +205,7 @@ contract Clipper is LibNote {
     }
 
     // Reset an auction
-    function redo(uint256 id) external note isStopped(2) {
+    function redo(uint256 id) external isStopped(2) {
         // Read auction data
         Sale memory sale = sales[id];
         require(sale.tab > 0, "Clipper/not-running-auction");
@@ -234,7 +234,7 @@ contract Clipper is LibNote {
                   uint256 max,          // Maximum acceptable price (DAI / collateral) [ray]
                   address who,          // Receiver of collateral, payer of DAI, and external call address
                   bytes calldata data   // Data to pass in external call; if length 0, no call is done
-    ) external note lock isStopped(2) {
+    ) external lock isStopped(2) {
         // Read auction data
         Sale memory sale = sales[id];
         require(sale.tab > 0, "Clipper/not-running-auction");

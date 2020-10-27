@@ -128,7 +128,7 @@ contract Dog is LibNote {
     function chop(bytes32 ilk) public view returns (uint256) { return ilks[ilk].chop; }
 
     // --- CDP Liquidation: all bark and no bite ---
-    function bark(bytes32 ilk, address urn) external note returns (uint256 id) {
+    function bark(bytes32 ilk, address urn) external returns (uint256 id) {
         require(live == 1, "Dog/not-live");
 
         (uint256 ink, uint256 art) = vat.urns(ilk, urn);
