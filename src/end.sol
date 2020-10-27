@@ -88,7 +88,7 @@ interface Clippy {
         uint96  tic,
         uint256 top
     );
-    function yank(bytes32 ilk, uint256 id) external;
+    function yank(uint256 id) external;
 }
 
 interface PipLike {
@@ -306,7 +306,7 @@ contract End is LibNote {
         tag[ilk] = wdiv(spot.par(), uint(pip.read()));
     }
 
-    function swip(bytes32 ilk, uint256 id) external note {
+    function sqip(bytes32 ilk, uint256 id) external note {
         require(tag[ilk] != 0, "End/tag-ilk-not-defined");
 
         (address clipV,,,) = dog.ilks(ilk);
@@ -314,9 +314,8 @@ contract End is LibNote {
         (, uint rate,,,) = vat.ilks(ilk);
         (, uint256 tab, uint256 lot, address usr,,) = clip.sales(id);
         
-        // only need to suck tab to vow, there's no bids
         vat.suck(address(vow), address(vow),  tab);
-        clip.yank(ilk, id);
+        clip.yank(id);
 
         uint art = tab / rate;
         Art[ilk] = add(Art[ilk], art);
