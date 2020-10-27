@@ -60,9 +60,11 @@ contract Dog is LibNote {
     // --- Data ---
     struct Ilk {
         address clip;  // Liquidator
-        uint256 chop;  // Liquidation Penalty  [wad]
+        uint256 chop;  // Liquidation Penalty                                          [wad]
         uint256 hole;  // Max DAI needed to cover debt+fees of active auctions per ilk [rad]
         uint256 dirt;  // Amt DAI needed to cover debt+fees of active auctions per ilk [rad]
+        uint256 chip;  // Percentage of tab to suck from vat to incentivize keepers    [wad]
+        uint256 tip;   // Flat fee to suck from vat to incentivize keepers             [rad]
     }
 
     mapping (bytes32 => Ilk) public ilks;
@@ -70,7 +72,6 @@ contract Dog is LibNote {
     uint256 public live;  // Active Flag
     VatLike public vat;   // CDP Engine
     VowLike public vow;   // Debt Engine
-    uint256 public tip;   // Keeper liquidation incentive                         [rad]
     uint256 public Hole;  // Max DAI needed to cover debt+fees of active auctions [rad]
     uint256 public Dirt;  // Amt DAI needed to cover debt+fees of active auctions [rad]
 
@@ -107,6 +108,9 @@ contract Dog is LibNote {
     function mul(uint256 x, uint256 y) internal pure returns (uint256 z) {
         require(y == 0 || (z = x * y) / y == x);
     }
+    function wmul(uint x, uint y) internal pure returns (uint z) {
+        z = add(mul(x, y), WAD / 2) / WAD;
+    }
 
     // --- Administration ---
     function file(bytes32 what, address data) external note auth {
@@ -115,12 +119,13 @@ contract Dog is LibNote {
     }
     function file(bytes32 what, uint256 data) external note auth {
         if (what == "Hole") Hole = data;
-        else if (what == "tip") tip = data;
         else revert("Dog/file-unrecognized-param");
     }
     function file(bytes32 ilk, bytes32 what, uint256 data) external note auth {
         if (what == "chop") ilks[ilk].chop = data;
         else if (what == "hole") ilks[ilk].hole = data;
+        else if (what == "chip") ilks[ilk].chip = data;
+        else if (what == "tip")  ilks[ilk].tip  = data;
         else revert("Dog/file-unrecognized-param");
     }
     function file(bytes32 ilk, bytes32 what, address clip) external note auth {
@@ -181,9 +186,9 @@ contract Dog is LibNote {
                 lot: dink,
                 usr: urn
             });
+            
+            vat.suck(address(vow), msg.sender, add(milk.tip, wmul(tab, milk.chip)));
         }
-
-        vat.suck(address(vow), msg.sender, tip);
 
         emit Bark(ilk, urn, dink, dart, due, milk.clip, id);
     }
