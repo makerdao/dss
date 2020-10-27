@@ -17,6 +17,8 @@
 
 pragma solidity >=0.5.12;
 
+import "./lib.sol";
+
 interface VatLike {
     function move(address,address,uint256) external;
     function flux(bytes32,address,address,uint256) external;
@@ -44,11 +46,11 @@ interface AbacusLike {
     function price(uint256, uint256) external view returns (uint256);
 }
 
-contract Clipper {
+contract Clipper is LibNote {
     // --- Auth ---
     mapping (address => uint256) public wards;
-    function rely(address usr) external /* note */ auth { wards[usr] = 1; }
-    function deny(address usr) external /* note */ auth { wards[usr] = 0; }
+    function rely(address usr) external note auth { wards[usr] = 1; }
+    function deny(address usr) external note auth { wards[usr] = 0; }
     modifier auth {
         require(wards[msg.sender] == 1, "Clipper/not-authorized");
         _;
@@ -90,21 +92,26 @@ contract Clipper {
 
     // --- Events ---
     event Kick(
-        uint256  id,
+        uint256 indexed id,
+        uint256 top,
         uint256 tab,
         uint256 lot,
         address indexed usr
     );
 
     event Take(
-        uint256  id,
+        uint256 indexed id, 
+        uint256 max,
+        uint256 price,
+        uint256 owe,
         uint256 tab,
         uint256 lot,
         address indexed usr
     );
 
     event Redo(
-        uint256  id,
+        uint256 indexed id,
+        uint256 top,
         uint256 tab,
         uint256 lot,
         address indexed usr
@@ -135,13 +142,13 @@ contract Clipper {
     }
 
     // --- Administration ---
-    function file(bytes32 what, uint256 data) external {
+    function file(bytes32 what, uint256 data) external note auth {
         if      (what ==  "buf") buf  = data;
         else if (what == "tail") tail = data; // Time elapsed    before auction reset
         else if (what == "cusp") cusp = data; // Percentage drop before auction reset
         else revert("Clipper/file-unrecognized-param");
     }
-    function file(bytes32 what, address data) external auth {
+    function file(bytes32 what, address data) external note auth {
         if      (what ==  "dog") dog  = DogLike(data);
         else if (what ==  "vow") vow  = data;
         else if (what == "calc") calc = AbacusLike(data);
@@ -194,7 +201,7 @@ contract Clipper {
         require(has, "Clipper/invalid-price");
         sales[id].top = rmul(rdiv(mul(uint256(val), BLN), spot.par()), buf);
 
-        emit Kick(id, tab, lot, usr);
+        emit Kick(id, sales[id].top, tab, lot, usr);
     }
 
     // Reset an auction
@@ -218,7 +225,7 @@ contract Clipper {
         require(has, "Clipper/invalid-price");
         sales[id].top = rmul(rdiv(mul(uint256(val), 10 ** 9), spot.par()), buf);
 
-        emit Redo(id, sales[id].tab, sales[id].lot, sales[id].usr);
+        emit Redo(id, sales[id].top, sales[id].tab, sales[id].lot, sales[id].usr);
     }
 
     // Buy amt of collateral from auction indexed by id
@@ -286,7 +293,7 @@ contract Clipper {
             sales[id].lot = sale.lot;
         }
 
-        emit Take(id, sale.tab, sale.lot, sale.usr);
+        emit Take(id, max, price, owe, sale.tab, sale.lot, sale.usr);
     }
 
     function _remove(uint256 id) internal {
@@ -314,12 +321,12 @@ contract Clipper {
     }
 
     // --- Shutdown ---
-    function setBreaker(uint256 level) external auth {
+    function setBreaker(uint256 level) external note auth {
         stopped = level;
     }
 
     // Cancel an auction during ES
-    function yank() external auth {
+    function yank() external note auth {
         // TODO
     }
 }
