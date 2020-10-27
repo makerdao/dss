@@ -20,6 +20,15 @@ interface VatLike {
     );
 }
 
+contract Rpow is Jug {
+    constructor(address vat_) public Jug(vat_){}
+
+    function pRpow(uint x, uint n, uint b) public pure returns(uint) {
+        return rpow(x, n, b);
+    }
+}
+
+
 contract JugTest is DSTest {
     Hevm hevm;
     Jug jug;
@@ -187,5 +196,12 @@ contract JugTest is DSTest {
         jug.init("i");
         hevm.warp(now + 1);
         jug.file("i", "duty", 1);
+    }
+    function test_rpow() public {
+        Rpow r = new Rpow(address(vat));
+        uint result = r.pRpow(uint(1000234891009084238901289093), uint(3724), uint(1e27));
+        // python calc = 2.397991232255757e27 = 2397991232255757e12
+        // expect 10 decimal precision
+        assertEq(result / uint(1e17), uint(2397991232255757e12) / 1e17);
     }
 }
