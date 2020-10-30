@@ -131,6 +131,7 @@ contract Clipper {
         buf  = RAY;
 
         wards[msg.sender] = 1;
+        emit Rely(msg.sender);
     }
 
     // --- Synchronization ---

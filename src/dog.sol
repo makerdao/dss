@@ -86,16 +86,17 @@ contract Dog {
       uint256 art,
       uint256 tab,
       address clip,
-      uint256 id
+      uint256 indexed id
     );
     event Digs(bytes32 indexed ilk, uint256 rad);
     event Cage();
 
     // --- Init ---
     constructor(address vat_) public {
-        wards[msg.sender] = 1;
         vat = VatLike(vat_);
         live = 1;
+        wards[msg.sender] = 1;
+        emit Rely(msg.sender);
     }
 
     // --- Math ---
