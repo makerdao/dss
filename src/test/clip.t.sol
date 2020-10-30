@@ -372,7 +372,7 @@ contract ClipperTest is DSTest {
 
     function test_get_chop() public {
         uint256 chop = dog.chop(ilk);
-        (, uint256 chop2,,) = dog.ilks(ilk);
+        (, uint256 chop2,,,,) = dog.ilks(ilk);
         assertEq(chop, chop2);
     }
     
