@@ -22,7 +22,7 @@ pragma solidity >=0.5.12;
 import "./lib.sol";
 
 interface ClipperLike {
-    function kick(uint256 tab, uint256 lot, address usr) external returns (uint256);
+    function kick(uint256 tab, uint256 lot, uint256 lip, address usr) external returns (uint256);
 }
 
 interface VatLike {
@@ -105,6 +105,10 @@ contract Dog is LibNote {
     function mul(uint256 x, uint256 y) internal pure returns (uint256 z) {
         require(y == 0 || (z = x * y) / y == x);
     }
+    function div(uint256 x, uint256 y) internal pure returns (uint256 z) {
+        require(y > 0);
+        z = x / y;
+    }
 
     // --- Administration ---
     function file(bytes32 what, address data) external note auth {
@@ -176,6 +180,7 @@ contract Dog is LibNote {
             id = ClipperLike(milk.clip).kick({
                 tab: tab,
                 lot: dink,
+                lip: div(mul(art, rate), ink),
                 usr: urn
             });
         }

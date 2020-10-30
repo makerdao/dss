@@ -162,6 +162,9 @@ contract Clipper is LibNote {
     function min(uint256 x, uint256 y) internal pure returns (uint256 z) {
         return x <= y ? x : y;
     }
+    function max(uint256 x, uint256 y) internal pure returns (uint256 z) {
+        return x >= y ? x : y;
+    }
     function sub(uint256 x, uint256 y) internal pure returns (uint256 z) {
         require((z = x - y) <= x);
     }
@@ -178,8 +181,9 @@ contract Clipper is LibNote {
     // --- Auction ---
 
     // start an auction
-    function kick(uint256 tab,  // Debt             [rad]
-                  uint256 lot,  // Collateral       [wad]
+    function kick(uint256 tab,  // Debt              [rad]
+                  uint256 lot,  // Collateral        [wad]
+                  uint256 lip,  // Liquidation price [ray]
                   address usr   // Liquidated CDP
     ) external auth isStopped(1) returns (uint256 id) {
         require(kicks < uint256(-1), "Clipper/overflow");
@@ -196,10 +200,10 @@ contract Clipper is LibNote {
         // Could get this from rmul(Vat.ilks(ilk).spot, Spotter.mat()) instead,
         // but if mat has changed since the last poke, the resulting value will
         // be incorrect.
-        (PipLike pip, ) = spot.ilks(ilk);
+        (PipLike pip, uint256 mat) = spot.ilks(ilk);
         (bytes32 val, bool has) = pip.peek();
         require(has, "Clipper/invalid-price");
-        sales[id].top = rmul(rdiv(mul(uint256(val), BLN), spot.par()), buf);
+        sales[id].top = rmul(rdiv(max(rmul(lip, mat), mul(uint256(val), BLN)), spot.par()), buf);
 
         emit Kick(id, sales[id].top, tab, lot, usr);
     }
