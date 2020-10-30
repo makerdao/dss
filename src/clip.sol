@@ -47,8 +47,8 @@ interface AbacusLike {
 contract Clipper {
     // --- Auth ---
     mapping (address => uint256) public wards;
-    function rely(address usr) public auth { wards[usr] = 1; emit Rely(usr); }
-    function deny(address usr) public auth { wards[usr] = 0; emit Deny(usr); }
+    function rely(address usr) external auth { wards[usr] = 1; emit Rely(usr); }
+    function deny(address usr) external auth { wards[usr] = 0; emit Deny(usr); }
     modifier auth {
         require(wards[msg.sender] == 1, "Clipper/not-authorized");
         _;
