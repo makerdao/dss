@@ -92,8 +92,8 @@ contract Clipper {
     event Rely(address indexed usr);
     event Deny(address indexed usr);
 
-    event File(bytes32 indexed what, uint256 data);
-    event File(bytes32 indexed what, address data);
+    event FileUint256(bytes32 indexed what, uint256 data);
+    event FileAddress(bytes32 indexed what, address data);
 
     event Kick(
         uint256 indexed id,
@@ -152,14 +152,14 @@ contract Clipper {
         else if (what == "tail") tail = data; // Time elapsed    before auction reset
         else if (what == "cusp") cusp = data; // Percentage drop before auction reset
         else revert("Clipper/file-unrecognized-param");
-        emit File(what, data);
+        emit FileUint256(what, data);
     }
     function file(bytes32 what, address data) external auth {
         if      (what ==  "dog") dog  = DogLike(data);
         else if (what ==  "vow") vow  = data;
         else if (what == "calc") calc = AbacusLike(data);
         else revert("Clipper/file-unrecognized-param");
-        emit File(what, data);
+        emit FileAddress(what, data);
     }
 
     // --- Math ---

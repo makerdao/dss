@@ -74,10 +74,10 @@ contract Dog {
     event Rely(address indexed usr);
     event Deny(address indexed usr);
 
-    event File(bytes32 indexed what, uint256 data);
-    event File(bytes32 indexed what, address data);
-    event File(bytes32 indexed ilk, bytes32 indexed what, uint256 data);
-    event File(bytes32 indexed ilk, bytes32 indexed what, address clip);
+    event FileUint256(bytes32 indexed what, uint256 data);
+    event FileAddress(bytes32 indexed what, address data);
+    event FileIlkUint256(bytes32 indexed ilk, bytes32 indexed what, uint256 data);
+    event FileIlkClip(bytes32 indexed ilk, bytes32 indexed what, address clip);
     
     event Bark(
       bytes32 indexed ilk,
@@ -118,23 +118,23 @@ contract Dog {
     function file(bytes32 what, address data) external auth {
         if (what == "vow") vow = VowLike(data);
         else revert("Dog/file-unrecognized-param");
-        emit File(what, data);
+        emit FileAddress(what, data);
     }
     function file(bytes32 what, uint256 data) external auth {
         if (what == "Hole") Hole = data;
         else revert("Dog/file-unrecognized-param");
-        emit File(what, data);
+        emit FileUint256(what, data);
     }
     function file(bytes32 ilk, bytes32 what, uint256 data) external auth {
         if (what == "chop") ilks[ilk].chop = data;
         else if (what == "hole") ilks[ilk].hole = data;
         else revert("Dog/file-unrecognized-param");
-        emit File(what, data);
+        emit FileIlkUint256(ilk, what, data);
     }
     function file(bytes32 ilk, bytes32 what, address clip) external auth {
         if (what == "clip") ilks[ilk].clip = clip;
         else revert("Dog/file-unrecognized-param");
-        emit File(what, clip);
+        emit FileIlkClip(ilk, what, clip);
     }
 
     function chop(bytes32 ilk) public view returns (uint256) { return ilks[ilk].chop; }
