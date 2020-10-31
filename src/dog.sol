@@ -84,7 +84,7 @@ contract Dog {
       address indexed urn,
       uint256 ink,
       uint256 art,
-      uint256 tab,
+      uint256 due,
       address clip,
       uint256 indexed id
     );
