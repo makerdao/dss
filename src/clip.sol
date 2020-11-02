@@ -203,7 +203,7 @@ contract Clipper is LibNote {
         (PipLike pip, uint256 mat) = spot.ilks(ilk);
         (bytes32 val, bool has) = pip.peek();
         require(has, "Clipper/invalid-price");
-        sales[id].top = rmul(rdiv(max(rmul(lip, mat), mul(uint256(val), BLN)), spot.par()), buf);
+        sales[id].top = rmul(max(rmul(lip, mat), rdiv(mul(uint256(val), BLN), spot.par())), buf);
 
         emit Kick(id, sales[id].top, tab, lot, usr);
     }
