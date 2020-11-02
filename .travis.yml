@@ -1,12 +1,10 @@
-os:
-  - linux
-language: nix
-nix: 2.3.6
+sudo: required
+language: python
+python:
+- 3.6
+services:
+- docker
 before_install:
-  - nix-env -iA nixpkgs.cachix
-  - echo "trusted-users = root travis" | sudo tee -a /etc/nix/nix.conf && sudo pkill nix-daemon
-  - cachix use maker
-  - git clone --recursive https://github.com/dapphub/dapptools $HOME/.dapp/dapptools
-  - nix-env -f https://github.com/makerdao/makerpkgs/tarball/master -iA dappPkgsVersions.hevm-0_42_0.dapp
+- git submodule update --init --recursive
 script:
-  - dapp --use solc:0.5.12 test
+-  bash docker_test.sh
