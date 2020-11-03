@@ -69,8 +69,6 @@ contract Vat {
         bytes             data
     ) anonymous;
 
-    event Debug(uint i, uint val);
-
     modifier note {
         _;
         assembly {
@@ -243,10 +241,6 @@ contract Vat {
         gem[i][v] = sub(gem[i][v], dink);
         sin[w]    = sub(sin[w],    dtab);
         vice      = sub(vice,      dtab);
-
-        emit Debug(5, sin[w]);
-        emit Debug(6, gem[i][v]);
-        emit Debug(7, vice);
     }
 
     // --- Settlement ---
@@ -262,11 +256,6 @@ contract Vat {
         dai[v] = add(dai[v], rad);
         vice   = add(vice,   rad);
         debt   = add(debt,   rad);
-
-        emit Debug(1, sin[u]);
-        emit Debug(2, dai[v]);
-        emit Debug(3, vice);
-        emit Debug(4, debt);
     }
 
     // --- Rates ---

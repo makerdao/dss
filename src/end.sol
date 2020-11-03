@@ -312,7 +312,7 @@ contract End is LibNote {
         tag[ilk] = wdiv(spot.par(), uint(pip.read()));
     }
 
-    function swip(bytes32 ilk, uint256 id) external note {
+    function halt(bytes32 ilk, uint256 id) external note {
         require(tag[ilk] != 0, "End/tag-ilk-not-defined");
 
         (address _clip,,,) = dog.ilks(ilk);
@@ -321,6 +321,7 @@ contract End is LibNote {
         (, uint256 tab, uint256 lot, address usr,,) = clip.sales(id);
         
         vat.suck(address(vow), address(vow),  tab);
+        vat.hope(address(clip)); // Should we have this?
         clip.yank(id);
 
         uint art = tab / rate;
