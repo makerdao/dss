@@ -446,6 +446,49 @@ contract ClipperTest is DSTest {
         assertEq(art, 0 ether);
     }
 
+    function test_kick_use_OSM() public {
+        uint256 pos;
+        uint256 tab;
+        uint256 lot;
+        address usr;
+        uint96  tic;
+        uint256 top;
+        uint256 ink;
+        uint256 art;
+
+        clip.file(bytes32("buf"),  ray(1.25 ether)); // 25% Initial price buffer
+
+        assertEq(clip.kicks(), 0);
+        (pos, tab, lot, usr, tic, top) = clip.sales(1);
+        assertEq(pos, 0);
+        assertEq(tab, 0);
+        assertEq(lot, 0);
+        assertEq(usr, address(0));
+        assertEq(uint256(tic), 0);
+        assertEq(top, 0);
+        assertEq(vat.gem(ilk, me), 960 ether);
+        (ink, art) = vat.urns(ilk, me);
+        assertEq(ink, 40 ether);
+        assertEq(art, 100 ether);
+
+        pip.poke(bytes32(uint256(6 ether))); // Higher than liq price, spot hasn't been poked so still unsafe
+
+        dog.bark(ilk, me);
+
+        assertEq(clip.kicks(), 1);
+        (pos, tab, lot, usr, tic, top) = clip.sales(1);
+        assertEq(pos, 0);
+        assertEq(tab, rad(110 ether));
+        assertEq(lot, 40 ether);
+        assertEq(usr, me);
+        assertEq(uint256(tic), now);
+        assertEq(top, ray(7.5 ether)); // OSM price = $6 + 25% buffer
+        assertEq(vat.gem(ilk, me), 960 ether);
+        (ink, art) = vat.urns(ilk, me);
+        assertEq(ink, 0 ether);
+        assertEq(art, 0 ether);
+    }
+
     function try_bark(bytes32 ilk, address urn) internal returns (bool ok) {
         string memory sig = "bark(bytes32,address)";
         (ok,) = address(dog).call(abi.encodeWithSignature(sig, ilk, urn));

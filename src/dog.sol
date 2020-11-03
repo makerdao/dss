@@ -180,7 +180,7 @@ contract Dog is LibNote {
             id = ClipperLike(milk.clip).kick({
                 tab: tab,
                 lot: dink,
-                lip: div(mul(art, rate), ink),
+                lip: due / dink,
                 usr: urn
             });
         }
