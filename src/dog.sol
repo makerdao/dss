@@ -105,10 +105,6 @@ contract Dog is LibNote {
     function mul(uint256 x, uint256 y) internal pure returns (uint256 z) {
         require(y == 0 || (z = x * y) / y == x);
     }
-    function div(uint256 x, uint256 y) internal pure returns (uint256 z) {
-        require(y > 0);
-        z = x / y;
-    }
 
     // --- Administration ---
     function file(bytes32 what, address data) external note auth {

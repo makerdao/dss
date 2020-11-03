@@ -31,7 +31,7 @@ contract Guy {
     function take(
         uint256 id,           
         uint256 amt,          
-        uint256 max,         
+        uint256 cap,         
         address who,   
         bytes calldata data
     ) 
@@ -40,7 +40,7 @@ contract Guy {
         clip.take({
             id: id,
             amt: amt,
-            max: max,
+            cap: cap,
             who: who,
             data: data
         });
@@ -700,7 +700,7 @@ contract ClipperTest is DSTest {
         Guy(ali).take({
             id:  1,
             amt: 20 ether,
-            max: ray(6.25 ether),
+            cap: ray(6.25 ether),
             who: address(ali),
             data: ""
         });
@@ -724,7 +724,7 @@ contract ClipperTest is DSTest {
         Guy(ali).take({
             id:  1,
             amt: 17.6 ether,
-            max: ray(6.25 ether),
+            cap: ray(6.25 ether),
             who: address(ali),
             data: ""
         });
@@ -748,7 +748,7 @@ contract ClipperTest is DSTest {
         Guy(ali).take({
             id:  1,
             amt: 10 ether,     
-            max: ray(6.25 ether),
+            cap: ray(6.25 ether),
             who: address(ali),
             data: ""
         });
@@ -768,11 +768,11 @@ contract ClipperTest is DSTest {
     }   
 
     function testFail_take_bid_too_low() public takeSetup {
-        // Bid so max (= 6.25 ray - 1) < price (= top = 6.25 ray) (fails with "Clipper/too-expensive")
+        // Bid so cap (= 6.25 ray - 1) < price (= top = 6.25 ray) (fails with "Clipper/too-expensive")
         Guy(ali).take({
             id:  1,
             amt: 22 ether,
-            max: ray(6.25 ether) - 1,
+            cap: ray(6.25 ether) - 1,
             who: address(ali),
             data: ""
         });
@@ -783,7 +783,7 @@ contract ClipperTest is DSTest {
         Guy(ali).take({
             id:  1,
             amt: 17.6 ether - 1,
-            max: ray(5 ether),
+            cap: ray(5 ether),
             who: address(ali),
             data: ""
         });
@@ -801,7 +801,7 @@ contract ClipperTest is DSTest {
         Guy(ali).take({
             id:  1,
             amt: 10 ether,     
-            max: ray(6.25 ether),
+            cap: ray(6.25 ether),
             who: address(ali),
             data: ""
         });
@@ -825,7 +825,7 @@ contract ClipperTest is DSTest {
         Guy(bob).take({
             id:  1,
             amt: 30 ether,     // Buy the rest of the lot 
-            max: ray(5 ether), // 6.25 * 0.99 ** 30 = 4.623127333676751 RAY => max > price
+            cap: ray(5 ether), // 6.25 * 0.99 ** 30 = 4.623127333676751 RAY => cap > price
             who: address(bob),
             data: ""
         });
@@ -965,7 +965,7 @@ contract ClipperTest is DSTest {
         Guy(ali).take({
             id:  1,
             amt: 20 ether,
-            max: ray(6.25 ether),
+            cap: ray(6.25 ether),
             who: address(ali),
             data: ""
         });
@@ -978,7 +978,7 @@ contract ClipperTest is DSTest {
         Guy(ali).take({
             id:  1,
             amt: 20 ether,
-            max: ray(6.25 ether),
+            cap: ray(6.25 ether),
             who: address(ali),
             data: ""
         });

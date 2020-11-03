@@ -101,7 +101,7 @@ contract Clipper is LibNote {
 
     event Take(
         uint256 indexed id, 
-        uint256 max,
+        uint256 cap,
         uint256 price,
         uint256 owe,
         uint256 tab,
@@ -235,7 +235,7 @@ contract Clipper is LibNote {
     // Buy amt of collateral from auction indexed by id
     function take(uint256 id,           // Auction id
                   uint256 amt,          // Upper limit on amount of collateral to buy  [wad]
-                  uint256 max,          // Maximum acceptable price (DAI / collateral) [ray]
+                  uint256 cap,          // Maximum acceptable price (DAI / collateral) [ray]
                   address who,          // Receiver of collateral, payer of DAI, and external call address
                   bytes calldata data   // Data to pass in external call; if length 0, no call is done
     ) external lock isStopped(2) {
@@ -250,7 +250,7 @@ contract Clipper is LibNote {
         require(sub(now, sale.tic) <= tail && rdiv(price, sale.top) >= cusp, "Clipper/needs-reset");
 
         // Ensure price is acceptable to buyer
-        require(max >= price, "Clipper/too-expensive");
+        require(cap >= price, "Clipper/too-expensive");
 
         // Purchase as much as possible, up to amt
         uint256 slice = min(sale.lot, amt);  // slice <= lot
@@ -297,7 +297,7 @@ contract Clipper is LibNote {
             sales[id].lot = sale.lot;
         }
 
-        emit Take(id, max, price, owe, sale.tab, sale.lot, sale.usr);
+        emit Take(id, cap, price, owe, sale.tab, sale.lot, sale.usr);
     }
 
     function _remove(uint256 id) internal {
