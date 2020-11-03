@@ -117,8 +117,6 @@ contract Clipper is LibNote {
         address indexed usr
     );
 
-    event Debug(uint i, uint val);
-
     // --- Init ---
     constructor(address vat_, address spot_, address dog_, bytes32 ilk_) public {
         vat  = VatLike(vat_);
@@ -205,11 +203,6 @@ contract Clipper is LibNote {
         (PipLike pip, uint256 mat) = spot.ilks(ilk);
         (bytes32 val, bool has) = pip.peek();
         require(has, "Clipper/invalid-price");
-
-        emit Debug(1, lip);
-        emit Debug(2, rmul(lip, mat));
-        emit Debug(3, rdiv(mul(uint256(val), BLN), spot.par()));
-
         sales[id].top = rmul(max(rmul(lip, mat), rdiv(mul(uint256(val), BLN), spot.par())), buf);
 
         emit Kick(id, sales[id].top, tab, lot, usr);
