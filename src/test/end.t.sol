@@ -152,16 +152,15 @@ contract EndTest is DSTest {
 
         DSValue pip = new DSValue();
         spot.file(name, "pip", address(pip));
-        spot.file(name, "mat", ray(1.5 ether));
-        // initial collateral price of 5
-        pip.poke(bytes32(5 * WAD));
+        spot.file(name, "mat", ray(2 ether));
+        // initial collateral price of 6
+        pip.poke(bytes32(6 * WAD));
+        spot.poke(name);
 
         vat.init(name);
-        GemJoin gemA = new GemJoin(address(vat), name, address(coin));
-
-        // 1 coin = 6 dai and liquidation ratio is 200%
-        vat.file(name, "spot",    ray(3 ether));
         vat.file(name, "line", rad(1000 ether));
+
+        GemJoin gemA = new GemJoin(address(vat), name, address(coin));
 
         coin.approve(address(gemA));
         coin.approve(address(vat));
@@ -508,43 +507,69 @@ contract EndTest is DSTest {
     // -- Scenario where there is one collateralised CDP
     // -- undergoing auction at the time of cage
     function test_cage_swip() public {
-        Ilk memory gold = init_collateral("gold");
+        bytes32 ilk = "gold";
+        Ilk memory gold = init_collateral(ilk);
 
         Usr ali = new Usr(vat, end);
 
-        // make a CDP:
+        // Make a CDP:
         address urn1 = address(ali);
         gold.gemA.join(urn1, 10 ether);
-        ali.frob("gold", urn1, urn1, urn1, 10 ether, 15 ether);
-        // this urn has 0 gem, 10 ink, 15 tab, 15 dai
+        ali.frob(ilk, urn1, urn1, urn1, 10 ether, 15 ether);
+        (uint ink, uint art) = vat.urns(ilk, urn1);
+        (, uint rate,,,) = vat.ilks(ilk);
+        assertEq(vat.gem(ilk, urn1), 0);
+        assertEq(ink, 10 ether);
+        assertEq(art, 15 ether);
 
-        vat.file("gold", "spot", ray(1 ether));     // now unsafe
-
-        uint auction = dog.bark("gold", urn1);  // CDP liquidated
-        assertEq(vat.vice(), rad(15 ether));    // now there is sin
-        // get 1 dai from ali
-        ali.move(address(ali), address(this), rad(1 ether));
+        vat.file(ilk, "spot", ray(1 ether)); // Now unsafe
         vat.hope(address(gold.clip));
-        (,, uint256 lot,,,) = gold.clip.sales(auction);
-        // gold.clip.tend(auction, lot, rad(1 ether)); // bid 1 dai
-        assertEq(dai(urn1), 14 ether);
-        assertEq(lot, 2);
 
-        // collateral price is 5
+        uint id = dog.bark(ilk, urn1);                   
+        (, uint256 tab, uint256 lot,,,) = gold.clip.sales(id);  
+        assertEq(tab, rad(16.5 ether));             
+        assertEq(dog.Dirt(), tab);
+        assertEq(lot, ink);
+
+        // Collateral price is 5
         gold.pip.poke(bytes32(5 * WAD));
+        spot.poke(ilk);
         end.cage();
-        end.cage("gold");
+        end.cage(ilk);
+        assertEq(end.tag(ilk), ray(0.2 ether)); // par / price
 
-        end.swip("gold", auction);
+        assertEq(vat.gem(ilk, address(gold.clip)), lot); // From grab in dog.bark()
+        assertEq(vat.sin(address(vow)),     art * rate); // From grab in dog.bark()
+        assertEq(vat.vice(),                art * rate); // From grab in dog.bark()
+        assertEq(vat.debt(),                art * rate); // From frob
+        assertEq(vat.dai(address(vow)), 0);
+
+        end.swip(ilk, id);
+
+        assertEq(vat.sin(address(ali)), 0); // From grab in dog.bark()
+
+        assertEq(vat.gem(ilk, address(gold.clip)), lot); // From grab in dog.bark()
+        assertEq(vat.sin(address(vow)),     art * rate); // From grab in dog.bark()
+        assertEq(vat.vice(),                art * rate); // From grab in dog.bark()
+        assertEq(vat.debt(),                art * rate); // From frob
+        assertEq(vat.dai(address(vow)), 0);
+
+        // assertEq(vat.sin(address(vow)), tab);  // Stays the same because of grab
+        // assertEq(vat.dai(address(vow)), tab);  // From sucking tab
+        // assertEq(vat.vice(), tab);             // Stays the same because of grab
+        // assertEq(vat.debt(), tab + 0.1 * tab); // From sucking tab
+
+        // assertEq(dog.dirt(), 0);
+
         // // assertEq(dai(address(this)), 1 ether);       // bid refunded
         // // vat.move(address(this), urn1, rad(1 ether)); // return 1 dai to ali
-        assertEq(dai(address(this)), 1);
+        // assertEq(dai(address(this)), 1);
 
-        end.skim("gold", urn1);
+        // end.skim(ilk, urn1); 
 
         // // local checks:
-        // assertEq(art("gold", urn1), 0);
-        // assertEq(ink("gold", urn1), 7 ether);
+        // assertEq(art(ilk, urn1), 0);
+        // assertEq(ink(ilk, urn1), 7 ether);
         // assertEq(vat.sin(address(vow)), rad(30 ether));
 
         // // balance the vow
@@ -554,15 +579,15 @@ contract EndTest is DSTest {
         // assertEq(vat.vice(), rad(15 ether));
 
         // // CDP closing
-        // ali.free("gold");
-        // assertEq(ink("gold", urn1), 0);
-        // assertEq(gem("gold", urn1), 7 ether);
+        // ali.free(ilk);
+        // assertEq(ink(ilk, urn1), 0);
+        // assertEq(gem(ilk, urn1), 7 ether);
         // ali.exit(gold.gemA, address(this), 7 ether);
 
         // hevm.warp(now + 1 hours);
         // end.thaw();
-        // end.flow("gold");
-        // assertTrue(end.fix("gold") != 0);
+        // end.flow(ilk);
+        // assertTrue(end.fix(ilk) != 0);
 
         // // dai redemption
         // ali.hope(address(end));
@@ -573,15 +598,15 @@ contract EndTest is DSTest {
         // assertEq(vat.debt(), 0);
         // assertEq(vat.vice(), 0);
 
-        // ali.cash("gold", 15 ether);
+        // ali.cash(ilk, 15 ether);
 
         // // local checks:
         // assertEq(dai(urn1), 0);
-        // assertEq(gem("gold", urn1), 3 ether);
+        // assertEq(gem(ilk, urn1), 3 ether);
         // ali.exit(gold.gemA, address(this), 3 ether);
 
-        // assertEq(gem("gold", address(end)), 0);
-        // assertEq(balanceOf("gold", address(gold.gemA)), 0);
+        // assertEq(gem(ilk, address(end)), 0);
+        // assertEq(balanceOf(ilk, address(gold.gemA)), 0);
     }
 
     // -- Scenario where there is one over-collateralised CDP
