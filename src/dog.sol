@@ -19,8 +19,6 @@
 
 pragma solidity >=0.5.12;
 
-import "./lib.sol";
-
 interface ClipperLike {
     function kick(uint256 tab, uint256 lot, address usr) external returns (uint256);
 }
@@ -46,11 +44,11 @@ interface VowLike {
     function fess(uint256) external;
 }
 
-contract Dog is LibNote {
+contract Dog {
     // --- Auth ---
     mapping (address => uint) public wards;
-    function rely(address usr) public note auth { wards[usr] = 1; }
-    function deny(address usr) public note auth { wards[usr] = 0; }
+    function rely(address usr) public auth { wards[usr] = 1; emit Rely(usr); }
+    function deny(address usr) public auth { wards[usr] = 0; emit Deny(usr); }
     modifier auth {
         require(wards[msg.sender] == 1, "Dog/not-authorized");
         _;
@@ -73,21 +71,32 @@ contract Dog is LibNote {
     uint256 public Dirt;  // Amt DAI needed to cover debt+fees of active auctions [rad]
 
     // --- Events ---
+    event Rely(address indexed usr);
+    event Deny(address indexed usr);
+
+    event FileUint256(bytes32 indexed what, uint256 data);
+    event FileAddress(bytes32 indexed what, address data);
+    event FileIlkUint256(bytes32 indexed ilk, bytes32 indexed what, uint256 data);
+    event FileIlkClip(bytes32 indexed ilk, bytes32 indexed what, address clip);
+    
     event Bark(
       bytes32 indexed ilk,
       address indexed urn,
       uint256 ink,
       uint256 art,
-      uint256 tab,
+      uint256 due,
       address clip,
-      uint256 id
+      uint256 indexed id
     );
+    event Digs(bytes32 indexed ilk, uint256 rad);
+    event Cage();
 
     // --- Init ---
     constructor(address vat_) public {
-        wards[msg.sender] = 1;
         vat = VatLike(vat_);
         live = 1;
+        wards[msg.sender] = 1;
+        emit Rely(msg.sender);
     }
 
     // --- Math ---
@@ -107,22 +116,26 @@ contract Dog is LibNote {
     }
 
     // --- Administration ---
-    function file(bytes32 what, address data) external note auth {
+    function file(bytes32 what, address data) external auth {
         if (what == "vow") vow = VowLike(data);
         else revert("Dog/file-unrecognized-param");
+        emit FileAddress(what, data);
     }
-    function file(bytes32 what, uint256 data) external note auth {
+    function file(bytes32 what, uint256 data) external auth {
         if (what == "Hole") Hole = data;
         else revert("Dog/file-unrecognized-param");
+        emit FileUint256(what, data);
     }
-    function file(bytes32 ilk, bytes32 what, uint256 data) external note auth {
+    function file(bytes32 ilk, bytes32 what, uint256 data) external auth {
         if (what == "chop") ilks[ilk].chop = data;
         else if (what == "hole") ilks[ilk].hole = data;
         else revert("Dog/file-unrecognized-param");
+        emit FileIlkUint256(ilk, what, data);
     }
-    function file(bytes32 ilk, bytes32 what, address clip) external note auth {
+    function file(bytes32 ilk, bytes32 what, address clip) external auth {
         if (what == "clip") ilks[ilk].clip = clip;
         else revert("Dog/file-unrecognized-param");
+        emit FileIlkClip(ilk, what, clip);
     }
 
     function chop(bytes32 ilk) public view returns (uint256) { return ilks[ilk].chop; }
@@ -183,12 +196,14 @@ contract Dog is LibNote {
         emit Bark(ilk, urn, dink, dart, due, milk.clip, id);
     }
 
-    function digs(bytes32 ilk, uint256 rad) external note auth {
+    function digs(bytes32 ilk, uint256 rad) external auth {
         Dirt = sub(Dirt, rad);
         ilks[ilk].dirt = sub(ilks[ilk].dirt, rad);
+        emit Digs(ilk, rad);
     }
 
-    function cage() external note auth {
+    function cage() external auth {
         live = 0;
+        emit Cage();
     }
 }

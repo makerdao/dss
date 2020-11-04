@@ -17,8 +17,6 @@
 
 pragma solidity >=0.5.12;
 
-import "./lib.sol";
-
 interface VatLike {
     function move(address,address,uint256) external;
     function flux(bytes32,address,address,uint256) external;
@@ -46,11 +44,11 @@ interface AbacusLike {
     function price(uint256, uint256) external view returns (uint256);
 }
 
-contract Clipper is LibNote {
+contract Clipper {
     // --- Auth ---
     mapping (address => uint256) public wards;
-    function rely(address usr) external note auth { wards[usr] = 1; }
-    function deny(address usr) external note auth { wards[usr] = 0; }
+    function rely(address usr) external auth { wards[usr] = 1; emit Rely(usr); }
+    function deny(address usr) external auth { wards[usr] = 0; emit Deny(usr); }
     modifier auth {
         require(wards[msg.sender] == 1, "Clipper/not-authorized");
         _;
@@ -91,6 +89,12 @@ contract Clipper is LibNote {
     uint256 public stopped = 0;
 
     // --- Events ---
+    event Rely(address indexed usr);
+    event Deny(address indexed usr);
+
+    event FileUint256(bytes32 indexed what, uint256 data);
+    event FileAddress(bytes32 indexed what, address data);
+
     event Kick(
         uint256 indexed id,
         uint256 top,
@@ -98,7 +102,6 @@ contract Clipper is LibNote {
         uint256 lot,
         address indexed usr
     );
-
     event Take(
         uint256 indexed id, 
         uint256 max,
@@ -108,7 +111,6 @@ contract Clipper is LibNote {
         uint256 lot,
         address indexed usr
     );
-
     event Redo(
         uint256 indexed id,
         uint256 top,
@@ -116,6 +118,9 @@ contract Clipper is LibNote {
         uint256 lot,
         address indexed usr
     );
+
+    event SetBreaker(uint256 level);
+    event Yank();
 
     // --- Init ---
     constructor(address vat_, address spot_, address dog_, bytes32 ilk_) public {
@@ -126,6 +131,7 @@ contract Clipper is LibNote {
         buf  = RAY;
 
         wards[msg.sender] = 1;
+        emit Rely(msg.sender);
     }
 
     // --- Synchronization ---
@@ -142,17 +148,19 @@ contract Clipper is LibNote {
     }
 
     // --- Administration ---
-    function file(bytes32 what, uint256 data) external note auth {
+    function file(bytes32 what, uint256 data) external auth {
         if      (what ==  "buf") buf  = data;
         else if (what == "tail") tail = data; // Time elapsed    before auction reset
         else if (what == "cusp") cusp = data; // Percentage drop before auction reset
         else revert("Clipper/file-unrecognized-param");
+        emit FileUint256(what, data);
     }
-    function file(bytes32 what, address data) external note auth {
+    function file(bytes32 what, address data) external auth {
         if      (what ==  "dog") dog  = DogLike(data);
         else if (what ==  "vow") vow  = data;
         else if (what == "calc") calc = AbacusLike(data);
         else revert("Clipper/file-unrecognized-param");
+        emit FileAddress(what, data);
     }
 
     // --- Math ---
@@ -321,12 +329,14 @@ contract Clipper is LibNote {
     }
 
     // --- Shutdown ---
-    function setBreaker(uint256 level) external note auth {
+    function setBreaker(uint256 level) external auth {
         stopped = level;
+        emit SetBreaker(level);
     }
 
     // Cancel an auction during ES
-    function yank() external note auth {
+    function yank() external auth {
         // TODO
+        emit Yank();
     }
 }
