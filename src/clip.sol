@@ -66,8 +66,9 @@ contract Clipper is LibNote {
     AbacusLike public calc;  // Current price calculator
 
     uint256 public buf;   // Multiplicative factor to increase starting price  [ray]
-    uint256 public tail;  // Time elapsed before auction reset                 [seconds]
-    uint256 public cusp;  // Percentage drop before auction reset              [ray]
+    uint256 public tail;  // Required time elapsed before auction reset        [seconds]
+    uint256 public cusp;  // Required percentage drop before auction reset     [ray]
+    uint256 public lop;   // Percentage drop of previous top on auction reset  [ray]
 
     uint256   public kicks;   // Total auctions
     uint256[] public active;  // Array of active auction ids
@@ -144,8 +145,9 @@ contract Clipper is LibNote {
     // --- Administration ---
     function file(bytes32 what, uint256 data) external note auth {
         if      (what ==  "buf") buf  = data;
-        else if (what == "tail") tail = data; // Time elapsed    before auction reset
-        else if (what == "cusp") cusp = data; // Percentage drop before auction reset
+        else if (what == "tail") tail = data; // Required time elapsed    before auction reset
+        else if (what == "cusp") cusp = data; // Required percentage drop before auction reset
+        else if (what == "lop")  lop  = data; // Percentage drop of previous top on auction reset
         else revert("Clipper/file-unrecognized-param");
     }
     function file(bytes32 what, address data) external note auth {
@@ -227,7 +229,7 @@ contract Clipper is LibNote {
         (PipLike pip, ) = spot.ilks(ilk);
         (bytes32 val, bool has) = pip.peek();
         require(has, "Clipper/invalid-price");
-        sales[id].top = rmul(rdiv(mul(uint256(val), 10 ** 9), spot.par()), buf);
+        sales[id].top = max(rmul(sales[id].top, lop), rmul(rdiv(mul(uint256(val), BLN), spot.par()), buf));
 
         emit Redo(id, sales[id].top, sales[id].tab, sales[id].lot, sales[id].usr);
     }

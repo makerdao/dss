@@ -903,7 +903,28 @@ contract ClipperTest is DSTest {
         
         (,,,, uint96 ticAfter, uint256 topAfter) = clip.sales(1);
         assertEq(uint256(ticAfter), startTime + 1801 seconds);     // (now)
-        assertEq(topAfter, ray(3.75 ether)); // $3 spot + 25% buffer = $3.75 (used most recent OSM price, not liq price in reset)
+        assertEq(topAfter, ray(3.75 ether)); // $3 spot + 25% buffer = $3.75 (used most recent OSM price, not liq price)
+    }
+
+    function test_auction_reset_use_prev_top() public {
+        auctionResetSetup(1 hours); // 1 hour till zero is reached (used to test cusp) 
+
+        clip.file("lop",  ray(0.75 ether)); // 25% decrease from previous top
+
+        pip.poke(bytes32(uint256(0))); // Simulate oracle attack
+
+        (,,,, uint96 ticBefore, uint256 topBefore) = clip.sales(1);
+        assertEq(uint256(ticBefore), startTime);
+        assertEq(topBefore, ray(6.25 ether)); // $5 liq price + 25% buffer = $6.25 (wasn't affected by poke)
+        
+        hevm.warp(startTime + 1800 seconds);
+        assertTrue(!try_redo(1));
+        hevm.warp(startTime + 1801 seconds);
+        assertTrue( try_redo(1));
+        
+        (,,,, uint96 ticAfter, uint256 topAfter) = clip.sales(1);
+        assertEq(uint256(ticAfter), startTime + 1801 seconds);     // (now)
+        assertEq(topAfter, ray(4.6875 ether)); // $6.25 * (1 - 0.25) = $4.6875
     }
 
     function testFail_auction_reset_tail_twice() public {
@@ -1002,7 +1023,7 @@ contract ClipperTest is DSTest {
         
         (,,,, uint96 ticAfter, uint256 topAfter) = clip.sales(1);
         assertEq(uint256(ticAfter), startTime + 3601 seconds);     // (now)
-        assertEq(topAfter, ray(3.75 ether)); // $3 spot + 25% buffer = $5 (used most recent OSM price, not liq price in reset)
+        assertEq(topAfter, ray(3.75 ether)); // $3 spot + 25% buffer = $5 (used most recent OSM price, not liq price)
     }
 
     function testFail_stopped_auction_reset_tail() public {
