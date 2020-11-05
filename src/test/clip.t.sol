@@ -45,6 +45,10 @@ contract Guy {
             data: data
         });
     }
+
+    function bark(Dog dog, bytes32 ilk, address urn) external {
+        dog.bark(ilk, urn);
+    }
 }
 
 contract ClipperTest is DSTest {
@@ -368,7 +372,7 @@ contract ClipperTest is DSTest {
 
     function test_get_chop() public {
         uint256 chop = dog.chop(ilk);
-        (, uint256 chop2,,) = dog.ilks(ilk);
+        (, uint256 chop2,,,,) = dog.ilks(ilk);
         assertEq(chop, chop2);
     }
     
@@ -382,6 +386,9 @@ contract ClipperTest is DSTest {
         uint256 ink;
         uint256 art;
 
+        dog.file(ilk, "tip",  rad(100 ether)); // Flat fee of 100 DAI
+        dog.file(ilk, "chip", 0);              // No linear increase
+
         assertEq(clip.kicks(), 0);
         (pos, tab, lot, usr, tic, top) = clip.sales(1);
         assertEq(pos, 0);
@@ -391,11 +398,12 @@ contract ClipperTest is DSTest {
         assertEq(uint256(tic), 0);
         assertEq(top, 0);
         assertEq(vat.gem(ilk, me), 960 ether);
+        assertEq(vat.dai(ali), rad(1000 ether));
         (ink, art) = vat.urns(ilk, me);
         assertEq(ink, 40 ether);
         assertEq(art, 100 ether);
 
-        dog.bark(ilk, me);
+        Guy(ali).bark(dog, ilk, me);
 
         assertEq(clip.kicks(), 1);
         (pos, tab, lot, usr, tic, top) = clip.sales(1);
@@ -406,6 +414,7 @@ contract ClipperTest is DSTest {
         assertEq(uint256(tic), now);
         assertEq(top, ray(4 ether));
         assertEq(vat.gem(ilk, me), 960 ether);
+        assertEq(vat.dai(ali), rad(1100 ether)); // Paid "tip" amount of DAI for calling bark()
         (ink, art) = vat.urns(ilk, me);
         assertEq(ink, 0 ether);
         assertEq(art, 0 ether);
@@ -430,7 +439,12 @@ contract ClipperTest is DSTest {
 
         clip.file(bytes32("buf"),  ray(1.25 ether)); // 25% Initial price buffer
 
-        dog.bark(ilk, me);
+        dog.file(ilk, "tip",  rad(100 ether)); // Flat fee of 100 DAI
+        dog.file(ilk, "chip", 0.02 ether);     // Linear increase of 2% of tab
+
+        assertEq(vat.dai(bob), rad(1000 ether));
+
+        Guy(bob).bark(dog, ilk, me);
 
         assertEq(clip.kicks(), 2);
         (pos, tab, lot, usr, tic, top) = clip.sales(2);
@@ -441,6 +455,7 @@ contract ClipperTest is DSTest {
         assertEq(uint256(tic), now);
         assertEq(top, ray(5 ether));
         assertEq(vat.gem(ilk, me), 920 ether);
+        assertEq(vat.dai(bob), rad(1000 ether) + rad(100 ether) + tab * 0.02 ether / WAD); // Paid (tip + tab * chip) amount of DAI for calling bark()
         (ink, art) = vat.urns(ilk, me);
         assertEq(ink, 0 ether);
         assertEq(art, 0 ether);
@@ -550,7 +565,7 @@ contract ClipperTest is DSTest {
 
     function test_Hole_hole() public {
         assertEq(dog.Dirt(), 0);
-        (,,, uint256 dirt) = dog.ilks(ilk);
+        (,,, uint256 dirt,,) = dog.ilks(ilk);
         assertEq(dirt, 0);
 
         dog.bark(ilk, me);
@@ -558,7 +573,7 @@ contract ClipperTest is DSTest {
         (, uint256 tab,,,,) = clip.sales(1);
 
         assertEq(dog.Dirt(), tab);
-        (,,, dirt) = dog.ilks(ilk);
+        (,,, dirt,,) = dog.ilks(ilk);
         assertEq(dirt, tab);
 
         bytes32 ilk2 = "silver";
@@ -591,8 +606,8 @@ contract ClipperTest is DSTest {
         (, uint256 tab2,,,,) = clip2.sales(1);
 
         assertEq(dog.Dirt(), tab + tab2);
-        (,,, dirt) = dog.ilks(ilk);
-        (,,, uint256 dirt2) = dog.ilks(ilk2);
+        (,,, dirt,,) = dog.ilks(ilk);
+        (,,, uint256 dirt2,,) = dog.ilks(ilk2);
         assertEq(dirt, tab);
         assertEq(dirt2, tab2);
     }
@@ -604,7 +619,7 @@ contract ClipperTest is DSTest {
         assertEq(_art(ilk, me), 100 ether);
 
         assertEq(dog.Dirt(), 0);
-        (,uint256 chop,, uint256 dirt) = dog.ilks(ilk);
+        (,uint256 chop,, uint256 dirt,,) = dog.ilks(ilk);
         assertEq(dirt, 0);
 
         dog.bark(ilk, me);
@@ -620,7 +635,7 @@ contract ClipperTest is DSTest {
         assertEq(_art(ilk, me), 100 ether - tab * WAD / rate / chop);
 
         assertEq(dog.Dirt(), tab);
-        (,,, dirt) = dog.ilks(ilk);
+        (,,, dirt,,) = dog.ilks(ilk);
         assertEq(dirt, tab);
     }
 
@@ -631,7 +646,7 @@ contract ClipperTest is DSTest {
         assertEq(_art(ilk, me), 100 ether);
 
         assertEq(dog.Dirt(), 0);
-        (,uint256 chop,, uint256 dirt) = dog.ilks(ilk);
+        (,uint256 chop,, uint256 dirt,,) = dog.ilks(ilk);
         assertEq(dirt, 0);
 
         dog.bark(ilk, me);
@@ -647,7 +662,7 @@ contract ClipperTest is DSTest {
         assertEq(_art(ilk, me), 100 ether - tab * WAD / rate / chop);
 
         assertEq(dog.Dirt(), tab);
-        (,,, dirt) = dog.ilks(ilk);
+        (,,, dirt,,) = dog.ilks(ilk);
         assertEq(dirt, tab);
     }
 

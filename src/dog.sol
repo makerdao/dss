@@ -36,6 +36,7 @@ interface VatLike {
         uint256 art   // [wad]
     );
     function grab(bytes32,address,address,address,int256,int256) external;
+    function suck(address,address,uint256) external;
     function hope(address) external;
     function nope(address) external;
 }
@@ -57,9 +58,11 @@ contract Dog {
     // --- Data ---
     struct Ilk {
         address clip;  // Liquidator
-        uint256 chop;  // Liquidation Penalty  [wad]
+        uint256 chop;  // Liquidation Penalty                                          [wad]
         uint256 hole;  // Max DAI needed to cover debt+fees of active auctions per ilk [rad]
         uint256 dirt;  // Amt DAI needed to cover debt+fees of active auctions per ilk [rad]
+        uint256 chip;  // Percentage of tab to suck from vow to incentivize keepers    [wad]
+        uint256 tip;   // Flat fee to suck from vow to incentivize keepers             [rad]
     }
 
     mapping (bytes32 => Ilk) public ilks;
@@ -114,6 +117,9 @@ contract Dog {
     function mul(uint256 x, uint256 y) internal pure returns (uint256 z) {
         require(y == 0 || (z = x * y) / y == x);
     }
+    function wmul(uint x, uint y) internal pure returns (uint z) {
+        z = mul(x, y) / WAD;
+    }
 
     // --- Administration ---
     function file(bytes32 what, address data) external auth {
@@ -129,6 +135,8 @@ contract Dog {
     function file(bytes32 ilk, bytes32 what, uint256 data) external auth {
         if (what == "chop") ilks[ilk].chop = data;
         else if (what == "hole") ilks[ilk].hole = data;
+        else if (what == "chip") ilks[ilk].chip = data;
+        else if (what == "tip")  ilks[ilk].tip  = data;
         else revert("Dog/file-unrecognized-param");
         emit FileIlkUint256(ilk, what, data);
     }
@@ -191,6 +199,8 @@ contract Dog {
                 lot: dink,
                 usr: urn
             });
+            
+            vat.suck(address(vow), msg.sender, add(milk.tip, wmul(tab, milk.chip)));
         }
 
         emit Bark(ilk, urn, dink, dart, due, milk.clip, id);
