@@ -109,7 +109,7 @@ contract Dog is LibNote {
         require(y == 0 || (z = x * y) / y == x);
     }
     function wmul(uint x, uint y) internal pure returns (uint z) {
-        z = add(mul(x, y), WAD / 2) / WAD;
+        z = mul(x, y) / WAD;
     }
 
     // --- Administration ---
