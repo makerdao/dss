@@ -442,6 +442,8 @@ contract ClipperTest is DSTest {
         dog.file(ilk, "tip",  rad(100 ether)); // Flat fee of 100 DAI
         dog.file(ilk, "chip", 0.02 ether);     // Linear increase of 2% of tab
 
+        assertEq(vat.dai(bob), rad(1000 ether));
+
         Guy(bob).bark(dog, ilk, me);
 
         assertEq(clip.kicks(), 2);
