@@ -15,14 +15,14 @@
 
 pragma solidity >=0.5.12;
 
-// interface Abacus {
-//     // 1st arg: initial price           [ray]
-//     // 2nd arg: auction start timestamp [Unix epoch]
-//     // returns: current auction price   [ray]
-//     function price(uint256, uint256) external view returns (uint256);
-// }
+interface Abacus {
+    // 1st arg: initial price               [ray]
+    // 2nd arg: seconds since auction start [seconds]
+    // returns: current auction price       [ray]
+    function price(uint256, uint256) external view returns (uint256);
+}
 
-contract LinearDecrease /* is Abacus */ {
+contract LinearDecrease is Abacus {
 
     // --- Auth ---
     mapping (address => uint256) public wards;
@@ -61,14 +61,13 @@ contract LinearDecrease /* is Abacus */ {
         z = z / RAY;
     }
 
-    function price(uint256 top, uint256 tic) external view returns (uint256) {
-        uint256 end = tic + tau;
-        if (now >= end) return 0;
-        return rmul(top, mul(end - now, RAY) / tau);
+    function price(uint256 top, uint256 dur) override external view returns (uint256) {
+        if (dur >= tau) return 0;
+        return rmul(top, mul(tau - dur, RAY) / tau);
     }
 }
 
-contract StairstepExponentialDecrease /* is Abacus */ {
+contract StairstepExponentialDecrease is Abacus {
 
     // --- Auth ---
     mapping (address => uint256) public wards;
@@ -137,7 +136,7 @@ contract StairstepExponentialDecrease /* is Abacus */ {
         }
     }
 
-    function price(uint256 top, uint256 tic) external view returns (uint256) {
-        return rmul(top, rpow(sub(RAY, cut), sub(now, uint256(tic)) / step, RAY));
+    function price(uint256 top, uint256 dur) override external view returns (uint256) {
+        return rmul(top, rpow(sub(RAY, cut), dur / step, RAY));
     }
 }

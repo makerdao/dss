@@ -228,13 +228,13 @@ contract ClipperTest is DSTest {
         hevm.warp(startTime);
         calc.file(bytes32("step"), step);
         calc.file(bytes32("cut"),  cut);
-        price = calc.price(top, tic);
+        price = calc.price(top, now - tic);
         assertEq(price, top);
 
         for(uint256 i = 1; i < testTime; i += 1) {
             hevm.warp(startTime + i);
             lastPrice = price;
-            price = calc.price(top, tic);
+            price = calc.price(top, now - tic);
             // Stairstep calculation
             if (i % step == 0) { testPrice = lastPrice * (RAY - percentDecrease) / RAY; }
             else               { testPrice = lastPrice; }
@@ -326,47 +326,47 @@ contract ClipperTest is DSTest {
 
         uint256 top = 1000 * RAY;
         uint256 tic = now; // Start of auction
-        uint256 price = calc.price(top, tic);
+        uint256 price = calc.price(top, now - tic);
         assertEq(price, top);
 
         hevm.warp(startTime + 360);                // 6min in,   1/10 done
-        price = calc.price(top, tic);
+        price = calc.price(top, now - tic);
         assertEq(price, (1000 - 100) * RAY);
 
         hevm.warp(startTime + 360 * 2);            // 12min in,  2/10 done
-        price = calc.price(top, tic);
+        price = calc.price(top, now - tic);
         assertEq(price, (1000 - 100 * 2) * RAY);
 
         hevm.warp(startTime + 360 * 3);            // 18min in,  3/10 done
-        price = calc.price(top, tic);
+        price = calc.price(top, now - tic);
         assertEq(price, (1000 - 100 * 3) * RAY);
 
         hevm.warp(startTime + 360 * 4);            // 24min in,  4/10 done
-        price = calc.price(top, tic);
+        price = calc.price(top, now - tic);
         assertEq(price, (1000 - 100 * 4) * RAY);
 
         hevm.warp(startTime + 360 * 5);            // 30min in,  5/10 done
-        price = calc.price(top, tic);
+        price = calc.price(top, now - tic);
         assertEq(price, (1000 - 100 * 5) * RAY);
 
         hevm.warp(startTime + 360 * 6);            // 36min in,  6/10 done
-        price = calc.price(top, tic);
+        price = calc.price(top, now - tic);
         assertEq(price, (1000 - 100 * 6) * RAY);
 
         hevm.warp(startTime + 360 * 7);            // 42min in,  7/10 done
-        price = calc.price(top, tic);
+        price = calc.price(top, now - tic);
         assertEq(price, (1000 - 100 * 7) * RAY);
 
         hevm.warp(startTime + 360 * 8);            // 48min in,  8/10 done
-        price = calc.price(top, tic);
+        price = calc.price(top, now - tic);
         assertEq(price, (1000 - 100 * 8) * RAY);
 
         hevm.warp(startTime + 360 * 9);            // 54min in,  9/10 done
-        price = calc.price(top, tic);
+        price = calc.price(top, now - tic);
         assertEq(price, (1000 - 100 * 9) * RAY);
 
         hevm.warp(startTime + 360 * 10);           // 60min in, 10/10 done
-        price = calc.price(top, tic);
+        price = calc.price(top, now - tic);
         assertEq(price, 0);
     }
 
@@ -793,7 +793,7 @@ contract ClipperTest is DSTest {
 
         hevm.warp(now + 30); 
 
-        uint256 price = clip.calc().price(top, tic);
+        uint256 price = clip.calc().price(top, now - tic);
         Guy(bob).take({
             id:  1,
             amt: 30 ether,     // Buy the rest of the lot 
