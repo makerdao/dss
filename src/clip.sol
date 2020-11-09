@@ -339,7 +339,7 @@ contract Clipper {
         require(sales[id].usr != address(0), "Clipper/usr-not-set");
         dog.digs(ilk, sales[id].tab);
         vat.flux(ilk, address(this), msg.sender, sales[id].lot);
-        delete sales[id];
+        _remove(id);
         emit Yank();
     }
 }
