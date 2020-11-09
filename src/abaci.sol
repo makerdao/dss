@@ -26,15 +26,19 @@ contract LinearDecrease /* is Abacus */ {
 
     // --- Auth ---
     mapping (address => uint256) public wards;
-    function rely(address usr) external /* note */ auth { wards[usr] = 1; }
-    function deny(address usr) external /* note */ auth { wards[usr] = 0; }
+    function rely(address usr) external auth { wards[usr] = 1; emit Rely(usr); }
+    function deny(address usr) external auth { wards[usr] = 0; emit Deny(usr); }
     modifier auth {
         require(wards[msg.sender] == 1, "LinearDecrease/not-authorized");
         _;
     }
 
     // --- Data ---
-    uint256 tau;  // seconds after auction start when the price reaches zero [seconds]
+    uint256 tau;  // Seconds after auction start when the price reaches zero [seconds]
+
+    // --- Events ---
+    event Rely(address indexed usr);
+    event Deny(address indexed usr);
 
     // --- Init ---
     constructor() public {
@@ -72,8 +76,8 @@ contract StairstepExponentialDecrease /* is Abacus */ {
 
     // --- Auth ---
     mapping (address => uint256) public wards;
-    function rely(address usr) external /* note */ auth { wards[usr] = 1; }
-    function deny(address usr) external /* note */ auth { wards[usr] = 0; }
+    function rely(address usr) external auth { wards[usr] = 1; emit Rely(usr); }
+    function deny(address usr) external auth { wards[usr] = 0; emit Deny(usr); }
     modifier auth {
         require(wards[msg.sender] == 1, "StairstepExponentialDecrease/not-authorized");
         _;
@@ -82,6 +86,10 @@ contract StairstepExponentialDecrease /* is Abacus */ {
     // --- Data ---
     uint256 public step; // Length of time between price drops        [seconds]
     uint256 public cut;  // Per-step multiplicative decrease in price [ray]
+
+    // --- Events ---
+    event Rely(address indexed usr);
+    event Deny(address indexed usr);
 
     // --- Init ---
     constructor() public {
