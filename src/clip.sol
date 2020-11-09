@@ -219,7 +219,7 @@ contract Clipper {
         require(sale.tab > 0, "Clipper/not-running-auction");
 
         // Compute current price [ray]
-        uint256 price = calc.price(sale.top, sale.tic);
+        uint256 price = calc.price(sale.top, sub(now, sale.tic));
 
         // Check that auction needs reset
         require(sub(now, sale.tic) > tail || rdiv(price, sale.top) < cusp, "Clipper/cannot-reset");
@@ -248,7 +248,7 @@ contract Clipper {
         require(sale.tab > 0, "Clipper/not-running-auction");
 
         // Compute current price [ray]
-        uint256 price = calc.price(sale.top, sale.tic);
+        uint256 price = calc.price(sale.top, sub(now, sale.tic));
 
         // Check that auction doesn't need reset
         require(sub(now, sale.tic) <= tail && rdiv(price, sale.top) >= cusp, "Clipper/needs-reset");
