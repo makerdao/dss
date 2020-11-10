@@ -199,9 +199,9 @@ contract Dog {
                 lot: dink,
                 usr: urn
             });
-            
-            vat.suck(address(vow), msg.sender, add(milk.tip, wmul(tab, milk.chip)));
         }
+
+        vat.suck(address(vow), msg.sender, add(milk.tip, wmul(due, milk.chip)));
 
         emit Bark(ilk, urn, dink, dart, due, milk.clip, id);
     }
