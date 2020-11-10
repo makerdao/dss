@@ -455,10 +455,13 @@ contract ClipperTest is DSTest {
         assertEq(uint256(tic), now);
         assertEq(top, ray(5 ether));
         assertEq(vat.gem(ilk, me), 920 ether);
-        assertEq(vat.dai(bob), rad(1000 ether) + rad(100 ether) + tab * 0.02 ether / WAD); // Paid (tip + tab * chip) amount of DAI for calling bark()
         (ink, art) = vat.urns(ilk, me);
         assertEq(ink, 0 ether);
         assertEq(art, 0 ether);
+
+        (, uint256 rate,,,) = vat.ilks(ilk);
+        uint due = 100 ether * rate; // (art * rate from initial frob)
+        assertEq(vat.dai(bob), rad(1000 ether) + rad(100 ether) + due * 0.02 ether / WAD); // Paid (tip + due * chip) amount of DAI for calling bark()
     }
 
     function try_bark(bytes32 ilk, address urn) internal returns (bool ok) {
