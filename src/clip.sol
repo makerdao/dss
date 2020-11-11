@@ -15,7 +15,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-pragma solidity >=0.5.12;
+pragma solidity >=0.6.7;
 
 interface VatLike {
     function move(address,address,uint256) external;
@@ -55,13 +55,13 @@ contract Clipper {
     }
 
     // --- Data ---
-    bytes32 public ilk;  // Collateral type of this Clipper
+    bytes32 immutable public ilk;      // Collateral type of this Clipper
 
-    address    public vow;   // Recipient of dai raised in auctions
-    VatLike    public vat;   // Core CDP Engine
-    DogLike    public dog;   // Liquidation module
-    SpotLike   public spot;  // Collateral price module
-    AbacusLike public calc;  // Current price calculator
+    address              public vow;   // Recipient of dai raised in auctions
+    VatLike    immutable public vat;   // Core CDP Engine
+    DogLike              public dog;   // Liquidation module
+    SpotLike   immutable public spot;  // Collateral price module
+    AbacusLike           public calc;  // Current price calculator
 
     uint256 public buf;   // Multiplicative factor to increase starting price  [ray]
     uint256 public tail;  // Time elapsed before auction reset                 [seconds]
