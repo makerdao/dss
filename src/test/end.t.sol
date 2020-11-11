@@ -29,6 +29,7 @@ import {Cat}  from '../cat.sol';
 import {Dog}  from '../dog.sol';
 import {Vow}  from '../vow.sol';
 import {Pot}  from '../pot.sol';
+import {Jug}  from '../jug.sol';
 import {Flipper} from '../flip.sol';
 import {Clipper} from '../clip.sol';
 import {Flapper} from '../flap.sol';
@@ -82,6 +83,7 @@ contract EndTest is DSTest {
     End   end;
     Vow   vow;
     Pot   pot;
+    Jug   jug;
     Cat   cat;
     Dog   dog;
 
@@ -166,6 +168,11 @@ contract EndTest is DSTest {
         coin.approve(address(vat));
 
         vat.rely(address(gemA));
+
+        jug = new Jug(address(vat));
+        jug.init("gold");
+        jug.file("vow", address(vow));
+        vat.rely(address(jug));
 
         Flipper flip = new Flipper(address(vat), address(cat), name);
         vat.hope(address(flip));
@@ -511,14 +518,23 @@ contract EndTest is DSTest {
 
         Usr ali = new Usr(vat, end);
 
+        // To check this yourself, use the following rate calculation (example 8%):
+        //
+        // $ bc -l <<< 'scale=27; e( l(1.08)/(60 * 60 * 24 * 365) )'
+        uint256 EIGHT_PCT = 1000000002440418608258400030;
+        jug.file("gold", "duty", EIGHT_PCT);
+        hevm.warp(now + 10 days);
+        jug.drip("gold");
+        (, uint rate,,,) = vat.ilks("gold");
+
         // Make a CDP:
         address urn1 = address(ali);
         gold.gemA.join(urn1, 10 ether);
         ali.frob("gold", urn1, urn1, urn1, 10 ether, 15 ether);
         (uint ink1, uint art1) = vat.urns("gold", urn1); // CDP before liquidation
-        (, uint rate,,,) = vat.ilks("gold");
+
         assertEq(vat.gem("gold", urn1), 0);
-        assertEq(rate, ray(1 ether));
+        assertTrue(rate > ray(1 ether));
         assertEq(ink1, 10 ether);
         assertEq(art1, 15 ether);
 
@@ -526,7 +542,7 @@ contract EndTest is DSTest {
 
         uint id = dog.bark("gold", urn1);                   
         (, uint256 tab, uint256 lot,,,) = gold.clip.sales(id);  
-        assertEq(tab, rad(16.5 ether));             
+        assertEq(tab, art1 * rate * 1.1 ether / WAD); // tab uses chop             
         assertEq(dog.Dirt(), tab);
         assertEq(lot, ink1);
 
@@ -562,66 +578,7 @@ contract EndTest is DSTest {
 
         (uint ink3, uint art3) = vat.urns("gold", urn1);    // CDP after snip
         assertEq(ink3, 10 ether);                           // All collateral returned to CDP
-        assertEq(art3 * rate, rad(16.5 ether));             // Tab amount of normalized debt transferred back into CDP
-
-        end.skim("gold", urn1);
-
-        uint wad = rmul(rmul(art3, rate), end.tag("gold")); // Amount of collateral sent to End from CDP
-        (uint ink4, uint art4) = vat.urns("gold", urn1);    // CDP after skim
-
-        assertEq(wad,  3.3 ether);                          // art * rate * tag = 16.5 * 0.2 = 3.3 units of collateral
-        assertEq(ink4, 6.7 ether);                          // Collateral leftover after sent to End (10 - 3.3)
-        assertEq(art4 * rate, 0);                           // All debt removed from CDP
-
-        assertEq(end.gap("gold"),                               0);  // CDP not underwater
-        assertEq(vat.gem("gold", address(end)),               wad);  // Owed collateral taken by End
-        assertEq(vat.sin(address(vow)), art1 * rate + art3 * rate);  // All debt removed from CDP
-        assertEq(vat.vice(),            art1 * rate + art3 * rate);  // Add vice from debt from CDP
-
-        // Balance the vow
-        vow.heal(min(vat.dai(address(vow)), vat.sin(address(vow))));
-        assertEq(vat.sin(address(vow)), rad(15 ether));
-        assertEq(vat.vice(),            rad(15 ether)); 
-        assertEq(vat.debt(),            rad(15 ether)); 
-        assertEq(vat.dai(address(vow)),             0); // Required for thaw()
-
-        ali.free("gold");
-        assertEq(ink("gold", urn1), 0);
-        assertEq(gem("gold", urn1), 6.7 ether);
-
-        hevm.warp(now + 1 hours);
-
-        end.thaw();
-
-        assertEq(end.debt(), vat.debt());
-
-        end.flow("gold");
-
-        // fix = (Art["gold"] * rate * tag["gold"] - gap["gold"]) / debt = (16.5 * 0.2 - 0) / 15 = 0.22 collateral per DAI
-        assertEq(end.fix("gold"), ray(0.22 ether)); 
-        
-        // DAI redemption
-        ali.hope(address(end));
-        assertEq(vat.dai(urn1), rad(15 ether)); // From initial frob
-        assertEq(end.bag(urn1),             0); 
-        assertEq(vat.dai(address(vow)),     0); 
-
-        ali.pack(15 ether);
-
-        assertEq(vat.dai(urn1),                    0); 
-        assertEq(end.bag(urn1),             15 ether);  // Added 15 wad to bag
-        assertEq(vat.dai(address(vow)), rad(15 ether)); // DAI transferred to vow
-
-        vow.heal(rad(15 ether));
-        assertEq(vat.debt(), 0);
-        assertEq(vat.vice(), 0);
-
-        ali.cash("gold", 15 ether);
-
-        assertEq(vat.gem("gold", urn1), 10 ether); // fluxed 15 * 0.22 = 3.3 units of collateral on cash(), now has 6.7 + 3.3 = 10 units of gold
-        assertEq(end.out("gold", urn1), 15 ether);
-
-        ali.exit(gold.gemA, address(this), 10 ether); // Ali is able to exit with all the collateral she started with
+        assertEq(art3, tab / rate);                         // Tab amount of normalized debt transferred back into CDP
     }
 
     // -- Scenario where there is one over-collateralised CDP
