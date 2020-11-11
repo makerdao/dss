@@ -506,7 +506,7 @@ contract EndTest is DSTest {
 
     // -- Scenario where there is one collateralised CDP
     // -- undergoing auction at the time of cage
-    function test_cage_halt() public {
+    function test_cage_snip() public {
         Ilk memory gold = init_collateral("gold");
 
         Usr ali = new Usr(vat, end);
@@ -549,18 +549,18 @@ contract EndTest is DSTest {
         assertEq(vat.debt(),                  art1 * rate); // From frob
         assertEq(vat.dai(address(vow)),                 0); // vat.suck() hasn't been called 
 
-        end.halt("gold", id);
+        end.snip("gold", id);
 
         assertEq(dog.Dirt(),                            0); // From clip.yank()
         assertEq(vat.gem("gold", address(gold.clip)),   0); // From clip.yank()
-        assertEq(vat.gem("gold", address(end)),         0); // From grab in end.halt() 
+        assertEq(vat.gem("gold", address(end)),         0); // From grab in end.snip() 
         assertEq(vat.sin(address(vow)),       art1 * rate); // From grab in dog.bark()
         assertEq(vat.vice(),                  art1 * rate); // From grab in dog.bark()
         assertEq(vat.debt(),            tab + art1 * rate); // From frob and suck
         assertEq(vat.dai(address(vow)),               tab); // From vat.suck()
         assertEq(end.Art("gold") * rate,              tab); // Incrementing total Art in End
 
-        (uint ink3, uint art3) = vat.urns("gold", urn1);    // CDP after halt
+        (uint ink3, uint art3) = vat.urns("gold", urn1);    // CDP after snip
         assertEq(ink3, 10 ether);                           // All collateral returned to CDP
         assertEq(art3 * rate, rad(16.5 ether));             // Tab amount of normalized debt transferred back into CDP
 

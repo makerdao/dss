@@ -312,7 +312,7 @@ contract End is LibNote {
         tag[ilk] = wdiv(spot.par(), uint(pip.read()));
     }
 
-    function halt(bytes32 ilk, uint256 id) external note {
+    function snip(bytes32 ilk, uint256 id) external note {
         require(tag[ilk] != 0, "End/tag-ilk-not-defined");
 
         (address _clip,,,) = dog.ilks(ilk);
