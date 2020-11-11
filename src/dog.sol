@@ -65,13 +65,14 @@ contract Dog {
         uint256 tip;   // Flat fee to suck from vow to incentivize keepers             [rad]
     }
 
+    VatLike immutable public vat;  // CDP Engine
+
     mapping (bytes32 => Ilk) public ilks;
 
-    uint256           public live;  // Active Flag
-    VatLike immutable public vat;   // CDP Engine
-    VowLike           public vow;   // Debt Engine
-    uint256           public Hole;  // Max DAI needed to cover debt+fees of active auctions [rad]
-    uint256           public Dirt;  // Amt DAI needed to cover debt+fees of active auctions [rad]
+    VowLike public vow;   // Debt Engine
+    uint256 public live;  // Active Flag
+    uint256 public Hole;  // Max DAI needed to cover debt+fees of active auctions [rad]
+    uint256 public Dirt;  // Amt DAI needed to cover debt+fees of active auctions [rad]
 
     // --- Events ---
     event Rely(address indexed usr);

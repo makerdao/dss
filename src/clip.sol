@@ -55,13 +55,13 @@ contract Clipper {
     }
 
     // --- Data ---
-    bytes32 immutable public ilk;      // Collateral type of this Clipper
+    bytes32  immutable public ilk;   // Collateral type of this Clipper
+    VatLike  immutable public vat;   // Core CDP Engine
+    SpotLike immutable public spot;  // Collateral price module
 
-    address              public vow;   // Recipient of dai raised in auctions
-    VatLike    immutable public vat;   // Core CDP Engine
-    DogLike              public dog;   // Liquidation module
-    SpotLike   immutable public spot;  // Collateral price module
-    AbacusLike           public calc;  // Current price calculator
+    address    public vow;   // Recipient of dai raised in auctions
+    DogLike    public dog;   // Liquidation module
+    AbacusLike public calc;  // Current price calculator
 
     uint256 public buf;   // Multiplicative factor to increase starting price  [ray]
     uint256 public tail;  // Time elapsed before auction reset                 [seconds]
