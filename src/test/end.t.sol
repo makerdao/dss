@@ -527,11 +527,25 @@ contract EndTest is DSTest {
 
         vat.file("gold", "spot", ray(1 ether)); // Now unsafe
 
-        uint id = dog.bark("gold", urn1);                   
-        (, uint256 tab, uint256 lot,,,) = gold.clip.sales(id);  
-        assertEq(tab, art1 * rate * 1.1 ether / WAD); // tab uses chop             
-        assertEq(dog.Dirt(), tab);
-        assertEq(lot, ink1);
+        uint256 id = dog.bark("gold", urn1);   
+
+        uint256 tab1;
+        uint256 lot1;    
+        {
+            address usr1;
+            uint96  tic1;
+            uint256 top1; 
+            uint256 pos1;
+            (pos1, tab1, lot1, usr1, tic1, top1) = gold.clip.sales(id);  
+            assertEq(pos1, 0);
+            assertEq(tab1, art1 * rate * 1.1 ether / WAD); // tab uses chop
+            assertEq(lot1, ink1);
+            assertEq(usr1, address(ali));
+            assertEq(uint256(tic1), now);
+            assertEq(uint256(top1), ray(6 ether));
+        }
+                     
+        assertEq(dog.Dirt(), tab1);
 
         {
             (uint ink2, uint art2) = vat.urns("gold", urn1); // CDP after liquidation
@@ -546,26 +560,43 @@ contract EndTest is DSTest {
         end.cage("gold");
         assertEq(end.tag("gold"), ray(0.2 ether)); // par / price = collateral per DAI
 
-        assertEq(vat.gem("gold", address(gold.clip)), lot); // From grab in dog.bark()
-        assertEq(vat.sin(address(vow)),       art1 * rate); // From grab in dog.bark()
-        assertEq(vat.vice(),                  art1 * rate); // From grab in dog.bark()
-        assertEq(vat.debt(),                  art1 * rate); // From frob
-        assertEq(vat.dai(address(vow)),                 0); // vat.suck() hasn't been called 
+        assertEq(vat.gem("gold", address(gold.clip)), lot1); // From grab in dog.bark()
+        assertEq(vat.sin(address(vow)),        art1 * rate); // From grab in dog.bark()
+        assertEq(vat.vice(),                   art1 * rate); // From grab in dog.bark()
+        assertEq(vat.debt(),                   art1 * rate); // From frob
+        assertEq(vat.dai(address(vow)),                  0); // vat.suck() hasn't been called 
 
         end.snip("gold", id);
+
+        uint256 tab2;
+        uint256 lot2;    
+        {
+            address usr2;
+            uint96  tic2;
+            uint256 top2; 
+            uint256 pos2;
+            (pos2, tab2, lot2, usr2, tic2, top2) = gold.clip.sales(id);  
+            assertEq(pos2,          0);
+            assertEq(tab2,          0); 
+            assertEq(lot2,          0);
+            assertEq(usr2,  address(0));
+            assertEq(uint256(tic2), 0);
+            assertEq(uint256(top2), 0);
+        }
+
 
         assertEq(dog.Dirt(),                            0); // From clip.yank()
         assertEq(vat.gem("gold", address(gold.clip)),   0); // From clip.yank()
         assertEq(vat.gem("gold", address(end)),         0); // From grab in end.snip() 
         assertEq(vat.sin(address(vow)),       art1 * rate); // From grab in dog.bark()
         assertEq(vat.vice(),                  art1 * rate); // From grab in dog.bark()
-        assertEq(vat.debt(),            tab + art1 * rate); // From frob and suck
-        assertEq(vat.dai(address(vow)),               tab); // From vat.suck()
-        assertEq(end.Art("gold") * rate,              tab); // Incrementing total Art in End
+        assertEq(vat.debt(),           tab1 + art1 * rate); // From frob and suck
+        assertEq(vat.dai(address(vow)),              tab1); // From vat.suck()
+        assertEq(end.Art("gold") * rate,             tab1); // Incrementing total Art in End
 
         (uint ink3, uint art3) = vat.urns("gold", urn1);    // CDP after snip
         assertEq(ink3, 10 ether);                           // All collateral returned to CDP
-        assertEq(art3, tab / rate);                         // Tab amount of normalized debt transferred back into CDP
+        assertEq(art3, tab1 / rate);                        // Tab amount of normalized debt transferred back into CDP
     }
 
     // -- Scenario where there is one over-collateralised CDP
