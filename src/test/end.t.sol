@@ -29,7 +29,6 @@ import {Cat}  from '../cat.sol';
 import {Dog}  from '../dog.sol';
 import {Vow}  from '../vow.sol';
 import {Pot}  from '../pot.sol';
-import {Jug}  from '../jug.sol';
 import {Flipper} from '../flip.sol';
 import {Clipper} from '../clip.sol';
 import {Flapper} from '../flap.sol';
@@ -83,7 +82,6 @@ contract EndTest is DSTest {
     End   end;
     Vow   vow;
     Pot   pot;
-    Jug   jug;
     Cat   cat;
     Dog   dog;
 
@@ -168,11 +166,6 @@ contract EndTest is DSTest {
         coin.approve(address(vat));
 
         vat.rely(address(gemA));
-
-        jug = new Jug(address(vat));
-        jug.init("gold");
-        jug.file("vow", address(vow));
-        vat.rely(address(jug));
 
         Flipper flip = new Flipper(address(vat), address(cat), name);
         vat.hope(address(flip));
@@ -518,23 +511,17 @@ contract EndTest is DSTest {
 
         Usr ali = new Usr(vat, end);
 
-        // To check this yourself, use the following rate calculation (example 8%):
-        //
-        // $ bc -l <<< 'scale=27; e( l(1.08)/(60 * 60 * 24 * 365) )'
-        uint256 EIGHT_PCT = 1000000002440418608258400030;
-        jug.file("gold", "duty", EIGHT_PCT);
-        hevm.warp(now + 10 days);
-        jug.drip("gold");
-        (, uint rate,,,) = vat.ilks("gold");
+        vat.fold("gold", address(vow), int256(ray(0.25 ether)));
 
         // Make a CDP:
         address urn1 = address(ali);
         gold.gemA.join(urn1, 10 ether);
         ali.frob("gold", urn1, urn1, urn1, 10 ether, 15 ether);
         (uint ink1, uint art1) = vat.urns("gold", urn1); // CDP before liquidation
+        (, uint rate,,,) = vat.ilks("gold");
 
         assertEq(vat.gem("gold", urn1), 0);
-        assertTrue(rate > ray(1 ether));
+        assertEq(rate, ray(1.25 ether));
         assertEq(ink1, 10 ether);
         assertEq(art1, 15 ether);
 
