@@ -532,10 +532,10 @@ contract EndTest is DSTest {
         uint256 tab1;
         uint256 lot1;    
         {
+            uint256 pos1;
             address usr1;
             uint96  tic1;
             uint256 top1; 
-            uint256 pos1;
             (pos1, tab1, lot1, usr1, tic1, top1) = gold.clip.sales(id);  
             assertEq(pos1, 0);
             assertEq(tab1, art1 * rate * 1.1 ether / WAD); // tab uses chop
@@ -567,14 +567,14 @@ contract EndTest is DSTest {
         assertEq(vat.dai(address(vow)),                  0); // vat.suck() hasn't been called 
 
         end.snip("gold", id);
-
-        uint256 tab2;
-        uint256 lot2;    
+   
         {
+            uint256 pos2;
+            uint256 tab2;
+            uint256 lot2; 
             address usr2;
             uint96  tic2;
             uint256 top2; 
-            uint256 pos2;
             (pos2, tab2, lot2, usr2, tic2, top2) = gold.clip.sales(id);  
             assertEq(pos2,          0);
             assertEq(tab2,          0); 
@@ -583,7 +583,6 @@ contract EndTest is DSTest {
             assertEq(uint256(tic2), 0);
             assertEq(uint256(top2), 0);
         }
-
 
         assertEq(dog.Dirt(),                            0); // From clip.yank()
         assertEq(vat.gem("gold", address(gold.clip)),   0); // From clip.yank()
