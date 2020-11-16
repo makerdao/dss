@@ -335,8 +335,11 @@ contract Clipper {
     }
 
     // Cancel an auction during ES
-    function yank() external auth {
-        // TODO
+    function yank(uint id) external auth {
+        require(sales[id].usr != address(0), "Clipper/usr-not-set");
+        dog.digs(ilk, sales[id].tab);
+        vat.flux(ilk, address(this), msg.sender, sales[id].lot);
+        _remove(id);
         emit Yank();
     }
 }

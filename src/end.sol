@@ -43,6 +43,7 @@ interface VatLike {
     function suck(address u, address v, uint256 rad) external;
     function cage() external;
 }
+
 interface CatLike {
     function ilks(bytes32) external returns (
         address flip,
@@ -51,13 +52,26 @@ interface CatLike {
     );
     function cage() external;
 }
+
+interface DogLike {
+    function ilks(bytes32) external returns (
+        address clip,
+        uint256 chop,
+        uint256 hole,
+        uint256 dirt
+    );
+    function cage() external;
+}
+
 interface PotLike {
     function cage() external;
 }
+
 interface VowLike {
     function cage() external;
 }
-interface Flippy {
+
+interface FlipLike {
     function bids(uint id) external view returns (
         uint256 bid,   // [rad]
         uint256 lot,   // [wad]
@@ -71,11 +85,23 @@ interface Flippy {
     function yank(uint id) external;
 }
 
+interface ClipLike {
+    function sales(uint id) external view returns (
+        uint256 pos,
+        uint256 tab,
+        uint256 lot,
+        address usr,
+        uint96  tic,
+        uint256 top
+    );
+    function yank(uint256 id) external;
+}
+
 interface PipLike {
     function read() external view returns (bytes32);
 }
 
-interface Spotty {
+interface SpotLike {
     function par() external view returns (uint256);
     function ilks(bytes32) external view returns (
         PipLike pip,
@@ -197,9 +223,10 @@ contract End is LibNote {
     // --- Data ---
     VatLike  public vat;   // CDP Engine
     CatLike  public cat;
+    DogLike  public dog;
     VowLike  public vow;   // Debt Engine
     PotLike  public pot;
-    Spotty   public spot;
+    SpotLike public spot;
 
     uint256  public live;  // Active Flag
     uint256  public when;  // Time of cage                   [unix epoch time]
@@ -250,10 +277,11 @@ contract End is LibNote {
     function file(bytes32 what, address data) external note auth {
         require(live == 1, "End/not-live");
         if (what == "vat")  vat = VatLike(data);
-        else if (what == "cat")  cat = CatLike(data);
-        else if (what == "vow")  vow = VowLike(data);
-        else if (what == "pot")  pot = PotLike(data);
-        else if (what == "spot") spot = Spotty(data);
+        else if (what == "cat")   cat = CatLike(data);
+        else if (what == "dog")   dog = DogLike(data);
+        else if (what == "vow")   vow = VowLike(data);
+        else if (what == "pot")   pot = PotLike(data);
+        else if (what == "spot") spot = SpotLike(data);
         else revert("End/file-unrecognized-param");
     }
     function file(bytes32 what, uint256 data) external note auth {
@@ -269,6 +297,7 @@ contract End is LibNote {
         when = now;
         vat.cage();
         cat.cage();
+        dog.cage();
         vow.cage();
         spot.cage();
         pot.cage();
@@ -283,11 +312,28 @@ contract End is LibNote {
         tag[ilk] = wdiv(spot.par(), uint(pip.read()));
     }
 
+    function snip(bytes32 ilk, uint256 id) external note {
+        require(tag[ilk] != 0, "End/tag-ilk-not-defined");
+
+        (address _clip,,,) = dog.ilks(ilk);
+        ClipLike clip = ClipLike(_clip);
+        (, uint rate,,,) = vat.ilks(ilk);
+        (, uint256 tab, uint256 lot, address usr,,) = clip.sales(id);
+        
+        vat.suck(address(vow), address(vow),  tab);
+        clip.yank(id);
+
+        uint art = tab / rate;
+        Art[ilk] = add(Art[ilk], art);
+        require(int(lot) >= 0 && int(art) >= 0, "End/overflow");
+        vat.grab(ilk, usr, address(this), address(vow), int(lot), int(art));
+    }
+
     function skip(bytes32 ilk, uint256 id) external note {
         require(tag[ilk] != 0, "End/tag-ilk-not-defined");
 
-        (address flipV,,) = cat.ilks(ilk);
-        Flippy flip = Flippy(flipV);
+        (address _flip,,) = cat.ilks(ilk);
+        FlipLike flip = FlipLike(_flip);
         (, uint rate,,,) = vat.ilks(ilk);
         (uint bid, uint lot,,,, address usr,, uint tab) = flip.bids(id);
 

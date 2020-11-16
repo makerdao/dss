@@ -171,7 +171,7 @@ contract ClipperTest is DSTest {
         pip.poke(bytes32(uint256(5 ether))); // Spot = $2.5
 
         spot.file(ilk, "pip", address(pip));
-        spot.file(ilk, "mat", ray(2 ether)); // 100% liquidation ratio for easier test calcs
+        spot.file(ilk, "mat", ray(2 ether)); // 200% liquidation ratio for easier test calcs
         spot.poke(ilk);
 
         vat.file(ilk, "dust", rad(20 ether)); // $20 dust
