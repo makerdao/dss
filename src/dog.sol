@@ -177,7 +177,7 @@ contract Dog {
             require(dart == art || mul(art - dart, rate) >= dust, "Dog/leaves-dust");
         }
 
-        uint256 dink = min(ink, mul(ink, dart) / art);
+        uint256 dink = mul(ink, dart) / art;
 
         require(dink > 0, "Dog/null-auction");
         require(dart <= 2**255 && dink <= 2**255, "Dog/overflow");
