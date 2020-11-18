@@ -328,6 +328,17 @@ contract Clipper {
         return active[idx];
     }
 
+    // Returns boolean for if an auction needs a redo (reset)
+    function needsRedo(uint256 id) external returns (bool) {
+        // Read auction data
+        Sale memory sale = sales[id];
+
+        // Compute current price [ray]
+        uint256 price = calc.price(sale.top, sub(now, sale.tic));
+
+        return (sale.tab > 0 && (sub(now, sale.tic) > tail || rdiv(price, sale.top) < cusp));
+    }
+
     // --- Shutdown ---
     function setBreaker(uint256 level) external auth {
         stopped = level;
