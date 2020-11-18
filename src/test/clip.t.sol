@@ -843,19 +843,6 @@ contract ClipperTest is DSTest {
         (ok,) = address(clip).call(abi.encodeWithSignature(sig, id));
     }
 
-    function test_auction_reset_view() public {
-        auctionResetSetup(10 hours); // 10 hours till zero is reached (used to test tail) 
-
-        pip.poke(bytes32(uint256(3 ether))); // Spot = $1.50 (update price before reset is called)
-        
-        hevm.warp(startTime + 3600 seconds);
-        assertTrue(!clip.needsRedo(1));
-        assertTrue(!try_redo(1));
-        hevm.warp(startTime + 3601 seconds);
-        assertTrue( clip.needsRedo(1));
-        assertTrue( try_redo(1));
-    }
-
     function test_auction_reset_tail() public {
         auctionResetSetup(10 hours); // 10 hours till zero is reached (used to test tail) 
 
@@ -866,8 +853,10 @@ contract ClipperTest is DSTest {
         assertEq(topBefore, ray(5 ether)); // $4 spot + 25% buffer = $5 (wasn't affected by poke)
         
         hevm.warp(startTime + 3600 seconds);
+        assertTrue(!clip.needsRedo(1));
         assertTrue(!try_redo(1));
         hevm.warp(startTime + 3601 seconds);
+        assertTrue( clip.needsRedo(1));
         assertTrue( try_redo(1));
         
         (,,,, uint96 ticAfter, uint256 topAfter) = clip.sales(1);
@@ -885,8 +874,10 @@ contract ClipperTest is DSTest {
         assertEq(topBefore, ray(5 ether)); // $4 spot + 25% buffer = $5 (wasn't affected by poke)
         
         hevm.warp(startTime + 1800 seconds);
+        assertTrue(!clip.needsRedo(1));
         assertTrue(!try_redo(1));
         hevm.warp(startTime + 1801 seconds);
+        assertTrue( clip.needsRedo(1));
         assertTrue( try_redo(1));
         
         (,,,, uint96 ticAfter, uint256 topAfter) = clip.sales(1);
