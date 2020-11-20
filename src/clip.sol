@@ -222,7 +222,7 @@ contract Clipper {
         uint256 price = calc.price(sale.top, sub(now, sale.tic));
 
         // Check that auction needs reset
-        require(sub(now, sale.tic) > tail || rdiv(price, sale.top) < cusp, "Clipper/cannot-reset");
+        require(ripe(sale, price), "Clipper/cannot-reset");
         
         sales[id].tic = uint96(now);
 
@@ -251,7 +251,7 @@ contract Clipper {
         uint256 price = calc.price(sale.top, sub(now, sale.tic));
 
         // Check that auction doesn't need reset
-        require(sub(now, sale.tic) <= tail && rdiv(price, sale.top) >= cusp, "Clipper/needs-reset");
+        require(!ripe(sale, price), "Clipper/needs-reset");
 
         // Ensure price is acceptable to buyer
         require(max >= price, "Clipper/too-expensive");
@@ -328,14 +328,19 @@ contract Clipper {
         return active[idx];
     }
 
-    // Returns boolean for if an auction needs a redo (reset)
-    function needsRedo(uint256 id) external returns (bool) {
+    // Externally returns boolean for if an auction needs a redo
+    function needsRedo(uint256 id) external view returns (bool) {
         // Read auction data
         Sale memory sale = sales[id];
 
         // Compute current price [ray]
         uint256 price = calc.price(sale.top, sub(now, sale.tic));
 
+        return ripe(sale, price);
+    }
+
+    // Internally returns boolean for if an auction needs a redo
+    function ripe(Sale memory sale, uint256 price) internal view returns (bool) {
         return (sale.tab > 0 && (sub(now, sale.tic) > tail || rdiv(price, sale.top) < cusp));
     }
 
