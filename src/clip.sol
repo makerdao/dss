@@ -333,6 +333,8 @@ contract Clipper {
         // Read auction data
         Sale memory sale = sales[id];
 
+        require(sale.tab > 0, "Clipper/not-running-auction");
+
         // Compute current price [ray]
         uint256 price = calc.price(sale.top, sub(now, sale.tic));
 
@@ -341,7 +343,7 @@ contract Clipper {
 
     // Internally returns boolean for if an auction needs a redo
     function done(Sale memory sale, uint256 price) internal view returns (bool) {
-        return (sale.tab > 0 && (sub(now, sale.tic) > tail || rdiv(price, sale.top) < cusp));
+        return (sub(now, sale.tic) > tail || rdiv(price, sale.top) < cusp);
     }
 
     // --- Shutdown ---
