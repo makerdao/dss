@@ -691,8 +691,10 @@ contract ClipperTest is DSTest {
         assertEq(topBefore, ray(5 ether)); // $4 spot + 25% buffer = $5 (wasn't affected by poke)
         
         hevm.warp(startTime + 3600 seconds);
+        assertTrue(!clip.needsRedo(1));
         assertTrue(!try_redo(1));
         hevm.warp(startTime + 3601 seconds);
+        assertTrue( clip.needsRedo(1));
         assertTrue( try_redo(1));
         
         (,,,, uint96 ticAfter, uint256 topAfter) = clip.sales(1);
@@ -710,8 +712,10 @@ contract ClipperTest is DSTest {
         assertEq(topBefore, ray(5 ether)); // $4 spot + 25% buffer = $5 (wasn't affected by poke)
         
         hevm.warp(startTime + 1800 seconds);
+        assertTrue(!clip.needsRedo(1));
         assertTrue(!try_redo(1));
         hevm.warp(startTime + 1801 seconds);
+        assertTrue( clip.needsRedo(1));
         assertTrue( try_redo(1));
         
         (,,,, uint96 ticAfter, uint256 topAfter) = clip.sales(1);
