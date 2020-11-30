@@ -302,6 +302,27 @@ contract ClipperTest is DSTest {
         assertEq(vat.dai(bob), rad(1000 ether) + rad(100 ether) + due * 0.02 ether / WAD); // Paid (tip + due * chip) amount of DAI for calling bark()
     }
 
+    function try_kick(uint256 tab, uint256 lot, address usr) internal returns (bool ok) {
+        string memory sig = "kick(uint256,uint256,address)";
+        (ok,) = address(clip).call(abi.encodeWithSignature(sig, tab, lot, usr));
+    }
+
+    function test_kick_basic() public {
+        assertTrue(try_kick(1 ether, 2 ether, address(1)));
+    }
+
+    function test_kick_zero_tab() public {
+        assertTrue(!try_kick(0, 2 ether, address(1)));
+    }
+
+    function test_kick_zero_lot() public {
+        assertTrue(!try_kick(1 ether, 0, address(1)));
+    }
+
+    function test_kick_zero_usr() public {
+        assertTrue(!try_kick(1 ether, 2 ether, address(0)));
+    }
+
     function try_bark(bytes32 ilk, address urn) internal returns (bool ok) {
         string memory sig = "bark(bytes32,address)";
         (ok,) = address(dog).call(abi.encodeWithSignature(sig, ilk, urn));

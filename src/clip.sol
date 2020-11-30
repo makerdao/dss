@@ -186,10 +186,16 @@ contract Clipper {
     // --- Auction ---
 
     // start an auction
+    // note: trusts the caller to transfer collateral to the contract
     function kick(uint256 tab,  // Debt             [rad]
                   uint256 lot,  // Collateral       [wad]
                   address usr   // Liquidated CDP
     ) external auth isStopped(1) returns (uint256 id) {
+        // Input validation
+        require(tab  >          0, "Clipper/zero-tab");
+        require(lot  >          0, "Clipper/zero-lot");
+        require(usr != address(0), "Clipper/zero-usr");
+
         require(kicks < uint256(-1), "Clipper/overflow");
         id = ++kicks;
         active.push(id);
