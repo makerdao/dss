@@ -528,6 +528,18 @@ contract ClipperTest is DSTest {
         assertEq(dirt, tab);
     }
 
+    function try_take(uint256 id, uint256 amt, uint256 max, address who, bytes memory data) internal returns (bool ok) {
+        string memory sig = "take(uint256,uint256,uint256,address,bytes)";
+        (ok,) = address(clip).call(abi.encodeWithSignature(sig, id, amt, max, who, data));
+    }
+
+    function test_take_zero_usr() public takeSetup {
+        // Auction id 2 is unpopulated.
+        (,,, address usr,,) = clip.sales(2);
+        assertEq(usr, address(0));
+        assertTrue(!try_take(2, 25 ether, ray(5 ether), address(ali), ""));
+    }
+
     function test_take_over_tab() public takeSetup {
         // Bid so owe (= 25 * 5 = 125 RAD) > tab (= 110 RAD)
         // Readjusts slice to be tab/top = 25
@@ -744,22 +756,27 @@ contract ClipperTest is DSTest {
         assertEq(topAfter, ray(3.75 ether)); // $3 spot + 25% buffer = $3.75 (used most recent OSM price)
     }
 
-    function testFail_auction_reset_tail_twice() public {
+    function test_auction_reset_tail_twice() public {
         auctionResetSetup(10 hours); // 10 hours till zero is reached (used to test tail) 
         
         hevm.warp(startTime + 3601 seconds);
         clip.redo(1);
 
-        clip.redo(1);
+        assertTrue(!try_redo(1));
     }
 
-    function testFail_auction_reset_cusp_twice() public {
+    function test_auction_reset_cusp_twice() public {
         auctionResetSetup(1 hours); // 1 hour till zero is reached (used to test cusp) 
         
         hevm.warp(startTime + 1801 seconds); // Price goes below 50% "cusp" after 30min01sec
         clip.redo(1);
 
-        clip.redo(1);
+        assertTrue(!try_redo(1));
+    }
+
+    function test_redo_zero_usr() public {
+        // Can't reset a non-existent auction.
+        assertTrue(!try_redo(1));
     }
 
     function test_setBreaker() public {
