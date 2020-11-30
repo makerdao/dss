@@ -222,7 +222,7 @@ contract Clipper {
     function redo(uint256 id) external isStopped(2) {
         // Read auction data
         Sale memory sale = sales[id];
-        require(sale.tab > 0, "Clipper/not-running-auction");
+        require(sale.usr != address(0), "Clipper/not-running-auction");
 
         // Compute current price [ray]
         uint256 price = calc.price(sale.top, sub(now, sale.tic));
@@ -251,7 +251,7 @@ contract Clipper {
     ) external lock isStopped(2) {
         // Read auction data
         Sale memory sale = sales[id];
-        require(sale.tab > 0, "Clipper/not-running-auction");
+        require(sale.usr != address(0), "Clipper/not-running-auction");
 
         // Compute current price [ray]
         uint256 price = calc.price(sale.top, sub(now, sale.tic));
@@ -342,7 +342,7 @@ contract Clipper {
         // Compute current price [ray]
         uint256 price = calc.price(sale.top, sub(now, sale.tic));
 
-        return sale.tab > 0 && done(sale, price);
+        return sale.usr != address(0) && done(sale, price);
     }
 
     // Internally returns boolean for if an auction needs a redo
@@ -358,9 +358,10 @@ contract Clipper {
 
     // Cancel an auction during ES
     function yank(uint id) external auth {
-        require(sales[id].usr != address(0), "Clipper/usr-not-set");
-        dog.digs(ilk, sales[id].tab);
-        vat.flux(ilk, address(this), msg.sender, sales[id].lot);
+        Sale memory sale = sales[id];
+        require(sale.usr != address(0), "Clipper/not-running-auction");
+        dog.digs(ilk, sale.tab);
+        vat.flux(ilk, address(this), msg.sender, sale.lot);
         _remove(id);
         emit Yank();
     }
