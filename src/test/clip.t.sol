@@ -302,6 +302,27 @@ contract ClipperTest is DSTest {
         assertEq(vat.dai(bob), rad(1000 ether) + rad(100 ether) + due * 0.02 ether / WAD); // Paid (tip + due * chip) amount of DAI for calling bark()
     }
 
+    function try_kick(uint256 tab, uint256 lot, address usr) internal returns (bool ok) {
+        string memory sig = "kick(uint256,uint256,address)";
+        (ok,) = address(clip).call(abi.encodeWithSignature(sig, tab, lot, usr));
+    }
+
+    function test_kick_basic() public {
+        assertTrue(try_kick(1 ether, 2 ether, address(1)));
+    }
+
+    function test_kick_zero_tab() public {
+        assertTrue(!try_kick(0, 2 ether, address(1)));
+    }
+
+    function test_kick_zero_lot() public {
+        assertTrue(!try_kick(1 ether, 0, address(1)));
+    }
+
+    function test_kick_zero_usr() public {
+        assertTrue(!try_kick(1 ether, 2 ether, address(0)));
+    }
+
     function try_bark(bytes32 ilk, address urn) internal returns (bool ok) {
         string memory sig = "bark(bytes32,address)";
         (ok,) = address(dog).call(abi.encodeWithSignature(sig, ilk, urn));
@@ -505,6 +526,18 @@ contract ClipperTest is DSTest {
         assertEq(dog.Dirt(), tab);
         (,,, dirt,,) = dog.ilks(ilk);
         assertEq(dirt, tab);
+    }
+
+    function try_take(uint256 id, uint256 amt, uint256 max, address who, bytes memory data) internal returns (bool ok) {
+        string memory sig = "take(uint256,uint256,uint256,address,bytes)";
+        (ok,) = address(clip).call(abi.encodeWithSignature(sig, id, amt, max, who, data));
+    }
+
+    function test_take_zero_usr() public takeSetup {
+        // Auction id 2 is unpopulated.
+        (,,, address usr,,) = clip.sales(2);
+        assertEq(usr, address(0));
+        assertTrue(!try_take(2, 25 ether, ray(5 ether), address(ali), ""));
     }
 
     function test_take_over_tab() public takeSetup {
@@ -723,22 +756,27 @@ contract ClipperTest is DSTest {
         assertEq(topAfter, ray(3.75 ether)); // $3 spot + 25% buffer = $3.75 (used most recent OSM price)
     }
 
-    function testFail_auction_reset_tail_twice() public {
+    function test_auction_reset_tail_twice() public {
         auctionResetSetup(10 hours); // 10 hours till zero is reached (used to test tail) 
         
         hevm.warp(startTime + 3601 seconds);
         clip.redo(1);
 
-        clip.redo(1);
+        assertTrue(!try_redo(1));
     }
 
-    function testFail_auction_reset_cusp_twice() public {
+    function test_auction_reset_cusp_twice() public {
         auctionResetSetup(1 hours); // 1 hour till zero is reached (used to test cusp) 
         
         hevm.warp(startTime + 1801 seconds); // Price goes below 50% "cusp" after 30min01sec
         clip.redo(1);
 
-        clip.redo(1);
+        assertTrue(!try_redo(1));
+    }
+
+    function test_redo_zero_usr() public {
+        // Can't reset a non-existent auction.
+        assertTrue(!try_redo(1));
     }
 
     function test_setBreaker() public {
