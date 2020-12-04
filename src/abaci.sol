@@ -101,7 +101,7 @@ contract StairstepExponentialDecrease is Abacus {
 
     // --- Administration ---
     function file(bytes32 what, uint256 data) external auth {
-        if      (what ==  "cut") require((cut = data) <= RAY, "Oven/cut-gt-RAY");
+        if      (what ==  "cut") require((cut = data) <= RAY, "StairstepExponentialDecrease/cut-gt-RAY");
         else if (what == "step") step = data;
         else revert("StairstepExponentialDecrease/file-unrecognized-param");
     }
