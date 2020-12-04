@@ -84,8 +84,8 @@ contract StairstepExponentialDecrease is Abacus {
     }
 
     // --- Data ---
-    uint256 public step; // Length of time between price drops        [seconds]
-    uint256 public cut;  // Per-step multiplicative decrease in price [ray]
+    uint256 public step; // Length of time between price drops [seconds]
+    uint256 public cut;  // Per-step multiplicative factor     [ray]
 
     // --- Events ---
     event Rely(address indexed usr);
@@ -108,11 +108,6 @@ contract StairstepExponentialDecrease is Abacus {
 
     // --- Math ---
     uint256 constant RAY = 10 ** 27;
-    function sub(uint256 x, uint256 y) internal pure returns (uint256 z) {
-        z = x - uint256(y);
-        require(y <= 0 || z <= x);
-        require(y >= 0 || z >= x);
-    }
     function rmul(uint256 x, uint256 y) internal pure returns (uint256 z) {
         z = x * y;
         require(y == 0 || z / y == x);
@@ -147,6 +142,6 @@ contract StairstepExponentialDecrease is Abacus {
     }
 
     function price(uint256 top, uint256 dur) override external view returns (uint256) {
-        return rmul(top, rpow(sub(RAY, cut), dur / step, RAY));
+        return rmul(top, rpow(cut, dur / step, RAY));
     }
 }
