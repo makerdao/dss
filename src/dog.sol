@@ -48,8 +48,8 @@ interface VowLike {
 contract Dog {
     // --- Auth ---
     mapping (address => uint) public wards;
-    function rely(address usr) public auth { wards[usr] = 1; emit Rely(usr); }
-    function deny(address usr) public auth { wards[usr] = 0; emit Deny(usr); }
+    function rely(address usr) external auth { wards[usr] = 1; emit Rely(usr); }
+    function deny(address usr) external auth { wards[usr] = 0; emit Deny(usr); }
     modifier auth {
         require(wards[msg.sender] == 1, "Dog/not-authorized");
         _;
@@ -147,7 +147,7 @@ contract Dog {
         emit FileIlkClip(ilk, what, clip);
     }
 
-    function chop(bytes32 ilk) public view returns (uint256) { return ilks[ilk].chop; }
+    function chop(bytes32 ilk) external view returns (uint256) { return ilks[ilk].chop; }
 
     // --- CDP Liquidation: all bark and no bite ---
     function bark(bytes32 ilk, address urn) external returns (uint256 id) {
