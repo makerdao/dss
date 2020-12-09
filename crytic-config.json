@@ -1,0 +1,7 @@
+{
+    "cwd": "./src",
+    "solc": "0.6.7",
+    "slither": {
+        "target": "./src"
+    }
+}
