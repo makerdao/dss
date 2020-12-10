@@ -99,8 +99,8 @@ contract ClipperTest is DSTest {
         uint256 art;
 
         StairstepExponentialDecrease calc = new StairstepExponentialDecrease();
-        calc.file("cut",  ray(0.01 ether));   // 1% decrease
-        calc.file("step", 1);                 // Decrease every 1 second
+        calc.file("cut",  RAY - ray(0.01 ether));  // 1% decrease
+        calc.file("step", 1);                      // Decrease every 1 second
 
         clip.file("buf",  ray(1.25 ether));   // 25% Initial price buffer
         clip.file("calc", address(calc));     // File price contract

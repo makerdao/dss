@@ -53,7 +53,7 @@ contract ClipperTest is DSTest {
             lastPrice = price;
             price = calc.price(top, now - tic);
             // Stairstep calculation
-            if (i % step == 0) { testPrice = lastPrice * (RAY - percentDecrease) / RAY; }
+            if (i % step == 0) { testPrice = lastPrice * percentDecrease / RAY; }
             else               { testPrice = lastPrice; }
             // Tolerance calculation
             if (testPrice >= price) { diff = testPrice - price; }
@@ -80,27 +80,27 @@ contract ClipperTest is DSTest {
         
         // 1.1234567890% decrease every 1 second
         // TODO: Check if there's a cleaner way to do this. I was getting rational_const errors.
-        percentDecrease = 1.1234567890E27 / 100;
+        percentDecrease = RAY - 1.1234567890E27 / 100;
         step = 1;
         checkExpDecrease(calc, percentDecrease, step, top, tic, percentDecrease, testTime, tolerance);
 
         // 2.1234567890% decrease every 1 second
-        percentDecrease = 2.1234567890E27 / 100;
+        percentDecrease = RAY - 2.1234567890E27 / 100;
         step = 1;
         checkExpDecrease(calc, percentDecrease, step, top, tic, percentDecrease, testTime, tolerance);
 
         // 1.1234567890% decrease every 5 seconds
-        percentDecrease = 1.1234567890E27 / 100;
+        percentDecrease = RAY - 1.1234567890E27 / 100;
         step = 5;
         checkExpDecrease(calc, percentDecrease, step, top, tic, percentDecrease, testTime, tolerance);
 
         // 2.1234567890% decrease every 5 seconds
-        percentDecrease = 2.1234567890E27 / 100;
+        percentDecrease = RAY - 2.1234567890E27 / 100;
         step = 5;
         checkExpDecrease(calc, percentDecrease, step, top, tic, percentDecrease, testTime, tolerance);
 
         // 1.1234567890% decrease every 5 minutes
-        percentDecrease = 1.1234567890E27 / 100;
+        percentDecrease = RAY - 1.1234567890E27 / 100;
         step = 5 minutes;
         checkExpDecrease(calc, percentDecrease, step, top, tic, percentDecrease, testTime, tolerance);
 
@@ -111,27 +111,27 @@ contract ClipperTest is DSTest {
         top = 1 * RAY / 10000000; 
 
         // 1.1234567890% decrease every 1 second
-        percentDecrease = 1.1234567890E27 / 100;
+        percentDecrease = RAY - 1.1234567890E27 / 100;
         step = 1;
         checkExpDecrease(calc, percentDecrease, step, top, tic, percentDecrease, testTime, tolerance);
 
         // 2.1234567890% decrease every 1 second
-        percentDecrease = 2.1234567890E27 / 100;
+        percentDecrease = RAY - 2.1234567890E27 / 100;
         step = 1;
         checkExpDecrease(calc, percentDecrease, step, top, tic, percentDecrease, testTime, tolerance);
 
         // 1.1234567890% decrease every 5 seconds
-        percentDecrease = 1.1234567890E27 / 100;
+        percentDecrease = RAY - 1.1234567890E27 / 100;
         step = 5;
         checkExpDecrease(calc, percentDecrease, step, top, tic, percentDecrease, testTime, tolerance);
 
         // 2.1234567890% decrease every 5 seconds
-        percentDecrease = 2.1234567890E27 / 100;
+        percentDecrease = RAY - 2.1234567890E27 / 100;
         step = 5;
         checkExpDecrease(calc, percentDecrease, step, top, tic, percentDecrease, testTime, tolerance);
 
         // 1.1234567890% decrease every 5 minutes
-        percentDecrease = 1.1234567890E27 / 100;
+        percentDecrease = RAY - 1.1234567890E27 / 100;
         step = 5 minutes;
         checkExpDecrease(calc, percentDecrease, step, top, tic, percentDecrease, testTime, tolerance);
     }
