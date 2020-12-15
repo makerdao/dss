@@ -876,4 +876,31 @@ contract ClipperTest is DSTest {
         hevm.warp(startTime + 3601 seconds);
         assertTrue( try_redo(1));
     }
+
+    function test_Clipper_yank() public takeSetup {
+        uint256 preGemBalance = vat.gem(ilk, address(this));
+        (,, uint256 origLot,,,) = clip.sales(1);
+
+        uint startGas = gasleft();
+        clip.yank(1);
+        uint endGas = gasleft();
+        emit log_named_uint("yank gas", startGas - endGas);
+
+        // Assert that the auction was deleted.
+        (uint256 pos, uint256 tab, uint256 lot, address usr, uint256 tic, uint256 top) = clip.sales(1);
+        assertEq(pos, 0);
+        assertEq(tab, 0);
+        assertEq(lot, 0);
+        assertEq(usr, address(0));
+        assertEq(uint256(tic), 0);
+        assertEq(top, 0);
+
+        // Assert that callback to clear dirt was successful.
+        assertEq(dog.Dirt(), 0);
+        (,,, uint256 dirt,,) = dog.ilks(ilk);
+        assertEq(dirt, 0);
+
+        // Assert transfer of gem.
+        assertEq(vat.gem(ilk, address(this)), preGemBalance + origLot);
+    }
 }
