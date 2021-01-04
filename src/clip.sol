@@ -356,12 +356,11 @@ contract Clipper {
         emit SetBreaker(level);
     }
 
-    // Cancel an auction during ES
+    // Cancel an auction during ES or via governance action.
     function yank(uint id) external auth {
-        Sale memory sale = sales[id];
-        require(sale.usr != address(0), "Clipper/not-running-auction");
-        dog.digs(ilk, sale.tab);
-        vat.flux(ilk, address(this), msg.sender, sale.lot);
+        require(sales[id].usr != address(0), "Clipper/not-running-auction");
+        dog.digs(ilk, sales[id].tab);
+        vat.flux(ilk, address(this), msg.sender, sales[id].lot);
         _remove(id);
         emit Yank();
     }
