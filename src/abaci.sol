@@ -34,7 +34,7 @@ contract LinearDecrease is Abacus {
     }
 
     // --- Data ---
-    uint256 tau;  // Seconds after auction start when the price reaches zero [seconds]
+    uint256 public tau;  // Seconds after auction start when the price reaches zero [seconds]
 
     // --- Events ---
     event Rely(address indexed usr);
