@@ -82,7 +82,7 @@ contract Dog {
     event FileAddress(bytes32 indexed what, address data);
     event FileIlkUint256(bytes32 indexed ilk, bytes32 indexed what, uint256 data);
     event FileIlkClip(bytes32 indexed ilk, bytes32 indexed what, address clip);
-    
+
     event Bark(
       bytes32 indexed ilk,
       address indexed urn,
@@ -163,8 +163,8 @@ contract Dog {
             (,rate, spot,, dust) = vat.ilks(ilk);
             require(spot > 0 && mul(ink, spot) < mul(art, rate), "Dog/not-unsafe");
 
-            // Get the minimum value between: 
-            // 1) Remaining space in the general Hole 
+            // Get the minimum value between:
+            // 1) Remaining space in the general Hole
             // 2) Remaining space in the collateral hole
             uint256 room = min(sub(Hole, Dirt), sub(milk.hole, milk.dirt));
 
@@ -185,7 +185,7 @@ contract Dog {
         vat.grab(
             ilk, urn, milk.clip, address(vow), -int256(dink), -int256(dart)
         );
-        
+
         uint256 due = mul(dart, rate);
         vow.fess(due);
 
