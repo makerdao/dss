@@ -179,7 +179,6 @@ contract Dog {
                 // avoid leaving a dusty vault to prevent unliquidatable vaults
                 dart = add(dart, mart);
             }
-            require(dart == art || mart >= dust, "Dog/leaves-dust");
 
             // Verify that CDP is not left in a dusty state
             require(dart == art || mul(art - dart, rate) >= dust, "Dog/leaves-dust");
