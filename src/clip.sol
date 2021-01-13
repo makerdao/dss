@@ -103,7 +103,7 @@ contract Clipper {
         address indexed usr
     );
     event Take(
-        uint256 indexed id, 
+        uint256 indexed id,
         uint256 max,
         uint256 price,
         uint256 owe,
@@ -229,7 +229,7 @@ contract Clipper {
 
         // Check that auction needs reset
         require(done(sale, price), "Clipper/cannot-reset");
-        
+
         sales[id].tic = uint96(now);
 
         // Could get this from rmul(Vat.ilks(ilk).spot, Spotter.mat()) instead, but if mat has changed since the
@@ -237,7 +237,7 @@ contract Clipper {
         (PipLike pip, ) = spot.ilks(ilk);
         (bytes32 val, bool has) = pip.peek();
         require(has, "Clipper/invalid-price");
-        sales[id].top = rmul(rdiv(mul(uint256(val), 10 ** 9), spot.par()), buf);
+        sales[id].top = rmul(rdiv(mul(uint256(val), BLN), spot.par()), buf);
 
         emit Redo(id, sales[id].top, sales[id].tab, sales[id].lot, sales[id].usr);
     }

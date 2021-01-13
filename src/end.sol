@@ -319,7 +319,7 @@ contract End is LibNote {
         ClipLike clip = ClipLike(_clip);
         (, uint rate,,,) = vat.ilks(ilk);
         (, uint256 tab, uint256 lot, address usr,,) = clip.sales(id);
-        
+
         vat.suck(address(vow), address(vow),  tab);
         clip.yank(id);
 
