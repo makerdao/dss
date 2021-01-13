@@ -181,7 +181,7 @@ contract Dog {
             }
 
             // Verify that CDP is not left in a dusty state
-            require(dart == art || mul(art - dart, rate) >= dust, "Dog/leaves-dust");
+            require(dart == art || mart >= dust, "Dog/leaves-dust");
         }
 
         uint256 dink = mul(ink, dart) / art;
