@@ -173,6 +173,14 @@ contract Dog {
 
             dart = min(art, mul(room, WAD) / rate / milk.chop);
 
+            uint256 mart = mul(art - dart, rate);
+
+            if (mart < dust) {
+                // avoid leaving a dusty vault to prevent unliquidatable vaults
+                dart = add(dart, mart);
+            }
+            require(dart == art || mart >= dust, "Dog/leaves-dust");
+
             // Verify that CDP is not left in a dusty state
             require(dart == art || mul(art - dart, rate) >= dust, "Dog/leaves-dust");
         }
