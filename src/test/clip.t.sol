@@ -328,7 +328,49 @@ contract ClipperTest is DSTest {
         (ok,) = address(dog).call(abi.encodeWithSignature(sig, ilk, urn));
     }
 
-    function test_bark_leaves_dust() public {
+    function test_bark_not_leaving_dust() public {
+        uint256 pos;
+        uint256 tab;
+        uint256 lot;
+        address usr;
+        uint96  tic;
+        uint256 top;
+        uint256 ink;
+        uint256 art;
+
+        dog.file(ilk, "hole", rad(80 ether)); // Makes room = 80 WAD
+        dog.file(ilk, "chop", 1 ether); // 0% chop (for precise calculations)
+
+        assertEq(clip.kicks(), 0);
+        (pos, tab, lot, usr, tic, top) = clip.sales(1);
+        assertEq(pos, 0);
+        assertEq(tab, 0);
+        assertEq(lot, 0);
+        assertEq(usr, address(0));
+        assertEq(uint256(tic), 0);
+        assertEq(top, 0);
+        assertEq(vat.gem(ilk, me), 960 ether);
+        (ink, art) = vat.urns(ilk, me);
+        assertEq(ink, 40 ether);
+        assertEq(art, 100 ether);
+
+        assertTrue(try_bark(ilk, me)); // art - dart = 100 - 80 = dust (= 20)
+
+        assertEq(clip.kicks(), 1);
+        (pos, tab, lot, usr, tic, top) = clip.sales(1);
+        assertEq(pos, 0);
+        assertEq(tab, rad(80 ether)); // No chop
+        assertEq(lot, 32 ether);
+        assertEq(usr, me);
+        assertEq(uint256(tic), now);
+        assertEq(top, ray(4 ether));
+        assertEq(vat.gem(ilk, me), 960 ether);
+        (ink, art) = vat.urns(ilk, me);
+        assertEq(ink, 8 ether);
+        assertEq(art, 20 ether);
+    }
+
+    function test_bark_not_leaving_dust_over_hole() public {
         uint256 pos;
         uint256 tab;
         uint256 lot;
@@ -354,16 +396,59 @@ contract ClipperTest is DSTest {
         assertEq(ink, 40 ether);
         assertEq(art, 100 ether);
 
-        assertTrue(!try_bark(ilk, me)); // art - dart = 100 - (80 + 1 wei) < dust (= 20)
-
-        dog.file(ilk, "hole", rad(80 ether)); // Makes room = 80 WAD
-
-        assertTrue( try_bark(ilk, me)); // art - dart = 100 - 80 == dust (= 20)
+        assertTrue(try_bark(ilk, me)); // art - dart = 100 - (80 + 1 wei) < dust (= 20) then the whole debt is taken
 
         assertEq(clip.kicks(), 1);
         (pos, tab, lot, usr, tic, top) = clip.sales(1);
         assertEq(pos, 0);
-        assertEq(tab, rad(80 ether)); // No chop
+        assertEq(tab, rad(100 ether)); // No chop
+        assertEq(lot, 40 ether);
+        assertEq(usr, me);
+        assertEq(uint256(tic), now);
+        assertEq(top, ray(4 ether));
+        assertEq(vat.gem(ilk, me), 960 ether);
+        (ink, art) = vat.urns(ilk, me);
+        assertEq(ink, 0 ether);
+        assertEq(art, 0 ether);
+    }
+
+    function test_bark_not_leaving_dust_rate() public {
+        uint256 pos;
+        uint256 tab;
+        uint256 lot;
+        address usr;
+        uint96  tic;
+        uint256 top;
+        uint256 ink;
+        uint256 art;
+
+        vat.fold(ilk, address(vow), int256(ray(0.02 ether)));
+        (, uint256 rate,,,) = vat.ilks(ilk);
+        assertEq(rate, ray(1.02 ether));
+
+        dog.file(ilk, "hole", mul(80 ether, rate)); // Makes room = 80 WAD
+        dog.file(ilk, "chop", 1 ether);                 // 0% chop (for precise calculations)
+        vat.file(ilk, "dust", mul(20 ether, rate));     // $20 in normalized debt (multiplied by rate for testing)
+
+        assertEq(clip.kicks(), 0);
+        (pos, tab, lot, usr, tic, top) = clip.sales(1);
+        assertEq(pos, 0);
+        assertEq(tab, 0);
+        assertEq(lot, 0);
+        assertEq(usr, address(0));
+        assertEq(uint256(tic), 0);
+        assertEq(top, 0);
+        assertEq(vat.gem(ilk, me), 960 ether);
+        (ink, art) = vat.urns(ilk, me);
+        assertEq(ink, 40 ether);
+        assertEq(art, 100 ether);
+
+        assertTrue(try_bark(ilk, me)); // (art - dart) * rate = (100 - (80 + 1 wei)) * rate < dust (= 20 * rate)
+
+        assertEq(clip.kicks(), 1);
+        (pos, tab, lot, usr, tic, top) = clip.sales(1);
+        assertEq(pos, 0);
+        assertEq(tab, mul(80 ether, rate)); // No chop
         assertEq(lot, 32 ether);
         assertEq(usr, me);
         assertEq(uint256(tic), now);
@@ -374,7 +459,7 @@ contract ClipperTest is DSTest {
         assertEq(art, 20 ether);
     }
 
-    function test_bark_leaves_dust_rate() public {
+    function test_bark_not_leaving_dust_over_hole_rate() public {
         uint256 pos;
         uint256 tab;
         uint256 lot;
@@ -391,7 +476,7 @@ contract ClipperTest is DSTest {
         dog.file(ilk, "hole", mul(80 ether + 1, rate)); // Makes room = 80 WAD + 1 wei in normalized debt
         dog.file(ilk, "chop", 1 ether);                 // 0% chop (for precise calculations)
         vat.file(ilk, "dust", mul(20 ether, rate));     // $20 in normalized debt (multiplied by rate for testing)
-        
+
         assertEq(clip.kicks(), 0);
         (pos, tab, lot, usr, tic, top) = clip.sales(1);
         assertEq(pos, 0);
@@ -405,24 +490,20 @@ contract ClipperTest is DSTest {
         assertEq(ink, 40 ether);
         assertEq(art, 100 ether);
 
-        assertTrue(!try_bark(ilk, me)); // (art - dart) * rate = (100 - (80 + 1 wei)) * rate < dust (= 20 * rate)
-
-        dog.file(ilk, "hole", mul(80 ether, rate)); // Makes room = 80 WAD + 1 wei in normalized debt
-
-        assertTrue( try_bark(ilk, me)); // (art - dart) * rate = (100 - 80) == dust (= 20 * rate)
+        assertTrue(try_bark(ilk, me)); // (art - dart) * rate = (100 - (80 + 1 wei)) * rate < dust (= 20 * rate)
 
         assertEq(clip.kicks(), 1);
         (pos, tab, lot, usr, tic, top) = clip.sales(1);
         assertEq(pos, 0);
-        assertEq(tab, mul(80 ether, rate)); // No chop
-        assertEq(lot, 32 ether);
+        assertEq(tab, mul(100 ether, rate)); // No chop
+        assertEq(lot, 40 ether);
         assertEq(usr, me);
         assertEq(uint256(tic), now);
         assertEq(top, ray(4 ether));
         assertEq(vat.gem(ilk, me), 960 ether);
         (ink, art) = vat.urns(ilk, me);
-        assertEq(ink, 8 ether);
-        assertEq(art, 20 ether);
+        assertEq(ink, 0 ether);
+        assertEq(art, 0 ether);
     }
 
     function test_Hole_hole() public {
