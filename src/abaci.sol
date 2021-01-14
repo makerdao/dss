@@ -40,6 +40,8 @@ contract LinearDecrease is Abacus {
     event Rely(address indexed usr);
     event Deny(address indexed usr);
 
+    event FileUint256(bytes32 indexed what, uint256 data);
+
     // --- Init ---
     constructor() public {
         wards[msg.sender] = 1;
@@ -50,6 +52,7 @@ contract LinearDecrease is Abacus {
     function file(bytes32 what, uint256 data) external auth {
         if (what ==  "tau") tau = data;
         else revert("LinearDecrease/file-unrecognized-param");
+        emit FileUint256(what, data);
     }
 
     // --- Math ---
@@ -91,6 +94,8 @@ contract StairstepExponentialDecrease is Abacus {
     event Rely(address indexed usr);
     event Deny(address indexed usr);
 
+    event FileUint256(bytes32 indexed what, uint256 data);
+
     // --- Init ---
     constructor() public {
         wards[msg.sender] = 1;
@@ -104,6 +109,7 @@ contract StairstepExponentialDecrease is Abacus {
         if      (what ==  "cut") require((cut = data) <= RAY, "StairstepExponentialDecrease/cut-gt-RAY");
         else if (what == "step") step = data;
         else revert("StairstepExponentialDecrease/file-unrecognized-param");
+        emit FileUint256(what, data);
     }
 
     // --- Math ---
