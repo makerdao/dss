@@ -46,8 +46,8 @@ contract Guy {
         });
     }
 
-    function bark(Dog dog, bytes32 ilk, address urn, address guy) external {
-        dog.bark(ilk, urn, guy);
+    function bark(Dog dog, bytes32 ilk, address urn, address usr) external {
+        dog.bark(ilk, urn, usr);
     }
 }
 
