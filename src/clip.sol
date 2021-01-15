@@ -88,6 +88,9 @@ contract Clipper {
     // 2: no new redo() or take()
     uint256 public stopped = 0;
 
+    // Allow external calls
+    bool public externalCalls = true;
+
     // --- Events ---
     event Rely(address indexed usr);
     event Deny(address indexed usr);
@@ -120,6 +123,7 @@ contract Clipper {
     );
 
     event SetBreaker(uint256 level);
+    event SetExternalCalls(bool allowed);
     event Yank();
 
     // --- Init ---
@@ -291,8 +295,8 @@ contract Clipper {
         vat.flux(ilk, address(this), who, slice);
 
         // Do external call (if defined)
-        // TODO: do we want to circuit break flash loans?
         if (data.length > 0) {
+            require(externalCalls, "Clipper/external-calls-disabled");
             ClipperCallee(who).clipperCall(owe, slice, data);
         }
 
@@ -359,6 +363,10 @@ contract Clipper {
     function setBreaker(uint256 level) external auth {
         stopped = level;
         emit SetBreaker(level);
+    }
+    function setExternalCalls(bool allowed) external auth {
+        externalCalls = allowed;
+        emit SetExternalCalls(allowed);
     }
 
     // Cancel an auction during ES or via governance action.

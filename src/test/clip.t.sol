@@ -49,6 +49,8 @@ contract Guy {
     function bark(Dog dog, bytes32 ilk, address urn) external {
         dog.bark(ilk, urn);
     }
+
+    function flashLoan() external {}
 }
 
 contract ClipperTest is DSTest {
@@ -587,6 +589,18 @@ contract ClipperTest is DSTest {
         assertEq(usr, address(0));
         assertEq(uint256(tic), 0);
         assertEq(top, 0);
+    }
+
+    function test_external_call() public takeSetup {
+        Guy(ali).flashLoan();
+        /* Guy(ali).take({ */
+        /*     id: 1, */
+        /*     amt: 15 ether, */
+        /*     max: ray(5 ether), */
+        /*     who: address(ali), */
+        /*     data: abi.encodeWithSignature("flashLoan()") */
+        /* }); */
+        /* clip.setExternalCalls(false); */
     }
 
     function test_take_under_tab() public takeSetup {
