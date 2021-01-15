@@ -29,13 +29,13 @@ contract Guy {
     }
 
     function take(
-        uint256 id,           
-        uint256 amt,          
-        uint256 max,         
-        address who,   
+        uint256 id,
+        uint256 amt,
+        uint256 max,
+        address who,
         bytes calldata data
-    ) 
-        external 
+    )
+        external
     {
         clip.take({
             id: id,
@@ -130,7 +130,7 @@ contract ClipperTest is DSTest {
         assertEq(vat.gem(ilk, ali), 0);
         assertEq(vat.dai(ali), rad(1000 ether));
         assertEq(vat.gem(ilk, bob), 0);
-        assertEq(vat.dai(bob), rad(1000 ether)); 
+        assertEq(vat.dai(bob), rad(1000 ether));
 
         _;
     }
@@ -190,10 +190,10 @@ contract ClipperTest is DSTest {
         vat.rely(address(clip));
 
         assertEq(vat.gem(ilk, me), 1000 ether);
-        assertEq(vat.dai(me), 0);  
+        assertEq(vat.dai(me), 0);
         vat.frob(ilk, me, me, me, 40 ether, 100 ether);
-        assertEq(vat.gem(ilk, me), 960 ether); 
-        assertEq(vat.dai(me), rad(100 ether));  
+        assertEq(vat.gem(ilk, me), 960 ether);
+        assertEq(vat.dai(me), rad(100 ether));
 
         pip.poke(bytes32(uint256(4 ether))); // Spot = $2
         spot.poke(ilk);          // Now unsafe
@@ -213,7 +213,7 @@ contract ClipperTest is DSTest {
         (, uint256 chop2,,,,) = dog.ilks(ilk);
         assertEq(chop, chop2);
     }
-    
+
     function test_kick() public {
         uint256 pos;
         uint256 tab;
@@ -391,7 +391,7 @@ contract ClipperTest is DSTest {
         dog.file(ilk, "hole", mul(80 ether + 1, rate)); // Makes room = 80 WAD + 1 wei in normalized debt
         dog.file(ilk, "chop", 1 ether);                 // 0% chop (for precise calculations)
         vat.file(ilk, "dust", mul(20 ether, rate));     // $20 in normalized debt (multiplied by rate for testing)
-        
+
         assertEq(clip.kicks(), 0);
         (pos, tab, lot, usr, tic, top) = clip.sales(1);
         assertEq(pos, 0);
@@ -563,7 +563,7 @@ contract ClipperTest is DSTest {
         assertEq(usr, address(0));
         assertEq(uint256(tic), 0);
         assertEq(top, 0);
-    }   
+    }
 
     function test_take_at_tab() public takeSetup {
         // Bid so owe (= 22 * 5 = 110 RAD) == tab (= 110 RAD)
@@ -587,7 +587,7 @@ contract ClipperTest is DSTest {
         assertEq(usr, address(0));
         assertEq(uint256(tic), 0);
         assertEq(top, 0);
-    }   
+    }
 
     function test_take_under_tab() public takeSetup {
         // Bid so owe (= 11 * 5 = 55 RAD) < tab (= 110 RAD)
@@ -606,12 +606,12 @@ contract ClipperTest is DSTest {
         // Assert auction DOES NOT end
         (uint256 pos, uint256 tab, uint256 lot, address usr, uint256 tic, uint256 top) = clip.sales(1);
         assertEq(pos, 0);
-        assertEq(tab, rad(55 ether));  // 110 - 5 * 11 
+        assertEq(tab, rad(55 ether));  // 110 - 5 * 11
         assertEq(lot, 29 ether);       // 40 - 11
         assertEq(usr, me);
         assertEq(uint256(tic), now);
         assertEq(top, ray(5 ether));
-    }   
+    }
 
     function testFail_take_bid_too_low() public takeSetup {
         // Bid so max (= 4) < price (= top = 5) (fails with "Clipper/too-expensive")
@@ -622,7 +622,7 @@ contract ClipperTest is DSTest {
             who: address(ali),
             data: ""
         });
-    }   
+    }
 
     function testFail_take_bid_creates_dust() public takeSetup {
         // Bid so owe (= (22 - 1wei) * 5 = 110 RAD - 1) < tab (= 110 RAD) (fails with "Clipper/dust")
@@ -633,7 +633,7 @@ contract ClipperTest is DSTest {
             who: address(ali),
             data: ""
         });
-    }   
+    }
 
     function test_take_multiple_bids_different_prices() public takeSetup {
         uint256 pos;
@@ -642,11 +642,11 @@ contract ClipperTest is DSTest {
         address usr;
         uint96  tic;
         uint256 top;
-        
+
         // Bid so owe (= 10 * 5 = 50 RAD) < tab (= 110 RAD)
         Guy(ali).take({
             id:  1,
-            amt: 10 ether,     
+            amt: 10 ether,
             max: ray(5 ether),
             who: address(ali),
             data: ""
@@ -659,18 +659,18 @@ contract ClipperTest is DSTest {
         // Assert auction DOES NOT end
         (pos, tab, lot, usr, tic, top) = clip.sales(1);
         assertEq(pos, 0);
-        assertEq(tab, rad(60 ether));  // 110 - 5 * 10 
+        assertEq(tab, rad(60 ether));  // 110 - 5 * 10
         assertEq(lot, 30 ether);       // 40 - 10
         assertEq(usr, me);
         assertEq(uint256(tic), now);
         assertEq(top, ray(5 ether));
 
-        hevm.warp(now + 30); 
+        hevm.warp(now + 30);
 
         uint256 price = clip.calc().price(top, now - tic);
         Guy(bob).take({
             id:  1,
-            amt: 30 ether,     // Buy the rest of the lot 
+            amt: 30 ether,     // Buy the rest of the lot
             max: ray(4 ether), // 5 * 0.99 ** 30 = 3.698501866941401 RAY => max > price
             who: address(bob),
             data: ""
@@ -691,11 +691,11 @@ contract ClipperTest is DSTest {
 
         uint256 lotReturn = 30 ether - expectedGem;         // lot - loaf.tab / max = 15
         assertEq(vat.gem(ilk, me), 960 ether + lotReturn);  // Collateral returned (10 WAD)
-    } 
+    }
 
     function auctionResetSetup(uint256 tau) internal {
         LinearDecrease calc = new LinearDecrease();
-        calc.file(bytes32("tau"), tau);       // tau hours till zero is reached (used to test tail)  
+        calc.file(bytes32("tau"), tau);       // tau hours till zero is reached (used to test tail)
 
         vat.file(ilk, "dust", rad(20 ether)); // $20 dust
 
@@ -715,50 +715,50 @@ contract ClipperTest is DSTest {
     }
 
     function test_auction_reset_tail() public {
-        auctionResetSetup(10 hours); // 10 hours till zero is reached (used to test tail) 
+        auctionResetSetup(10 hours); // 10 hours till zero is reached (used to test tail)
 
         pip.poke(bytes32(uint256(3 ether))); // Spot = $1.50 (update price before reset is called)
 
         (,,,, uint96 ticBefore, uint256 topBefore) = clip.sales(1);
         assertEq(uint256(ticBefore), startTime);
         assertEq(topBefore, ray(5 ether)); // $4 spot + 25% buffer = $5 (wasn't affected by poke)
-        
+
         hevm.warp(startTime + 3600 seconds);
         assertTrue(!clip.needsRedo(1));
         assertTrue(!try_redo(1));
         hevm.warp(startTime + 3601 seconds);
         assertTrue( clip.needsRedo(1));
         assertTrue( try_redo(1));
-        
+
         (,,,, uint96 ticAfter, uint256 topAfter) = clip.sales(1);
         assertEq(uint256(ticAfter), startTime + 3601 seconds);     // (now)
         assertEq(topAfter, ray(3.75 ether)); // $3 spot + 25% buffer = $5 (used most recent OSM price)
     }
 
     function test_auction_reset_cusp() public {
-        auctionResetSetup(1 hours); // 1 hour till zero is reached (used to test cusp) 
+        auctionResetSetup(1 hours); // 1 hour till zero is reached (used to test cusp)
 
         pip.poke(bytes32(uint256(3 ether))); // Spot = $1.50 (update price before reset is called)
 
         (,,,, uint96 ticBefore, uint256 topBefore) = clip.sales(1);
         assertEq(uint256(ticBefore), startTime);
         assertEq(topBefore, ray(5 ether)); // $4 spot + 25% buffer = $5 (wasn't affected by poke)
-        
+
         hevm.warp(startTime + 1800 seconds);
         assertTrue(!clip.needsRedo(1));
         assertTrue(!try_redo(1));
         hevm.warp(startTime + 1801 seconds);
         assertTrue( clip.needsRedo(1));
         assertTrue( try_redo(1));
-        
+
         (,,,, uint96 ticAfter, uint256 topAfter) = clip.sales(1);
         assertEq(uint256(ticAfter), startTime + 1801 seconds);     // (now)
         assertEq(topAfter, ray(3.75 ether)); // $3 spot + 25% buffer = $3.75 (used most recent OSM price)
     }
 
     function test_auction_reset_tail_twice() public {
-        auctionResetSetup(10 hours); // 10 hours till zero is reached (used to test tail) 
-        
+        auctionResetSetup(10 hours); // 10 hours till zero is reached (used to test tail)
+
         hevm.warp(startTime + 3601 seconds);
         clip.redo(1);
 
@@ -766,8 +766,8 @@ contract ClipperTest is DSTest {
     }
 
     function test_auction_reset_cusp_twice() public {
-        auctionResetSetup(1 hours); // 1 hour till zero is reached (used to test cusp) 
-        
+        auctionResetSetup(1 hours); // 1 hour till zero is reached (used to test cusp)
+
         hevm.warp(startTime + 1801 seconds); // Price goes below 50% "cusp" after 30min01sec
         clip.redo(1);
 
@@ -840,7 +840,7 @@ contract ClipperTest is DSTest {
     }
 
     function test_stopped_auction_reset_tail() public {
-        auctionResetSetup(10 hours); // 10 hours till zero is reached (used to test tail) 
+        auctionResetSetup(10 hours); // 10 hours till zero is reached (used to test tail)
 
         clip.setBreaker(1);
 
@@ -849,12 +849,12 @@ contract ClipperTest is DSTest {
         (,,,, uint96 ticBefore, uint256 topBefore) = clip.sales(1);
         assertEq(uint256(ticBefore), startTime);
         assertEq(topBefore, ray(5 ether)); // $4 spot + 25% buffer = $5 (wasn't affected by poke)
-        
+
         hevm.warp(startTime + 3600 seconds);
         assertTrue(!try_redo(1));
         hevm.warp(startTime + 3601 seconds);
         assertTrue( try_redo(1));
-        
+
         (,,,, uint96 ticAfter, uint256 topAfter) = clip.sales(1);
         assertEq(uint256(ticAfter), startTime + 3601 seconds);     // (now)
         assertEq(topAfter, ray(3.75 ether)); // $3 spot + 25% buffer = $5 (used most recent OSM price)
@@ -863,14 +863,14 @@ contract ClipperTest is DSTest {
     function testFail_stopped_auction_reset_tail() public {
         clip.setBreaker(2);
 
-        auctionResetSetup(10 hours); // 10 hours till zero is reached (used to test tail) 
+        auctionResetSetup(10 hours); // 10 hours till zero is reached (used to test tail)
 
         pip.poke(bytes32(uint256(3 ether))); // Spot = $1.50 (update price before reset is called)
 
         (,,,, uint96 ticBefore, uint256 topBefore) = clip.sales(1);
         assertEq(uint256(ticBefore), startTime);
         assertEq(topBefore, ray(5 ether)); // $4 spot + 25% buffer = $5 (wasn't affected by poke)
-        
+
         hevm.warp(startTime + 3600 seconds);
         assertTrue(!try_redo(1));
         hevm.warp(startTime + 3601 seconds);
