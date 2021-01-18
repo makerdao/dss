@@ -227,11 +227,10 @@ contract Clipper {
 
         require(usr != address(0), "Clipper/not-running-auction");
 
-        // Compute current price [ray]
-        uint256 price = calc.price(top, sub(now, tic));
-
         // Check that auction needs reset
-        require(done(tic, top, price), "Clipper/cannot-reset");
+        // and compute current price [ray]
+        (bool done, ) = status(tic, top);
+        require(done, "Clipper/cannot-reset");
 
         sales[id].tic = uint96(now);
 
@@ -252,46 +251,56 @@ contract Clipper {
                   address who,          // Receiver of collateral, payer of DAI, and external call address
                   bytes calldata data   // Data to pass in external call; if length 0, no call is done
     ) external lock isStopped(2) {
-        // Read auction data
-        Sale memory sale = sales[id];
-        require(sale.usr != address(0), "Clipper/not-running-auction");
+        address usr = sales[id].usr;
+        uint96  tic = sales[id].tic;
 
-        // Compute current price [ray]
-        uint256 price = calc.price(sale.top, sub(now, sale.tic));
+        require(usr != address(0), "Clipper/not-running-auction");
 
-        // Check that auction doesn't need reset
-        require(!done(sale.tic, sale.top, price), "Clipper/needs-reset");
+        uint256 price;
+        {
+            bool done;
+            (done, price) = status(tic, sales[id].top);
+
+            // Check that auction doesn't need reset
+            require(!done, "Clipper/cannot-reset");
+        }
 
         // Ensure price is acceptable to buyer
         require(max >= price, "Clipper/too-expensive");
 
-        // Purchase as much as possible, up to amt
-        uint256 slice = min(sale.lot, amt);  // slice <= lot
+        uint256 lot = sales[id].lot;
+        uint256 tab = sales[id].tab;
+        uint256 owe;
 
-        // DAI needed to buy a slice of this sale
-        uint256 owe = mul(slice, price);
+        {
+            // Purchase as much as possible, up to amt
+            uint256 slice = min(lot, amt);  // slice <= lot
 
-        // Don't collect more than tab of DAI
-        if (owe >= sale.tab) {
-            owe = sale.tab;       // owe' <= owe
-            slice = owe / price;  // Adjust slice; slice' = owe' / price <= owe / price == slice <= lot
-            sale.tab = 0;         // Zero tab left, auction will be deleted
-        } else {  // owe < sale.tab
-            // Calculate remaining tab after operation
-            sale.tab = sale.tab - owe;  // safe since owe < sale.tab
-            (,,,, uint256 dust) = vat.ilks(ilk);
-            require(sale.tab >= dust, "Clipper/dust");
-        }
+            // DAI needed to buy a slice of this sale
+            owe = mul(slice, price);
 
-        // Calculate remaining lot after operation
-        sale.lot = sale.lot - slice;  // safe because: slice <= lot
+            // Don't collect more than tab of DAI
+            if (owe >= tab) {
+                owe = tab;            // owe' <= owe
+                slice = owe / price;  // Adjust slice; slice' = owe' / price <= owe / price == slice <= lot
+                tab = 0;              // Zero tab left, auction will be deleted
+            } else {  // owe < tab
+                // Calculate remaining tab after operation
+                tab = tab - owe;  // safe since owe < tab
+                (,,,, uint256 dust) = vat.ilks(ilk);
+                require(tab >= dust, "Clipper/dust");
+            }
 
-        // Send collateral to who
-        vat.flux(ilk, address(this), who, slice);
+            // Calculate remaining lot after operation
+            lot = lot - slice;  // safe because: slice <= lot
 
-        // Do external call (if defined)
-        if (data.length > 0) {
-            ClipperCallee(who).clipperCall(owe, slice, data);
+            // Send collateral to who
+            vat.flux(ilk, address(this), who, slice);
+
+            // Do external call (if defined)
+            if (data.length > 0) {
+                ClipperCallee(who).clipperCall(owe, slice, data);
+            }
         }
 
         // Get DAI from who address
@@ -300,17 +309,17 @@ contract Clipper {
         // Removes Dai out for liquidation from accumulator
         dog.digs(ilk, owe);
 
-        if (sale.lot == 0) {
+        if (lot == 0) {
             _remove(id);
-        } else if (sale.tab == 0) {
-            vat.flux(ilk, address(this), sale.usr, sale.lot);
+        } else if (tab == 0) {
+            vat.flux(ilk, address(this), usr, lot);
             _remove(id);
         } else {
-            sales[id].tab = sale.tab;
-            sales[id].lot = sale.lot;
+            sales[id].tab = tab;
+            sales[id].lot = lot;
         }
 
-        emit Take(id, max, price, owe, sale.tab, sale.lot, sale.usr);
+        emit Take(id, max, price, owe, tab, lot, usr);
     }
 
     function _remove(uint256 id) internal {
@@ -344,15 +353,15 @@ contract Clipper {
         uint96  tic = sales[id].tic;
         uint256 top = sales[id].top;
 
-        // Compute current price [ray]
-        uint256 price = calc.price(top, sub(now, tic));
+        (bool done,) = status(sales[id].tic, sales[id].top);
 
-        return usr != address(0) && done(tic, top, price);
+        return usr != address(0) && done;
     }
 
     // Internally returns boolean for if an auction needs a redo
-    function done(uint96 tic, uint256 top, uint256 price) internal view returns (bool) {
-        return (sub(now, tic) > tail || rdiv(price, top) < cusp);
+    function status(uint96 tic, uint256 top) internal view returns (bool done, uint256 price) {
+        price = calc.price(top, sub(now, tic));
+        done  = (sub(now, tic) > tail || rdiv(price, top) < cusp);
     }
 
     // --- Shutdown ---
