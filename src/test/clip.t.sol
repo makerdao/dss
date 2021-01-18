@@ -987,4 +987,15 @@ contract ClipperTest is DSTest {
         // Assert transfer of gem.
         assertEq(vat.gem(ilk, address(this)), preGemBalance + origLot);
     }
+
+    function testFail_take_impersonation() public takeSetup { // should fail, but works
+        Guy che = new Guy(clip);
+        che.take({
+            id: 1,
+            amt: 99999999999999 ether,
+            max: ray(99999999999999 ether),
+            who: address(ali),
+            data: ""
+        });
+    }
 }
