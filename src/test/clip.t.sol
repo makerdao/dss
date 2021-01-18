@@ -49,6 +49,12 @@ contract Guy {
     function bark(Dog dog, bytes32 ilk, address urn, address usr) external {
         dog.bark(ilk, urn, usr);
     }
+
+    function clipperCall(uint256 owe, uint256 slice, bytes calldata data)
+        external {
+        Vat(address(clip.vat())).suck(address(0), address(this), owe);
+    }
+
 }
 
 contract ClipperTest is DSTest {
@@ -66,6 +72,7 @@ contract ClipperTest is DSTest {
 
     address ali;
     address bob;
+    address che;
 
     uint256 WAD = 10 ** 18;
     uint256 RAY = 10 ** 27;
@@ -200,9 +207,12 @@ contract ClipperTest is DSTest {
 
         ali = address(new Guy(clip));
         bob = address(new Guy(clip));
+        che = address(new Guy(clip));
 
         Guy(ali).hope(address(clip));
         Guy(bob).hope(address(clip));
+        Guy(che).hope(address(clip));
+        vat.rely(che);
 
         vat.suck(address(0), address(ali), rad(1000 ether));
         vat.suck(address(0), address(bob), rad(1000 ether));
@@ -984,5 +994,27 @@ contract ClipperTest is DSTest {
 
         // Assert transfer of gem.
         assertEq(vat.gem(ilk, address(this)), preGemBalance + origLot);
+    }
+
+    function testFail_not_enough_dai() public takeSetup {
+        Guy(che).take({
+            id:  1,
+            amt: 25 ether,
+            max: ray(5 ether),
+            who: address(che),
+            data: ""
+        });
+    }
+
+    function test_flashloan() public takeSetup {
+        assertEq(vat.dai(che), 0);
+        Guy(che).take({
+            id:  1,
+            amt: 25 ether,
+            max: ray(5 ether),
+            who: address(che),
+            data: "hey"
+        });
+        assertEq(vat.dai(che), 0);
     }
 }
