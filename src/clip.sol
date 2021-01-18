@@ -221,14 +221,17 @@ contract Clipper {
     // Reset an auction
     function redo(uint256 id) external isStopped(2) {
         // Read auction data
-        Sale memory sale = sales[id];
-        require(sale.usr != address(0), "Clipper/not-running-auction");
+        address usr = sales[id].usr;
+        uint96  tic = sales[id].tic;
+        uint256 top = sales[id].top;
+
+        require(usr != address(0), "Clipper/not-running-auction");
 
         // Compute current price [ray]
-        uint256 price = calc.price(sale.top, sub(now, sale.tic));
+        uint256 price = calc.price(top, sub(now, tic));
 
         // Check that auction needs reset
-        require(done(sale, price), "Clipper/cannot-reset");
+        require(done(tic, top, price), "Clipper/cannot-reset");
 
         sales[id].tic = uint96(now);
 
@@ -237,9 +240,9 @@ contract Clipper {
         (PipLike pip, ) = spot.ilks(ilk);
         (bytes32 val, bool has) = pip.peek();
         require(has, "Clipper/invalid-price");
-        sales[id].top = rmul(rdiv(mul(uint256(val), BLN), spot.par()), buf);
+        sales[id].top = top = rmul(rdiv(mul(uint256(val), BLN), spot.par()), buf);
 
-        emit Redo(id, sales[id].top, sales[id].tab, sales[id].lot, sales[id].usr);
+        emit Redo(id, top, sales[id].tab, sales[id].lot, usr);
     }
 
     // Buy amt of collateral from auction indexed by id
@@ -257,7 +260,7 @@ contract Clipper {
         uint256 price = calc.price(sale.top, sub(now, sale.tic));
 
         // Check that auction doesn't need reset
-        require(!done(sale, price), "Clipper/needs-reset");
+        require(!done(sale.tic, sale.top, price), "Clipper/needs-reset");
 
         // Ensure price is acceptable to buyer
         require(max >= price, "Clipper/too-expensive");
@@ -337,17 +340,19 @@ contract Clipper {
     // Externally returns boolean for if an auction needs a redo
     function needsRedo(uint256 id) external view returns (bool) {
         // Read auction data
-        Sale memory sale = sales[id];
+        address usr = sales[id].usr;
+        uint96  tic = sales[id].tic;
+        uint256 top = sales[id].top;
 
         // Compute current price [ray]
-        uint256 price = calc.price(sale.top, sub(now, sale.tic));
+        uint256 price = calc.price(top, sub(now, tic));
 
-        return sale.usr != address(0) && done(sale, price);
+        return usr != address(0) && done(tic, top, price);
     }
 
     // Internally returns boolean for if an auction needs a redo
-    function done(Sale memory sale, uint256 price) internal view returns (bool) {
-        return (sub(now, sale.tic) > tail || rdiv(price, sale.top) < cusp);
+    function done(uint96 tic, uint256 top, uint256 price) internal view returns (bool) {
+        return (sub(now, tic) > tail || rdiv(price, top) < cusp);
     }
 
     // --- Shutdown ---
