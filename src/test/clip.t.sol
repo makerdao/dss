@@ -51,10 +51,26 @@ contract Guy {
     }
 
     function clipperCall(uint256 owe, uint256 slice, bytes calldata data)
-        external {
+        external virtual {
         Vat(address(clip.vat())).suck(address(0), address(this), owe);
     }
 
+}
+
+contract BadGuy is Guy {
+
+    constructor(Clipper clip_) Guy(clip_) public {}
+
+    function clipperCall(uint256 owe, uint256 slice, bytes calldata data)
+        external override {
+        clip.take({ // attempt reentrancy
+            id: 1,
+            amt: 25 ether,
+            max: 5 ether * 10E27,
+            who: address(this),
+            data: ""
+        });
+    }
 }
 
 contract ClipperTest is DSTest {
@@ -73,6 +89,7 @@ contract ClipperTest is DSTest {
     address ali;
     address bob;
     address che;
+    address dan;
 
     uint256 WAD = 10 ** 18;
     uint256 RAY = 10 ** 27;
@@ -208,14 +225,17 @@ contract ClipperTest is DSTest {
         ali = address(new Guy(clip));
         bob = address(new Guy(clip));
         che = address(new Guy(clip));
+        dan = address(new BadGuy(clip));
 
         Guy(ali).hope(address(clip));
         Guy(bob).hope(address(clip));
         Guy(che).hope(address(clip));
         vat.rely(che);
+        BadGuy(dan).hope(address(clip));
 
         vat.suck(address(0), address(ali), rad(1000 ether));
         vat.suck(address(0), address(bob), rad(1000 ether));
+        vat.suck(address(0), address(dan), rad(1000 ether));
     }
 
     function test_get_chop() public {
@@ -1016,5 +1036,15 @@ contract ClipperTest is DSTest {
             data: "hey"
         });
         assertEq(vat.dai(che), 0);
+    }
+
+    function testFail_reentrancy() public takeSetup {
+        BadGuy(dan).take({
+            id: 1,
+            amt: 25 ether,
+            max: ray(5 ether),
+            who: address(dan),
+            data: "hey"
+        });
     }
 }
