@@ -459,7 +459,7 @@ contract ClipperTest is DSTest {
         assertEq(art, 20 ether);
     }
 
-    function test_bark_not_leaving_dust_over_hole_rate() public {
+    function test_bark_only_leaving_dust_over_hole_rate() public {
         uint256 pos;
         uint256 tab;
         uint256 lot;
