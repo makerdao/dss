@@ -120,7 +120,7 @@ contract Clipper {
     );
 
     event SetBreaker(uint256 level);
-    event Yank();
+    event Yank(uint256 id);
 
     // --- Init ---
     constructor(address vat_, address spot_, address dog_, bytes32 ilk_) public {
@@ -367,7 +367,6 @@ contract Clipper {
         dog.digs(ilk, sales[id].tab);
         vat.flux(ilk, address(this), msg.sender, sales[id].lot);
         _remove(id);
-        // TODO: add id?
-        emit Yank();
+        emit Yank(id);
     }
 }
