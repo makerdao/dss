@@ -262,7 +262,7 @@ contract Clipper {
             (done, price) = status(tic, sales[id].top);
 
             // Check that auction doesn't need reset
-            require(!done, "Clipper/cannot-reset");
+            require(!done, "Clipper/needs-reset");
         }
 
         // Ensure price is acceptable to buyer
