@@ -73,7 +73,7 @@ contract Clipper {
     struct Sale {
         uint256 pos;  // Index in active array
         uint256 tab;  // Dai to raise       [rad]
-        uint256 lot;  // ETH to sell        [wad]
+        uint256 lot;  // collateral to sell [wad]
         address usr;  // Liquidated CDP
         uint96  tic;  // Auction start time
         uint256 top;  // Starting price     [ray]
@@ -85,7 +85,7 @@ contract Clipper {
     // Levels for circuit breaker
     // 0: no breaker
     // 1: no new kick()
-    // 2: no new warm() or take()
+    // 2: no new redo() or take()
     uint256 public stopped = 0;
 
     // --- Events ---
@@ -120,7 +120,7 @@ contract Clipper {
     );
 
     event SetBreaker(uint256 level);
-    event Yank();
+    event Yank(uint256 id);
 
     // --- Init ---
     constructor(address vat_, address spot_, address dog_, bytes32 ilk_) public {
@@ -168,7 +168,7 @@ contract Clipper {
     uint256 constant BLN = 10 ** 9;
 
     function min(uint256 x, uint256 y) internal pure returns (uint256 z) {
-        return x <= y ? x : y;
+        z = x <= y ? x : y;
     }
     function sub(uint256 x, uint256 y) internal pure returns (uint256 z) {
         require((z = x - y) <= x);
@@ -192,11 +192,11 @@ contract Clipper {
                   address usr   // Liquidated CDP
     ) external auth isStopped(1) returns (uint256 id) {
         // Input validation
-        require(tab  >          0, "Clipper/zero-tab");
-        require(lot  >          0, "Clipper/zero-lot");
-        require(usr != address(0), "Clipper/zero-usr");
+        require(tab    >           0, "Clipper/zero-tab");
+        require(lot    >           0, "Clipper/zero-lot");
+        require(usr   !=  address(0), "Clipper/zero-usr");
+        require(kicks  < uint256(-1), "Clipper/overflow");
 
-        require(kicks < uint256(-1), "Clipper/overflow");
         id = ++kicks;
         active.push(id);
 
@@ -205,7 +205,7 @@ contract Clipper {
         sales[id].tab = tab;
         sales[id].lot = lot;
         sales[id].usr = usr;
-        sales[id].tic = uint96(now);
+        sales[id].tic = uint96(block.timestamp);
 
         // Could get this from rmul(Vat.ilks(ilk).spot, Spotter.mat()) instead,
         // but if mat has changed since the last poke, the resulting value will
@@ -225,12 +225,12 @@ contract Clipper {
         require(sale.usr != address(0), "Clipper/not-running-auction");
 
         // Compute current price [ray]
-        uint256 price = calc.price(sale.top, sub(now, sale.tic));
+        uint256 price = calc.price(sale.top, sub(block.timestamp, sale.tic));
 
         // Check that auction needs reset
         require(done(sale, price), "Clipper/cannot-reset");
 
-        sales[id].tic = uint96(now);
+        sales[id].tic = uint96(block.timestamp);
 
         // Could get this from rmul(Vat.ilks(ilk).spot, Spotter.mat()) instead, but if mat has changed since the
         // last poke, the resulting value will be incorrect
@@ -238,6 +238,8 @@ contract Clipper {
         (bytes32 val, bool has) = pip.peek();
         require(has, "Clipper/invalid-price");
         sales[id].top = rmul(rdiv(mul(uint256(val), BLN), spot.par()), buf);
+
+        // TODO: missing incentive
 
         emit Redo(id, sales[id].top, sales[id].tab, sales[id].lot, sales[id].usr);
     }
@@ -254,7 +256,7 @@ contract Clipper {
         require(sale.usr != address(0), "Clipper/not-running-auction");
 
         // Compute current price [ray]
-        uint256 price = calc.price(sale.top, sub(now, sale.tic));
+        uint256 price = calc.price(sale.top, sub(block.timestamp, sale.tic));
 
         // Check that auction doesn't need reset
         require(!done(sale, price), "Clipper/needs-reset");
@@ -281,12 +283,14 @@ contract Clipper {
         }
 
         // Calculate remaining lot after operation
+        // TODO: could we end up with 1 wei rounding error?
         sale.lot = sale.lot - slice;  // safe because: slice <= lot
 
         // Send collateral to who
         vat.flux(ilk, address(this), who, slice);
 
         // Do external call (if defined)
+        // TODO: do we want to circuit break flash loans?
         if (data.length > 0) {
             ClipperCallee(who).clipperCall(owe, slice, data);
         }
@@ -340,14 +344,14 @@ contract Clipper {
         Sale memory sale = sales[id];
 
         // Compute current price [ray]
-        uint256 price = calc.price(sale.top, sub(now, sale.tic));
+        uint256 price = calc.price(sale.top, sub(block.timestamp, sale.tic));
 
         return sale.usr != address(0) && done(sale, price);
     }
 
     // Internally returns boolean for if an auction needs a redo
     function done(Sale memory sale, uint256 price) internal view returns (bool) {
-        return (sub(now, sale.tic) > tail || rdiv(price, sale.top) < cusp);
+        return (sub(block.timestamp, sale.tic) > tail || rdiv(price, sale.top) < cusp);
     }
 
     // --- Shutdown ---
@@ -362,6 +366,6 @@ contract Clipper {
         dog.digs(ilk, sales[id].tab);
         vat.flux(ilk, address(this), msg.sender, sales[id].lot);
         _remove(id);
-        emit Yank();
+        emit Yank(id);
     }
 }
