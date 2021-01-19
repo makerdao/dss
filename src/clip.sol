@@ -274,7 +274,6 @@ contract Clipper {
         if (owe >= sale.tab) {
             owe = sale.tab;       // owe' <= owe
             slice = owe / price;  // Adjust slice; slice' = owe' / price <= owe / price == slice <= lot
-            // TODO check that this doesn't violate max from user
             sale.tab = 0;         // Zero tab left, auction will be deleted
         } else {  // owe < sale.tab
             // Calculate remaining tab after operation
