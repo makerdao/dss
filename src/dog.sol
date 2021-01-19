@@ -107,7 +107,7 @@ contract Dog {
     uint256 constant WAD = 10 ** 18;
 
     function min(uint256 x, uint256 y) internal pure returns (uint256 z) {
-        if (x > y) { z = y; } else { z = x; }
+        z = x <= y ? x : y;
     }
     function add(uint256 x, uint256 y) internal pure returns (uint256 z) {
         require((z = x + y) >= x);
@@ -118,7 +118,7 @@ contract Dog {
     function mul(uint256 x, uint256 y) internal pure returns (uint256 z) {
         require(y == 0 || (z = x * y) / y == x);
     }
-    function wmul(uint x, uint y) internal pure returns (uint z) {
+    function wmul(uint256 x, uint256 y) internal pure returns (uint256 z) {
         z = mul(x, y) / WAD;
     }
 
@@ -147,10 +147,12 @@ contract Dog {
         emit FileIlkClip(ilk, what, clip);
     }
 
-    function chop(bytes32 ilk) external view returns (uint256) { return ilks[ilk].chop; }
+    function chop(bytes32 ilk) external view returns (uint256) {
+        return ilks[ilk].chop;
+    }
 
     // --- CDP Liquidation: all bark and no bite ---
-    function bark(bytes32 ilk, address urn) external returns (uint256 id) {
+    function bark(bytes32 ilk, address urn, address usr) external returns (uint256 id) {
         require(live == 1, "Dog/not-live");
 
         (uint256 ink, uint256 art) = vat.urns(ilk, urn);
@@ -171,10 +173,13 @@ contract Dog {
             // Verify there is room and it is not dusty
             require(room > 0 && room >= dust, "Dog/liquidation-limit-hit");
 
+            // uint256.max()/(RAD*WAD) = 115,792,089,237,316
             dart = min(art, mul(room, WAD) / rate / milk.chop);
 
-            // Verify that CDP is not left in a dusty state
-            require(dart == art || mul(art - dart, rate) >= dust, "Dog/leaves-dust");
+            if (mul(art - dart, rate) < dust) {
+                // avoid leaving a dusty vault to prevent unliquidatable vaults
+                dart = art;
+            }
         }
 
         uint256 dink = mul(ink, dart) / art;
@@ -202,7 +207,8 @@ contract Dog {
             });
         }
 
-        vat.suck(address(vow), msg.sender, add(milk.tip, wmul(due, milk.chip)));
+        // incentive to call bark()
+        vat.suck(address(vow), usr, add(milk.tip, wmul(due, milk.chip)));
 
         emit Bark(ilk, urn, dink, dart, due, milk.clip, id);
     }
