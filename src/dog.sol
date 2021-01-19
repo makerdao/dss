@@ -176,8 +176,10 @@ contract Dog {
             // uint256.max()/(RAD*WAD) = 115,792,089,237,316
             dart = min(art, mul(room, WAD) / rate / milk.chop);
 
-            // Verify that CDP is not left in a dusty state
-            require(dart == art || mul(art - dart, rate) >= dust, "Dog/leaves-dust");
+            if (mul(art - dart, rate) < dust) {
+                // avoid leaving a dusty vault to prevent unliquidatable vaults
+                dart = art;
+            }
         }
 
         uint256 dink = mul(ink, dart) / art;
