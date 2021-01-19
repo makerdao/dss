@@ -361,8 +361,8 @@ contract Clipper {
 
     // Internally returns boolean for if an auction needs a redo
     function status(uint96 tic, uint256 top) internal view returns (bool done, uint256 price) {
-        price = calc.price(top, sub(now, tic));
-        done  = (sub(now, tic) > tail || rdiv(price, top) < cusp);
+        price = calc.price(top, sub(block.timestamp, tic));
+        done  = (sub(block.timestamp, tic) > tail || rdiv(price, top) < cusp);
     }
 
     // --- Shutdown ---
