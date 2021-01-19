@@ -351,9 +351,8 @@ contract Clipper {
         // Read auction data
         address usr = sales[id].usr;
         uint96  tic = sales[id].tic;
-        uint256 top = sales[id].top;
 
-        (bool done,) = status(sales[id].tic, sales[id].top);
+        (bool done,) = status(tic, sales[id].top);
 
         return usr != address(0) && done;
     }
