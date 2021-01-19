@@ -527,16 +527,16 @@ contract EndTest is DSTest {
 
         vat.file("gold", "spot", ray(1 ether)); // Now unsafe
 
-        uint256 id = dog.bark("gold", urn1);   
+        uint256 id = dog.bark("gold", urn1, address(this));
 
         uint256 tab1;
-        uint256 lot1;    
+        uint256 lot1;
         {
             uint256 pos1;
             address usr1;
             uint96  tic1;
-            uint256 top1; 
-            (pos1, tab1, lot1, usr1, tic1, top1) = gold.clip.sales(id);  
+            uint256 top1;
+            (pos1, tab1, lot1, usr1, tic1, top1) = gold.clip.sales(id);
             assertEq(pos1, 0);
             assertEq(tab1, art1 * rate * 1.1 ether / WAD); // tab uses chop
             assertEq(lot1, ink1);
@@ -544,7 +544,7 @@ contract EndTest is DSTest {
             assertEq(uint256(tic1), now);
             assertEq(uint256(top1), ray(6 ether));
         }
-                     
+
         assertEq(dog.Dirt(), tab1);
 
         {
@@ -564,20 +564,20 @@ contract EndTest is DSTest {
         assertEq(vat.sin(address(vow)),        art1 * rate); // From grab in dog.bark()
         assertEq(vat.vice(),                   art1 * rate); // From grab in dog.bark()
         assertEq(vat.debt(),                   art1 * rate); // From frob
-        assertEq(vat.dai(address(vow)),                  0); // vat.suck() hasn't been called 
+        assertEq(vat.dai(address(vow)),                  0); // vat.suck() hasn't been called
 
         end.snip("gold", id);
-   
+
         {
             uint256 pos2;
             uint256 tab2;
-            uint256 lot2; 
+            uint256 lot2;
             address usr2;
             uint96  tic2;
-            uint256 top2; 
-            (pos2, tab2, lot2, usr2, tic2, top2) = gold.clip.sales(id);  
+            uint256 top2;
+            (pos2, tab2, lot2, usr2, tic2, top2) = gold.clip.sales(id);
             assertEq(pos2,          0);
-            assertEq(tab2,          0); 
+            assertEq(tab2,          0);
             assertEq(lot2,          0);
             assertEq(usr2,  address(0));
             assertEq(uint256(tic2), 0);
@@ -586,7 +586,7 @@ contract EndTest is DSTest {
 
         assertEq(dog.Dirt(),                            0); // From clip.yank()
         assertEq(vat.gem("gold", address(gold.clip)),   0); // From clip.yank()
-        assertEq(vat.gem("gold", address(end)),         0); // From grab in end.snip() 
+        assertEq(vat.gem("gold", address(end)),         0); // From grab in end.snip()
         assertEq(vat.sin(address(vow)),       art1 * rate); // From grab in dog.bark()
         assertEq(vat.vice(),                  art1 * rate); // From grab in dog.bark()
         assertEq(vat.debt(),           tab1 + art1 * rate); // From frob and suck
