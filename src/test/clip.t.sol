@@ -73,6 +73,16 @@ contract BadGuy is Guy {
     }
 }
 
+contract RedoGuy is Guy {
+
+    constructor(Clipper clip_) Guy(clip_) public {}
+
+    function clipperCall(uint256 owe, uint256 slice, bytes calldata data)
+        external override {
+        clip.redo(1);
+    }
+}
+
 contract ClipperTest is DSTest {
     Hevm hevm;
 
@@ -90,6 +100,7 @@ contract ClipperTest is DSTest {
     address bob;
     address che;
     address dan;
+    address emi;
 
     uint256 WAD = 10 ** 18;
     uint256 RAY = 10 ** 27;
@@ -226,16 +237,19 @@ contract ClipperTest is DSTest {
         bob = address(new Guy(clip));
         che = address(new Guy(clip));
         dan = address(new BadGuy(clip));
+        emi = address(new RedoGuy(clip));
 
         Guy(ali).hope(address(clip));
         Guy(bob).hope(address(clip));
         Guy(che).hope(address(clip));
         vat.rely(che);
         BadGuy(dan).hope(address(clip));
+        RedoGuy(emi).hope(address(clip));
 
         vat.suck(address(0), address(ali), rad(1000 ether));
         vat.suck(address(0), address(bob), rad(1000 ether));
         vat.suck(address(0), address(dan), rad(1000 ether));
+        vat.suck(address(0), address(emi), rad(1000 ether));
     }
 
     function test_get_chop() public {
@@ -1044,6 +1058,16 @@ contract ClipperTest is DSTest {
             amt: 25 ether,
             max: ray(5 ether),
             who: address(dan),
+            data: "hey"
+        });
+    }
+
+    function testFail_redo() public takeSetup {
+        RedoGuy(emi).take({
+            id: 1,
+            amt: 25 ether,
+            max: ray(5 ether),
+            who: address(emi),
             data: "hey"
         });
     }
