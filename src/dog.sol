@@ -152,7 +152,7 @@ contract Dog {
     }
 
     // --- CDP Liquidation: all bark and no bite ---
-    function bark(bytes32 ilk, address urn) external returns (uint256 id) {
+    function bark(bytes32 ilk, address urn, address usr) external returns (uint256 id) {
         require(live == 1, "Dog/not-live");
 
         (uint256 ink, uint256 art) = vat.urns(ilk, urn);
@@ -206,7 +206,7 @@ contract Dog {
         }
 
         // incentive to call bark()
-        vat.suck(address(vow), msg.sender, add(milk.tip, wmul(due, milk.chip)));
+        vat.suck(address(vow), usr, add(milk.tip, wmul(due, milk.chip)));
 
         emit Bark(ilk, urn, dink, dart, due, milk.clip, id);
     }
