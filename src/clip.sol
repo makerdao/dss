@@ -290,7 +290,6 @@ contract Clipper {
         vat.flux(ilk, address(this), who, slice);
 
         // Do external call (if defined)
-        // TODO: do we want to circuit break flash loans?
         if (data.length > 0) {
             ClipperCallee(who).clipperCall(owe, slice, data);
         }
