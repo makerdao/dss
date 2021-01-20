@@ -47,7 +47,7 @@ contract Trader {
     GemJoin goldJoin;
     DSToken dai;
     DaiJoin daiJoin;
-    Exchange uniswap;
+    Exchange exchange;
 
     constructor(
         Clipper clip_,
@@ -56,7 +56,7 @@ contract Trader {
         GemJoin goldJoin_,
         DSToken dai_,
         DaiJoin daiJoin_,
-        Exchange uniswap_
+        Exchange exchange_
     ) public {
         clip = clip_;
         vat = vat_;
@@ -64,7 +64,7 @@ contract Trader {
         goldJoin = goldJoin_;
         dai = dai_;
         daiJoin = daiJoin_;
-        uniswap = uniswap_;
+        exchange = exchange_;
     }
 
     function take(
@@ -88,8 +88,8 @@ contract Trader {
     function clipperCall(uint256 owe, uint256 slice, bytes calldata data)
         external {
         goldJoin.exit(address(this), slice);
-        gold.approve(address(uniswap));
-        uniswap.sellGold(slice);
+        gold.approve(address(exchange));
+        exchange.sellGold(slice);
         dai.approve(address(daiJoin));
         vat.hope(address(clip));
         daiJoin.join(address(this), owe / 1E27);
@@ -172,7 +172,7 @@ contract ClipperTest is DSTest {
     Clipper clip;
 
     address me;
-    Exchange uniswap;
+    Exchange exchange;
 
     address ali;
     address bob;
@@ -277,10 +277,10 @@ contract ClipperTest is DSTest {
         dai = new DSToken("DAI");
         daiJoin = new DaiJoin(address(vat), address(dai));
         vat.suck(address(0), address(daiJoin), rad(1000 ether));
-        uniswap = new Exchange(gold, dai, goldPrice * 11 / 10);
+        exchange = new Exchange(gold, dai, goldPrice * 11 / 10);
 
         dai.mint(1000 ether);
-        dai.transfer(address(uniswap), 1000 ether);
+        dai.transfer(address(exchange), 1000 ether);
         dai.setOwner(address(daiJoin));
         gold.mint(1000 ether);
         gold.transfer(address(goldJoin), 1000 ether);
@@ -327,7 +327,7 @@ contract ClipperTest is DSTest {
 
         ali = address(new Guy(clip));
         bob = address(new Guy(clip));
-        che = address(new Trader(clip, vat, gold, goldJoin, dai, daiJoin, uniswap));
+        che = address(new Trader(clip, vat, gold, goldJoin, dai, daiJoin, exchange));
         dan = address(new BadGuy(clip));
         emi = address(new RedoGuy(clip));
 
