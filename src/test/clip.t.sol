@@ -323,9 +323,9 @@ contract ClipperTest is DSTest {
         assertTrue(!try_kick(1 ether, 2 ether, address(0)));
     }
 
-    function try_bark(bytes32 ilk, address urn) internal returns (bool ok) {
+    function try_bark(bytes32 ilk_, address urn_) internal returns (bool ok) {
         string memory sig = "bark(bytes32,address,address)";
-        (ok,) = address(dog).call(abi.encodeWithSignature(sig, ilk, urn, address(this)));
+        (ok,) = address(dog).call(abi.encodeWithSignature(sig, ilk_, urn_, address(this)));
     }
 
     function test_bark_not_leaving_dust() public {
