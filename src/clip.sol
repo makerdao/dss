@@ -70,6 +70,13 @@ contract Clipper {
     uint256   public kicks;   // Total auctions
     uint256[] public active;  // Array of active auction ids
 
+    // Manage take approvals
+    mapping(
+        address => mapping(
+            address => bool
+        )
+    ) public can;           // Owner => Allowed Owner => True/False
+
     struct Sale {
         uint256 pos;  // Index in active array
         uint256 tab;  // Dai to raise       [rad]
@@ -91,6 +98,7 @@ contract Clipper {
     // --- Events ---
     event Rely(address indexed usr);
     event Deny(address indexed usr);
+    event Approve(address indexed usr, bool ok);
 
     event FileUint256(bytes32 indexed what, uint256 data);
     event FileAddress(bytes32 indexed what, address data);
@@ -183,6 +191,12 @@ contract Clipper {
         z = mul(x, RAY) / y;
     }
 
+    // Allow/disallow a usr address to manage the take.
+    function approve(address usr, bool ok) public {
+        can[msg.sender][usr] = ok;
+        emit Approve(usr, ok);
+    }
+
     // --- Auction ---
 
     // start an auction
@@ -253,6 +267,8 @@ contract Clipper {
                   address who,          // Receiver of collateral, payer of DAI, and external call address
                   bytes calldata data   // Data to pass in external call; if length 0, no call is done
     ) external lock isStopped(2) {
+        require(who == msg.sender || can[who][msg.sender], "Clipper/not-allowed");
+
         address usr = sales[id].usr;
         uint96  tic = sales[id].tic;
 
