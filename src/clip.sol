@@ -37,7 +37,7 @@ interface DogLike {
 }
 
 interface ClipperCallee {
-    function clipperCall(uint256, uint256, bytes calldata) external;
+    function clipperCall(address, uint256, uint256, bytes calldata) external;
 }
 
 interface AbacusLike {
@@ -70,13 +70,6 @@ contract Clipper {
     uint256   public kicks;   // Total auctions
     uint256[] public active;  // Array of active auction ids
 
-    // Manage take approvals
-    mapping(
-        address => mapping(
-            address => bool
-        )
-    ) public can;           // Owner => Allowed User => True/False
-
     struct Sale {
         uint256 pos;  // Index in active array
         uint256 tab;  // Dai to raise       [rad]
@@ -98,7 +91,6 @@ contract Clipper {
     // --- Events ---
     event Rely(address indexed usr);
     event Deny(address indexed usr);
-    event Approve(address indexed usr, bool ok);
 
     event FileUint256(bytes32 indexed what, uint256 data);
     event FileAddress(bytes32 indexed what, address data);
@@ -191,11 +183,6 @@ contract Clipper {
         z = mul(x, RAY) / y;
     }
 
-    // Allow/disallow a usr address to manage the take.
-    function approve(address usr, bool ok) public {
-        can[msg.sender][usr] = ok;
-        emit Approve(usr, ok);
-    }
 
     // --- Auction ---
 
@@ -267,7 +254,6 @@ contract Clipper {
                   address who,          // Receiver of collateral, payer of DAI, and external call address
                   bytes calldata data   // Data to pass in external call; if length 0, no call is done
     ) external lock isStopped(2) {
-        require(who == msg.sender || can[who][msg.sender], "Clipper/not-allowed");
 
         address usr = sales[id].usr;
         uint96  tic = sales[id].tic;
@@ -317,12 +303,12 @@ contract Clipper {
 
             // Do external call (if defined)
             if (data.length > 0) {
-                ClipperCallee(who).clipperCall(owe, slice, data);
+                ClipperCallee(who).clipperCall(msg.sender, owe, slice, data);
             }
         }
 
         // Get DAI from who address
-        vat.move(who, vow, owe);
+        vat.move(msg.sender, vow, owe);
 
         // Removes Dai out for liquidation from accumulator
         dog.digs(ilk, owe);

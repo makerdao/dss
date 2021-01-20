@@ -30,10 +30,6 @@ contract Guy {
         Vat(address(clip.vat())).hope(usr);
     }
 
-    function approve(address usr, bool ok) public {
-        clip.approve(usr, ok);
-    }
-
     function take(
         uint256 id,
         uint256 amt,
@@ -994,19 +990,6 @@ contract ClipperTest is DSTest {
 
     function testFail_take_impersonation() public takeSetup {
         Guy che = new Guy(clip);
-        che.take({
-            id: 1,
-            amt: 99999999999999 ether,
-            max: ray(99999999999999 ether),
-            who: address(ali),
-            data: ""
-        });
-    }
-
-    function test_allowed_take_impersonation() public takeSetup {
-        Guy che = new Guy(clip);
-        Guy(ali).approve(address(che), true);
-
         che.take({
             id: 1,
             amt: 99999999999999 ether,
