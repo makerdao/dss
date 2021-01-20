@@ -21,6 +21,7 @@ interface VatLike {
     function move(address,address,uint256) external;
     function flux(bytes32,address,address,uint256) external;
     function ilks(bytes32) external returns (uint256, uint256, uint256, uint256, uint256);
+    function suck(address,address,uint256) external;
 }
 
 interface PipLike {
@@ -88,6 +89,9 @@ contract Clipper {
     // 2: no new redo() or take()
     uint256 public stopped = 0;
 
+    uint256 chip; // Percentage of tab to suck from vow to incentivize keepers [wad]
+    uint256 tip;  // Flat fee to suck from vow to incentivize keepers          [rad]
+
     // --- Events ---
     event Rely(address indexed usr);
     event Deny(address indexed usr);
@@ -150,8 +154,10 @@ contract Clipper {
     // --- Administration ---
     function file(bytes32 what, uint256 data) external auth {
         if      (what ==  "buf") buf  = data;
-        else if (what == "tail") tail = data; // Time elapsed    before auction reset
+        else if (what == "tail") tail = data; // Time elapsed before auction reset
         else if (what == "cusp") cusp = data; // Percentage drop before auction reset
+        else if (what == "chip") chip = data; // Percentage of tab to incentivize
+        else if (what == "tip")   tip = data; // Flat fee to incentivize keepers
         else revert("Clipper/file-unrecognized-param");
         emit FileUint256(what, data);
     }
@@ -164,11 +170,15 @@ contract Clipper {
     }
 
     // --- Math ---
+    uint256 constant BLN = 10 **  9;
+    uint256 constant WAD = 10 ** 18;
     uint256 constant RAY = 10 ** 27;
-    uint256 constant BLN = 10 ** 9;
 
     function min(uint256 x, uint256 y) internal pure returns (uint256 z) {
         z = x <= y ? x : y;
+    }
+    function add(uint256 x, uint256 y) internal pure returns (uint256 z) {
+        require((z = x + y) >= x);
     }
     function sub(uint256 x, uint256 y) internal pure returns (uint256 z) {
         require((z = x - y) <= x);
@@ -176,6 +186,8 @@ contract Clipper {
     function mul(uint256 x, uint256 y) internal pure returns (uint256 z) {
         require(y == 0 || (z = x * y) / y == x);
     }
+    function wmul(uint256 x, uint256 y) internal pure returns (uint256 z) {
+        z = mul(x, y) / WAD;                                                            }
     function rmul(uint256 x, uint256 y) internal pure returns (uint256 z) {
         z = mul(x, y) / RAY;
     }
@@ -188,9 +200,11 @@ contract Clipper {
 
     // start an auction
     // note: trusts the caller to transfer collateral to the contract
-    function kick(uint256 tab,  // Debt             [rad]
-                  uint256 lot,  // Collateral       [wad]
-                  address usr   // Liquidated CDP
+    function kick(
+        uint256 tab,  // Debt                   [rad]
+        uint256 lot,  // Collateral             [wad]
+        address usr,  // Liquidated CDP
+        address kpr   // Keeper that called dog.bark()
     ) external auth isStopped(1) returns (uint256 id) {
         // Input validation
         require(tab    >           0, "Clipper/zero-tab");
@@ -216,12 +230,17 @@ contract Clipper {
         require(has, "Clipper/invalid-price");
         sales[id].top = rmul(rdiv(mul(uint256(val), BLN), spot.par()), buf);
 
+        // incentive to kick auction
+        vat.suck(address(vow), kpr, add(tip, wmul(tab, chip)));
+
         emit Kick(id, sales[id].top, tab, lot, usr);
     }
 
     // Reset an auction
-    function redo(uint256 id) external isStopped(2) {
+    function redo(uint256 id, address kpr) external isStopped(2) {
         // Read auction data
+        uint256 tab = sales[id].tab;
+        uint256 lot = sales[id].lot;
         address usr = sales[id].usr;
         uint96  tic = sales[id].tic;
         uint256 top = sales[id].top;
@@ -242,17 +261,21 @@ contract Clipper {
         require(has, "Clipper/invalid-price");
         sales[id].top = top = rmul(rdiv(mul(uint256(val), BLN), spot.par()), buf);
 
-        // TODO: missing incentive
+        // TODO: have a test for dusty lot here
 
-        emit Redo(id, top, sales[id].tab, sales[id].lot, usr);
+        // incentive to redo auction
+        vat.suck(address(vow), kpr, add(tip, wmul(tab, chip)));
+
+        emit Redo(id, top, tab, lot, usr);
     }
 
     // Buy amt of collateral from auction indexed by id
-    function take(uint256 id,           // Auction id
-                  uint256 amt,          // Upper limit on amount of collateral to buy  [wad]
-                  uint256 max,          // Maximum acceptable price (DAI / collateral) [ray]
-                  address who,          // Receiver of collateral, and external call address
-                  bytes calldata data   // Data to pass in external call; if length 0, no call is done
+    function take(
+        uint256 id,           // Auction id
+        uint256 amt,          // Upper limit on amount of collateral to buy  [wad]
+        uint256 max,          // Maximum acceptable price (DAI / collateral) [ray]
+        address who,          // Receiver of collateral, payer of DAI, and external call address
+        bytes calldata data   // Data to pass in external call; if length 0, no call is done
     ) external lock isStopped(2) {
 
         address usr = sales[id].usr;
