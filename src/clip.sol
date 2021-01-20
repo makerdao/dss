@@ -75,7 +75,7 @@ contract Clipper {
         address => mapping(
             address => bool
         )
-    ) public can;           // Owner => Allowed Owner => True/False
+    ) public can;           // Owner => Allowed User => True/False
 
     struct Sale {
         uint256 pos;  // Index in active array
