@@ -307,7 +307,7 @@ contract Clipper {
             }
         }
 
-        // Get DAI from who address
+        // Get DAI from caller
         vat.move(msg.sender, vow, owe);
 
         // Removes Dai out for liquidation from accumulator
