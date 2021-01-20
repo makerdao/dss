@@ -992,7 +992,7 @@ contract ClipperTest is DSTest {
         assertEq(vat.gem(ilk, address(this)), preGemBalance + origLot);
     }
 
-    function testFail_take_impersonation() public takeSetup { // should fail, but works
+    function testFail_take_impersonation() public takeSetup {
         Guy che = new Guy(clip);
         che.take({
             id: 1,
