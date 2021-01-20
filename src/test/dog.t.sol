@@ -6,16 +6,28 @@ import { DSTest } from "ds-test/test.sol";
 import { Vat } from "../vat.sol";
 import { Dog } from "../dog.sol";
 
+contract VowMock {
+    function fess (uint256 due) public {}
+}
+
+contract ClipperMock {
+    function kick(uint256 tab, uint256 lot, address usr)
+        external returns (uint256 id) {
+        id = 42;
+    }
+}
+
 contract DogTest is DSTest {
 
-    Vat vat;
     bytes32 constant ilk = "gold";
-    address constant vow = address(0);
     address constant usr = address(1);
     uint256 constant THOUSAND = 1E3;
     uint256 constant WAD = 1E18;
     uint256 constant RAY = 1E27;
     uint256 constant RAD = 1E45;
+    Vat vat;
+    VowMock vow;
+    ClipperMock clip;
     Dog dog;
 
     function setUp() public {
@@ -23,13 +35,19 @@ contract DogTest is DSTest {
         vat.init(ilk);
         vat.file(ilk, "spot", THOUSAND * RAY);
         vat.file(ilk, "dust", 100 * RAD);
+        vow = new VowMock();
+        clip = new ClipperMock();
         dog = new Dog(address(vat));
+        vat.rely(address(dog));
+        dog.file(ilk, "chop", 11 * WAD / 10);
+        dog.file("vow", address(vow));
+        dog.file(ilk, "clip", address(clip));
     }
 
     function setUrn(uint256 ink, uint256 art) internal {
         vat.slip(ilk, usr, int256(ink));
-        vat.suck(vow, vow, art * RAY);
-        vat.grab(ilk, usr, usr, vow, int256(ink), int256(art));
+        vat.suck(address(vow), address(vow), art * RAY);
+        vat.grab(ilk, usr, usr, address(vow), int256(ink), int256(art));
     }
 
     function setHoles(uint256 Hole, uint256 hole) internal {
