@@ -134,7 +134,7 @@ contract BadGuy is Guy {
 
     constructor(Clipper clip_) Guy(clip_) public {}
 
-    function clipperCall(uint256 owe, uint256 slice, bytes calldata data)
+    function clipperCall(address sender, uint256 owe, uint256 slice, bytes calldata data)
         external {
         clip.take({ // attempt reentrancy
             id: 1,
@@ -150,7 +150,7 @@ contract RedoGuy is Guy {
 
     constructor(Clipper clip_) Guy(clip_) public {}
 
-    function clipperCall(uint256 owe, uint256 slice, bytes calldata data)
+    function clipperCall(address sender, uint256 owe, uint256 slice, bytes calldata data)
         external {
         clip.redo(1);
     }
