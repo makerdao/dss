@@ -286,9 +286,9 @@ contract Clipper {
                 owe = tab;            // owe' <= owe
             } else if (slice < lot) { // if slice == lot, dust is OK
                 (,,,, uint256 dust) = vat.ilks(ilk);
+                require(tab > dust, "Clipper/no-partial-purchase");
                 if (owe > tab - dust) { // owe would leave a dusty amount
                     owe = tab - dust; // owe' <= owe
-                    require(owe > 0, "Clipper/amt-too-low");
                 }
             }
 
