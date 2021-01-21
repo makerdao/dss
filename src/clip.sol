@@ -231,7 +231,9 @@ contract Clipper {
         sales[id].top = rmul(rdiv(mul(uint256(val), BLN), spot.par()), buf);
 
         // incentive to kick auction
-        vat.suck(address(vow), kpr, add(tip, wmul(tab, chip)));
+        if (tip > 0 || chip > 0) {
+            vat.suck(address(vow), kpr, add(tip, wmul(tab, chip)));
+        }
 
         emit Kick(id, sales[id].top, tab, lot, usr);
     }
@@ -239,8 +241,6 @@ contract Clipper {
     // Reset an auction
     function redo(uint256 id, address kpr) external isStopped(2) {
         // Read auction data
-        uint256 tab = sales[id].tab;
-        uint256 lot = sales[id].lot;
         address usr = sales[id].usr;
         uint96  tic = sales[id].tic;
         uint256 top = sales[id].top;
@@ -252,6 +252,8 @@ contract Clipper {
         (bool done, ) = status(tic, top);
         require(done, "Clipper/cannot-reset");
 
+        uint256 tab   = sales[id].tab;
+        uint256 lot   = sales[id].lot;
         sales[id].tic = uint96(block.timestamp);
 
         // Could get this from rmul(Vat.ilks(ilk).spot, Spotter.mat()) instead, but if mat has changed since the
@@ -264,7 +266,9 @@ contract Clipper {
         // TODO: have a test for dusty lot here
 
         // incentive to redo auction
-        vat.suck(address(vow), kpr, add(tip, wmul(tab, chip)));
+        if (tip > 0 || chip > 0) {
+            vat.suck(address(vow), kpr, add(tip, wmul(tab, chip)));
+        }
 
         emit Redo(id, top, tab, lot, usr);
     }
