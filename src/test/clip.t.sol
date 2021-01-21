@@ -85,14 +85,14 @@ contract Trader {
         });
     }
 
-    function clipperCall(address who, uint256 owe, uint256 slice, bytes calldata data)
+    function clipperCall(address sender, uint256 owe, uint256 slice, bytes calldata data)
         external {
         goldJoin.exit(address(this), slice);
         gold.approve(address(exchange));
         exchange.sellGold(slice);
         dai.approve(address(daiJoin));
         vat.hope(address(clip));
-        daiJoin.join(address(this), owe / 1E27);
+        daiJoin.join(sender, owe / 1E27);
     }
 }
 
