@@ -60,6 +60,7 @@ contract Clipper {
     VatLike  immutable public vat;   // Core CDP Engine
     SpotLike immutable public spot;  // Collateral price module
 
+    // TODO: do we want to make vow and dog immutable?
     address    public vow;   // Recipient of dai raised in auctions
     DogLike    public dog;   // Liquidation module
     AbacusLike public calc;  // Current price calculator
@@ -239,6 +240,7 @@ contract Clipper {
     }
 
     // Reset an auction
+    // TODO: should we add the reentrancy guard here?
     function redo(uint256 id, address kpr) external isStopped(2) {
         // Read auction data
         address usr = sales[id].usr;
@@ -338,6 +340,7 @@ contract Clipper {
             vat.flux(ilk, address(this), who, slice);
 
             // Do external call (if defined)
+            // TODO: do we want to do this with the dog too?
             if (data.length > 0 && address(vat) != who) {
                 ClipperCallee(who).clipperCall(msg.sender, owe, slice, data);
             }
