@@ -338,7 +338,7 @@ contract Clipper {
             vat.flux(ilk, address(this), who, slice);
 
             // Do external call (if defined)
-            if (data.length > 0) {
+            if (data.length > 0 && address(vat) != who) {
                 ClipperCallee(who).clipperCall(msg.sender, owe, slice, data);
             }
         }
