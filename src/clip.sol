@@ -288,6 +288,7 @@ contract Clipper {
                 (,,,, uint256 dust) = vat.ilks(ilk);
                 if (owe > tab - dust) { // owe would leave a dusty amount
                     owe = tab - dust; // owe' <= owe
+                    require(owe > 0, "Clipper/amt-too-low");
                 }
             }
 
