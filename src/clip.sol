@@ -284,19 +284,28 @@ contract Clipper {
             owe = mul(slice, price);
 
             // Don't collect more than tab of DAI
-            if (owe >= tab) {
-                owe = tab;            // owe' <= owe
-                slice = owe / price;  // Adjust slice; slice' = owe' / price <= owe / price == slice <= lot
-                tab = 0;              // Zero tab left, auction will be deleted
-            } else {  // owe < tab
-                // Calculate remaining tab after operation
-                tab = tab - owe;  // safe since owe < tab
+            if (owe > tab) {
+                // Total debt will be paid
+                owe = tab;                  // owe' <= owe
+                // Adjust slice
+                slice = owe / price;        // slice' = owe' / price <= owe / price == slice <= lot
+            } else if (owe < tab && slice < lot) {
+                // if slice == lot => auction completed => dust doesn't matter
                 (,,,, uint256 dust) = vat.ilks(ilk);
-                require(tab >= dust, "Clipper/dust");
+                if (tab - owe < dust) {     // safe as owe < tab
+                    // if tab <= dust, buyers have to buy the whole thing
+                    require(tab > dust, "Clipper/no-partial-purchase");
+                    // Adjust amount to pay
+                    owe = tab - dust;       // owe' <= owe
+                    // Adjust slice
+                    slice = owe / price;    // slice' = owe' / price < owe / price == slice < lot
+                }
             }
 
+            // Calculate remaining tab after operation
+            tab = tab - owe;  // safe since owe <= tab
             // Calculate remaining lot after operation
-            lot = lot - slice;  // safe because: slice <= lot
+            lot = lot - slice;
 
             // Send collateral to who
             vat.flux(ilk, address(this), who, slice);

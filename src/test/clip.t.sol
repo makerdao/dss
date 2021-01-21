@@ -840,8 +840,16 @@ contract ClipperTest is DSTest {
         });
     }
 
-    function testFail_take_bid_creates_dust() public takeSetup {
-        // Bid so owe (= (22 - 1wei) * 5 = 110 RAD - 1) < tab (= 110 RAD) (fails with "Clipper/dust")
+    function test_take_bid_recalculates_due_dust() public takeSetup {
+        (, uint256 tab, uint256 lot,, uint256 tic, uint256 top) = clip.sales(1);
+        assertEq(tab, rad(110 ether));
+        assertEq(lot, 40 ether);
+
+        uint256 price = clip.calc().price(top, now - tic);
+        assertEq(price, ray(5 ether));
+
+        // Bid so owe (= (22 - 1wei) * 5 = 110 RAD - 1) < tab (= 110 RAD)
+        // 1 < 20 RAD => owe = 110 RAD - 20 RAD
         Guy(ali).take({
             id:  1,
             amt: 22 ether - 1,
@@ -849,6 +857,38 @@ contract ClipperTest is DSTest {
             who: address(ali),
             data: ""
         });
+
+        (, tab, lot,,,) = clip.sales(1);
+        assertEq(tab, rad(20 ether));
+        assertEq(lot, 40 ether - rad((110 - 20) * 1 ether) / price);
+    }
+
+    function test_take_bid_avoids_recalculate_due_no_more_lot() public takeSetup {
+        hevm.warp(now + 60); // Reducing the price
+
+        (, uint256 tab, uint256 lot,, uint256 tic, uint256 top) = clip.sales(1);
+        assertEq(tab, rad(110 ether));
+        assertEq(lot, 40 ether);
+
+        uint256 price = clip.calc().price(top, now - tic);
+        assertEq(price, 2735783211953807380973706855); // 2.73 RAY
+
+        // Bid so owe (= (22 - 1wei) * 5 = 110 RAD - 1) < tab (= 110 RAD)
+        // 1 < 20 RAD => owe = 110 RAD - 20 RAD
+        Guy(ali).take({
+            id:  1,
+            amt: 40 ether,
+            max: ray(2.8 ether),
+            who: address(ali),
+            data: ""
+        });
+
+        // 40 * 2.73 = 109.42...
+        // It means a very low amount of tab (< dust) would remain but doesn't matter
+        // as the auction is finished because there isn't more lot
+        (, tab, lot,,,) = clip.sales(1);
+        assertEq(tab, 0);
+        assertEq(lot, 0);
     }
 
     function test_take_multiple_bids_different_prices() public takeSetup {
