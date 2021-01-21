@@ -286,17 +286,23 @@ contract Clipper {
             // Don't collect more than tab of DAI
             if (owe >= tab) {
                 // Total debt will be paid
-                owe = tab;            // owe' <= owe
-            } else if (slice < lot) { // if slice == lot, dust is OK
+                owe = tab;                  // owe' <= owe
+                // Adjust slice
+                slice = owe / price;        // slice' = owe' / price <= owe / price == slice <= lot
+            } else if (slice < lot) {
+                // if slice == lot => auction completed => dust doesn't matter
                 (,,,, uint256 dust) = vat.ilks(ilk);
-                require(tab > dust, "Clipper/no-partial-purchase");
-                if (owe > tab - dust) { // owe would leave a dusty amount
-                    owe = tab - dust; // owe' <= owe
+                if (tab - owe < dust) {     // safe as owe < tab
+                    require(tab > dust, "Clipper/no-partial-purchase");
+                    // Adjust amount to pay
+                    owe = tab - dust;       // owe' <= owe
+                    // Adjust slice
+                    slice = owe / price;    // slice' = owe' / price < owe / price == slice < lot
                 }
             }
 
-            slice = owe / price;  // Adjust slice; slice' = owe' / price <= owe / price == slice <= lot
-            tab = tab - owe;  // safe since owe < tab
+            // Calculate remaining tab after operation
+            tab = tab - owe;  // safe since owe <= tab
             // Calculate remaining lot after operation
             lot = lot - slice;
 
