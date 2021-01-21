@@ -37,7 +37,7 @@ interface DogLike {
 }
 
 interface ClipperCallee {
-    function clipperCall(uint256, uint256, bytes calldata) external;
+    function clipperCall(address, uint256, uint256, bytes calldata) external;
 }
 
 interface AbacusLike {
@@ -183,6 +183,7 @@ contract Clipper {
         z = mul(x, RAY) / y;
     }
 
+
     // --- Auction ---
 
     // start an auction
@@ -250,9 +251,10 @@ contract Clipper {
     function take(uint256 id,           // Auction id
                   uint256 amt,          // Upper limit on amount of collateral to buy  [wad]
                   uint256 max,          // Maximum acceptable price (DAI / collateral) [ray]
-                  address who,          // Receiver of collateral, payer of DAI, and external call address
+                  address who,          // Receiver of collateral, and external call address
                   bytes calldata data   // Data to pass in external call; if length 0, no call is done
     ) external lock isStopped(2) {
+
         address usr = sales[id].usr;
         uint96  tic = sales[id].tic;
 
@@ -301,12 +303,12 @@ contract Clipper {
 
             // Do external call (if defined)
             if (data.length > 0) {
-                ClipperCallee(who).clipperCall(owe, slice, data);
+                ClipperCallee(who).clipperCall(msg.sender, owe, slice, data);
             }
         }
 
-        // Get DAI from who address
-        vat.move(who, vow, owe);
+        // Get DAI from caller
+        vat.move(msg.sender, vow, owe);
 
         // Removes Dai out for liquidation from accumulator
         dog.digs(ilk, owe);

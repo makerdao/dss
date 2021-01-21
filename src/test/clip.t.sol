@@ -85,14 +85,14 @@ contract Trader {
         });
     }
 
-    function clipperCall(uint256 owe, uint256 slice, bytes calldata data)
+    function clipperCall(address sender, uint256 owe, uint256 slice, bytes calldata data)
         external {
         goldJoin.exit(address(this), slice);
         gold.approve(address(exchange));
         exchange.sellGold(slice);
         dai.approve(address(daiJoin));
         vat.hope(address(clip));
-        daiJoin.join(address(this), owe / 1E27);
+        daiJoin.join(sender, owe / 1E27);
     }
 }
 
@@ -134,7 +134,7 @@ contract BadGuy is Guy {
 
     constructor(Clipper clip_) Guy(clip_) public {}
 
-    function clipperCall(uint256 owe, uint256 slice, bytes calldata data)
+    function clipperCall(address sender, uint256 owe, uint256 slice, bytes calldata data)
         external {
         clip.take({ // attempt reentrancy
             id: 1,
@@ -150,7 +150,7 @@ contract RedoGuy is Guy {
 
     constructor(Clipper clip_) Guy(clip_) public {}
 
-    function clipperCall(uint256 owe, uint256 slice, bytes calldata data)
+    function clipperCall(address sender, uint256 owe, uint256 slice, bytes calldata data)
         external {
         clip.redo(1);
     }
@@ -1161,6 +1161,17 @@ contract ClipperTest is DSTest {
             max: ray(5 ether),
             who: address(emi),
             data: "hey"
+        });
+    }
+
+    function testFail_take_impersonation() public takeSetup { // should fail, but works
+        Guy che = new Guy(clip);
+        che.take({
+            id: 1,
+            amt: 99999999999999 ether,
+            max: ray(99999999999999 ether),
+            who: address(ali),
+            data: ""
         });
     }
 }
