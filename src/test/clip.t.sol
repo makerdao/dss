@@ -150,9 +150,10 @@ contract RedoGuy is Guy {
 
     constructor(Clipper clip_) Guy(clip_) public {}
 
-    function clipperCall(address sender, uint256 owe, uint256 slice, bytes calldata data)
-        external {
-        clip.redo(1);
+    function clipperCall(
+        address sender, uint256 owe, uint256 slice, bytes calldata data
+    ) external {
+        clip.redo(1, sender);
     }
 }
 
@@ -431,8 +432,6 @@ contract ClipperTest is DSTest {
         assertEq(ink, 0 ether);
         assertEq(art, 0 ether);
 
-//        (, uint256 rate,,,) = vat.ilks(ilk);
-//        uint owe = ((100 ether * rate) * 1.1 ether) / 1 ether; // (art * rate from initial frob with liquidation penalty)
         assertEq(vat.dai(bob), rad(1000 ether) + rad(100 ether) + tab * 0.02 ether / WAD); // Paid (tip + due * chip) amount of DAI for calling bark()
     }
 
