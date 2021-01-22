@@ -20,7 +20,12 @@
 pragma solidity >=0.6.11;
 
 interface ClipperLike {
-    function kick(uint256 tab, uint256 lot, address usr) external returns (uint256);
+    function kick(
+        uint256 tab,
+        uint256 lot,
+        address usr,
+        address kpr
+    ) external returns (uint256);
 }
 
 interface VatLike {
@@ -36,7 +41,6 @@ interface VatLike {
         uint256 art   // [wad]
     );
     function grab(bytes32,address,address,address,int256,int256) external;
-    function suck(address,address,uint256) external;
     function hope(address) external;
     function nope(address) external;
 }
@@ -61,8 +65,6 @@ contract Dog {
         uint256 chop;  // Liquidation Penalty                                          [wad]
         uint256 hole;  // Max DAI needed to cover debt+fees of active auctions per ilk [rad]
         uint256 dirt;  // Amt DAI needed to cover debt+fees of active auctions per ilk [rad]
-        uint256 chip;  // Percentage of due to suck from vow to incentivize keepers    [wad]
-        uint256 tip;   // Flat fee to suck from vow to incentivize keepers             [rad]
     }
 
     VatLike immutable public vat;  // CDP Engine
@@ -118,9 +120,6 @@ contract Dog {
     function mul(uint256 x, uint256 y) internal pure returns (uint256 z) {
         require(y == 0 || (z = x * y) / y == x);
     }
-    function wmul(uint256 x, uint256 y) internal pure returns (uint256 z) {
-        z = mul(x, y) / WAD;
-    }
 
     // --- Administration ---
     function file(bytes32 what, address data) external auth {
@@ -136,8 +135,6 @@ contract Dog {
     function file(bytes32 ilk, bytes32 what, uint256 data) external auth {
         if (what == "chop") ilks[ilk].chop = data;
         else if (what == "hole") ilks[ilk].hole = data;
-        else if (what == "chip") ilks[ilk].chip = data;
-        else if (what == "tip")  ilks[ilk].tip  = data;
         else revert("Dog/file-unrecognized-param");
         emit FileIlkUint256(ilk, what, data);
     }
@@ -152,7 +149,7 @@ contract Dog {
     }
 
     // --- CDP Liquidation: all bark and no bite ---
-    function bark(bytes32 ilk, address urn, address usr) external returns (uint256 id) {
+    function bark(bytes32 ilk, address urn, address kpr) external returns (uint256 id) {
         require(live == 1, "Dog/not-live");
 
         (uint256 ink, uint256 art) = vat.urns(ilk, urn);
@@ -203,12 +200,10 @@ contract Dog {
             id = ClipperLike(milk.clip).kick({
                 tab: tab,
                 lot: dink,
-                usr: urn
+                usr: urn,
+                kpr: kpr
             });
         }
-
-        // incentive to call bark()
-        vat.suck(address(vow), usr, add(milk.tip, wmul(due, milk.chip)));
 
         emit Bark(ilk, urn, dink, dart, due, milk.clip, id);
     }

@@ -150,9 +150,10 @@ contract RedoGuy is Guy {
 
     constructor(Clipper clip_) Guy(clip_) public {}
 
-    function clipperCall(address sender, uint256 owe, uint256 slice, bytes calldata data)
-        external {
-        clip.redo(1);
+    function clipperCall(
+        address sender, uint256 owe, uint256 slice, bytes calldata data
+    ) external {
+        clip.redo(1, sender);
     }
 }
 
@@ -344,7 +345,7 @@ contract ClipperTest is DSTest {
 
     function test_get_chop() public {
         uint256 chop = dog.chop(ilk);
-        (, uint256 chop2,,,,) = dog.ilks(ilk);
+        (, uint256 chop2,,) = dog.ilks(ilk);
         assertEq(chop, chop2);
     }
 
@@ -358,8 +359,8 @@ contract ClipperTest is DSTest {
         uint256 ink;
         uint256 art;
 
-        dog.file(ilk, "tip",  rad(100 ether)); // Flat fee of 100 DAI
-        dog.file(ilk, "chip", 0);              // No linear increase
+        clip.file("tip",  rad(100 ether)); // Flat fee of 100 DAI
+        clip.file("chip", 0);              // No linear increase
 
         assertEq(clip.kicks(), 0);
         (pos, tab, lot, usr, tic, top) = clip.sales(1);
@@ -411,8 +412,8 @@ contract ClipperTest is DSTest {
 
         clip.file(bytes32("buf"),  ray(1.25 ether)); // 25% Initial price buffer
 
-        dog.file(ilk, "tip",  rad(100 ether)); // Flat fee of 100 DAI
-        dog.file(ilk, "chip", 0.02 ether);     // Linear increase of 2% of tab
+        clip.file("tip",  rad(100 ether)); // Flat fee of 100 DAI
+        clip.file("chip", 0.02 ether);     // Linear increase of 2% of tab
 
         assertEq(vat.dai(bob), rad(1000 ether));
 
@@ -431,30 +432,28 @@ contract ClipperTest is DSTest {
         assertEq(ink, 0 ether);
         assertEq(art, 0 ether);
 
-        (, uint256 rate,,,) = vat.ilks(ilk);
-        uint due = 100 ether * rate; // (art * rate from initial frob)
-        assertEq(vat.dai(bob), rad(1000 ether) + rad(100 ether) + due * 0.02 ether / WAD); // Paid (tip + due * chip) amount of DAI for calling bark()
+        assertEq(vat.dai(bob), rad(1000 ether) + rad(100 ether) + tab * 0.02 ether / WAD); // Paid (tip + due * chip) amount of DAI for calling bark()
     }
 
-    function try_kick(uint256 tab, uint256 lot, address usr) internal returns (bool ok) {
-        string memory sig = "kick(uint256,uint256,address)";
-        (ok,) = address(clip).call(abi.encodeWithSignature(sig, tab, lot, usr));
+    function try_kick(uint256 tab, uint256 lot, address usr, address kpr) internal returns (bool ok) {
+        string memory sig = "kick(uint256,uint256,address,address)";
+        (ok,) = address(clip).call(abi.encodeWithSignature(sig, tab, lot, usr, kpr));
     }
 
     function test_kick_basic() public {
-        assertTrue(try_kick(1 ether, 2 ether, address(1)));
+        assertTrue(try_kick(1 ether, 2 ether, address(1), address(this)));
     }
 
     function test_kick_zero_tab() public {
-        assertTrue(!try_kick(0, 2 ether, address(1)));
+        assertTrue(!try_kick(0, 2 ether, address(1), address(this)));
     }
 
     function test_kick_zero_lot() public {
-        assertTrue(!try_kick(1 ether, 0, address(1)));
+        assertTrue(!try_kick(1 ether, 0, address(1), address(this)));
     }
 
     function test_kick_zero_usr() public {
-        assertTrue(!try_kick(1 ether, 2 ether, address(0)));
+        assertTrue(!try_kick(1 ether, 2 ether, address(0), address(this)));
     }
 
     function try_bark(bytes32 ilk_, address urn_) internal returns (bool ok) {
@@ -643,7 +642,7 @@ contract ClipperTest is DSTest {
 
     function test_Hole_hole() public {
         assertEq(dog.Dirt(), 0);
-        (,,, uint256 dirt,,) = dog.ilks(ilk);
+        (,,, uint256 dirt) = dog.ilks(ilk);
         assertEq(dirt, 0);
 
         dog.bark(ilk, me, address(this));
@@ -651,7 +650,7 @@ contract ClipperTest is DSTest {
         (, uint256 tab,,,,) = clip.sales(1);
 
         assertEq(dog.Dirt(), tab);
-        (,,, dirt,,) = dog.ilks(ilk);
+        (,,, dirt) = dog.ilks(ilk);
         assertEq(dirt, tab);
 
         bytes32 ilk2 = "silver";
@@ -684,8 +683,8 @@ contract ClipperTest is DSTest {
         (, uint256 tab2,,,,) = clip2.sales(1);
 
         assertEq(dog.Dirt(), tab + tab2);
-        (,,, dirt,,) = dog.ilks(ilk);
-        (,,, uint256 dirt2,,) = dog.ilks(ilk2);
+        (,,, dirt) = dog.ilks(ilk);
+        (,,, uint256 dirt2) = dog.ilks(ilk2);
         assertEq(dirt, tab);
         assertEq(dirt2, tab2);
     }
@@ -697,7 +696,7 @@ contract ClipperTest is DSTest {
         assertEq(_art(ilk, me), 100 ether);
 
         assertEq(dog.Dirt(), 0);
-        (,uint256 chop,, uint256 dirt,,) = dog.ilks(ilk);
+        (,uint256 chop,, uint256 dirt) = dog.ilks(ilk);
         assertEq(dirt, 0);
 
         dog.bark(ilk, me, address(this));
@@ -713,7 +712,7 @@ contract ClipperTest is DSTest {
         assertEq(_art(ilk, me), 100 ether - tab * WAD / rate / chop);
 
         assertEq(dog.Dirt(), tab);
-        (,,, dirt,,) = dog.ilks(ilk);
+        (,,, dirt) = dog.ilks(ilk);
         assertEq(dirt, tab);
     }
 
@@ -724,7 +723,7 @@ contract ClipperTest is DSTest {
         assertEq(_art(ilk, me), 100 ether);
 
         assertEq(dog.Dirt(), 0);
-        (,uint256 chop,, uint256 dirt,,) = dog.ilks(ilk);
+        (,uint256 chop,, uint256 dirt) = dog.ilks(ilk);
         assertEq(dirt, 0);
 
         dog.bark(ilk, me, address(this));
@@ -740,7 +739,7 @@ contract ClipperTest is DSTest {
         assertEq(_art(ilk, me), 100 ether - tab * WAD / rate / chop);
 
         assertEq(dog.Dirt(), tab);
-        (,,, dirt,,) = dog.ilks(ilk);
+        (,,, dirt) = dog.ilks(ilk);
         assertEq(dirt, tab);
     }
 
@@ -965,9 +964,9 @@ contract ClipperTest is DSTest {
         assertEq(clip.kicks(), 1);
     }
 
-    function try_redo(uint256 id) internal returns (bool ok) {
-        string memory sig = "redo(uint256)";
-        (ok,) = address(clip).call(abi.encodeWithSignature(sig, id));
+    function try_redo(uint256 id, address kpr) internal returns (bool ok) {
+        string memory sig = "redo(uint256,address)";
+        (ok,) = address(clip).call(abi.encodeWithSignature(sig, id, kpr));
     }
 
     function test_auction_reset_tail() public {
@@ -981,10 +980,10 @@ contract ClipperTest is DSTest {
 
         hevm.warp(startTime + 3600 seconds);
         assertTrue(!clip.needsRedo(1));
-        assertTrue(!try_redo(1));
+        assertTrue(!try_redo(1, address(this)));
         hevm.warp(startTime + 3601 seconds);
-        assertTrue( clip.needsRedo(1));
-        assertTrue( try_redo(1));
+        assertTrue(clip.needsRedo(1));
+        assertTrue(try_redo(1, address(this)));
 
         (,,,, uint96 ticAfter, uint256 topAfter) = clip.sales(1);
         assertEq(uint256(ticAfter), startTime + 3601 seconds);     // (now)
@@ -1002,10 +1001,10 @@ contract ClipperTest is DSTest {
 
         hevm.warp(startTime + 1800 seconds);
         assertTrue(!clip.needsRedo(1));
-        assertTrue(!try_redo(1));
+        assertTrue(!try_redo(1, address(this)));
         hevm.warp(startTime + 1801 seconds);
-        assertTrue( clip.needsRedo(1));
-        assertTrue( try_redo(1));
+        assertTrue(clip.needsRedo(1));
+        assertTrue(try_redo(1, address(this)));
 
         (,,,, uint96 ticAfter, uint256 topAfter) = clip.sales(1);
         assertEq(uint256(ticAfter), startTime + 1801 seconds);     // (now)
@@ -1016,23 +1015,23 @@ contract ClipperTest is DSTest {
         auctionResetSetup(10 hours); // 10 hours till zero is reached (used to test tail)
 
         hevm.warp(startTime + 3601 seconds);
-        clip.redo(1);
+        clip.redo(1, address(this));
 
-        assertTrue(!try_redo(1));
+        assertTrue(!try_redo(1, address(this)));
     }
 
     function test_auction_reset_cusp_twice() public {
         auctionResetSetup(1 hours); // 1 hour till zero is reached (used to test cusp)
 
         hevm.warp(startTime + 1801 seconds); // Price goes below 50% "cusp" after 30min01sec
-        clip.redo(1);
+        clip.redo(1, address(this));
 
-        assertTrue(!try_redo(1));
+        assertTrue(!try_redo(1, address(this)));
     }
 
     function test_redo_zero_usr() public {
         // Can't reset a non-existent auction.
-        assertTrue(!try_redo(1));
+        assertTrue(!try_redo(1, address(this)));
     }
 
     function test_setBreaker() public {
@@ -1107,9 +1106,9 @@ contract ClipperTest is DSTest {
         assertEq(topBefore, ray(5 ether)); // $4 spot + 25% buffer = $5 (wasn't affected by poke)
 
         hevm.warp(startTime + 3600 seconds);
-        assertTrue(!try_redo(1));
+        assertTrue(!try_redo(1, address(this)));
         hevm.warp(startTime + 3601 seconds);
-        assertTrue( try_redo(1));
+        assertTrue(try_redo(1, address(this)));
 
         (,,,, uint96 ticAfter, uint256 topAfter) = clip.sales(1);
         assertEq(uint256(ticAfter), startTime + 3601 seconds);     // (now)
@@ -1128,9 +1127,9 @@ contract ClipperTest is DSTest {
         assertEq(topBefore, ray(5 ether)); // $4 spot + 25% buffer = $5 (wasn't affected by poke)
 
         hevm.warp(startTime + 3600 seconds);
-        assertTrue(!try_redo(1));
+        assertTrue(!try_redo(1, address(this)));
         hevm.warp(startTime + 3601 seconds);
-        assertTrue( try_redo(1));
+        assertTrue(try_redo(1, address(this)));
     }
 
     function test_Clipper_yank() public takeSetup {
@@ -1153,7 +1152,7 @@ contract ClipperTest is DSTest {
 
         // Assert that callback to clear dirt was successful.
         assertEq(dog.Dirt(), 0);
-        (,,, uint256 dirt,,) = dog.ilks(ilk);
+        (,,, uint256 dirt) = dog.ilks(ilk);
         assertEq(dirt, 0);
 
         // Assert transfer of gem.
