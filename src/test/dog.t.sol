@@ -11,7 +11,7 @@ contract VowMock {
 }
 
 contract ClipperMock {
-    function kick(uint256 tab, uint256 lot, address usr)
+    function kick(uint256 tab, uint256 lot, address usr, address kpr)
         external returns (uint256 id) {
         id = 42;
     }
@@ -58,7 +58,7 @@ contract DogTest is DSTest {
     function isDusty() internal returns (bool dusty) {
         (, uint256 rate,,, uint256 dust) = vat.ilks(ilk);
         (, uint256 art) = vat.urns(ilk, usr);
-        (, uint256 chop,,,,) = dog.ilks(ilk);
+        (, uint256 chop,,) = dog.ilks(ilk);
         uint256 due = art * rate;
         uint256 tab = due * chop / WAD;
         dusty = tab > 0 && tab < dust;
