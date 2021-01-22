@@ -249,7 +249,7 @@ contract Clipper {
 
         // Check that auction needs reset
         // and compute current price [ray]
-        (bool done, ) = status(tic, top);
+        (bool done,) = status(tic, top);
         require(done, "Clipper/cannot-reset");
 
         uint256 tab   = sales[id].tab;
@@ -261,13 +261,16 @@ contract Clipper {
         (PipLike pip, ) = spotter.ilks(ilk);
         (bytes32 val, bool has) = pip.peek();
         require(has, "Clipper/invalid-price");
-        sales[id].top = top = rmul(rdiv(mul(uint256(val), BLN), spotter.par()), buf);
-
-        // TODO: have a test for dusty lot here
+        uint256 price = rdiv(mul(uint256(val), BLN), spotter.par());
+        sales[id].top = top = rmul(price, buf);
 
         // incentive to redo auction
         if (tip > 0 || chip > 0) {
-            vat.suck(vow, kpr, add(tip, wmul(tab, chip)));
+            (,,,, uint256 dust) = vat.ilks(ilk);
+            // TODO: Make a test to check when this condition is not passing
+            if (tab >= dust && mul(lot, price) >= dust) {
+                vat.suck(vow, kpr, add(tip, wmul(tab, chip)));
+            }
         }
 
         emit Redo(id, top, tab, lot, usr);
