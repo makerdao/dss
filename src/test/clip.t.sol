@@ -286,8 +286,7 @@ contract ClipperTest is DSTest {
         gold.mint(1000 ether);
         gold.transfer(address(goldJoin), 1000 ether);
 
-        dog = new Dog(address(vat));
-        dog.file("vow", address(vow));
+        dog = new Dog(address(vat), address(vow));
         vat.rely(address(dog));
         vow.rely(address(dog));
 
@@ -306,7 +305,7 @@ contract ClipperTest is DSTest {
         vat.file(ilk, "line", rad(10000 ether));
         vat.file("Line",      rad(10000 ether));
 
-        clip = new Clipper(address(vat), address(spot), address(dog), ilk);
+        clip = new Clipper(address(vat), address(vow), address(spot), address(dog), ilk);
         clip.rely(address(dog));
 
         dog.file(ilk, "clip", address(clip));
@@ -654,7 +653,7 @@ contract ClipperTest is DSTest {
         assertEq(dirt, tab);
 
         bytes32 ilk2 = "silver";
-        Clipper clip2 = new Clipper(address(vat), address(spot), address(dog), ilk2);
+        Clipper clip2 = new Clipper(address(vat), address(vow), address(spot), address(dog), ilk2);
         clip2.rely(address(dog));
 
         dog.file(ilk2, "clip", address(clip2));

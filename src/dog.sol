@@ -68,10 +68,10 @@ contract Dog {
     }
 
     VatLike immutable public vat;  // CDP Engine
+    VowLike immutable public vow;  // Debt Engine
 
     mapping (bytes32 => Ilk) public ilks;
 
-    VowLike public vow;   // Debt Engine
     uint256 public live;  // Active Flag
     uint256 public Hole;  // Max DAI needed to cover debt+fees of active auctions [rad]
     uint256 public Dirt;  // Amt DAI needed to cover debt+fees of active auctions [rad]
@@ -98,8 +98,9 @@ contract Dog {
     event Cage();
 
     // --- Init ---
-    constructor(address vat_) public {
+    constructor(address vat_, address vow_) public {
         vat = VatLike(vat_);
+        vow = VowLike(vow_);
         live = 1;
         wards[msg.sender] = 1;
         emit Rely(msg.sender);
@@ -122,11 +123,6 @@ contract Dog {
     }
 
     // --- Administration ---
-    function file(bytes32 what, address data) external auth {
-        if (what == "vow") vow = VowLike(data);
-        else revert("Dog/file-unrecognized-param");
-        emit FileAddress(what, data);
-    }
     function file(bytes32 what, uint256 data) external auth {
         if (what == "Hole") Hole = data;
         else revert("Dog/file-unrecognized-param");

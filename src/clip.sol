@@ -58,11 +58,10 @@ contract Clipper {
     // --- Data ---
     bytes32  immutable public ilk;   // Collateral type of this Clipper
     VatLike  immutable public vat;   // Core CDP Engine
+    address  immutable public vow;   // Recipient of dai raised in auctions
     SpotLike immutable public spot;  // Collateral price module
+    DogLike  immutable public dog;   // Liquidation module
 
-    // TODO: do we want to make vow and dog immutable?
-    address    public vow;   // Recipient of dai raised in auctions
-    DogLike    public dog;   // Liquidation module
     AbacusLike public calc;  // Current price calculator
 
     uint256 public buf;   // Multiplicative factor to increase starting price  [ray]
@@ -128,8 +127,9 @@ contract Clipper {
     event Yank(uint256 id);
 
     // --- Init ---
-    constructor(address vat_, address spot_, address dog_, bytes32 ilk_) public {
+    constructor(address vat_, address vow_, address spot_, address dog_, bytes32 ilk_) public {
         vat  = VatLike(vat_);
+        vow  = vow_;
         spot = SpotLike(spot_);
         dog  = DogLike(dog_);
         ilk  = ilk_;
@@ -163,9 +163,7 @@ contract Clipper {
         emit FileUint256(what, data);
     }
     function file(bytes32 what, address data) external auth {
-        if      (what ==  "dog") dog  = DogLike(data);
-        else if (what ==  "vow") vow  = data;
-        else if (what == "calc") calc = AbacusLike(data);
+        if (what == "calc") calc = AbacusLike(data);
         else revert("Clipper/file-unrecognized-param");
         emit FileAddress(what, data);
     }
@@ -233,7 +231,7 @@ contract Clipper {
 
         // incentive to kick auction
         if (tip > 0 || chip > 0) {
-            vat.suck(address(vow), kpr, add(tip, wmul(tab, chip)));
+            vat.suck(vow, kpr, add(tip, wmul(tab, chip)));
         }
 
         emit Kick(id, sales[id].top, tab, lot, usr);
@@ -269,7 +267,7 @@ contract Clipper {
 
         // incentive to redo auction
         if (tip > 0 || chip > 0) {
-            vat.suck(address(vow), kpr, add(tip, wmul(tab, chip)));
+            vat.suck(vow, kpr, add(tip, wmul(tab, chip)));
         }
 
         emit Redo(id, top, tab, lot, usr);
@@ -339,9 +337,10 @@ contract Clipper {
             // Send collateral to who
             vat.flux(ilk, address(this), who, slice);
 
-            // Do external call (if defined)
-            // TODO: do we want to do this with the dog too?
-            if (data.length > 0 && address(vat) != who) {
+            // Do external call (if data is defined) but to be
+            // extremely careful we don't allow to do it to the two
+            // contracts which the Clipper needs to be authorized
+            if (data.length > 0 && who != address(vat) && who != address(dog)) {
                 ClipperCallee(who).clipperCall(msg.sender, owe, slice, data);
             }
         }
