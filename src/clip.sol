@@ -389,7 +389,7 @@ contract Clipper {
         return active[id];
     }
 
-    // Externally returns boolean for if an auction needs a redo
+    // Externally returns boolean for if an auction needs a redo and also the current price
     function getStatus(uint256 id) external view returns (bool needsRedo, uint256 price) {
         // Read auction data
         address usr = sales[id].usr;
