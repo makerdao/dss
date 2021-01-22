@@ -106,12 +106,54 @@ contract DogTest is DSTest {
         assertTrue(!isDusty());
     }
 
-    function test_bark_exactly_dust_over_Hole() public {
+    function test_bark_dust_over_Hole_stress() public {
         uint256 dust = 200;
         vat.file(ilk, "dust", dust * RAD);
         uint256 Hole = 5 * THOUSAND;
         dog.file("Hole", Hole * RAD);
         setUrn(WAD, (Hole + dust) * WAD);
+        dog.file(ilk, "chop", WAD);
+        dog.bark(ilk, usr, address(this));
+        assertTrue(!isDusty());
+    }
+
+    function test_bark_over_ilk_hole() public {
+        uint256 dust = 200;
+        vat.file(ilk, "dust", dust * RAD);
+        uint256 hole = 5 * THOUSAND;
+        dog.file(ilk, "hole", hole * RAD);
+        setUrn(WAD, (hole + dust * 2) * WAD);
+        dog.bark(ilk, usr, address(this));
+    }
+
+    function test_bark_over_Hole() public {
+        uint256 dust = 200;
+        vat.file(ilk, "dust", dust * RAD);
+        uint256 Hole = 5 * THOUSAND;
+        dog.file("Hole", Hole * RAD);
+        setUrn(WAD, (Hole + dust * 2) * WAD);
+        dog.bark(ilk, usr, address(this));
+    }
+
+    function test_bark_dust_under_ilk_hole() public {
+        uint256 dust = 200;
+        vat.file(ilk, "dust", dust * RAD);
+        uint256 hole = 5 * THOUSAND;
+        dog.file(ilk, "hole", hole * RAD);
+        setUrn(WAD, (hole - dust / 2) * WAD);
+        dog.bark(ilk, usr, address(this));
+        assertTrue(!isDusty());
+    }
+
+    function test_bark_dust_under_Hole() public {
+        uint256 dust = 200;
+        vat.file(ilk, "dust", dust * RAD);
+        uint256 Hole = 5 * THOUSAND;
+        dog.file("Hole", Hole * RAD);
+        setUrn(WAD, (Hole - dust / 2) * WAD);
+        dog.bark(ilk, usr, address(this));
+        assertTrue(!isDusty());
+    }
         dog.bark(ilk, usr, address(this));
         assertTrue(!isDusty());
     }
