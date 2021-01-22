@@ -1183,7 +1183,7 @@ contract ClipperTest is DSTest {
         assertTrue(dai.balanceOf(che) > 0); // Che turned a profit
     }
 
-    function testFail_reentrancy() public takeSetup {
+    function testFail_reentrancy_take() public takeSetup {
         BadGuy(dan).take({
             id: 1,
             amt: 25 ether,
@@ -1193,7 +1193,7 @@ contract ClipperTest is DSTest {
         });
     }
 
-    function testFail_redo() public takeSetup {
+    function testFail_reentrancy_redo() public takeSetup {
         RedoGuy(emi).take({
             id: 1,
             amt: 25 ether,
