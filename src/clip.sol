@@ -21,6 +21,7 @@ interface VatLike {
     function move(address,address,uint256) external;
     function flux(bytes32,address,address,uint256) external;
     function ilks(bytes32) external returns (uint256, uint256, uint256, uint256, uint256);
+    function suck(address,address,uint256) external;
 }
 
 interface PipLike {
@@ -37,7 +38,7 @@ interface DogLike {
 }
 
 interface ClipperCallee {
-    function clipperCall(uint256, uint256, bytes calldata) external;
+    function clipperCall(address, uint256, uint256, bytes calldata) external;
 }
 
 interface AbacusLike {
@@ -59,6 +60,7 @@ contract Clipper {
     VatLike  immutable public vat;   // Core CDP Engine
     SpotLike immutable public spot;  // Collateral price module
 
+    // TODO: do we want to make vow and dog immutable?
     address    public vow;   // Recipient of dai raised in auctions
     DogLike    public dog;   // Liquidation module
     AbacusLike public calc;  // Current price calculator
@@ -87,6 +89,9 @@ contract Clipper {
     // 1: no new kick()
     // 2: no new redo() or take()
     uint256 public stopped = 0;
+
+    uint256 chip; // Percentage of tab to suck from vow to incentivize keepers [wad]
+    uint256 tip;  // Flat fee to suck from vow to incentivize keepers          [rad]
 
     // --- Events ---
     event Rely(address indexed usr);
@@ -150,8 +155,10 @@ contract Clipper {
     // --- Administration ---
     function file(bytes32 what, uint256 data) external auth {
         if      (what ==  "buf") buf  = data;
-        else if (what == "tail") tail = data; // Time elapsed    before auction reset
+        else if (what == "tail") tail = data; // Time elapsed before auction reset
         else if (what == "cusp") cusp = data; // Percentage drop before auction reset
+        else if (what == "chip") chip = data; // Percentage of tab to incentivize
+        else if (what == "tip")   tip = data; // Flat fee to incentivize keepers
         else revert("Clipper/file-unrecognized-param");
         emit FileUint256(what, data);
     }
@@ -164,11 +171,15 @@ contract Clipper {
     }
 
     // --- Math ---
+    uint256 constant BLN = 10 **  9;
+    uint256 constant WAD = 10 ** 18;
     uint256 constant RAY = 10 ** 27;
-    uint256 constant BLN = 10 ** 9;
 
     function min(uint256 x, uint256 y) internal pure returns (uint256 z) {
         z = x <= y ? x : y;
+    }
+    function add(uint256 x, uint256 y) internal pure returns (uint256 z) {
+        require((z = x + y) >= x);
     }
     function sub(uint256 x, uint256 y) internal pure returns (uint256 z) {
         require((z = x - y) <= x);
@@ -176,6 +187,8 @@ contract Clipper {
     function mul(uint256 x, uint256 y) internal pure returns (uint256 z) {
         require(y == 0 || (z = x * y) / y == x);
     }
+    function wmul(uint256 x, uint256 y) internal pure returns (uint256 z) {
+        z = mul(x, y) / WAD;                                                            }
     function rmul(uint256 x, uint256 y) internal pure returns (uint256 z) {
         z = mul(x, y) / RAY;
     }
@@ -183,13 +196,16 @@ contract Clipper {
         z = mul(x, RAY) / y;
     }
 
+
     // --- Auction ---
 
     // start an auction
     // note: trusts the caller to transfer collateral to the contract
-    function kick(uint256 tab,  // Debt             [rad]
-                  uint256 lot,  // Collateral       [wad]
-                  address usr   // Liquidated CDP
+    function kick(
+        uint256 tab,  // Debt                   [rad]
+        uint256 lot,  // Collateral             [wad]
+        address usr,  // Liquidated CDP
+        address kpr   // Keeper that called dog.bark()
     ) external auth isStopped(1) returns (uint256 id) {
         // Input validation
         require(tab    >           0, "Clipper/zero-tab");
@@ -215,11 +231,17 @@ contract Clipper {
         require(has, "Clipper/invalid-price");
         sales[id].top = rmul(rdiv(mul(uint256(val), BLN), spot.par()), buf);
 
+        // incentive to kick auction
+        if (tip > 0 || chip > 0) {
+            vat.suck(address(vow), kpr, add(tip, wmul(tab, chip)));
+        }
+
         emit Kick(id, sales[id].top, tab, lot, usr);
     }
 
     // Reset an auction
-    function redo(uint256 id) external isStopped(2) {
+    // TODO: should we add the reentrancy guard here?
+    function redo(uint256 id, address kpr) external isStopped(2) {
         // Read auction data
         address usr = sales[id].usr;
         uint96  tic = sales[id].tic;
@@ -232,6 +254,8 @@ contract Clipper {
         (bool done, ) = status(tic, top);
         require(done, "Clipper/cannot-reset");
 
+        uint256 tab   = sales[id].tab;
+        uint256 lot   = sales[id].lot;
         sales[id].tic = uint96(block.timestamp);
 
         // Could get this from rmul(Vat.ilks(ilk).spot, Spotter.mat()) instead, but if mat has changed since the
@@ -241,18 +265,25 @@ contract Clipper {
         require(has, "Clipper/invalid-price");
         sales[id].top = top = rmul(rdiv(mul(uint256(val), BLN), spot.par()), buf);
 
-        // TODO: missing incentive
+        // TODO: have a test for dusty lot here
 
-        emit Redo(id, top, sales[id].tab, sales[id].lot, usr);
+        // incentive to redo auction
+        if (tip > 0 || chip > 0) {
+            vat.suck(address(vow), kpr, add(tip, wmul(tab, chip)));
+        }
+
+        emit Redo(id, top, tab, lot, usr);
     }
 
     // Buy amt of collateral from auction indexed by id
-    function take(uint256 id,           // Auction id
-                  uint256 amt,          // Upper limit on amount of collateral to buy  [wad]
-                  uint256 max,          // Maximum acceptable price (DAI / collateral) [ray]
-                  address who,          // Receiver of collateral, payer of DAI, and external call address
-                  bytes calldata data   // Data to pass in external call; if length 0, no call is done
+    function take(
+        uint256 id,           // Auction id
+        uint256 amt,          // Upper limit on amount of collateral to buy  [wad]
+        uint256 max,          // Maximum acceptable price (DAI / collateral) [ray]
+        address who,          // Receiver of collateral, payer of DAI, and external call address
+        bytes calldata data   // Data to pass in external call; if length 0, no call is done
     ) external lock isStopped(2) {
+
         address usr = sales[id].usr;
         uint96  tic = sales[id].tic;
 
@@ -282,31 +313,41 @@ contract Clipper {
             owe = mul(slice, price);
 
             // Don't collect more than tab of DAI
-            if (owe >= tab) {
-                owe = tab;            // owe' <= owe
-                slice = owe / price;  // Adjust slice; slice' = owe' / price <= owe / price == slice <= lot
-                tab = 0;              // Zero tab left, auction will be deleted
-            } else {  // owe < tab
-                // Calculate remaining tab after operation
-                tab = tab - owe;  // safe since owe < tab
+            if (owe > tab) {
+                // Total debt will be paid
+                owe = tab;                  // owe' <= owe
+                // Adjust slice
+                slice = owe / price;        // slice' = owe' / price <= owe / price == slice <= lot
+            } else if (owe < tab && slice < lot) {
+                // if slice == lot => auction completed => dust doesn't matter
                 (,,,, uint256 dust) = vat.ilks(ilk);
-                require(tab >= dust, "Clipper/dust");
+                if (tab - owe < dust) {     // safe as owe < tab
+                    // if tab <= dust, buyers have to buy the whole thing
+                    require(tab > dust, "Clipper/no-partial-purchase");
+                    // Adjust amount to pay
+                    owe = tab - dust;       // owe' <= owe
+                    // Adjust slice
+                    slice = owe / price;    // slice' = owe' / price < owe / price == slice < lot
+                }
             }
 
+            // Calculate remaining tab after operation
+            tab = tab - owe;  // safe since owe <= tab
             // Calculate remaining lot after operation
-            lot = lot - slice;  // safe because: slice <= lot
+            lot = lot - slice;
 
             // Send collateral to who
             vat.flux(ilk, address(this), who, slice);
 
             // Do external call (if defined)
-            if (data.length > 0) {
-                ClipperCallee(who).clipperCall(owe, slice, data);
+            // TODO: do we want to do this with the dog too?
+            if (data.length > 0 && address(vat) != who) {
+                ClipperCallee(who).clipperCall(msg.sender, owe, slice, data);
             }
         }
 
-        // Get DAI from who address
-        vat.move(who, vow, owe);
+        // Get DAI from caller
+        vat.move(msg.sender, vow, owe);
 
         // Removes Dai out for liquidation from accumulator
         dog.digs(ilk, owe);

@@ -178,6 +178,7 @@ contract EndTest is DSTest {
         cat.file("box", rad((10 ether) * MLN));
 
         Clipper clip = new Clipper(address(vat), address(spot), address(dog), name);
+        vat.rely(address(clip));
         vat.hope(address(clip));
         clip.rely(address(end));
         clip.rely(address(dog));

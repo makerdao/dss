@@ -9,6 +9,7 @@ import "ds-value/value.sol";
 import {Vat}     from "../vat.sol";
 import {Spotter} from "../spot.sol";
 import {Vow}     from "../vow.sol";
+import {GemJoin, DaiJoin} from "../join.sol";
 
 import {Clipper} from "../clip.sol";
 import "../abaci.sol";
@@ -17,6 +18,82 @@ import "../dog.sol";
 interface Hevm {
     function warp(uint256) external;
     function store(address,bytes32,bytes32) external;
+}
+
+contract Exchange {
+
+    DSToken gold;
+    DSToken dai;
+    uint256 goldPrice;
+
+    constructor(DSToken gold_, DSToken dai_, uint256 goldPrice_) public {
+        gold = gold_;
+        dai = dai_;
+        goldPrice = goldPrice_;
+    }
+
+    function sellGold(uint256 goldAmt) external {
+        gold.transferFrom(msg.sender, address(this), goldAmt);
+        uint256 daiAmt = goldAmt * goldPrice / 1E18;
+        dai.transfer(msg.sender, daiAmt);
+    }
+}
+
+contract Trader {
+
+    Clipper clip;
+    Vat vat;
+    DSToken gold;
+    GemJoin goldJoin;
+    DSToken dai;
+    DaiJoin daiJoin;
+    Exchange exchange;
+
+    constructor(
+        Clipper clip_,
+        Vat vat_,
+        DSToken gold_,
+        GemJoin goldJoin_,
+        DSToken dai_,
+        DaiJoin daiJoin_,
+        Exchange exchange_
+    ) public {
+        clip = clip_;
+        vat = vat_;
+        gold = gold_;
+        goldJoin = goldJoin_;
+        dai = dai_;
+        daiJoin = daiJoin_;
+        exchange = exchange_;
+    }
+
+    function take(
+        uint256 id,
+        uint256 amt,
+        uint256 max,
+        address who,
+        bytes calldata data
+    )
+        external
+    {
+        clip.take({
+            id: id,
+            amt: amt,
+            max: max,
+            who: who,
+            data: data
+        });
+    }
+
+    function clipperCall(address sender, uint256 owe, uint256 slice, bytes calldata data)
+        external {
+        goldJoin.exit(address(this), slice);
+        gold.approve(address(exchange));
+        exchange.sellGold(slice);
+        dai.approve(address(daiJoin));
+        vat.hope(address(clip));
+        daiJoin.join(sender, owe / 1E27);
+    }
 }
 
 contract Guy {
@@ -53,6 +130,33 @@ contract Guy {
     }
 }
 
+contract BadGuy is Guy {
+
+    constructor(Clipper clip_) Guy(clip_) public {}
+
+    function clipperCall(address sender, uint256 owe, uint256 slice, bytes calldata data)
+        external {
+        clip.take({ // attempt reentrancy
+            id: 1,
+            amt: 25 ether,
+            max: 5 ether * 10E27,
+            who: address(this),
+            data: ""
+        });
+    }
+}
+
+contract RedoGuy is Guy {
+
+    constructor(Clipper clip_) Guy(clip_) public {}
+
+    function clipperCall(
+        address sender, uint256 owe, uint256 slice, bytes calldata data
+    ) external {
+        clip.redo(1, sender);
+    }
+}
+
 contract ClipperTest is DSTest {
     Hevm hevm;
 
@@ -61,13 +165,21 @@ contract ClipperTest is DSTest {
     Spotter spot;
     Vow     vow;
     DSValue pip;
+    DSToken gold;
+    GemJoin goldJoin;
+    DSToken dai;
+    DaiJoin daiJoin;
 
     Clipper clip;
 
     address me;
+    Exchange exchange;
 
     address ali;
     address bob;
+    address che;
+    address dan;
+    address emi;
 
     uint256 WAD = 10 ** 18;
     uint256 RAY = 10 ** 27;
@@ -78,6 +190,7 @@ contract ClipperTest is DSTest {
         bytes20(uint160(uint256(keccak256('hevm cheat code'))));
 
     bytes32 constant ilk = "gold";
+    uint256 constant goldPrice = 5 ether;
 
     uint256 constant startTime = 604411200; // Used to avoid issues with `now`
 
@@ -159,6 +272,19 @@ contract ClipperTest is DSTest {
         vat.rely(address(spot));
 
         vow = new Vow(address(vat), address(0), address(0));
+        gold = new DSToken("GLD");
+        goldJoin = new GemJoin(address(vat), ilk, address(gold));
+        vat.rely(address(goldJoin));
+        dai = new DSToken("DAI");
+        daiJoin = new DaiJoin(address(vat), address(dai));
+        vat.suck(address(0), address(daiJoin), rad(1000 ether));
+        exchange = new Exchange(gold, dai, goldPrice * 11 / 10);
+
+        dai.mint(1000 ether);
+        dai.transfer(address(exchange), 1000 ether);
+        dai.setOwner(address(daiJoin));
+        gold.mint(1000 ether);
+        gold.transfer(address(goldJoin), 1000 ether);
 
         dog = new Dog(address(vat));
         dog.file("vow", address(vow));
@@ -170,7 +296,7 @@ contract ClipperTest is DSTest {
         vat.slip(ilk, me, 1000 ether);
 
         pip = new DSValue();
-        pip.poke(bytes32(uint256(5 ether))); // Spot = $2.5
+        pip.poke(bytes32(goldPrice)); // Spot = $2.5
 
         spot.file(ilk, "pip", address(pip));
         spot.file(ilk, "mat", ray(2 ether)); // 200% liquidation ratio for easier test calcs
@@ -202,17 +328,24 @@ contract ClipperTest is DSTest {
 
         ali = address(new Guy(clip));
         bob = address(new Guy(clip));
+        che = address(new Trader(clip, vat, gold, goldJoin, dai, daiJoin, exchange));
+        dan = address(new BadGuy(clip));
+        emi = address(new RedoGuy(clip));
 
         Guy(ali).hope(address(clip));
         Guy(bob).hope(address(clip));
+        BadGuy(dan).hope(address(clip));
+        RedoGuy(emi).hope(address(clip));
 
         vat.suck(address(0), address(ali), rad(1000 ether));
         vat.suck(address(0), address(bob), rad(1000 ether));
+        vat.suck(address(0), address(dan), rad(1000 ether));
+        vat.suck(address(0), address(emi), rad(1000 ether));
     }
 
     function test_get_chop() public {
         uint256 chop = dog.chop(ilk);
-        (, uint256 chop2,,,,) = dog.ilks(ilk);
+        (, uint256 chop2,,) = dog.ilks(ilk);
         assertEq(chop, chop2);
     }
 
@@ -226,8 +359,8 @@ contract ClipperTest is DSTest {
         uint256 ink;
         uint256 art;
 
-        dog.file(ilk, "tip",  rad(100 ether)); // Flat fee of 100 DAI
-        dog.file(ilk, "chip", 0);              // No linear increase
+        clip.file("tip",  rad(100 ether)); // Flat fee of 100 DAI
+        clip.file("chip", 0);              // No linear increase
 
         assertEq(clip.kicks(), 0);
         (pos, tab, lot, usr, tic, top) = clip.sales(1);
@@ -259,7 +392,7 @@ contract ClipperTest is DSTest {
         assertEq(ink, 0 ether);
         assertEq(art, 0 ether);
 
-        pip.poke(bytes32(uint256(5 ether))); // Spot = $2.5
+        pip.poke(bytes32(goldPrice)); // Spot = $2.5
         spot.poke(ilk);          // Now safe
 
         hevm.warp(startTime + 100);
@@ -279,8 +412,8 @@ contract ClipperTest is DSTest {
 
         clip.file(bytes32("buf"),  ray(1.25 ether)); // 25% Initial price buffer
 
-        dog.file(ilk, "tip",  rad(100 ether)); // Flat fee of 100 DAI
-        dog.file(ilk, "chip", 0.02 ether);     // Linear increase of 2% of tab
+        clip.file("tip",  rad(100 ether)); // Flat fee of 100 DAI
+        clip.file("chip", 0.02 ether);     // Linear increase of 2% of tab
 
         assertEq(vat.dai(bob), rad(1000 ether));
 
@@ -299,30 +432,28 @@ contract ClipperTest is DSTest {
         assertEq(ink, 0 ether);
         assertEq(art, 0 ether);
 
-        (, uint256 rate,,,) = vat.ilks(ilk);
-        uint due = 100 ether * rate; // (art * rate from initial frob)
-        assertEq(vat.dai(bob), rad(1000 ether) + rad(100 ether) + due * 0.02 ether / WAD); // Paid (tip + due * chip) amount of DAI for calling bark()
+        assertEq(vat.dai(bob), rad(1000 ether) + rad(100 ether) + tab * 0.02 ether / WAD); // Paid (tip + due * chip) amount of DAI for calling bark()
     }
 
-    function try_kick(uint256 tab, uint256 lot, address usr) internal returns (bool ok) {
-        string memory sig = "kick(uint256,uint256,address)";
-        (ok,) = address(clip).call(abi.encodeWithSignature(sig, tab, lot, usr));
+    function try_kick(uint256 tab, uint256 lot, address usr, address kpr) internal returns (bool ok) {
+        string memory sig = "kick(uint256,uint256,address,address)";
+        (ok,) = address(clip).call(abi.encodeWithSignature(sig, tab, lot, usr, kpr));
     }
 
     function test_kick_basic() public {
-        assertTrue(try_kick(1 ether, 2 ether, address(1)));
+        assertTrue(try_kick(1 ether, 2 ether, address(1), address(this)));
     }
 
     function test_kick_zero_tab() public {
-        assertTrue(!try_kick(0, 2 ether, address(1)));
+        assertTrue(!try_kick(0, 2 ether, address(1), address(this)));
     }
 
     function test_kick_zero_lot() public {
-        assertTrue(!try_kick(1 ether, 0, address(1)));
+        assertTrue(!try_kick(1 ether, 0, address(1), address(this)));
     }
 
     function test_kick_zero_usr() public {
-        assertTrue(!try_kick(1 ether, 2 ether, address(0)));
+        assertTrue(!try_kick(1 ether, 2 ether, address(0), address(this)));
     }
 
     function try_bark(bytes32 ilk_, address urn_) internal returns (bool ok) {
@@ -511,7 +642,7 @@ contract ClipperTest is DSTest {
 
     function test_Hole_hole() public {
         assertEq(dog.Dirt(), 0);
-        (,,, uint256 dirt,,) = dog.ilks(ilk);
+        (,,, uint256 dirt) = dog.ilks(ilk);
         assertEq(dirt, 0);
 
         dog.bark(ilk, me, address(this));
@@ -519,7 +650,7 @@ contract ClipperTest is DSTest {
         (, uint256 tab,,,,) = clip.sales(1);
 
         assertEq(dog.Dirt(), tab);
-        (,,, dirt,,) = dog.ilks(ilk);
+        (,,, dirt) = dog.ilks(ilk);
         assertEq(dirt, tab);
 
         bytes32 ilk2 = "silver";
@@ -538,7 +669,7 @@ contract ClipperTest is DSTest {
         vat.slip(ilk2, me, 40 ether);
 
         DSValue pip2 = new DSValue();
-        pip2.poke(bytes32(uint256(5 ether))); // Spot = $2.5
+        pip2.poke(bytes32(goldPrice)); // Spot = $2.5
 
         spot.file(ilk2, "pip", address(pip2));
         spot.file(ilk2, "mat", ray(2 ether));
@@ -552,8 +683,8 @@ contract ClipperTest is DSTest {
         (, uint256 tab2,,,,) = clip2.sales(1);
 
         assertEq(dog.Dirt(), tab + tab2);
-        (,,, dirt,,) = dog.ilks(ilk);
-        (,,, uint256 dirt2,,) = dog.ilks(ilk2);
+        (,,, dirt) = dog.ilks(ilk);
+        (,,, uint256 dirt2) = dog.ilks(ilk2);
         assertEq(dirt, tab);
         assertEq(dirt2, tab2);
     }
@@ -565,7 +696,7 @@ contract ClipperTest is DSTest {
         assertEq(_art(ilk, me), 100 ether);
 
         assertEq(dog.Dirt(), 0);
-        (,uint256 chop,, uint256 dirt,,) = dog.ilks(ilk);
+        (,uint256 chop,, uint256 dirt) = dog.ilks(ilk);
         assertEq(dirt, 0);
 
         dog.bark(ilk, me, address(this));
@@ -581,7 +712,7 @@ contract ClipperTest is DSTest {
         assertEq(_art(ilk, me), 100 ether - tab * WAD / rate / chop);
 
         assertEq(dog.Dirt(), tab);
-        (,,, dirt,,) = dog.ilks(ilk);
+        (,,, dirt) = dog.ilks(ilk);
         assertEq(dirt, tab);
     }
 
@@ -592,7 +723,7 @@ contract ClipperTest is DSTest {
         assertEq(_art(ilk, me), 100 ether);
 
         assertEq(dog.Dirt(), 0);
-        (,uint256 chop,, uint256 dirt,,) = dog.ilks(ilk);
+        (,uint256 chop,, uint256 dirt) = dog.ilks(ilk);
         assertEq(dirt, 0);
 
         dog.bark(ilk, me, address(this));
@@ -608,7 +739,7 @@ contract ClipperTest is DSTest {
         assertEq(_art(ilk, me), 100 ether - tab * WAD / rate / chop);
 
         assertEq(dog.Dirt(), tab);
-        (,,, dirt,,) = dog.ilks(ilk);
+        (,,, dirt) = dog.ilks(ilk);
         assertEq(dirt, tab);
     }
 
@@ -708,8 +839,16 @@ contract ClipperTest is DSTest {
         });
     }
 
-    function testFail_take_bid_creates_dust() public takeSetup {
-        // Bid so owe (= (22 - 1wei) * 5 = 110 RAD - 1) < tab (= 110 RAD) (fails with "Clipper/dust")
+    function test_take_bid_recalculates_due_dust() public takeSetup {
+        (, uint256 tab, uint256 lot,, uint256 tic, uint256 top) = clip.sales(1);
+        assertEq(tab, rad(110 ether));
+        assertEq(lot, 40 ether);
+
+        uint256 price = clip.calc().price(top, now - tic);
+        assertEq(price, ray(5 ether));
+
+        // Bid so owe (= (22 - 1wei) * 5 = 110 RAD - 1) < tab (= 110 RAD)
+        // 1 < 20 RAD => owe = 110 RAD - 20 RAD
         Guy(ali).take({
             id:  1,
             amt: 22 ether - 1,
@@ -717,6 +856,38 @@ contract ClipperTest is DSTest {
             who: address(ali),
             data: ""
         });
+
+        (, tab, lot,,,) = clip.sales(1);
+        assertEq(tab, rad(20 ether));
+        assertEq(lot, 40 ether - rad((110 - 20) * 1 ether) / price);
+    }
+
+    function test_take_bid_avoids_recalculate_due_no_more_lot() public takeSetup {
+        hevm.warp(now + 60); // Reducing the price
+
+        (, uint256 tab, uint256 lot,, uint256 tic, uint256 top) = clip.sales(1);
+        assertEq(tab, rad(110 ether));
+        assertEq(lot, 40 ether);
+
+        uint256 price = clip.calc().price(top, now - tic);
+        assertEq(price, 2735783211953807380973706855); // 2.73 RAY
+
+        // Bid so owe (= (22 - 1wei) * 5 = 110 RAD - 1) < tab (= 110 RAD)
+        // 1 < 20 RAD => owe = 110 RAD - 20 RAD
+        Guy(ali).take({
+            id:  1,
+            amt: 40 ether,
+            max: ray(2.8 ether),
+            who: address(ali),
+            data: ""
+        });
+
+        // 40 * 2.73 = 109.42...
+        // It means a very low amount of tab (< dust) would remain but doesn't matter
+        // as the auction is finished because there isn't more lot
+        (, tab, lot,,,) = clip.sales(1);
+        assertEq(tab, 0);
+        assertEq(lot, 0);
     }
 
     function test_take_multiple_bids_different_prices() public takeSetup {
@@ -793,9 +964,9 @@ contract ClipperTest is DSTest {
         assertEq(clip.kicks(), 1);
     }
 
-    function try_redo(uint256 id) internal returns (bool ok) {
-        string memory sig = "redo(uint256)";
-        (ok,) = address(clip).call(abi.encodeWithSignature(sig, id));
+    function try_redo(uint256 id, address kpr) internal returns (bool ok) {
+        string memory sig = "redo(uint256,address)";
+        (ok,) = address(clip).call(abi.encodeWithSignature(sig, id, kpr));
     }
 
     function test_auction_reset_tail() public {
@@ -809,10 +980,10 @@ contract ClipperTest is DSTest {
 
         hevm.warp(startTime + 3600 seconds);
         assertTrue(!clip.needsRedo(1));
-        assertTrue(!try_redo(1));
+        assertTrue(!try_redo(1, address(this)));
         hevm.warp(startTime + 3601 seconds);
-        assertTrue( clip.needsRedo(1));
-        assertTrue( try_redo(1));
+        assertTrue(clip.needsRedo(1));
+        assertTrue(try_redo(1, address(this)));
 
         (,,,, uint96 ticAfter, uint256 topAfter) = clip.sales(1);
         assertEq(uint256(ticAfter), startTime + 3601 seconds);     // (now)
@@ -830,10 +1001,10 @@ contract ClipperTest is DSTest {
 
         hevm.warp(startTime + 1800 seconds);
         assertTrue(!clip.needsRedo(1));
-        assertTrue(!try_redo(1));
+        assertTrue(!try_redo(1, address(this)));
         hevm.warp(startTime + 1801 seconds);
-        assertTrue( clip.needsRedo(1));
-        assertTrue( try_redo(1));
+        assertTrue(clip.needsRedo(1));
+        assertTrue(try_redo(1, address(this)));
 
         (,,,, uint96 ticAfter, uint256 topAfter) = clip.sales(1);
         assertEq(uint256(ticAfter), startTime + 1801 seconds);     // (now)
@@ -844,23 +1015,23 @@ contract ClipperTest is DSTest {
         auctionResetSetup(10 hours); // 10 hours till zero is reached (used to test tail)
 
         hevm.warp(startTime + 3601 seconds);
-        clip.redo(1);
+        clip.redo(1, address(this));
 
-        assertTrue(!try_redo(1));
+        assertTrue(!try_redo(1, address(this)));
     }
 
     function test_auction_reset_cusp_twice() public {
         auctionResetSetup(1 hours); // 1 hour till zero is reached (used to test cusp)
 
         hevm.warp(startTime + 1801 seconds); // Price goes below 50% "cusp" after 30min01sec
-        clip.redo(1);
+        clip.redo(1, address(this));
 
-        assertTrue(!try_redo(1));
+        assertTrue(!try_redo(1, address(this)));
     }
 
     function test_redo_zero_usr() public {
         // Can't reset a non-existent auction.
-        assertTrue(!try_redo(1));
+        assertTrue(!try_redo(1, address(this)));
     }
 
     function test_setBreaker() public {
@@ -935,9 +1106,9 @@ contract ClipperTest is DSTest {
         assertEq(topBefore, ray(5 ether)); // $4 spot + 25% buffer = $5 (wasn't affected by poke)
 
         hevm.warp(startTime + 3600 seconds);
-        assertTrue(!try_redo(1));
+        assertTrue(!try_redo(1, address(this)));
         hevm.warp(startTime + 3601 seconds);
-        assertTrue( try_redo(1));
+        assertTrue(try_redo(1, address(this)));
 
         (,,,, uint96 ticAfter, uint256 topAfter) = clip.sales(1);
         assertEq(uint256(ticAfter), startTime + 3601 seconds);     // (now)
@@ -956,9 +1127,9 @@ contract ClipperTest is DSTest {
         assertEq(topBefore, ray(5 ether)); // $4 spot + 25% buffer = $5 (wasn't affected by poke)
 
         hevm.warp(startTime + 3600 seconds);
-        assertTrue(!try_redo(1));
+        assertTrue(!try_redo(1, address(this)));
         hevm.warp(startTime + 3601 seconds);
-        assertTrue( try_redo(1));
+        assertTrue(try_redo(1, address(this)));
     }
 
     function test_Clipper_yank() public takeSetup {
@@ -981,10 +1152,65 @@ contract ClipperTest is DSTest {
 
         // Assert that callback to clear dirt was successful.
         assertEq(dog.Dirt(), 0);
-        (,,, uint256 dirt,,) = dog.ilks(ilk);
+        (,,, uint256 dirt) = dog.ilks(ilk);
         assertEq(dirt, 0);
 
         // Assert transfer of gem.
         assertEq(vat.gem(ilk, address(this)), preGemBalance + origLot);
+    }
+
+    function testFail_not_enough_dai() public takeSetup {
+        Guy(che).take({
+            id:  1,
+            amt: 25 ether,
+            max: ray(5 ether),
+            who: address(che),
+            data: ""
+        });
+    }
+
+    function test_flashsale() public takeSetup {
+        assertEq(vat.dai(che), 0);
+        assertEq(dai.balanceOf(che), 0);
+        Guy(che).take({
+            id:  1,
+            amt: 25 ether,
+            max: ray(5 ether),
+            who: address(che),
+            data: "hey"
+        });
+        assertEq(vat.dai(che), 0);
+        assertTrue(dai.balanceOf(che) > 0); // Che turned a profit
+    }
+
+    function testFail_reentrancy() public takeSetup {
+        BadGuy(dan).take({
+            id: 1,
+            amt: 25 ether,
+            max: ray(5 ether),
+            who: address(dan),
+            data: "hey"
+        });
+    }
+
+    function testFail_redo() public takeSetup {
+        RedoGuy(emi).take({
+            id: 1,
+            amt: 25 ether,
+            max: ray(5 ether),
+            who: address(emi),
+            data: "hey"
+        });
+    }
+
+    function testFail_take_impersonation() public takeSetup { // should fail, but works
+        Guy che = new Guy(clip);
+        che.take({
+            id: 1,
+            amt: 99999999999999 ether,
+            max: ray(99999999999999 ether),
+            who: address(ali),
+            data: ""
+        });
     }
 }
