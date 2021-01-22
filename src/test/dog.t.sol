@@ -154,7 +154,4 @@ contract DogTest is DSTest {
         dog.bark(ilk, usr, address(this));
         assertTrue(!isDusty());
     }
-        dog.bark(ilk, usr, address(this));
-        assertTrue(!isDusty());
-    }
 }
