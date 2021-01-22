@@ -240,8 +240,7 @@ contract Clipper {
     }
 
     // Reset an auction
-    // TODO: should we add the reentrancy guard here?
-    function redo(uint256 id, address kpr) external isStopped(2) {
+    function redo(uint256 id, address kpr) external lock isStopped(2) {
         // Read auction data
         address usr = sales[id].usr;
         uint96  tic = sales[id].tic;
@@ -323,6 +322,7 @@ contract Clipper {
                 (,,,, uint256 dust) = vat.ilks(ilk);
                 if (tab - owe < dust) {     // safe as owe < tab
                     // if tab <= dust, buyers have to buy the whole thing
+                    // TODO: Add a test that makes to revert here
                     require(tab > dust, "Clipper/no-partial-purchase");
                     // Adjust amount to pay
                     owe = tab - dust;       // owe' <= owe
