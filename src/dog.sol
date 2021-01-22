@@ -81,7 +81,6 @@ contract Dog {
     event Deny(address indexed usr);
 
     event FileUint256(bytes32 indexed what, uint256 data);
-    event FileAddress(bytes32 indexed what, address data);
     event FileIlkUint256(bytes32 indexed ilk, bytes32 indexed what, uint256 data);
     event FileIlkClip(bytes32 indexed ilk, bytes32 indexed what, address clip);
 
