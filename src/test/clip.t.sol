@@ -87,6 +87,7 @@ contract Trader {
 
     function clipperCall(address sender, uint256 owe, uint256 slice, bytes calldata data)
         external {
+        data;
         goldJoin.exit(address(this), slice);
         gold.approve(address(exchange));
         exchange.sellGold(slice);
@@ -136,6 +137,7 @@ contract BadGuy is Guy {
 
     function clipperCall(address sender, uint256 owe, uint256 slice, bytes calldata data)
         external {
+        sender; owe; slice; data;
         clip.take({ // attempt reentrancy
             id: 1,
             amt: 25 ether,
@@ -153,6 +155,7 @@ contract RedoGuy is Guy {
     function clipperCall(
         address sender, uint256 owe, uint256 slice, bytes calldata data
     ) external {
+        owe; slice; data;
         clip.redo(1, sender);
     }
 }
@@ -1208,8 +1211,8 @@ contract ClipperTest is DSTest {
     }
 
     function testFail_take_impersonation() public takeSetup { // should fail, but works
-        Guy che = new Guy(clip);
-        che.take({
+        Guy gon = new Guy(clip);
+        gon.take({
             id: 1,
             amt: 99999999999999 ether,
             max: ray(99999999999999 ether),
