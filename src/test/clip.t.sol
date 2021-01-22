@@ -840,11 +840,11 @@ contract ClipperTest is DSTest {
     }
 
     function test_take_bid_recalculates_due_dust() public takeSetup {
-        (, uint256 tab, uint256 lot,, uint256 tic, uint256 top) = clip.sales(1);
+        (, uint256 tab, uint256 lot,,,) = clip.sales(1);
         assertEq(tab, rad(110 ether));
         assertEq(lot, 40 ether);
 
-        uint256 price = clip.calc().price(top, now - tic);
+        (, uint256 price) = clip.getStatus(1);
         assertEq(price, ray(5 ether));
 
         // Bid so owe (= (22 - 1wei) * 5 = 110 RAD - 1) < tab (= 110 RAD)
@@ -865,11 +865,11 @@ contract ClipperTest is DSTest {
     function test_take_bid_avoids_recalculate_due_no_more_lot() public takeSetup {
         hevm.warp(now + 60); // Reducing the price
 
-        (, uint256 tab, uint256 lot,, uint256 tic, uint256 top) = clip.sales(1);
+        (, uint256 tab, uint256 lot,,,) = clip.sales(1);
         assertEq(tab, rad(110 ether));
         assertEq(lot, 40 ether);
 
-        uint256 price = clip.calc().price(top, now - tic);
+        (, uint256 price) = clip.getStatus(1);
         assertEq(price, 2735783211953807380973706855); // 2.73 RAY
 
         // Bid so owe (= (22 - 1wei) * 5 = 110 RAD - 1) < tab (= 110 RAD)
@@ -922,7 +922,7 @@ contract ClipperTest is DSTest {
 
         hevm.warp(now + 30);
 
-        uint256 price = clip.calc().price(top, now - tic);
+        (, uint256 price) = clip.getStatus(1);
         Guy(bob).take({
             id:  1,
             amt: 30 ether,     // Buy the rest of the lot
@@ -979,10 +979,12 @@ contract ClipperTest is DSTest {
         assertEq(topBefore, ray(5 ether)); // $4 spot + 25% buffer = $5 (wasn't affected by poke)
 
         hevm.warp(startTime + 3600 seconds);
-        assertTrue(!clip.needsRedo(1));
+        (bool needsRedo,) = clip.getStatus(1);
+        assertTrue(!needsRedo);
         assertTrue(!try_redo(1, address(this)));
         hevm.warp(startTime + 3601 seconds);
-        assertTrue(clip.needsRedo(1));
+        (needsRedo,) = clip.getStatus(1);
+        assertTrue(needsRedo);
         assertTrue(try_redo(1, address(this)));
 
         (,,,, uint96 ticAfter, uint256 topAfter) = clip.sales(1);
@@ -1000,10 +1002,12 @@ contract ClipperTest is DSTest {
         assertEq(topBefore, ray(5 ether)); // $4 spot + 25% buffer = $5 (wasn't affected by poke)
 
         hevm.warp(startTime + 1800 seconds);
-        assertTrue(!clip.needsRedo(1));
+        (bool needsRedo,) = clip.getStatus(1);
+        assertTrue(!needsRedo);
         assertTrue(!try_redo(1, address(this)));
         hevm.warp(startTime + 1801 seconds);
-        assertTrue(clip.needsRedo(1));
+        (needsRedo,) = clip.getStatus(1);
+        assertTrue(needsRedo);
         assertTrue(try_redo(1, address(this)));
 
         (,,,, uint96 ticAfter, uint256 topAfter) = clip.sales(1);
