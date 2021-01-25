@@ -89,8 +89,8 @@ contract Clipper {
     // 2: no new redo() or take()
     uint256 public stopped = 0;
 
-    uint256 chip; // Percentage of tab to suck from vow to incentivize keepers [wad]
-    uint256 tip;  // Flat fee to suck from vow to incentivize keepers          [rad]
+    uint256 public chip; // Percentage of tab to suck from vow to incentivize keepers [wad]
+    uint256 public tip;  // Flat fee to suck from vow to incentivize keepers          [rad]
 
     // --- Events ---
     event Rely(address indexed usr);
@@ -267,7 +267,6 @@ contract Clipper {
         // incentive to redo auction
         if (tip > 0 || chip > 0) {
             (,,,, uint256 dust) = vat.ilks(ilk);
-            // TODO: Make a test to check when this condition is not passing
             if (tab >= dust && mul(lot, price) >= dust) {
                 vat.suck(vow, kpr, add(tip, wmul(tab, chip)));
             }

@@ -1173,6 +1173,65 @@ contract ClipperTest is DSTest {
         assertTrue(try_redo(1, address(this)));
     }
 
+    function test_redo_incentive() public takeSetup {
+        // (, uint256 price) = clip.getStatus(1);
+        // assertEq(price, ray(5 ether));
+
+        clip.file("tip",  rad(100 ether)); // Flat fee of 100 DAI
+        clip.file("chip", 0);              // No linear increase
+
+        (, uint256 tab, uint256 lot,,,) = clip.sales(1);
+
+        assertEq(tab, rad(110 ether));
+        assertEq(lot, 40 ether);
+
+        hevm.warp(now + 300);
+        clip.redo(1, address(123));
+        assertEq(vat.dai(address(123)), clip.tip());
+
+        clip.file("chip", 0.02 ether);     // Linear increase of 2% of tab
+        hevm.warp(now + 300);
+        clip.redo(1, address(234));
+        assertEq(vat.dai(address(234)), clip.tip() + clip.chip() * tab / WAD);
+
+        clip.file("tip", 0); // No more flat fee
+        hevm.warp(now + 300);
+        clip.redo(1, address(345));
+        assertEq(vat.dai(address(345)), clip.chip() * tab / WAD);
+
+        vat.file(ilk, "dust", rad(110 ether) + 1); // 1 wei > than $110 (tab) as dust
+
+        hevm.warp(now + 300);
+        clip.redo(1, address(456));
+        assertEq(vat.dai(address(456)), 0);
+
+        vat.file(ilk, "dust", rad(20 ether)); // $20 dust
+
+        hevm.warp(now + 100); // Reducing the price
+
+        (, uint256 price) = clip.getStatus(1);
+        assertEq(price, 1830161706366147524653080130); // 1.83 RAY
+
+        clip.take({
+            id:  1,
+            amt: 38 ether,
+            max: ray(5 ether),
+            who: address(this),
+            data: ""
+        });
+
+        (, tab, lot,,,) = clip.sales(1);
+
+        assertEq(tab, rad(110 ether) - 38 ether * price); // > $20 dust
+        // When auction is reset the current price of lot
+        // is calculated from oracle price ($4) to see if dusty
+        assertEq(lot, 2 ether); // (2 * $4) < $20 quivalent (dusty collateral)
+
+        hevm.warp(now + 300);
+        clip.redo(1, address(567));
+        assertEq(vat.dai(address(567)), 0);
+    }
+
     function test_Clipper_yank() public takeSetup {
         uint256 preGemBalance = vat.gem(ilk, address(this));
         (,, uint256 origLot,,,) = clip.sales(1);
