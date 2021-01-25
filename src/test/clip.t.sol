@@ -1174,9 +1174,6 @@ contract ClipperTest is DSTest {
     }
 
     function test_redo_incentive() public takeSetup {
-        // (, uint256 price) = clip.getStatus(1);
-        // assertEq(price, ray(5 ether));
-
         clip.file("tip",  rad(100 ether)); // Flat fee of 100 DAI
         clip.file("chip", 0);              // No linear increase
 
@@ -1205,6 +1202,7 @@ contract ClipperTest is DSTest {
         clip.redo(1, address(456));
         assertEq(vat.dai(address(456)), 0);
 
+        // Set dust back to $20 so we can check the lot dusty case
         vat.file(ilk, "dust", rad(20 ether)); // $20 dust
 
         hevm.warp(now + 100); // Reducing the price
