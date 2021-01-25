@@ -78,8 +78,7 @@ contract DogTest is DSTest {
         dog.bark(ilk, usr, address(this));
     }
 
-    // currently, dog.bark doesn't check if a vault is unliquidatable
-    function test_bark_unliquidatable_vault() public {
+    function testFail_bark_unliquidatable_vault() public {
         uint256 dust = 200;
         vat.file(ilk, "dust", dust * RAD);
         setUrn(1, (dust / 2) * WAD);
@@ -87,7 +86,7 @@ contract DogTest is DSTest {
         dog.bark(ilk, usr, address(this));
     }
 
-    function test_bark_over_ilk_hole_under_ilk_hole_plus_dust() public {
+    function test_bark_over_ilk_hole_under_dust() public {
         uint256 dust = 200;
         vat.file(ilk, "dust", dust * RAD);
         uint256 hole = 5 * THOUSAND;
@@ -99,7 +98,7 @@ contract DogTest is DSTest {
         assertEq(art, 0);
     }
 
-    function test_bark_over_Hole_under_Hole_plus_dust() public {
+    function test_bark_over_Hole_under_dust() public {
         uint256 dust = 200;
         vat.file(ilk, "dust", dust * RAD);
         uint256 Hole = 5 * THOUSAND;
@@ -120,7 +119,7 @@ contract DogTest is DSTest {
         dog.bark(ilk, usr, address(this));
         assertTrue(!isDusty());
         (, uint256 art) = vat.urns(ilk, usr);
-        assertEq(art, dust * WAD);
+        assertEq(art, 0);
     }
 
     function test_bark_equals_Hole_plus_dust() public {
@@ -132,6 +131,30 @@ contract DogTest is DSTest {
         dog.bark(ilk, usr, address(this));
         assertTrue(!isDusty());
         (, uint256 art) = vat.urns(ilk, usr);
-        assertEq(art, dust * WAD);
+        assertEq(art, 0);
+    }
+
+    function test_bark_over_ilk_hole_plus_dust() public {
+        uint256 dust = 200;
+        vat.file(ilk, "dust", dust * RAD);
+        uint256 hole = 5 * THOUSAND;
+        dog.file(ilk, "hole", hole * RAD);
+        setUrn(WAD, hole * WAD * WAD / dog.chop(ilk) + dust * WAD + 1);
+        dog.bark(ilk, usr, address(this));
+        assertTrue(!isDusty());
+        (, uint256 art) = vat.urns(ilk, usr);
+        assertEq(art, dust * WAD + 1);
+    }
+
+    function test_bark_over_Hole_plus_dust() public {
+        uint256 dust = 200;
+        vat.file(ilk, "dust", dust * RAD);
+        uint256 Hole = 5 * THOUSAND;
+        dog.file("Hole", Hole * RAD);
+        setUrn(WAD, Hole * WAD * WAD / dog.chop(ilk) + dust * WAD + 1);
+        dog.bark(ilk, usr, address(this));
+        assertTrue(!isDusty());
+        (, uint256 art) = vat.urns(ilk, usr);
+        assertEq(art, dust * WAD + 1);
     }
 }

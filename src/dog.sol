@@ -120,6 +120,9 @@ contract Dog {
     function mul(uint256 x, uint256 y) internal pure returns (uint256 z) {
         require(y == 0 || (z = x * y) / y == x);
     }
+    function wdiv(uint x, uint y) internal pure returns (uint z) {
+        z = mul(x, WAD) / y;
+    }
 
     // --- Administration ---
     function file(bytes32 what, address data) external auth {
@@ -170,13 +173,9 @@ contract Dog {
             // Verify there is room and it is not dusty
             require(room > 0 && room >= dust, "Dog/liquidation-limit-hit");
 
-            // uint256.max()/(RAD*WAD) = 115,792,089,237,316
-            dart = min(art, mul(room, WAD) / rate / milk.chop);
-
-            if (mul(art - dart, rate) < dust) {
-                // avoid leaving a dusty vault to prevent unliquidatable vaults
-                dart = art;
-            }
+            uint256 tab = mul(art, rate);
+            uint256 choppedRoom = wdiv(room, milk.chop);
+            dart = choppedRoom > sub(tab, dust) ? art : choppedRoom / rate;
         }
 
         uint256 dink = mul(ink, dart) / art;
