@@ -335,15 +335,17 @@ contract ClipperTest is DSTest {
         dan = address(new BadGuy(clip));
         emi = address(new RedoGuy(clip));
 
+        vat.hope(address(clip));
         Guy(ali).hope(address(clip));
         Guy(bob).hope(address(clip));
         BadGuy(dan).hope(address(clip));
         RedoGuy(emi).hope(address(clip));
 
-        vat.suck(address(0), address(ali), rad(1000 ether));
-        vat.suck(address(0), address(bob), rad(1000 ether));
-        vat.suck(address(0), address(dan), rad(1000 ether));
-        vat.suck(address(0), address(emi), rad(1000 ether));
+        vat.suck(address(0), address(this), rad(1000 ether));
+        vat.suck(address(0), address(ali),  rad(1000 ether));
+        vat.suck(address(0), address(bob),  rad(1000 ether));
+        vat.suck(address(0), address(dan),  rad(1000 ether));
+        vat.suck(address(0), address(emi),  rad(1000 ether));
     }
 
     function test_get_chop() public {
@@ -892,6 +894,39 @@ contract ClipperTest is DSTest {
         assertEq(lot, 0);
     }
 
+    function test_take_bid_fails_no_partial_allowed() public takeSetup {
+        (, uint256 price) = clip.getStatus(1);
+        assertEq(price, ray(5 ether));
+
+        clip.take({
+            id:  1,
+            amt: 22 ether - 1,
+            max: ray(5 ether),
+            who: address(this),
+            data: ""
+        });
+
+        (, uint256 tab, uint256 lot,,,) = clip.sales(1);
+        assertEq(tab, rad(20 ether));
+        assertEq(lot, 40 ether - rad((110 - 20) * 1 ether) / price);
+
+        assertTrue(!try_take({
+            id:  1,
+            amt: tab / price - 1, // Try to do a partial purchase when tab == dust
+            max: ray(5 ether),
+            who: address(this),
+            data: ""
+        }));
+
+        clip.take({
+            id:  1,
+            amt: tab / price, // This time take the whole tab
+            max: ray(5 ether),
+            who: address(this),
+            data: ""
+        });
+    }
+
     function test_take_multiple_bids_different_prices() public takeSetup {
         uint256 pos;
         uint256 tab;
@@ -1136,6 +1171,63 @@ contract ClipperTest is DSTest {
         assertTrue(!try_redo(1, address(this)));
         hevm.warp(startTime + 3601 seconds);
         assertTrue(try_redo(1, address(this)));
+    }
+
+    function test_redo_incentive() public takeSetup {
+        clip.file("tip",  rad(100 ether)); // Flat fee of 100 DAI
+        clip.file("chip", 0);              // No linear increase
+
+        (, uint256 tab, uint256 lot,,,) = clip.sales(1);
+
+        assertEq(tab, rad(110 ether));
+        assertEq(lot, 40 ether);
+
+        hevm.warp(now + 300);
+        clip.redo(1, address(123));
+        assertEq(vat.dai(address(123)), clip.tip());
+
+        clip.file("chip", 0.02 ether);     // Linear increase of 2% of tab
+        hevm.warp(now + 300);
+        clip.redo(1, address(234));
+        assertEq(vat.dai(address(234)), clip.tip() + clip.chip() * tab / WAD);
+
+        clip.file("tip", 0); // No more flat fee
+        hevm.warp(now + 300);
+        clip.redo(1, address(345));
+        assertEq(vat.dai(address(345)), clip.chip() * tab / WAD);
+
+        vat.file(ilk, "dust", rad(110 ether) + 1); // 1 wei > than $110 (tab) as dust
+
+        hevm.warp(now + 300);
+        clip.redo(1, address(456));
+        assertEq(vat.dai(address(456)), 0);
+
+        // Set dust back to $20 so we can check the lot dusty case
+        vat.file(ilk, "dust", rad(20 ether)); // $20 dust
+
+        hevm.warp(now + 100); // Reducing the price
+
+        (, uint256 price) = clip.getStatus(1);
+        assertEq(price, 1830161706366147524653080130); // 1.83 RAY
+
+        clip.take({
+            id:  1,
+            amt: 38 ether,
+            max: ray(5 ether),
+            who: address(this),
+            data: ""
+        });
+
+        (, tab, lot,,,) = clip.sales(1);
+
+        assertEq(tab, rad(110 ether) - 38 ether * price); // > $20 dust
+        // When auction is reset the current price of lot
+        // is calculated from oracle price ($4) to see if dusty
+        assertEq(lot, 2 ether); // (2 * $4) < $20 quivalent (dusty collateral)
+
+        hevm.warp(now + 300);
+        clip.redo(1, address(567));
+        assertEq(vat.dai(address(567)), 0);
     }
 
     function test_Clipper_yank() public takeSetup {
