@@ -335,15 +335,17 @@ contract ClipperTest is DSTest {
         dan = address(new BadGuy(clip));
         emi = address(new RedoGuy(clip));
 
+        vat.hope(address(clip));
         Guy(ali).hope(address(clip));
         Guy(bob).hope(address(clip));
         BadGuy(dan).hope(address(clip));
         RedoGuy(emi).hope(address(clip));
 
-        vat.suck(address(0), address(ali), rad(1000 ether));
-        vat.suck(address(0), address(bob), rad(1000 ether));
-        vat.suck(address(0), address(dan), rad(1000 ether));
-        vat.suck(address(0), address(emi), rad(1000 ether));
+        vat.suck(address(0), address(this), rad(1000 ether));
+        vat.suck(address(0), address(ali),  rad(1000 ether));
+        vat.suck(address(0), address(bob),  rad(1000 ether));
+        vat.suck(address(0), address(dan),  rad(1000 ether));
+        vat.suck(address(0), address(emi),  rad(1000 ether));
     }
 
     function test_get_chop() public {
@@ -890,6 +892,39 @@ contract ClipperTest is DSTest {
         (, tab, lot,,,) = clip.sales(1);
         assertEq(tab, 0);
         assertEq(lot, 0);
+    }
+
+    function test_take_bid_fails_no_partial_allowed() public takeSetup {
+        (, uint256 price) = clip.getStatus(1);
+        assertEq(price, ray(5 ether));
+
+        clip.take({
+            id:  1,
+            amt: 22 ether - 1,
+            max: ray(5 ether),
+            who: address(this),
+            data: ""
+        });
+
+        (, uint256 tab, uint256 lot,,,) = clip.sales(1);
+        assertEq(tab, rad(20 ether));
+        assertEq(lot, 40 ether - rad((110 - 20) * 1 ether) / price);
+
+        assertTrue(!try_take({
+            id:  1,
+            amt: tab / price - 1, // Try to do a partial purchase when tab == dust
+            max: ray(5 ether),
+            who: address(this),
+            data: ""
+        }));
+
+        clip.take({
+            id:  1,
+            amt: tab / price, // This time take the whole tab
+            max: ray(5 ether),
+            who: address(this),
+            data: ""
+        });
     }
 
     function test_take_multiple_bids_different_prices() public takeSetup {

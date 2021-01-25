@@ -324,7 +324,6 @@ contract Clipper {
                 (,,,, uint256 dust) = vat.ilks(ilk);
                 if (tab - owe < dust) {     // safe as owe < tab
                     // if tab <= dust, buyers have to buy the whole thing
-                    // TODO: Add a test that makes to revert here
                     require(tab > dust, "Clipper/no-partial-purchase");
                     // Adjust amount to pay
                     owe = tab - dust;       // owe' <= owe
