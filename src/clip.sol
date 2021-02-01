@@ -275,7 +275,77 @@ contract Clipper {
         emit Redo(id, top, tab, lot, usr);
     }
 
-    // Buy amt of collateral from auction indexed by id
+    // Buy `amt` of collateral from auction indexed by `id`
+    //
+    // This function computes `owe`, i.e. the amount of DAI needed to purchase
+    // `amt` of collateral at the current price, as determined by the auction's
+    // abacus:
+    //
+    //     owe = amt * abacus.price
+    //
+    // If `amt` is equal or higher than the auction's `lot`, it means that all
+    // the available collateral is being bought.
+    //
+    //     owe = auction.lot * abacus.price             , for amt >= auction.lot
+    //     owe = amt * abacus.price                                  , otherwise
+    //
+    // Note that the first case means that the auction is over.
+    // Additionally, `owe` needs to be less than or equal to the auction's
+    // `tab`:
+    //
+    //     owe = min(auction.lot * abacus.price, auction.tab)
+    //                                                  , for amt >= auction.lot
+    //     owe = min(amt * abacus.price, auction.tab)                , otherwise
+    //
+    // After each successful call to this function, the auction's `tab` value
+    // decreases:
+    //
+    //     auction.tab' = auction.tab - owe
+    //
+    // However, there is a restriction regarding the resulting `tab` value: it
+    // cannot be less than the `dust` value of its collateral type:
+    //
+    //     auction.tab' >= collateral.dust
+    //
+    // Solving for `owe` in the two equations above:
+    //
+    //     auction.tab - owe >= collateral.dust
+    //     -owe >= collateral.dust - auction.tab
+    //     owe <= aution.tab - collateral.dust
+    //
+    // Thus, if the auction is to continue, a valid `owe` amount has to be less
+    // than or equal to the difference between the auction's `tab` and the
+    // collateral's `dust` value:
+    //
+    //     owe = min(auction.lot * abacus.price, auction.tab)
+    //                                                  , for amt >= auction.lot
+    //     owe = min(amt * abacus.price, auction.tab - collateral.dust)
+    //                                                               , otherwise
+    //
+    // Note that, since the first case means that the aucion is over, the dust
+    // restriction does not apply to it.
+    // Another case in which the auction is over is when
+    //
+    //     owe = auction.tab
+    //
+    // In this case, the `dust` value is also irrelevant. On the other hand, we
+    // know that
+    //
+    //     owe = amt * abacus.price
+    //
+    // Solving for `amt` in the two equations above:
+    //
+    //     auction.tab = amt * abacus.price
+    //     amt = auction.tab / abacus.price
+    //
+    // Thus, the general computation of `owe` can be expressed as:
+    //
+    //     owe = min(auction.lot * abacus.price, auction.tab)
+    //                                                  , for amt >= auction.lot
+    //     owe = auction.tab              , for amt = auction.tab / abacus.price
+    //     owe = min(amt * abacus.price, auction.tab - collateral.dust)
+    //                                                               , otherwise
+    //
     function take(
         uint256 id,           // Auction id
         uint256 amt,          // Upper limit on amount of collateral to buy  [wad]
