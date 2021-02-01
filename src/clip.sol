@@ -200,6 +200,13 @@ contract Clipper {
 
     // start an auction
     // note: trusts the caller to transfer collateral to the contract
+    // The starting price `top` is obtained as follows:
+    //
+    //     top = val * buf / par
+    //
+    // Where `val` is the collateral's unitary value in USD, `buf` is a
+    // multiplicative factor to increase the starting price, and `par` is a
+    // reference per DAI.
     function kick(
         uint256 tab,  // Debt                   [rad]
         uint256 lot,  // Collateral             [wad]
@@ -239,6 +246,7 @@ contract Clipper {
     }
 
     // Reset an auction
+    // See `kick` above for an explanation of the computation of `top`.
     function redo(uint256 id, address kpr) external lock isStopped(2) {
         // Read auction data
         address usr = sales[id].usr;
