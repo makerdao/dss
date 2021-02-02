@@ -190,22 +190,18 @@ contract Dog {
     //
     //     vault.debt' = vault.debt - tab
     //
-    // However, the new debt value cannot be lower than the collateral's `dust`:
+    // However, the new debt value cannot be dusty. This means that it has to be
+    // either zero, or at least equal to the collateral's `dust` value:
     //
-    //     vault.debt' >= ilk.dust
+    //     vault.debt' >= ilk.dust                                          , or
+    //     vault.debt' = 0
     //
-    // Solving for `tab` in the two equations above,
+    // Solving for `tab` for both cases using the previous equation,
     //
     //     vault.debt - tab >= ilk.dust
     //     -tab >= ilk.dust - vault.debt
     //     tab <= vault.debt - ilk.dust
     //     tab <= vault.art * ilk.rate - ilk.dust
-    //
-    // That is, unless the new debt value is zero:
-    //
-    //     vault.debt' = 0
-    //
-    // Solving for `tab` again,
     //
     //     vault.debt - tab = 0
     //     tab = vault.debt
