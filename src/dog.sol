@@ -213,7 +213,7 @@ contract Dog {
     //
     // When `dart`'s value is one such that `vault.art'` will be dusty, the
     // whole vault is liquidated instead, even if it surpasses the hole
-    // restriccions. This would happend for the following values of `dart`:
+    // restriccions. This would happen for the following values of `dart`:
     //
     //     vault.art' * ilk.rate < ilk.dust && vault.art' > 0
     //     vault.art' < ilk.dust / ilk.rate && vault.art' > 0
@@ -223,7 +223,7 @@ contract Dog {
     //     vault.art > dart > vault.art - ilk.dust / ilk.rate
     //     vault.art - ilk.dust / ilk.rate < dart < vault.art
     //
-    // Thus, the general equation for tab is as follows:
+    // Thus, the general equation for `tab` is as follows:
     //
     //     tab = min(
     //             dart * ilk.rate * ilk.chop,
