@@ -211,14 +211,28 @@ contract Dog {
     //     vault.art - dart = 0
     //     dart = vault.art
     //
+    // When `dart`'s value is one such that `vault.art'` will be dusty, the
+    // whole vault is liquidated instead, even if it surpasses the hole
+    // restriccions. This would happend for the following values of `dart`:
+    //
+    //     vault.art' * ilk.rate < ilk.dust && vault.art' > 0
+    //     vault.art' < ilk.dust / ilk.rate && vault.art' > 0
+    //     0 < vault.art' < ilk.dust / ilk.rate
+    //     0 < vault.art - dart < ilk.dust / ilk.rate
+    //     - vault.art < -dart < ilk.dust / ilk.rate - vault.art
+    //     vault.art > dart > vault.art - ilk.dust / ilk.rate
+    //     vault.art - ilk.dust / ilk.rate < dart < vault.art
+    //
     // Thus, the general equation for tab is as follows:
     //
-    //     tab = dart * ilk.rate * ilk.chop               , for dart = vault.art
     //     tab = min(
     //             dart * ilk.rate * ilk.chop,
     //             ilk.hole - ilk.dirt,
     //             Hole - Dirt
     //           )                 , for dart <= vault.art - ilk.dust / ilk.rate
+    //
+    //     tab = vault.art * ilk.rate * ilk.chop
+    //                 , for vault.art - ilk.dust / ilk.rate < dart <= vault.art
     //
     function bark(bytes32 ilk, address urn, address kpr) external returns (uint256 id) {
         require(live == 1, "Dog/not-live");
