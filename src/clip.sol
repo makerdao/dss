@@ -58,7 +58,7 @@ contract Clipper {
     // --- Data ---
     bytes32  immutable public ilk;   // Collateral type of this Clipper
     VatLike  immutable public vat;   // Core CDP Engine
-    DogLike  immutable public dog;      // Liquidation module
+    DogLike  immutable public dog;   // Liquidation module
 
     address     public vow;      // Recipient of dai raised in auctions
     SpotterLike public spotter;  // Collateral price module
