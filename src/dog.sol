@@ -151,11 +151,15 @@ contract Dog {
     // --- CDP Liquidation: all bark and no bite ---
     //
     // This function computes `tab`, the target amount of DAI to be raised in
-    // an auction. In the general case, it is the product of the vault's
-    // normalized debt, the collateral's accumulated rate, and the collateral's
-    // `chop` value.
+    // an auction. In the general case, it is the product of `dart`, the
+    // collateral's accumulated rate, and the collateral's `chop` value.
     //
-    //     tab = vault.art * ilk.rate * ilk.chop
+    //     tab = dart * ilk.rate * ilk.chop
+    //
+    // The `dart` value stands for `delta art` and it is equal to or less than
+    // the vault's normalized debt (`art`) value:
+    //
+    //     dart <= vault.art
     //
     // When a liquidation is successfully started, its `tab` value is added to
     // the collateral's `dirt` value:
@@ -186,35 +190,35 @@ contract Dog {
     //
     //     vault.debt = vault.art * ilk.rate
     //
-    // Furthermore, this debt is decreased after a liquidation is triggered:
+    // Furthermore, a vault's normalized debt is decreased after a liquidation
+    // is triggered:
     //
-    //     vault.debt' = vault.debt - tab
+    //     vault.art' = vault.art - dart
     //
     // However, the new debt value cannot be dusty. This means that it has to be
     // either zero, or at least equal to the collateral's `dust` value:
     //
-    //     vault.debt' >= ilk.dust                                          , or
-    //     vault.debt' = 0
+    //     vault.art' * ilk.rate >= ilk.dust                                , or
+    //     vault.art' = 0
     //
-    // Solving for `tab` for both cases using the previous equation,
+    // Solving for `dart` for both cases using the previous equation,
     //
-    //     vault.debt - tab >= ilk.dust
-    //     -tab >= ilk.dust - vault.debt
-    //     tab <= vault.debt - ilk.dust
-    //     tab <= vault.art * ilk.rate - ilk.dust
+    //     vault.art' >= ilk.dust / ilk.rate
+    //     vault.art - dart >= ilk.dust / ilk.rate
+    //     -dart >= ilk.dust / ilk.rate - vault.art
+    //     dart <= vault.art - ilk.dust / ilk.rate
     //
-    //     vault.debt - tab = 0
-    //     tab = vault.debt
-    //     tab = vault.art * ilk.rate
+    //     vault.art - dart = 0
+    //     dart = vault.art
     //
-    // In summary, `tab` is computed with the following formula:
+    // Thus, the general equation for tab is as follows:
     //
-    //     tab = vault.art * ilk.rate * ilk.chop
-    //
-    // And is subject to the following conditions:
-    //
-    //     tab <= min(ilk.hole - ilk.dirt, Hole - Dirt)
-    //     tab <= vault.art * ilk.rate - ilk.dust || tab = vault.art * ilk.rate
+    //     tab = dart * ilk.rate * ilk.chop               , for dart = vault.art
+    //     tab = min(
+    //             dart * ilk.rate * ilk.chop,
+    //             ilk.hole - ilk.dirt,
+    //             Hole - Dirt
+    //           )                 , for dart <= vault.art - ilk.dust / ilk.rate
     //
     function bark(bytes32 ilk, address urn, address kpr) external returns (uint256 id) {
         require(live == 1, "Dog/not-live");
