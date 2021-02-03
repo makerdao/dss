@@ -184,6 +184,7 @@ contract EndTest is DSTest {
         clip.rely(address(dog));
         dog.rely(address(clip));
         dog.file(name, "clip", address(clip));
+        dog.file(name, "step", WAD);
         dog.file(name, "chop", 1.1 ether);
         dog.file(name, "hole", rad(25000 ether));
         dog.file("Hole", rad((25000 ether)));

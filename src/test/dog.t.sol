@@ -40,6 +40,7 @@ contract DogTest is DSTest {
         clip = new ClipperMock();
         dog = new Dog(address(vat));
         vat.rely(address(dog));
+        dog.file(ilk, "step", WAD);
         dog.file(ilk, "chop", 11 * WAD / 10);
         dog.file("vow", address(vow));
         dog.file(ilk, "clip", address(clip));
@@ -59,7 +60,7 @@ contract DogTest is DSTest {
     function isDusty() internal returns (bool dusty) {
         (, uint256 rate,,, uint256 dust) = vat.ilks(ilk);
         (, uint256 art) = vat.urns(ilk, usr);
-        (, uint256 chop,,) = dog.ilks(ilk);
+        (,, uint256 chop,,) = dog.ilks(ilk);
         uint256 due = art * rate;
         uint256 tab = due * chop / WAD;
         dusty = tab > 0 && tab < dust;

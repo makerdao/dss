@@ -62,6 +62,7 @@ contract Dog {
     // --- Data ---
     struct Ilk {
         address clip;  // Liquidator
+        uint256 step;  // Liquidation Ratio                                            [wad]
         uint256 chop;  // Liquidation Penalty                                          [wad]
         uint256 hole;  // Max DAI needed to cover debt+fees of active auctions per ilk [rad]
         uint256 dirt;  // Amt DAI needed to cover debt+fees of active auctions per ilk [rad]
@@ -134,6 +135,7 @@ contract Dog {
     }
     function file(bytes32 ilk, bytes32 what, uint256 data) external auth {
         if (what == "chop") ilks[ilk].chop = data;
+        else if (what == "step") ilks[ilk].step = data;
         else if (what == "hole") ilks[ilk].hole = data;
         else revert("Dog/file-unrecognized-param");
         emit FileIlkUint256(ilk, what, data);
@@ -160,7 +162,7 @@ contract Dog {
         {
             uint256 spot;
             (,rate, spot,, dust) = vat.ilks(ilk);
-            require(spot > 0 && mul(ink, spot) < mul(art, rate), "Dog/not-unsafe");
+            require(spot > 0 && mul(ink, spot) < mul(mul(art, milk.step) / WAD, rate), "Dog/not-unsafe");
 
             // Get the minimum value between:
             // 1) Remaining space in the general Hole
