@@ -167,13 +167,15 @@ contract Dog {
     // otherwise the transaction fails
     //
     // Then `dart` is defined as:
-    // if urn.art <= room || urn.art > room && urn.art < room + dust
+    // if urn.art * ilk.rate * ilk.chop <= room ||
+    //    urn.art * ilk.rate * ilk.chop > room && urn.art * ilk.rate * ilk.chop < room + dust:
     //      dart = urn.art
     // otherwise
     //      dart = room / ilk.rate / ilk.chop
     //
     // Leaving the final formulas as:
-    // if urn.art <= room || urn.art > room && urn.art < room + dust:
+    // if urn.art * ilk.rate * ilk.chop <= room ||
+    //    urn.art * ilk.rate * ilk.chop > room && urn.art * ilk.rate * ilk.chop < room + dust:
     //      tab = urn.art * ilk.rate * ilk.chop
     //      lot = urn.ink
     // otherwise
