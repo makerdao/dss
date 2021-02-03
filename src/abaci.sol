@@ -166,9 +166,12 @@ contract StairstepExponentialDecrease is Abacus {
     // top: initial price
     // dur: seconds since the auction has started
     // step: seconds between a price drop
-    // cut: percentage to decrease per step (more accurately, the % / 100..e.g., if we want a 2.4% decrease, then cut is 0.024)
+    // cut: cut is the percentage to decrease. In the code, it is represented as 1 - (% value / 100)
+    // So, a 1 % decrease, cut would be 1 - 0.01 
 
     // returns: top * (cut ^ (dur / step))
+
+
 
   
     function price(uint256 top, uint256 dur) override external view returns (uint256) {
