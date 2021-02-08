@@ -211,6 +211,13 @@ contract Clipper {
 
     // start an auction
     // note: trusts the caller to transfer collateral to the contract
+    // The starting price `top` is obtained as follows:
+    //
+    //     top = val * buf / par
+    //
+    // Where `val` is the collateral's unitary value in USD, `buf` is a
+    // multiplicative factor to increase the starting price, and `par` is a
+    // reference per DAI.
     function kick(
         uint256 tab,  // Debt                   [rad]
         uint256 lot,  // Collateral             [wad]
@@ -247,6 +254,7 @@ contract Clipper {
     }
 
     // Reset an auction
+    // See `kick` above for an explanation of the computation of `top`.
     function redo(uint256 id, address kpr) external lock isStopped(2) {
         // Read auction data
         address usr = sales[id].usr;
@@ -280,7 +288,32 @@ contract Clipper {
         emit Redo(id, top, tab, lot, usr);
     }
 
-    // Buy amt of collateral from auction indexed by id
+    // Buy `amt` of collateral from auction indexed by `id`
+    //
+    // This function computes `owe` as the amount of DAI to pay in the auction
+    // and `slice` as the amount of collateral being bought for that DAI paid
+    //
+    // amt = desired max amount of collateral being purchased
+    // tab = current amount of DAI to be raised in the auction
+    // lot = maximum amount of collateral available for selling
+    // abacus.price = current price of collateral
+    //
+    // The values of `owe` and `slice` will be
+    // defined according to these different cases:
+    //
+    // if min(lot, amt) * abacus.price >= tab
+    //     owe = tab
+    //     slice = tab / abacus.price
+    // otherwise
+    //     if amt < lot && tab - (amt * abacus.price) < ilk.dust
+    //         if tab > ilk.dust
+    //             owe = tab - ilk.dust
+    //             slice = owe / abacus.price
+    //         otherwise
+    //             tx fails
+    //     otherwise
+    //         owe = min(lot, amt) * abacus.price
+    //         slice = min(lot, amt)
     function take(
         uint256 id,           // Auction id
         uint256 amt,          // Upper limit on amount of collateral to buy  [wad]

@@ -71,6 +71,15 @@ contract LinearDecrease is Abacus {
         z = z / RAY;
     }
 
+    // Price calculation when price is decreased linearly in proportion to time:
+    // tau: The number of seconds after the start of the auction where the price will hit 0
+    // top: Initial price
+    // dur: current seconds since the start of the auction
+    //
+    // Returns y = top * ((tau - dur) / tau)
+    //
+    // Note the internal call to mul multiples by RAY, thereby ensuring that the rmul calculation
+    // which utilizes top and tau (RAY values) is also a RAY value.
     function price(uint256 top, uint256 dur) override external view returns (uint256) {
         if (dur >= tau) return 0;
         return rmul(top, mul(tau - dur, RAY) / tau);
@@ -149,6 +158,14 @@ contract StairstepExponentialDecrease is Abacus {
         }
     }
 
+    // top: initial price
+    // dur: seconds since the auction has started
+    // step: seconds between a price drop
+    // cut: cut is the percentage to decrease. In the code, it is represented as 1 - (% value / 100)
+    // So, a 1 % decrease, cut would be 1 - 0.01
+    //
+    // returns: top * (cut ^ (dur / step))
+    //
     function price(uint256 top, uint256 dur) override external view returns (uint256) {
         return rmul(top, rpow(cut, dur / step, RAY));
     }
