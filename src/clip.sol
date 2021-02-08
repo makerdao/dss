@@ -425,7 +425,7 @@ contract Clipper {
     }
 
     // Cancel an auction during ES or via governance action.
-    function yank(uint id) external auth {
+    function yank(uint256 id) external auth {
         require(sales[id].usr != address(0), "Clipper/not-running-auction");
         dog.digs(ilk, sales[id].tab);
         vat.flux(ilk, address(this), msg.sender, sales[id].lot);
