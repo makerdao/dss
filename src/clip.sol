@@ -198,6 +198,17 @@ contract Clipper {
 
     // --- Auction ---
 
+    // get the price directly from the OSM
+    // Could get this from rmul(Vat.ilks(ilk).spot, Spotter.mat()) instead, but
+    // if mat has changed since the last poke, the resulting value will be
+    // incorrect.
+    function getPrice() internal returns (uint256 price) {
+        (PipLike pip, ) = spotter.ilks(ilk);
+        (bytes32 val, bool has) = pip.peek();
+        require(has, "Clipper/invalid-price");
+        price = rdiv(mul(uint256(val), BLN), spotter.par());
+    }
+
     // start an auction
     // note: trusts the caller to transfer collateral to the contract
     function kick(
@@ -222,16 +233,8 @@ contract Clipper {
         sales[id].usr = usr;
         sales[id].tic = uint96(block.timestamp);
 
-        // Could get this from rmul(Vat.ilks(ilk).spot, Spotter.mat()) instead,
-        // but if mat has changed since the last poke, the resulting value will
-        // be incorrect.
         uint256 top;
-        {   // Avoid stack too deep
-            (PipLike pip, ) = spotter.ilks(ilk);
-            (bytes32 val, bool has) = pip.peek();
-            require(has, "Clipper/invalid-price");
-            sales[id].top = top = rmul(rdiv(mul(uint256(val), BLN), spotter.par()), buf);
-        }
+        sales[id].top = top = rmul(getPrice(), buf);
 
         // incentive to kick auction
         uint256 _tip  = tip;
@@ -261,16 +264,8 @@ contract Clipper {
         uint256 lot   = sales[id].lot;
         sales[id].tic = uint96(block.timestamp);
 
-        // Could get this from rmul(Vat.ilks(ilk).spot, Spotter.mat()) instead, but if mat has changed since the
-        // last poke, the resulting value will be incorrect
-        uint256 price;
-        {   // Avoid stack too deep
-            (PipLike pip, ) = spotter.ilks(ilk);
-            (bytes32 val, bool has) = pip.peek();
-            require(has, "Clipper/invalid-price");
-            price = rdiv(mul(uint256(val), BLN), spotter.par());
-            sales[id].top = top = rmul(price, buf);
-        }
+        uint256 price = getPrice();
+        sales[id].top = top = rmul(price, buf);
 
         // incentive to redo auction
         uint256 _tip  = tip;
