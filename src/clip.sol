@@ -88,7 +88,7 @@ contract Clipper {
     // Levels for circuit breaker
     // 0: no breaker
     // 1: no new kick()
-    // 2: no new redo() or take()
+    // 2: no new kick(), redo(), or take()
     uint256 public stopped = 0;
 
     // --- Events ---
@@ -186,7 +186,8 @@ contract Clipper {
         require(y == 0 || (z = x * y) / y == x);
     }
     function wmul(uint256 x, uint256 y) internal pure returns (uint256 z) {
-        z = mul(x, y) / WAD;                                                            }
+        z = mul(x, y) / WAD;
+    }
     function rmul(uint256 x, uint256 y) internal pure returns (uint256 z) {
         z = mul(x, y) / RAY;
     }
@@ -420,6 +421,9 @@ contract Clipper {
 
     // --- Shutdown ---
     function setBreaker(uint256 level) external auth {
+        // 0: no breaker
+        // 1: no new kick()
+        // 2: no new kick(), redo(), or take()
         stopped = level;
         emit SetBreaker(level);
     }
