@@ -224,11 +224,12 @@ contract Clipper {
         // Could get this from rmul(Vat.ilks(ilk).spot, Spotter.mat()) instead,
         // but if mat has changed since the last poke, the resulting value will
         // be incorrect.
+        uint256 top;
         {   // Avoid stack too deep
             (PipLike pip, ) = spotter.ilks(ilk);
             (bytes32 val, bool has) = pip.peek();
             require(has, "Clipper/invalid-price");
-            sales[id].top = rmul(rdiv(mul(uint256(val), BLN), spotter.par()), buf);
+            sales[id].top = top = rmul(rdiv(mul(uint256(val), BLN), spotter.par()), buf);
         }
 
         // incentive to kick auction
@@ -238,7 +239,7 @@ contract Clipper {
             vat.suck(vow, kpr, add(_tip, wmul(tab, _chip)));
         }
 
-        emit Kick(id, sales[id].top, tab, lot, usr);
+        emit Kick(id, top, tab, lot, usr);
     }
 
     // Reset an auction
