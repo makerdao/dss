@@ -243,8 +243,8 @@ contract End {
     event Rely(address indexed usr);
     event Deny(address indexed usr);
 
-    event FileUint256(bytes32 indexed what, uint256 data);
-    event FileAddress(bytes32 indexed what, address data);
+    event File(bytes32 indexed what, uint256 data);
+    event File(bytes32 indexed what, address data);
 
     event Cage();
     event Cage(bytes32 indexed ilk);
@@ -300,13 +300,13 @@ contract End {
         else if (what == "pot")   pot = PotLike(data);
         else if (what == "spot") spot = SpotLike(data);
         else revert("End/file-unrecognized-param");
-        emit FileAddress(what, data);
+        emit File(what, data);
     }
     function file(bytes32 what, uint256 data) external auth {
         require(live == 1, "End/not-live");
         if (what == "wait") wait = data;
         else revert("End/file-unrecognized-param");
-        emit FileUint256(what, data);
+        emit File(what, data);
     }
 
     // --- Settlement ---
