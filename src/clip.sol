@@ -67,6 +67,8 @@ contract Clipper {
     uint256 public buf;   // Multiplicative factor to increase starting price  [ray]
     uint256 public tail;  // Time elapsed before auction reset                 [seconds]
     uint256 public cusp;  // Percentage drop before auction reset              [ray]
+    uint256 public chip;  // Percentage of tab to suck from vow to incentivize keepers [wad]
+    uint256 public tip;   // Flat fee to suck from vow to incentivize keepers          [rad]
 
     uint256   public kicks;   // Total auctions
     uint256[] public active;  // Array of active auction ids
@@ -88,9 +90,6 @@ contract Clipper {
     // 1: no new kick()
     // 2: no new redo() or take()
     uint256 public stopped = 0;
-
-    uint256 public chip; // Percentage of tab to suck from vow to incentivize keepers [wad]
-    uint256 public tip;  // Flat fee to suck from vow to incentivize keepers          [rad]
 
     // --- Events ---
     event Rely(address indexed usr);
@@ -225,14 +224,18 @@ contract Clipper {
         // Could get this from rmul(Vat.ilks(ilk).spot, Spotter.mat()) instead,
         // but if mat has changed since the last poke, the resulting value will
         // be incorrect.
-        (PipLike pip, ) = spotter.ilks(ilk);
-        (bytes32 val, bool has) = pip.peek();
-        require(has, "Clipper/invalid-price");
-        sales[id].top = rmul(rdiv(mul(uint256(val), BLN), spotter.par()), buf);
+        {   // Avoid stack too deep
+            (PipLike pip, ) = spotter.ilks(ilk);
+            (bytes32 val, bool has) = pip.peek();
+            require(has, "Clipper/invalid-price");
+            sales[id].top = rmul(rdiv(mul(uint256(val), BLN), spotter.par()), buf);
+        }
 
         // incentive to kick auction
-        if (tip > 0 || chip > 0) {
-            vat.suck(vow, kpr, add(tip, wmul(tab, chip)));
+        uint256 _tip  = tip;
+        uint256 _chip = chip;
+        if (_tip > 0 || _chip > 0) {
+            vat.suck(vow, kpr, add(_tip, wmul(tab, _chip)));
         }
 
         emit Kick(id, sales[id].top, tab, lot, usr);
@@ -258,17 +261,22 @@ contract Clipper {
 
         // Could get this from rmul(Vat.ilks(ilk).spot, Spotter.mat()) instead, but if mat has changed since the
         // last poke, the resulting value will be incorrect
-        (PipLike pip, ) = spotter.ilks(ilk);
-        (bytes32 val, bool has) = pip.peek();
-        require(has, "Clipper/invalid-price");
-        uint256 price = rdiv(mul(uint256(val), BLN), spotter.par());
-        sales[id].top = top = rmul(price, buf);
+        uint256 price;
+        {   // Avoid stack too deep
+            (PipLike pip, ) = spotter.ilks(ilk);
+            (bytes32 val, bool has) = pip.peek();
+            require(has, "Clipper/invalid-price");
+            price = rdiv(mul(uint256(val), BLN), spotter.par());
+            sales[id].top = top = rmul(price, buf);
+        }
 
         // incentive to redo auction
-        if (tip > 0 || chip > 0) {
+        uint256 _tip  = tip;
+        uint256 _chip = chip;
+        if (_tip > 0 || _chip > 0) {
             (,,,, uint256 dust) = vat.ilks(ilk);
             if (tab >= dust && mul(lot, price) >= dust) {
-                vat.suck(vow, kpr, add(tip, wmul(tab, chip)));
+                vat.suck(vow, kpr, add(_tip, wmul(tab, _chip)));
             }
         }
 
