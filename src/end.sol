@@ -142,11 +142,13 @@ interface SpotLike {
 
     We determine (b) by processing ongoing dai generating processes,
     i.e. auctions. We need to ensure that auctions will not generate any
-    further dai income. In the two-way auction model this occurs when
+    further dai income.
+
+    In the two-way auction model (Flipper) this occurs when
     all auctions are in the reverse (`dent`) phase. There are two ways
     of ensuring this:
 
-    4.  i) `wait`: set the cooldown period to be at least as long as the
+    4a. i) `wait`: set the cooldown period to be at least as long as the
            longest auction duration, which needs to be determined by the
            cage administrator.
 
@@ -161,13 +163,26 @@ interface SpotLike {
 
            `skip(ilk, id)`:
             - cancel individual flip auctions in the `tend` (forward) phase
-            - retrieves collateral and returns dai to bidder
+            - retrieves collateral and debt (including penalty) to owner's CDP
+            - returns dai to last bidder
             - `dent` (reverse) phase auctions can continue normally
 
-    Option (i), `wait`, is sufficient for processing the system
-    settlement but option (ii), `skip`, will speed it up. Both options
-    are available in this implementation, with `skip` being enabled on a
-    per-auction basis.
+    Option (i), `wait`, is sufficient (if all auctions were bidded at least
+    once) for processing the system settlement but option (ii), `skip`,
+    will speed it up. Both options are available in this implementation,
+    with `skip` being enabled on a per-auction basis.
+
+    In the case of the Dutch Auctions model (Clipper) they keep recovering
+    debt during the whole lifetime and there isn't a max duration time
+    guaranteed for the auction to end.
+    So the way to ensure the protocol will not receive extra dai income is:
+
+    4b. i) `snip`: cancel all ongoing auctions and seize the collateral.
+
+           `snip(ilk, id)`:
+            - cancel individual running clip auctions
+            - retrieves remaining collateral and debt (including penalty)
+              to owner's CDP
 
     When a CDP has been processed and has no debt remaining, the
     remaining collateral can be removed.
