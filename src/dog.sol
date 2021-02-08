@@ -165,10 +165,11 @@ contract Dog {
             // Get the minimum value between:
             // 1) Remaining space in the general Hole
             // 2) Remaining space in the collateral hole
-            uint256 room = min(sub(Hole, Dirt), sub(milk.hole, milk.dirt));
+            require(Hole > Dirt && milk.hole > milk.dirt, "Dog/liquidation-limit-hit");
+            uint256 room = min(Hole - Dirt, milk.hole - milk.dirt);
 
-            // Verify there is room and it is not dusty
-            require(room > 0 && room >= dust, "Dog/liquidation-limit-hit");
+            // Verify room is not dusty
+            require(room >= dust, "Dog/liquidation-limit-hit-dusty");
 
             // uint256.max()/(RAD*WAD) = 115,792,089,237,316
             dart = min(art, mul(room, WAD) / rate / milk.chop);
