@@ -1,3 +1,3 @@
-build  :; dapp --use solc:0.6.11 build
+build  :; dapp --use solc:0.5.12 build
 clean  :; dapp clean
-test   :; dapp --use solc:0.6.11 test -v ${TEST_FLAGS}
+test   :; dapp --use solc:0.5.12 test -v ${TEST_FLAGS}
