@@ -44,7 +44,7 @@ interface VatLike {
 }
 
 interface VowLike {
-    function fess(uint256) external;
+    function fess(uint256,uint256) external;
 }
 
 contract Cat is LibNote {
@@ -62,6 +62,7 @@ contract Cat is LibNote {
         address flip;  // Liquidator
         uint256 chop;  // Liquidation Penalty  [wad]
         uint256 dunk;  // Liquidation Quantity [rad]
+        uint256 wait;  // Bad debt grace period [seconds]
     }
 
     mapping (bytes32 => Ilk) public ilks;
@@ -118,6 +119,7 @@ contract Cat is LibNote {
     function file(bytes32 ilk, bytes32 what, uint256 data) external note auth {
         if (what == "chop") ilks[ilk].chop = data;
         else if (what == "dunk") ilks[ilk].dunk = data;
+        else if (what == "wait") ilks[ilk].wait = data;
         else revert("Cat/file-unrecognized-param");
     }
     function file(bytes32 ilk, bytes32 what, address flip) external note auth {
@@ -157,7 +159,7 @@ contract Cat is LibNote {
         vat.grab(
             ilk, urn, address(this), address(vow), -int256(dink), -int256(dart)
         );
-        vow.fess(mul(dart, rate));
+        vow.fess(add(now, milk.wait), mul(dart, rate));
 
         { // Avoid stack too deep
             // This calcuation will overflow if dart*rate exceeds ~10^14,
