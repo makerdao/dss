@@ -7,4 +7,4 @@ before_install:
   - echo "trusted-users = root travis" | sudo tee -a /etc/nix/nix.conf && sudo pkill nix-daemon
   - cachix use maker
 script:
-  - nix-shell --pure --run 'dapp --use solc:0.5.12 test'
+  - nix-shell --pure --run 'dapp test'
