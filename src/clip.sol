@@ -369,8 +369,10 @@ contract Clipper {
     function _remove(uint256 id) internal {
         uint256 _index   = sales[id].pos;
         uint256 _move    = active[active.length - 1];
-        active[_index]   = _move;
-        sales[_move].pos = _index;
+        if (_index != _move) {
+            active[_index]   = _move;
+            sales[_move].pos = _index;
+        }
         active.pop();
         delete sales[id];
     }
