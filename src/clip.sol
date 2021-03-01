@@ -122,7 +122,6 @@ contract Clipper {
         address indexed usr
     );
 
-    event SetBreaker(uint256 level);
     event Yank(uint256 id);
 
     // --- Init ---
@@ -151,16 +150,17 @@ contract Clipper {
     }
 
     // --- Administration ---
-    function file(bytes32 what, uint256 data) external auth {
-        if      (what ==  "buf") buf  = data;
-        else if (what == "tail") tail = data; // Time elapsed before auction reset
-        else if (what == "cusp") cusp = data; // Percentage drop before auction reset
-        else if (what == "chip") chip = data; // Percentage of tab to incentivize
-        else if (what == "tip")   tip = data; // Flat fee to incentivize keepers
+    function file(bytes32 what, uint256 data) external auth lock {
+        if      (what == "buf")         buf = data;
+        else if (what == "tail")       tail = data;  // Time elapsed before auction reset
+        else if (what == "cusp")       cusp = data;  // Percentage drop before auction reset
+        else if (what == "chip")       chip = data;  // Percentage of tab to incentivize
+        else if (what == "tip")         tip = data;  // Flat fee to incentivize keepers
+        else if (what == "stopped") stopped = data;  // Set breaker (0, 1 or 2)
         else revert("Clipper/file-unrecognized-param");
         emit File(what, data);
     }
-    function file(bytes32 what, address data) external auth {
+    function file(bytes32 what, address data) external auth lock {
         if (what == "spotter") spotter = SpotterLike(data);
         else if (what == "vow")    vow = data;
         else if (what == "calc")  calc = AbacusLike(data);
@@ -223,7 +223,7 @@ contract Clipper {
         uint256 lot,  // Collateral             [wad]
         address usr,  // Liquidated CDP
         address kpr   // Keeper that called dog.bark()
-    ) external auth isStopped(1) returns (uint256 id) {
+    ) external auth lock isStopped(1) returns (uint256 id) {
         // Input validation
         require(tab    >           0, "Clipper/zero-tab");
         require(lot    >           0, "Clipper/zero-lot");
@@ -455,17 +455,8 @@ contract Clipper {
         done  = (sub(block.timestamp, tic) > tail || rdiv(price, top) < cusp);
     }
 
-    // --- Shutdown ---
-    function setBreaker(uint256 level) external auth {
-        // 0: no breaker
-        // 1: no new kick()
-        // 2: no new kick(), redo(), or take()
-        stopped = level;
-        emit SetBreaker(level);
-    }
-
     // Cancel an auction during ES or via governance action.
-    function yank(uint256 id) external auth {
+    function yank(uint256 id) external auth lock {
         require(sales[id].usr != address(0), "Clipper/not-running-auction");
         dog.digs(ilk, sales[id].tab);
         vat.flux(ilk, address(this), msg.sender, sales[id].lot);

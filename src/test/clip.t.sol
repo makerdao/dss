@@ -160,6 +160,54 @@ contract RedoGuy is Guy {
     }
 }
 
+contract KickGuy is Guy {
+
+    constructor(Clipper clip_) Guy(clip_) public {}
+
+    function clipperCall(
+        address sender, uint256 owe, uint256 slice, bytes calldata data
+    ) external {
+        sender; owe; slice; data;
+        clip.kick(1, 1, address(0), address(0));
+    }
+}
+
+contract FileUintGuy is Guy {
+
+    constructor(Clipper clip_) Guy(clip_) public {}
+
+    function clipperCall(
+        address sender, uint256 owe, uint256 slice, bytes calldata data
+    ) external {
+        sender; owe; slice; data;
+        clip.file("stopped", 1);
+    }
+}
+
+contract FileAddrGuy is Guy {
+
+    constructor(Clipper clip_) Guy(clip_) public {}
+
+    function clipperCall(
+        address sender, uint256 owe, uint256 slice, bytes calldata data
+    ) external {
+        sender; owe; slice; data;
+        clip.file("vow", address(123));
+    }
+}
+
+contract YankGuy is Guy {
+
+    constructor(Clipper clip_) Guy(clip_) public {}
+
+    function clipperCall(
+        address sender, uint256 owe, uint256 slice, bytes calldata data
+    ) external {
+        sender; owe; slice; data;
+        clip.yank(1);
+    }
+}
+
 contract PublicClip is Clipper {
 
     constructor(address vat, address spot, address dog, bytes32 ilk) public Clipper(vat, spot, dog, ilk) {}
@@ -196,8 +244,6 @@ contract ClipperTest is DSTest {
     address ali;
     address bob;
     address che;
-    address dan;
-    address emi;
 
     uint256 WAD = 10 ** 18;
     uint256 RAY = 10 ** 27;
@@ -351,20 +397,14 @@ contract ClipperTest is DSTest {
         ali = address(new Guy(clip));
         bob = address(new Guy(clip));
         che = address(new Trader(clip, vat, gold, goldJoin, dai, daiJoin, exchange));
-        dan = address(new BadGuy(clip));
-        emi = address(new RedoGuy(clip));
 
         vat.hope(address(clip));
         Guy(ali).hope(address(clip));
         Guy(bob).hope(address(clip));
-        BadGuy(dan).hope(address(clip));
-        RedoGuy(emi).hope(address(clip));
 
         vat.suck(address(0), address(this), rad(1000 ether));
         vat.suck(address(0), address(ali),  rad(1000 ether));
         vat.suck(address(0), address(bob),  rad(1000 ether));
-        vat.suck(address(0), address(dan),  rad(1000 ether));
-        vat.suck(address(0), address(emi),  rad(1000 ether));
     }
 
     function test_get_chop() public {
@@ -1137,7 +1177,7 @@ contract ClipperTest is DSTest {
     }
 
     function test_setBreaker() public {
-        clip.setBreaker(1);
+        clip.file("stopped", 1);
         assertEq(clip.stopped(), 1);
     }
 
@@ -1164,14 +1204,14 @@ contract ClipperTest is DSTest {
         assertEq(ink, 40 ether);
         assertEq(art, 100 ether);
 
-        clip.setBreaker(1);
+        clip.file("stopped", 1);
 
         dog.bark(ilk, me, address(this));
     }
 
     // At a stopped == 1 we are ok to take
     function test_stopped_take() public takeSetup {
-        clip.setBreaker(1);
+        clip.file("stopped", 1);
         // Bid so owe (= 25 * 5 = 125 RAD) > tab (= 110 RAD)
         // Readjusts slice to be tab/top = 25
         Guy(ali).take({
@@ -1184,7 +1224,7 @@ contract ClipperTest is DSTest {
     }
 
     function testFail_stopped_take() public takeSetup {
-        clip.setBreaker(2);
+        clip.file("stopped", 2);
         // Bid so owe (= 25 * 5 = 125 RAD) > tab (= 110 RAD)
         // Readjusts slice to be tab/top = 25
         Guy(ali).take({
@@ -1199,7 +1239,7 @@ contract ClipperTest is DSTest {
     function test_stopped_auction_reset_tail() public {
         auctionResetSetup(10 hours); // 10 hours till zero is reached (used to test tail)
 
-        clip.setBreaker(1);
+        clip.file("stopped", 1);
 
         pip.poke(bytes32(uint256(3 ether))); // Spot = $1.50 (update price before reset is called)
 
@@ -1218,7 +1258,7 @@ contract ClipperTest is DSTest {
     }
 
     function testFail_stopped_auction_reset_tail() public {
-        clip.setBreaker(2);
+        clip.file("stopped", 2);
 
         auctionResetSetup(10 hours); // 10 hours till zero is reached (used to test tail)
 
@@ -1402,28 +1442,96 @@ contract ClipperTest is DSTest {
     }
 
     function testFail_reentrancy_take() public takeSetup {
-        BadGuy(dan).take({
+        BadGuy usr = new BadGuy(clip);
+        usr.hope(address(clip));
+        vat.suck(address(0), address(usr),  rad(1000 ether));
+
+        usr.take({
             id: 1,
             amt: 25 ether,
             max: ray(5 ether),
-            who: address(dan),
+            who: address(usr),
             data: "hey"
         });
     }
 
     function testFail_reentrancy_redo() public takeSetup {
-        RedoGuy(emi).take({
+        RedoGuy usr = new RedoGuy(clip);
+        usr.hope(address(clip));
+        vat.suck(address(0), address(usr),  rad(1000 ether));
+
+        usr.take({
             id: 1,
             amt: 25 ether,
             max: ray(5 ether),
-            who: address(emi),
+            who: address(usr),
+            data: "hey"
+        });
+    }
+
+    function testFail_reentrancy_kick() public takeSetup {
+        KickGuy usr = new KickGuy(clip);
+        usr.hope(address(clip));
+        vat.suck(address(0), address(usr),  rad(1000 ether));
+        clip.rely(address(usr));
+
+        usr.take({
+            id: 1,
+            amt: 25 ether,
+            max: ray(5 ether),
+            who: address(usr),
+            data: "hey"
+        });
+    }
+
+    function testFail_reentrancy_file_uint() public takeSetup {
+        FileUintGuy usr = new FileUintGuy(clip);
+        usr.hope(address(clip));
+        vat.suck(address(0), address(usr),  rad(1000 ether));
+        clip.rely(address(usr));
+
+        usr.take({
+            id: 1,
+            amt: 25 ether,
+            max: ray(5 ether),
+            who: address(usr),
+            data: "hey"
+        });
+    }
+
+    function testFail_reentrancy_file_addr() public takeSetup {
+        FileAddrGuy usr = new FileAddrGuy(clip);
+        usr.hope(address(clip));
+        vat.suck(address(0), address(usr),  rad(1000 ether));
+        clip.rely(address(usr));
+
+        usr.take({
+            id: 1,
+            amt: 25 ether,
+            max: ray(5 ether),
+            who: address(usr),
+            data: "hey"
+        });
+    }
+
+    function testFail_reentrancy_yank() public takeSetup {
+        YankGuy usr = new YankGuy(clip);
+        usr.hope(address(clip));
+        vat.suck(address(0), address(usr),  rad(1000 ether));
+        clip.rely(address(usr));
+
+        usr.take({
+            id: 1,
+            amt: 25 ether,
+            max: ray(5 ether),
+            who: address(usr),
             data: "hey"
         });
     }
 
     function testFail_take_impersonation() public takeSetup { // should fail, but works
-        Guy gon = new Guy(clip);
-        gon.take({
+        Guy usr = new Guy(clip);
+        usr.take({
             id: 1,
             amt: 99999999999999 ether,
             max: ray(99999999999999 ether),
