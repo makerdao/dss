@@ -200,15 +200,24 @@ contract Dog {
             require(Hole > Dirt && milk.hole > milk.dirt, "Dog/liquidation-limit-hit");
             uint256 room = min(Hole - Dirt, milk.hole - milk.dirt);
 
-            // Verify room is not dusty
-            require(room >= dust, "Dog/liquidation-limit-hit-dusty");
-
             // uint256.max()/(RAD*WAD) = 115,792,089,237,316
             dart = min(art, mul(room, WAD) / rate / milk.chop);
 
-            if (mul(art - dart, rate) < dust) {
-                // avoid leaving a dusty vault to prevent unliquidatable vaults
-                dart = art;
+            // Partial liquidation edge case logic
+            if (art > dart) {
+                if (mul(art - dart, rate) < dust) {
+
+                    // If the leftover Vault would be dusty, just liquidate it entirely.
+                    // This will result in at least one of dirt_i > hole_i or Dirt > Hole becoming true.
+                    // The amount of excess will be bounded above by ceiling(dust_i * chop_i / WAD).
+                    // This deviation is assumed to be small compared to both hole_i and Hole, so that
+                    // the extra amount of target DAI over the limits intended is not of economic concern.
+                    dart = art;
+                } else {
+
+                    // In a partial liquidation, the resulting auction should also be non-dusty.
+                    require(mul(dart, rate) >= dust, "Dog/dusty-auction-from-partial-liquidation");
+                }
             }
         }
 
