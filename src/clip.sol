@@ -388,17 +388,23 @@ contract Clipper {
         // Get DAI from caller
         vat.move(msg.sender, vow, owe);
 
-        // Removes Dai out for liquidation from accumulator
-        dog.digs(ilk, owe);
-
         if (lot == 0) {
             _remove(id);
+
+            // Removes Dai out for liquidation from accumulator
+            dog.digs(ilk, tab + owe);  // safe since tab = original_tab - owe
         } else if (tab == 0) {
             vat.flux(ilk, address(this), usr, lot);
             _remove(id);
+
+            // Removes Dai out for liquidation from accumulator
+            dog.digs(ilk, owe);
         } else {
             sales[id].tab = tab;
             sales[id].lot = lot;
+
+            // Removes Dai out for liquidation from accumulator
+            dog.digs(ilk, owe);
         }
 
         emit Take(id, max, price, owe, tab, lot, usr);

@@ -212,6 +212,10 @@ contract ClipperTest is DSTest {
 
     uint256 constant startTime = 604411200; // Used to avoid issues with `now`
 
+    function sub(uint256 x, uint256 y) internal pure returns (uint256 z) {
+        require((z = x - y) <= x);
+    }
+
     function _ink(bytes32 ilk_, address urn_) internal view returns (uint256) {
         (uint256 ink_,) = vat.urns(ilk_, urn_);
         return ink_;
@@ -797,6 +801,10 @@ contract ClipperTest is DSTest {
         assertEq(usr, address(0));
         assertEq(uint256(tic), 0);
         assertEq(top, 0);
+
+        assertEq(dog.Dirt(), 0);
+        (,,, uint256 dirt) = dog.ilks(ilk);
+        assertEq(dirt, 0);
     }
 
     function test_take_at_tab() public takeSetup {
@@ -821,6 +829,10 @@ contract ClipperTest is DSTest {
         assertEq(usr, address(0));
         assertEq(uint256(tic), 0);
         assertEq(top, 0);
+
+        assertEq(dog.Dirt(), 0);
+        (,,, uint256 dirt) = dog.ilks(ilk);
+        assertEq(dirt, 0);
     }
 
     function test_take_under_tab() public takeSetup {
@@ -845,6 +857,40 @@ contract ClipperTest is DSTest {
         assertEq(usr, me);
         assertEq(uint256(tic), now);
         assertEq(top, ray(5 ether));
+
+        assertEq(dog.Dirt(), tab);
+        (,,, uint256 dirt) = dog.ilks(ilk);
+        assertEq(dirt, tab);
+    }
+
+    function test_take_full_lot_partial_tab() public takeSetup {
+        hevm.warp(now + 69);  // approx 50% price decline
+        // Bid to purchase entire lot less than tab (~2.5 * 40 ~= 100 < 110)
+        Guy(ali).take({
+            id:  1,
+            amt: 40 ether,     // purchase all collateral
+            max: ray(2.5 ether),
+            who: address(ali),
+            data: ""
+        });
+
+        assertEq(vat.gem(ilk, ali), 40 ether);  // Took entire lot
+        assertTrue(sub(vat.dai(ali), rad(900 ether)) < rad(0.1 ether));  // Paid about 100 ether
+        assertEq(vat.gem(ilk, me), 960 ether);  // Collateral not returned
+
+        // Assert auction ends
+        (uint256 pos, uint256 tab, uint256 lot, address usr, uint256 tic, uint256 top) = clip.sales(1);
+        assertEq(pos, 0);
+        assertEq(tab, 0);
+        assertEq(lot, 0);
+        assertEq(usr, address(0));
+        assertEq(uint256(tic), 0);
+        assertEq(top, 0);
+
+        // All dirt should be cleared, since the auction has ended, even though < 100% of tab was collected
+        assertEq(dog.Dirt(), 0);
+        (,,, uint256 dirt) = dog.ilks(ilk);
+        assertEq(dirt, 0);
     }
 
     function testFail_take_bid_too_low() public takeSetup {
