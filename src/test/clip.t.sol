@@ -160,6 +160,21 @@ contract RedoGuy is Guy {
     }
 }
 
+contract PublicClip is Clipper {
+
+    constructor(address vat, address spot, address dog, bytes32 ilk) public Clipper(vat, spot, dog, ilk) {}
+
+    function add() public returns (uint256 id) {
+        id = ++kicks;
+        active.push(id);
+        sales[id].pos = active.length - 1;
+    }
+
+    function remove(uint256 id) public {
+        _remove(id);
+    }
+}
+
 contract ClipperTest is DSTest {
     Hevm hevm;
 
@@ -1255,6 +1270,65 @@ contract ClipperTest is DSTest {
 
         // Assert transfer of gem.
         assertEq(vat.gem(ilk, address(this)), preGemBalance + origLot);
+    }
+
+    function test_remove_id() public {
+        PublicClip pclip = new PublicClip(address(vat), address(spot), address(dog), "gold");
+        uint256 pos;
+
+        pclip.add();
+        pclip.add();
+        uint256 id = pclip.add();
+        pclip.add();
+        pclip.add();
+
+        // [1,2,3,4,5]
+        assertEq(pclip.count(), 5);   // 5 elements added
+        assertEq(pclip.getId(0), 1);
+        assertEq(pclip.getId(1), 2);
+        assertEq(pclip.getId(2), 3);
+        assertEq(pclip.getId(3), 4);
+        assertEq(pclip.getId(4), 5);
+
+        pclip.remove(id);
+
+        // [1,2,5,4]
+        assertEq(pclip.count(), 4);
+        assertEq(pclip.getId(0), 1);
+        assertEq(pclip.getId(1), 2);
+        assertEq(pclip.getId(2), 5);  // Swapped last for middle
+        (pos,,,,,) = pclip.sales(5);
+        assertEq(pos, 2);
+        assertEq(pclip.getId(3), 4);
+
+        pclip.remove(4);
+
+        // [1,2,5]
+        assertEq(pclip.count(), 3);
+
+        (pos,,,,,) = pclip.sales(1);
+        assertEq(pos, 0); // Sale 1 in slot 0
+        assertEq(pclip.getId(0), 1);
+
+        (pos,,,,,) = pclip.sales(2);
+        assertEq(pos, 1); // Sale 2 in slot 1
+        assertEq(pclip.getId(1), 2);
+
+        (pos,,,,,) = pclip.sales(5);
+        assertEq(pos, 2); // Sale 5 in slot 2
+        assertEq(pclip.getId(2), 5); // Final element removed
+
+        (pos,,,,,) = pclip.sales(4);
+        assertEq(pos, 0); // Sale 4 was deleted. Returns 0
+    }
+
+    function testFail_id_out_of_range() public {
+        PublicClip pclip = new PublicClip(address(vat), address(spot), address(dog), "gold");
+
+        pclip.add();
+        pclip.add();
+
+        pclip.getId(9); // Fail because id is out of range
     }
 
     function testFail_not_enough_dai() public takeSetup {
