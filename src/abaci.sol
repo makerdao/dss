@@ -160,7 +160,7 @@ contract StairstepExponentialDecrease is Abacus {
     // dur: seconds since the auction has started
     // step: seconds between a price drop
     // cut: cut is the percentage to decrease. In the code, it is represented as 1 - (% value / 100)
-    // So, a 1 % decrease, cut would be 1 - 0.01
+    // So, a 1 % decrease, cut would be (1 - 0.01) * RAY
     //
     // returns: top * (cut ^ (dur / step))
     //
