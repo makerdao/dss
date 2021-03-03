@@ -58,8 +58,8 @@ contract Clipper {
     // --- Data ---
     bytes32  immutable public ilk;   // Collateral type of this Clipper
     VatLike  immutable public vat;   // Core CDP Engine
-    DogLike  immutable public dog;   // Liquidation module
 
+    DogLike     public dog;      // Liquidation module
     address     public vow;      // Recipient of dai raised in auctions
     SpotterLike public spotter;  // Collateral price module
     AbacusLike  public calc;     // Current price calculator
@@ -162,6 +162,7 @@ contract Clipper {
     }
     function file(bytes32 what, address data) external auth lock {
         if (what == "spotter") spotter = SpotterLike(data);
+        else if (what == "dog")    dog = DogLike(data);
         else if (what == "vow")    vow = data;
         else if (what == "calc")  calc = AbacusLike(data);
         else revert("Clipper/file-unrecognized-param");
@@ -380,31 +381,26 @@ contract Clipper {
             // Do external call (if data is defined) but to be
             // extremely careful we don't allow to do it to the two
             // contracts which the Clipper needs to be authorized
-            if (data.length > 0 && who != address(vat) && who != address(dog)) {
+            DogLike dog_ = dog;
+            if (data.length > 0 && who != address(vat) && who != address(dog_)) {
                 ClipperCallee(who).clipperCall(msg.sender, owe, slice, data);
             }
-        }
 
-        // Get DAI from caller
-        vat.move(msg.sender, vow, owe);
+            // Get DAI from caller
+            vat.move(msg.sender, vow, owe);
+
+            // Removes Dai out for liquidation from accumulator
+            dog_.digs(ilk, lot == 0 ? tab + owe : owe);
+        }
 
         if (lot == 0) {
             _remove(id);
-
-            // Removes Dai out for liquidation from accumulator
-            dog.digs(ilk, tab + owe);  // safe since tab = original_tab - owe
         } else if (tab == 0) {
             vat.flux(ilk, address(this), usr, lot);
             _remove(id);
-
-            // Removes Dai out for liquidation from accumulator
-            dog.digs(ilk, owe);
         } else {
             sales[id].tab = tab;
             sales[id].lot = lot;
-
-            // Removes Dai out for liquidation from accumulator
-            dog.digs(ilk, owe);
         }
 
         emit Take(id, max, price, owe, tab, lot, usr);

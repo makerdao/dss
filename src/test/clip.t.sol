@@ -407,6 +407,12 @@ contract ClipperTest is DSTest {
         vat.suck(address(0), address(bob),  rad(1000 ether));
     }
 
+    function test_change_dog() public {
+        assertTrue(address(clip.dog()) != address(123));
+        clip.file("dog", address(123));
+        assertEq(address(clip.dog()), address(123));
+    }
+
     function test_get_chop() public {
         uint256 chop = dog.chop(ilk);
         (, uint256 chop2,,) = dog.ilks(ilk);
