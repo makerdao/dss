@@ -165,6 +165,8 @@ contract StairstepExponentialDecrease is Abacus {
     // returns: top * (cut ^ (dur / step))
     //
     function price(uint256 top, uint256 dur) override external view returns (uint256) {
-        return rmul(top, rpow(cut, dur / step, RAY));
+        uint256  _cut = cut;
+        require(_cut > 0, "StairstepExponentialDecrease/invalid-cut");
+        return rmul(top, rpow(_cut, dur / step, RAY));
     }
 }
