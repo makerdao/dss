@@ -109,7 +109,7 @@ contract StairstepExponentialDecrease is Abacus {
 
     // --- Init ---
     // @notice: `cut` and `step` values must be correctly set for
-    //     this function to return a valid price
+    //     this contract to return a valid price
     constructor() public {
         wards[msg.sender] = 1;
         emit Rely(msg.sender);
