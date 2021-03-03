@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-pragma solidity >=0.6.11;
+pragma solidity >=0.6.12;
 
 import { DSTest } from "ds-test/test.sol";
 import { Vat } from "../vat.sol";
