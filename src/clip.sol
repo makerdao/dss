@@ -246,7 +246,9 @@ contract Clipper {
         sales[id].tic = uint96(block.timestamp);
 
         uint256 top;
-        sales[id].top = top = rmul(getPrice(), buf);
+        top = rmul(getPrice(), buf);
+        require(top > 0, "Clipper/zero-top-price");
+        sales[id].top = top;
 
         // incentive to kick auction
         uint256 _tip  = tip;
@@ -280,7 +282,9 @@ contract Clipper {
         sales[id].tic = uint96(block.timestamp);
 
         uint256 price = getPrice();
-        sales[id].top = top = rmul(price, buf);
+        top = rmul(price, buf);
+        require(top > 0, "Clipper/zero-top-price");
+        sales[id].top = top;
 
         // incentive to redo auction
         uint256 _tip  = tip;
