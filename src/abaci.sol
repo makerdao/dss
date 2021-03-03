@@ -108,10 +108,10 @@ contract StairstepExponentialDecrease is Abacus {
     event FileUint256(bytes32 indexed what, uint256 data);
 
     // --- Init ---
+    // @notice: `cut` and `step` values must be correctly set for
+    //     this contract to return a valid price
     constructor() public {
         wards[msg.sender] = 1;
-        cut  = 0;
-        step = 1;
         emit Rely(msg.sender);
     }
 
@@ -162,7 +162,7 @@ contract StairstepExponentialDecrease is Abacus {
     // dur: seconds since the auction has started
     // step: seconds between a price drop
     // cut: cut is the percentage to decrease. In the code, it is represented as 1 - (% value / 100)
-    // So, a 1 % decrease, cut would be 1 - 0.01
+    // So, a 1 % decrease, cut would be (1 - 0.01) * RAY
     //
     // returns: top * (cut ^ (dur / step))
     //
