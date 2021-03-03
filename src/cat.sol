@@ -19,7 +19,9 @@
 
 pragma solidity >=0.5.12;
 
-import "./lib.sol";
+// FIXME: This contract was altered compared to the production version.
+// It doesn't use LibNote anymore.
+// New deployments of this contract will need to include custom events (TO DO).
 
 interface Kicker {
     function kick(address urn, address gal, uint256 tab, uint256 lot, uint256 bid)
@@ -47,11 +49,11 @@ interface VowLike {
     function fess(uint256) external;
 }
 
-contract Cat is LibNote {
+contract Cat {
     // --- Auth ---
     mapping (address => uint256) public wards;
-    function rely(address usr) external note auth { wards[usr] = 1; }
-    function deny(address usr) external note auth { wards[usr] = 0; }
+    function rely(address usr) external auth { wards[usr] = 1; }
+    function deny(address usr) external auth { wards[usr] = 0; }
     modifier auth {
         require(wards[msg.sender] == 1, "Cat/not-authorized");
         _;
@@ -107,20 +109,20 @@ contract Cat is LibNote {
     }
 
     // --- Administration ---
-    function file(bytes32 what, address data) external note auth {
+    function file(bytes32 what, address data) external auth {
         if (what == "vow") vow = VowLike(data);
         else revert("Cat/file-unrecognized-param");
     }
-    function file(bytes32 what, uint256 data) external note auth {
+    function file(bytes32 what, uint256 data) external auth {
         if (what == "box") box = data;
         else revert("Cat/file-unrecognized-param");
     }
-    function file(bytes32 ilk, bytes32 what, uint256 data) external note auth {
+    function file(bytes32 ilk, bytes32 what, uint256 data) external auth {
         if (what == "chop") ilks[ilk].chop = data;
         else if (what == "dunk") ilks[ilk].dunk = data;
         else revert("Cat/file-unrecognized-param");
     }
-    function file(bytes32 ilk, bytes32 what, address flip) external note auth {
+    function file(bytes32 ilk, bytes32 what, address flip) external auth {
         if (what == "flip") {
             vat.nope(ilks[ilk].flip);
             ilks[ilk].flip = flip;
@@ -177,11 +179,11 @@ contract Cat is LibNote {
         emit Bite(ilk, urn, dink, dart, mul(dart, rate), milk.flip, id);
     }
 
-    function claw(uint256 rad) external note auth {
+    function claw(uint256 rad) external auth {
         litter = sub(litter, rad);
     }
 
-    function cage() external note auth {
+    function cage() external auth {
         live = 0;
     }
 }

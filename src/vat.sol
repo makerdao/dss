@@ -19,19 +19,23 @@
 
 pragma solidity >=0.5.12;
 
+// FIXME: This contract was altered compared to the production version.
+// It doesn't use LibNote anymore.
+// New deployments of this contract will need to include custom events (TO DO).
+
 contract Vat {
     // --- Auth ---
     mapping (address => uint) public wards;
-    function rely(address usr) external note auth { require(live == 1, "Vat/not-live"); wards[usr] = 1; }
-    function deny(address usr) external note auth { require(live == 1, "Vat/not-live"); wards[usr] = 0; }
+    function rely(address usr) external auth { require(live == 1, "Vat/not-live"); wards[usr] = 1; }
+    function deny(address usr) external auth { require(live == 1, "Vat/not-live"); wards[usr] = 0; }
     modifier auth {
         require(wards[msg.sender] == 1, "Vat/not-authorized");
         _;
     }
 
     mapping(address => mapping (address => uint)) public can;
-    function hope(address usr) external note { can[msg.sender][usr] = 1; }
-    function nope(address usr) external note { can[msg.sender][usr] = 0; }
+    function hope(address usr) external { can[msg.sender][usr] = 1; }
+    function nope(address usr) external { can[msg.sender][usr] = 0; }
     function wish(address bit, address usr) internal view returns (bool) {
         return either(bit == usr, can[bit][usr] == 1);
     }
@@ -59,34 +63,6 @@ contract Vat {
     uint256 public vice;  // Total Unbacked Dai  [rad]
     uint256 public Line;  // Total Debt Ceiling  [rad]
     uint256 public live;  // Active Flag
-
-    // --- Logs ---
-    event LogNote(
-        bytes4   indexed  sig,
-        bytes32  indexed  arg1,
-        bytes32  indexed  arg2,
-        bytes32  indexed  arg3,
-        bytes             data
-    ) anonymous;
-
-    modifier note {
-        _;
-        assembly {
-            // log an 'anonymous' event with a constant 6 words of calldata
-            // and four indexed topics: the selector and the first three args
-            let mark := msize()                       // end of memory ensures zero
-            mstore(0x40, add(mark, 288))              // update free memory pointer
-            mstore(mark, 0x20)                        // bytes type data offset
-            mstore(add(mark, 0x20), 224)              // bytes size (padded)
-            calldatacopy(add(mark, 0x40), 0, 224)     // bytes payload
-            log4(mark, 288,                           // calldata
-                 shl(224, shr(224, calldataload(0))), // msg.sig
-                 calldataload(4),                     // arg1
-                 calldataload(36),                    // arg2
-                 calldataload(68)                     // arg3
-                )
-        }
-    }
 
     // --- Init ---
     constructor() public {
@@ -121,36 +97,36 @@ contract Vat {
     }
 
     // --- Administration ---
-    function init(bytes32 ilk) external note auth {
+    function init(bytes32 ilk) external auth {
         require(ilks[ilk].rate == 0, "Vat/ilk-already-init");
         ilks[ilk].rate = 10 ** 27;
     }
-    function file(bytes32 what, uint data) external note auth {
+    function file(bytes32 what, uint data) external auth {
         require(live == 1, "Vat/not-live");
         if (what == "Line") Line = data;
         else revert("Vat/file-unrecognized-param");
     }
-    function file(bytes32 ilk, bytes32 what, uint data) external note auth {
+    function file(bytes32 ilk, bytes32 what, uint data) external auth {
         require(live == 1, "Vat/not-live");
         if (what == "spot") ilks[ilk].spot = data;
         else if (what == "line") ilks[ilk].line = data;
         else if (what == "dust") ilks[ilk].dust = data;
         else revert("Vat/file-unrecognized-param");
     }
-    function cage() external note auth {
+    function cage() external auth {
         live = 0;
     }
 
     // --- Fungibility ---
-    function slip(bytes32 ilk, address usr, int256 wad) external note auth {
+    function slip(bytes32 ilk, address usr, int256 wad) external auth {
         gem[ilk][usr] = add(gem[ilk][usr], wad);
     }
-    function flux(bytes32 ilk, address src, address dst, uint256 wad) external note {
+    function flux(bytes32 ilk, address src, address dst, uint256 wad) external {
         require(wish(src, msg.sender), "Vat/not-allowed");
         gem[ilk][src] = sub(gem[ilk][src], wad);
         gem[ilk][dst] = add(gem[ilk][dst], wad);
     }
-    function move(address src, address dst, uint256 rad) external note {
+    function move(address src, address dst, uint256 rad) external {
         require(wish(src, msg.sender), "Vat/not-allowed");
         dai[src] = sub(dai[src], rad);
         dai[dst] = add(dai[dst], rad);
@@ -164,7 +140,7 @@ contract Vat {
     }
 
     // --- CDP Manipulation ---
-    function frob(bytes32 i, address u, address v, address w, int dink, int dart) external note {
+    function frob(bytes32 i, address u, address v, address w, int dink, int dart) external {
         // system is live
         require(live == 1, "Vat/not-live");
 
@@ -203,7 +179,7 @@ contract Vat {
         ilks[i]    = ilk;
     }
     // --- CDP Fungibility ---
-    function fork(bytes32 ilk, address src, address dst, int dink, int dart) external note {
+    function fork(bytes32 ilk, address src, address dst, int dink, int dart) external {
         Urn storage u = urns[ilk][src];
         Urn storage v = urns[ilk][dst];
         Ilk storage i = ilks[ilk];
@@ -228,7 +204,7 @@ contract Vat {
         require(either(vtab >= i.dust, v.art == 0), "Vat/dust-dst");
     }
     // --- CDP Confiscation ---
-    function grab(bytes32 i, address u, address v, address w, int dink, int dart) external note auth {
+    function grab(bytes32 i, address u, address v, address w, int dink, int dart) external auth {
         Urn storage urn = urns[i][u];
         Ilk storage ilk = ilks[i];
 
@@ -244,14 +220,14 @@ contract Vat {
     }
 
     // --- Settlement ---
-    function heal(uint rad) external note {
+    function heal(uint rad) external {
         address u = msg.sender;
         sin[u] = sub(sin[u], rad);
         dai[u] = sub(dai[u], rad);
         vice   = sub(vice,   rad);
         debt   = sub(debt,   rad);
     }
-    function suck(address u, address v, uint rad) external note auth {
+    function suck(address u, address v, uint rad) external auth {
         sin[u] = add(sin[u], rad);
         dai[v] = add(dai[v], rad);
         vice   = add(vice,   rad);
@@ -259,7 +235,7 @@ contract Vat {
     }
 
     // --- Rates ---
-    function fold(bytes32 i, address u, int rate) external note auth {
+    function fold(bytes32 i, address u, int rate) external auth {
         require(live == 1, "Vat/not-live");
         Ilk storage ilk = ilks[i];
         ilk.rate = add(ilk.rate, rate);
