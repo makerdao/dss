@@ -103,7 +103,9 @@ contract Clipper {
         uint256 top,
         uint256 tab,
         uint256 lot,
-        address indexed usr
+        address indexed usr,
+        address indexed kpr,
+        uint256 coin
     );
     event Take(
         uint256 indexed id,
@@ -119,7 +121,9 @@ contract Clipper {
         uint256 top,
         uint256 tab,
         uint256 lot,
-        address indexed usr
+        address indexed usr,
+        address indexed kpr,
+        uint256 coin
     );
 
     event Yank(uint256 id);
@@ -247,11 +251,13 @@ contract Clipper {
         // incentive to kick auction
         uint256 _tip  = tip;
         uint256 _chip = chip;
+        uint256 coin;
         if (_tip > 0 || _chip > 0) {
-            vat.suck(vow, kpr, add(_tip, wmul(tab, _chip)));
+            coin = add(_tip, wmul(tab, _chip));
+            vat.suck(vow, kpr, coin);
         }
 
-        emit Kick(id, top, tab, lot, usr);
+        emit Kick(id, top, tab, lot, usr, kpr, coin);
     }
 
     // Reset an auction
@@ -279,14 +285,16 @@ contract Clipper {
         // incentive to redo auction
         uint256 _tip  = tip;
         uint256 _chip = chip;
+        uint256 coin;
         if (_tip > 0 || _chip > 0) {
             (,,,, uint256 dust) = vat.ilks(ilk);
             if (tab >= dust && mul(lot, price) >= dust) {
-                vat.suck(vow, kpr, add(_tip, wmul(tab, _chip)));
+                coin = add(_tip, wmul(tab, _chip));
+                vat.suck(vow, kpr, coin);
             }
         }
 
-        emit Redo(id, top, tab, lot, usr);
+        emit Redo(id, top, tab, lot, usr, kpr, coin);
     }
 
     // Buy `amt` of collateral from auction indexed by `id`
