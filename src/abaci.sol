@@ -110,8 +110,6 @@ contract StairstepExponentialDecrease is Abacus {
     // --- Init ---
     constructor() public {
         wards[msg.sender] = 1;
-        cut  = 0;
-        step = 1;
         emit Rely(msg.sender);
     }
 
