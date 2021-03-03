@@ -108,6 +108,8 @@ contract StairstepExponentialDecrease is Abacus {
     event FileUint256(bytes32 indexed what, uint256 data);
 
     // --- Init ---
+    // @notice: `cut` and `step` values must be correctly set for
+    //     this function to return a valid price
     constructor() public {
         wards[msg.sender] = 1;
         emit Rely(msg.sender);
@@ -165,8 +167,6 @@ contract StairstepExponentialDecrease is Abacus {
     // returns: top * (cut ^ (dur / step))
     //
     function price(uint256 top, uint256 dur) override external view returns (uint256) {
-        uint256  _cut = cut;
-        require(_cut > 0, "StairstepExponentialDecrease/invalid-cut");
-        return rmul(top, rpow(_cut, dur / step, RAY));
+        return rmul(top, rpow(cut, dur / step, RAY));
     }
 }
