@@ -1337,6 +1337,20 @@ contract ClipperTest is DSTest {
         assertEq(vat.dai(address(567)), 0);
     }
 
+    function test_incentive_max_values() public {
+        clip.file("chip", 2 ** 64 - 1);
+        clip.file("tip", 2 ** 192 - 1);
+
+        assertEq(uint256(clip.chip()), uint256(18.446744073709551615 * 10 ** 18));
+        assertEq(uint256(clip.tip()), uint256(6277101735386.680763835789423207666416102355444464034512895 * 10 ** 45));
+
+        clip.file("chip", 2 ** 64);
+        clip.file("tip", 2 ** 192);
+
+        assertEq(uint256(clip.chip()), 0);
+        assertEq(uint256(clip.tip()), 0);
+    }
+
     function test_Clipper_yank() public takeSetup {
         uint256 preGemBalance = vat.gem(ilk, address(this));
         (,, uint256 origLot,,,) = clip.sales(1);

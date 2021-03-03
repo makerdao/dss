@@ -67,8 +67,8 @@ contract Clipper {
     uint256 public buf;   // Multiplicative factor to increase starting price  [ray]
     uint256 public tail;  // Time elapsed before auction reset                 [seconds]
     uint256 public cusp;  // Percentage drop before auction reset              [ray]
-    uint256 public chip;  // Percentage of tab to suck from vow to incentivize keepers [wad]
-    uint256 public tip;   // Flat fee to suck from vow to incentivize keepers          [rad]
+    uint64  public chip;  // Percentage of tab to suck from vow to incentivize keepers [wad]
+    uint192 public tip;   // Flat fee to suck from vow to incentivize keepers          [rad]
 
     uint256   public kicks;   // Total auctions
     uint256[] public active;  // Array of active auction ids
@@ -156,11 +156,11 @@ contract Clipper {
     // --- Administration ---
     function file(bytes32 what, uint256 data) external auth lock {
         if      (what == "buf")         buf = data;
-        else if (what == "tail")       tail = data;  // Time elapsed before auction reset
-        else if (what == "cusp")       cusp = data;  // Percentage drop before auction reset
-        else if (what == "chip")       chip = data;  // Percentage of tab to incentivize
-        else if (what == "tip")         tip = data;  // Flat fee to incentivize keepers
-        else if (what == "stopped") stopped = data;  // Set breaker (0, 1 or 2)
+        else if (what == "tail")       tail = data;           // Time elapsed before auction reset
+        else if (what == "cusp")       cusp = data;           // Percentage drop before auction reset
+        else if (what == "chip")       chip = uint64(data);   // Percentage of tab to incentivize (max: 2^64 - 1 => 18.xxx WAD = 18xx%)
+        else if (what == "tip")         tip = uint192(data);  // Flat fee to incentivize keepers (max: 2^192 - 1 => 6.277T RAD)
+        else if (what == "stopped") stopped = data;           // Set breaker (0, 1 or 2)
         else revert("Clipper/file-unrecognized-param");
         emit File(what, data);
     }
