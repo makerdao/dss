@@ -133,7 +133,7 @@ contract Dai {
                     ))
             ));
 
-        require(owner == ecrecover(digest, v, r, s), "Dai/invalid-permit");
+        require(owner != address(0) && owner == ecrecover(digest, v, r, s), "Dai/invalid-permit");
 
         allowance[owner][spender] = value;
         emit Approval(owner, spender, value);
