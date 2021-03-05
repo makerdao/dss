@@ -86,6 +86,8 @@ contract TokenUser {
 
 interface Hevm {
     function warp(uint256) external;
+    function addr(uint256) external returns (address);
+    function sign(uint256,bytes32) external returns (uint8, bytes32, bytes32);
 }
 
 contract DaiTest is DSTest {
@@ -100,13 +102,12 @@ contract DaiTest is DSTest {
 
     uint amount = 2;
     uint fee = 1;
-    uint nonce = 0;
-    uint deadline = 0;
-    address cal = 0x90F8bf6A479f320ead074411a4B0e7944Ea8c9C1;
+    uint deadline;
+    address cal;
     address del = 0xdd2d5D3f7f1b35b7A0601D6A00DbB7D44Af58479;
-    bytes32 r = 0xf4deb87c6a5676297bed14226df809c5b41cc632151079051f5db1af5698cc18;
-    bytes32 s = 0x377c682cca592b251e216ece7371c64b1cd06f8edd52f21bae61f4b19bebc6f3;
-    uint8 v = 28;
+    bytes32 r;
+    bytes32 s;
+    uint8 v;
 
 
     function setUp() public {
@@ -118,6 +119,15 @@ contract DaiTest is DSTest {
         user1 = address(new TokenUser(token));
         user2 = address(new TokenUser(token));
         self = address(this);
+
+        // sign the `permit` message
+        cal = hevm.addr(1);
+        deadline = now + 1 hours;
+        bytes32 structHash = keccak256(abi.encode(
+            token.PERMIT_TYPEHASH(), cal, del, amount, token.nonces(cal), deadline
+        ));
+        bytes32 digest = keccak256(abi.encodePacked("\x19\x01", token.DOMAIN_SEPARATOR(), structHash));
+        (v, r, s) = hevm.sign(1, digest);
     }
 
     function createToken() internal returns (Dai) {
@@ -289,7 +299,7 @@ contract DaiTest is DSTest {
 
     function testPermitWithExpiry() public {
         assertEq(now, 604411200);
-        token.permit(cal, del, 100, 604411200 + 1 hours, v, r, s);
+        token.permit(cal, del, amount, deadline, v, r, s);
         assertEq(token.allowance(cal, del), 100);
         assertEq(token.nonces(cal), 1);
     }
@@ -297,6 +307,6 @@ contract DaiTest is DSTest {
     function testFailPermitWithExpiry() public {
         hevm.warp(now + 2 hours);
         assertEq(now, 604411200 + 2 hours);
-        token.permit(cal, del, 100, 1, v, r, s);
+        token.permit(cal, del, amount, deadline, v, r, s);
     }
 }
