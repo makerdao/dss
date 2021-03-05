@@ -102,14 +102,11 @@ contract DaiTest is DSTest {
     uint fee = 1;
     uint nonce = 0;
     uint deadline = 0;
-    address cal = 0x29C76e6aD8f28BB1004902578Fb108c507Be341b;
+    address cal = 0x90F8bf6A479f320ead074411a4B0e7944Ea8c9C1;
     address del = 0xdd2d5D3f7f1b35b7A0601D6A00DbB7D44Af58479;
-    bytes32 r = 0x46323dda87c592902a10f931e64a8160ae899d141f46b07a73e676b0e5daa1c4;
-    bytes32 s = 0x6339a2fc9fdf1c0737fb35eb0928f0558170e3900da9b483ed1904bd9fdb2f87;
+    bytes32 r = 0xf4deb87c6a5676297bed14226df809c5b41cc632151079051f5db1af5698cc18;
+    bytes32 s = 0x377c682cca592b251e216ece7371c64b1cd06f8edd52f21bae61f4b19bebc6f3;
     uint8 v = 28;
-    bytes32 _r = 0x8c37dc98d15d1f9907c731184d4aaad7896d5d9424c8a5c002bc569b3bf50ba6;
-    bytes32 _s = 0x0a561c49460341843d248c63923be1d7c67bc2b5753bd07835be47828e4d0c2e;
-    uint8 _v = 27;
 
 
     function setUp() public {
@@ -283,41 +280,23 @@ contract DaiTest is DSTest {
     }
 
     function testTypehash() public {
-        assertEq(token.PERMIT_TYPEHASH(), 0xea2aa0a1be11a07ed86d755c93467f4f82362b452371d1ba94d1715123511acb);
+        assertEq(token.PERMIT_TYPEHASH(), 0x6e71edae12b1b97f4d1f60370fef10105fa2faae0126114a169c64845d6126c9);
     }
 
     function testDomain_Separator() public {
-        assertEq(token.DOMAIN_SEPARATOR(), 0x92a148ae95a9faf19ab88b195b0da85dd00a6764ac8a66d5e64fb3add1579cac);
-    }
-
-    function testPermit() public {
-        assertEq(token.nonces(cal), 0);
-        assertEq(token.allowance(cal, del), 0);
-        token.permit(cal, del, 0, 0, true, v, r, s);
-        assertEq(token.allowance(cal, del),uint(-1));
-        assertEq(token.nonces(cal),1);
-    }
-
-    function testFailPermitAddress0() public {
-        v = 0;
-        token.permit(address(0), del, 0, 0, true, v, r, s);
+        assertEq(token.DOMAIN_SEPARATOR(), 0xc783c8c902fe442ca30c87a62e8e823b3b761301f0bf863830e1ba5608b74f75);
     }
 
     function testPermitWithExpiry() public {
         assertEq(now, 604411200);
-        token.permit(cal, del, 0, 604411200 + 1 hours, true, _v, _r, _s);
-        assertEq(token.allowance(cal, del),uint(-1));
-        assertEq(token.nonces(cal),1);
+        token.permit(cal, del, 100, 604411200 + 1 hours, v, r, s);
+        assertEq(token.allowance(cal, del), 100);
+        assertEq(token.nonces(cal), 1);
     }
 
     function testFailPermitWithExpiry() public {
         hevm.warp(now + 2 hours);
         assertEq(now, 604411200 + 2 hours);
-        token.permit(cal, del, 0, 1, true, _v, _r, _s);
-    }
-
-    function testFailReplay() public {
-        token.permit(cal, del, 0, 0, true, v, r, s);
-        token.permit(cal, del, 0, 0, true, v, r, s);
+        token.permit(cal, del, 100, 1, v, r, s);
     }
 }

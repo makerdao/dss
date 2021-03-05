@@ -77,7 +77,6 @@ contract Dai {
 
         // Set addresses which disallow transfer
         balanceOf[address(this)] = uint256(-1);
-        balanceOf[address(0)] = uint256(-1);
     }
 
     // --- Token ---
