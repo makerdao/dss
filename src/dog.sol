@@ -133,7 +133,7 @@ contract Dog {
         emit File(what, data);
     }
     function file(bytes32 ilk, bytes32 what, uint256 data) external auth {
-        if (what == "chop") ilks[ilk].chop = data;
+        if (what == "chop") { require(data >= WAD); ilks[ilk].chop = data; }
         else if (what == "hole") ilks[ilk].hole = data;
         else revert("Dog/file-unrecognized-param");
         emit File(ilk, what, data);
