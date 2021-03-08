@@ -47,6 +47,19 @@ contract DogTest is DSTest {
         dog.file(ilk, "hole", 10 * THOUSAND * RAD);
     }
 
+    function test_file_chop() public {
+        dog.file(ilk, "chop", WAD);
+        dog.file(ilk, "chop", WAD * 113 / 100);
+    }
+
+    function testFail_file_chop_lt_WAD() public {
+        dog.file(ilk, "chop", WAD - 1);
+    }
+
+    function testFail_file_chop_eq_zero() public {
+        dog.file(ilk, "chop", 0);
+    }
+
     function setUrn(uint256 ink, uint256 art) internal {
         vat.slip(ilk, usr, int256(ink));
         (, uint256 rate,,,) = vat.ilks(ilk);
