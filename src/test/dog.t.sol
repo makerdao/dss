@@ -11,9 +11,8 @@ contract VowMock {
 }
 
 contract ClipperMock {
-    function kick(uint256 tab, uint256 lot, address usr, address kpr)
-        external returns (uint256 id) {
-        tab; lot; usr; kpr;
+    function kick(uint256, uint256, address, address)
+        external pure returns (uint256 id) {
         id = 42;
     }
 }
