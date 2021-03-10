@@ -434,10 +434,9 @@ contract Clipper {
         return active.length;
     }
 
-    // Returns auction id for a live auction based on it's position
-    //  in the active auction array
-    function getId(uint256 pos) external view returns (uint256) {
-        return active[pos];
+    // Return the entire array of active auctions
+    function list() external view returns (uint256[] memory) {
+        return active;
     }
 
     // Externally returns boolean for if an auction needs a redo and also the current price
