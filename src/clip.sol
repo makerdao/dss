@@ -135,6 +135,7 @@ contract Clipper {
         dog     = DogLike(dog_);
         ilk     = ilk_;
         buf     = RAY;
+        locked = 1;
 
         wards[msg.sender] = 1;
         emit Rely(msg.sender);
@@ -142,10 +143,10 @@ contract Clipper {
 
     // --- Synchronization ---
     modifier lock {
-        require(locked == 0, "Clipper/system-locked");
-        locked = 1;
+        require(locked == 1, "Clipper/system-locked");
+        locked = 2;
         _;
-        locked = 0;
+        locked = 1;
     }
 
     modifier isStopped(uint256 level) {
