@@ -648,6 +648,7 @@ contract ClipperTest is DSTest {
         dog.file(ilk, "hole", mul(80 ether, rate)); // Makes room = 80 WAD
         dog.file(ilk, "chop", 1 ether);                 // 0% chop (for precise calculations)
         vat.file(ilk, "dust", mul(20 ether, rate));     // $20 in normalized debt (multiplied by rate for testing)
+        clip.updust();
 
         assertEq(clip.kicks(), 0);
         (pos, tab, lot, usr, tic, top) = clip.sales(1);
@@ -695,6 +696,7 @@ contract ClipperTest is DSTest {
         dog.file(ilk, "hole", mul(80 ether + 1, rate)); // Makes room = 80 WAD + 1 wei in normalized debt
         dog.file(ilk, "chop", 1 ether);                 // 0% chop (for precise calculations)
         vat.file(ilk, "dust", mul(20 ether, rate));     // $20 in normalized debt (multiplied by rate for testing)
+        clip.updust();
 
         assertEq(clip.kicks(), 0);
         (pos, tab, lot, usr, tic, top) = clip.sales(1);
@@ -1320,6 +1322,7 @@ contract ClipperTest is DSTest {
         assertEq(vat.dai(address(345)), clip.chip() * tab / WAD);
 
         vat.file(ilk, "dust", rad(110 ether) + 1); // 1 wei > than $110 (tab) as dust
+        clip.updust();
 
         hevm.warp(now + 300);
         clip.redo(1, address(456));
@@ -1327,6 +1330,7 @@ contract ClipperTest is DSTest {
 
         // Set dust back to $20 so we can check the lot dusty case
         vat.file(ilk, "dust", rad(20 ether)); // $20 dust
+        clip.updust();
 
         hevm.warp(now + 100); // Reducing the price
 
