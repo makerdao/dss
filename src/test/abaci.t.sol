@@ -153,7 +153,7 @@ contract ClipperTest is DSTest {
         uint256 top = 4000 * RAY;
         uint256 expectedPrice = top;
         uint256 tolerance = RAY / 1000;  // 0.001, i.e 0.1%
-        for (uint256 i = 0; i < 1; i++) {  // will cover initial value + four half-lives
+        for (uint256 i = 0; i < 5; i++) {  // will cover initial value + four half-lives
             assertEqWithinTolerance(calc.price(top, i*tHalf), expectedPrice, tolerance);
             // each loop iteration advances one half-life, so expectedPrice decreases by a factor of 2
             expectedPrice /= 2;
