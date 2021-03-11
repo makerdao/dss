@@ -161,10 +161,12 @@ contract StairstepExponentialDecrease is Abacus {
     // top: initial price
     // dur: seconds since the auction has started
     // step: seconds between a price drop
-    // cut: cut is the percentage to decrease. In the code, it is represented as 1 - (% value / 100)
-    // So, a 1 % decrease, cut would be (1 - 0.01) * RAY
+    // cut: cut encodes the percentage to decrease per step.
+    //   For efficiency, the values is set as (1 - (% value / 100)) * RAY
+    //   So, for a 1% decrease per step, cut would be (1 - 0.01) * RAY
     //
-    // returns: top * (cut ^ (dur / step))
+    // returns: top * (cut ^ dur)
+    //
     //
     function price(uint256 top, uint256 dur) override external view returns (uint256) {
         return rmul(top, rpow(cut, dur / step, RAY));
@@ -247,8 +249,8 @@ contract ExponentialDecrease is Abacus {
     // top: initial price
     // dur: seconds since the auction has started
     // cut: cut encodes the percentage to decrease per second.
-    // For efficiency, the values is set as (1 - (% value / 100)) * RAY
-    // So, for a 1% decrease per second, cut would be (1 - 0.01) * RAY
+    //   For efficiency, the values is set as (1 - (% value / 100)) * RAY
+    //   So, for a 1% decrease per second, cut would be (1 - 0.01) * RAY
     //
     // returns: top * (cut ^ dur)
     //
