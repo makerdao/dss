@@ -516,7 +516,7 @@ contract ClipperTest is DSTest {
         pip.poke(bytes32(0));
 
         hevm.warp(startTime + 1801 seconds);
-        (bool needsRedo,) = clip.getStatus(1);
+        (bool needsRedo,,) = clip.getStatus(1);
         assertTrue(needsRedo);
         clip.redo(1, address(this));
     }
@@ -971,7 +971,8 @@ contract ClipperTest is DSTest {
         assertEq(tab, rad(110 ether));
         assertEq(lot, 40 ether);
 
-        (, uint256 price) = clip.getStatus(1);
+        (, uint256 price,uint256 _lot) = clip.getStatus(1);
+        assertEq(_lot, lot);
         assertEq(price, ray(5 ether));
 
         // Bid so owe (= (22 - 1wei) * 5 = 110 RAD - 1) < tab (= 110 RAD)
@@ -996,7 +997,7 @@ contract ClipperTest is DSTest {
         assertEq(tab, rad(110 ether));
         assertEq(lot, 40 ether);
 
-        (, uint256 price) = clip.getStatus(1);
+        (, uint256 price,) = clip.getStatus(1);
         assertEq(price, 2735783211953807380973706855); // 2.73 RAY
 
         // Bid so owe (= (22 - 1wei) * 5 = 110 RAD - 1) < tab (= 110 RAD)
@@ -1018,7 +1019,7 @@ contract ClipperTest is DSTest {
     }
 
     function test_take_bid_fails_no_partial_allowed() public takeSetup {
-        (, uint256 price) = clip.getStatus(1);
+        (, uint256 price,) = clip.getStatus(1);
         assertEq(price, ray(5 ether));
 
         clip.take({
@@ -1082,11 +1083,11 @@ contract ClipperTest is DSTest {
 
         hevm.warp(now + 30);
 
-        (, uint256 price) = clip.getStatus(1);
+        (, uint256 _price, uint256 _lot) = clip.getStatus(1);
         Guy(bob).take({
             id:  1,
-            amt: 30 ether,     // Buy the rest of the lot
-            max: ray(4 ether), // 5 * 0.99 ** 30 = 3.698501866941401 RAY => max > price
+            amt: _lot,     // Buy the rest of the lot
+            max: ray(_price), // 5 * 0.99 ** 30 = 3.698501866941401 RAY => max > price
             who: address(bob),
             data: ""
         });
@@ -1100,9 +1101,9 @@ contract ClipperTest is DSTest {
         assertEq(uint256(tic), 0);
         assertEq(top, 0);
 
-        uint256 expectedGem = (RAY * 60 ether) / price;  // tab / price
-        assertEq(vat.gem(ilk, bob), expectedGem);        // Didn't take whole lot
-        assertEq(vat.dai(bob), rad(940 ether));          // Paid rest of tab (60)
+        uint256 expectedGem = (RAY * 60 ether) / _price;  // tab / price
+        assertEq(vat.gem(ilk, bob), expectedGem);         // Didn't take whole lot
+        assertEq(vat.dai(bob), rad(940 ether));           // Paid rest of tab (60)
 
         uint256 lotReturn = 30 ether - expectedGem;         // lot - loaf.tab / max = 15
         assertEq(vat.gem(ilk, me), 960 ether + lotReturn);  // Collateral returned (10 WAD)
@@ -1139,11 +1140,11 @@ contract ClipperTest is DSTest {
         assertEq(topBefore, ray(5 ether)); // $4 spot + 25% buffer = $5 (wasn't affected by poke)
 
         hevm.warp(startTime + 3600 seconds);
-        (bool needsRedo,) = clip.getStatus(1);
+        (bool needsRedo,,) = clip.getStatus(1);
         assertTrue(!needsRedo);
         assertTrue(!try_redo(1, address(this)));
         hevm.warp(startTime + 3601 seconds);
-        (needsRedo,) = clip.getStatus(1);
+        (needsRedo,,) = clip.getStatus(1);
         assertTrue(needsRedo);
         assertTrue(try_redo(1, address(this)));
 
@@ -1162,11 +1163,11 @@ contract ClipperTest is DSTest {
         assertEq(topBefore, ray(5 ether)); // $4 spot + 25% buffer = $5 (wasn't affected by poke)
 
         hevm.warp(startTime + 1800 seconds);
-        (bool needsRedo,) = clip.getStatus(1);
+        (bool needsRedo,,) = clip.getStatus(1);
         assertTrue(!needsRedo);
         assertTrue(!try_redo(1, address(this)));
         hevm.warp(startTime + 1801 seconds);
-        (needsRedo,) = clip.getStatus(1);
+        (needsRedo,,) = clip.getStatus(1);
         assertTrue(needsRedo);
         assertTrue(try_redo(1, address(this)));
 
@@ -1330,7 +1331,7 @@ contract ClipperTest is DSTest {
 
         hevm.warp(now + 100); // Reducing the price
 
-        (, uint256 price) = clip.getStatus(1);
+        (, uint256 price,) = clip.getStatus(1);
         assertEq(price, 1830161706366147524653080130); // 1.83 RAY
 
         clip.take({
