@@ -11,6 +11,10 @@ contract VowMock {
 }
 
 contract ClipperMock {
+    bytes32 public ilk;
+    function setIlk(bytes32 wat) external {
+        ilk = wat;
+    }
     function kick(uint256, uint256, address, address)
         external pure returns (uint256 id) {
         id = 42;
@@ -37,6 +41,7 @@ contract DogTest is DSTest {
         vat.file(ilk, "dust", 100 * RAD);
         vow = new VowMock();
         clip = new ClipperMock();
+        clip.setIlk(ilk);
         dog = new Dog(address(vat));
         vat.rely(address(dog));
         dog.file(ilk, "chop", 11 * WAD / 10);
@@ -57,6 +62,10 @@ contract DogTest is DSTest {
 
     function testFail_file_chop_eq_zero() public {
         dog.file(ilk, "chop", 0);
+    }
+
+    function testFail_file_clip_wrong_ilk() public {
+        dog.file("mismatched_ilk", "clip", address(clip));
     }
 
     function setUrn(uint256 ink, uint256 art) internal {

@@ -20,6 +20,7 @@
 pragma solidity >=0.6.12;
 
 interface ClipperLike {
+    function ilk() external view returns (bytes32);
     function kick(
         uint256 tab,
         uint256 lot,
@@ -133,14 +134,18 @@ contract Dog {
         emit File(what, data);
     }
     function file(bytes32 ilk, bytes32 what, uint256 data) external auth {
-        if (what == "chop") { require(data >= WAD); ilks[ilk].chop = data; }
-        else if (what == "hole") ilks[ilk].hole = data;
+        if (what == "chop") {
+            require(data >= WAD, "Dog/file-chop-lt-WAD");
+            ilks[ilk].chop = data;
+        } else if (what == "hole") ilks[ilk].hole = data;
         else revert("Dog/file-unrecognized-param");
         emit File(ilk, what, data);
     }
     function file(bytes32 ilk, bytes32 what, address clip) external auth {
-        if (what == "clip") ilks[ilk].clip = clip;
-        else revert("Dog/file-unrecognized-param");
+        if (what == "clip") {
+            require(ilk == ClipperLike(clip).ilk(), "Dog/file-ilk-neq-clip.ilk");
+            ilks[ilk].clip = clip;
+        } else revert("Dog/file-unrecognized-param");
         emit File(ilk, what, clip);
     }
 
