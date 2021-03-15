@@ -27,6 +27,19 @@ contract ClipperTest is DSTest {
         hevm.warp(startTime);
     }
 
+    function assertEqWithinTolerance(
+        uint256 x,
+        uint256 y,
+        uint256 tolerance) internal {
+            uint256 diff;
+            if (x >= y) {
+                diff = x - y;
+            } else {
+                diff = y - x;
+            }
+            assertTrue(diff <= tolerance);
+    }
+
     function checkExpDecrease(
         StairstepExponentialDecrease calc,
         uint256 cut,
@@ -41,7 +54,6 @@ contract ClipperTest is DSTest {
     {
         uint256 price;
         uint256 lastPrice;
-        uint256 diff;
         uint256 testPrice;
 
         hevm.warp(startTime);
@@ -57,13 +69,7 @@ contract ClipperTest is DSTest {
             // Stairstep calculation
             if (i % step == 0) { testPrice = lastPrice * percentDecrease / RAY; }
             else               { testPrice = lastPrice; }
-            // Tolerance calculation
-            if (testPrice >= price) { diff = testPrice - price; }
-            else                    { diff = price - testPrice; }
-            // Precision is lost as price goes higher (can only get 10^27 max precision).
-            // E.g., top = 50m => Expected: 16338200015683006288456874400625678
-            //                    Actual:   16338200015683006288456874350000000
-            assertTrue(diff <= tolerance);
+            assertEqWithinTolerance(testPrice, price, tolerance);
         }
     }
 
@@ -136,6 +142,22 @@ contract ClipperTest is DSTest {
         percentDecrease = RAY - 1.1234567890E27 / 100;
         step = 5 minutes;
         checkExpDecrease(calc, percentDecrease, step, top, tic, percentDecrease, testTime, tolerance);
+    }
+
+    function test_continuous_exp_decrease() public {
+        ExponentialDecrease calc = new ExponentialDecrease();
+        uint256 tHalf = 900;
+        uint256 cut = 0.999230132966E27;  // ~15 half life, cut ~= e^(ln(1/2)/900)
+        calc.file("cut", cut);
+
+        uint256 top = 4000 * RAY;
+        uint256 expectedPrice = top;
+        uint256 tolerance = RAY / 1000;  // 0.001, i.e 0.1%
+        for (uint256 i = 0; i < 5; i++) {  // will cover initial value + four half-lives
+            assertEqWithinTolerance(calc.price(top, i*tHalf), expectedPrice, tolerance);
+            // each loop iteration advances one half-life, so expectedPrice decreases by a factor of 2
+            expectedPrice /= 2;
+        }
     }
 
     function test_linear_decrease() public {
