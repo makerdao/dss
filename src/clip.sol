@@ -69,6 +69,7 @@ contract Clipper {
     uint256 public cusp;  // Percentage drop before auction reset              [ray]
     uint64  public chip;  // Percentage of tab to suck from vow to incentivize keepers [wad]
     uint192 public tip;   // Flat fee to suck from vow to incentivize keepers          [rad]
+    uint256 public dust;  // Cache the ilk dust to prevent excessive SLOAD
 
     uint256   public kicks;   // Total auctions
     uint256[] public active;  // Array of active auction ids
@@ -135,6 +136,7 @@ contract Clipper {
         dog     = DogLike(dog_);
         ilk     = ilk_;
         buf     = RAY;
+        updust(vat_, ilk_);
 
         wards[msg.sender] = 1;
         emit Rely(msg.sender);
@@ -291,8 +293,8 @@ contract Clipper {
         uint256 _chip = chip;
         uint256 coin;
         if (_tip > 0 || _chip > 0) {
-            (,,,, uint256 dust) = vat.ilks(ilk);
-            if (tab >= dust && mul(lot, price) >= dust) {
+            uint256 _dust = dust;
+            if (tab >= _dust && mul(lot, price) >= _dust) {
                 coin = add(_tip, wmul(tab, _chip));
                 vat.suck(vow, kpr, coin);
             }
@@ -371,12 +373,12 @@ contract Clipper {
                 slice = owe / price;        // slice' = owe' / price <= owe / price == slice <= lot
             } else if (owe < tab && slice < lot) {
                 // if slice == lot => auction completed => dust doesn't matter
-                (,,,, uint256 dust) = vat.ilks(ilk);
-                if (tab - owe < dust) {     // safe as owe < tab
+                uint256 _dust = dust;
+                if (tab - owe < _dust) {     // safe as owe < tab
                     // if tab <= dust, buyers have to buy the whole thing
-                    require(tab > dust, "Clipper/no-partial-purchase");
+                    require(tab > _dust, "Clipper/no-partial-purchase");
                     // Adjust amount to pay
-                    owe = tab - dust;       // owe' <= owe
+                    owe = tab - _dust;       // owe' <= owe
                     // Adjust slice
                     slice = owe / price;    // slice' = owe' / price < owe / price == slice < lot
                 }
@@ -456,6 +458,16 @@ contract Clipper {
     function status(uint96 tic, uint256 top) internal view returns (bool done, uint256 price) {
         price = calc.price(top, sub(block.timestamp, tic));
         done  = (sub(block.timestamp, tic) > tail || rdiv(price, top) < cusp);
+    }
+
+    // Public function to update the cached dust value
+    function updust() external {
+        updust(address(vat), ilk);
+    }
+
+    function updust(address _vat, bytes32 _ilk) internal {
+        (,,,, uint256 _dust) = VatLike(_vat).ilks(_ilk);
+        dust = _dust;
     }
 
     // Cancel an auction during ES or via governance action.
