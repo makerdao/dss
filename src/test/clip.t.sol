@@ -1406,22 +1406,22 @@ contract ClipperTest is DSTest {
 
         // [1,2,3,4,5]
         assertEq(pclip.count(), 5);   // 5 elements added
-        assertEq(pclip.getId(0), 1);
-        assertEq(pclip.getId(1), 2);
-        assertEq(pclip.getId(2), 3);
-        assertEq(pclip.getId(3), 4);
-        assertEq(pclip.getId(4), 5);
+        assertEq(pclip.active(0), 1);
+        assertEq(pclip.active(1), 2);
+        assertEq(pclip.active(2), 3);
+        assertEq(pclip.active(3), 4);
+        assertEq(pclip.active(4), 5);
 
         pclip.remove(id);
 
         // [1,2,5,4]
         assertEq(pclip.count(), 4);
-        assertEq(pclip.getId(0), 1);
-        assertEq(pclip.getId(1), 2);
-        assertEq(pclip.getId(2), 5);  // Swapped last for middle
+        assertEq(pclip.active(0), 1);
+        assertEq(pclip.active(1), 2);
+        assertEq(pclip.active(2), 5);  // Swapped last for middle
         (pos,,,,,) = pclip.sales(5);
         assertEq(pos, 2);
-        assertEq(pclip.getId(3), 4);
+        assertEq(pclip.active(3), 4);
 
         pclip.remove(4);
 
@@ -1430,15 +1430,15 @@ contract ClipperTest is DSTest {
 
         (pos,,,,,) = pclip.sales(1);
         assertEq(pos, 0); // Sale 1 in slot 0
-        assertEq(pclip.getId(0), 1);
+        assertEq(pclip.active(0), 1);
 
         (pos,,,,,) = pclip.sales(2);
         assertEq(pos, 1); // Sale 2 in slot 1
-        assertEq(pclip.getId(1), 2);
+        assertEq(pclip.active(1), 2);
 
         (pos,,,,,) = pclip.sales(5);
         assertEq(pos, 2); // Sale 5 in slot 2
-        assertEq(pclip.getId(2), 5); // Final element removed
+        assertEq(pclip.active(2), 5); // Final element removed
 
         (pos,,,,,) = pclip.sales(4);
         assertEq(pos, 0); // Sale 4 was deleted. Returns 0
@@ -1450,7 +1450,7 @@ contract ClipperTest is DSTest {
         pclip.add();
         pclip.add();
 
-        pclip.getId(9); // Fail because id is out of range
+        pclip.active(9); // Fail because id is out of range
     }
 
     function testFail_not_enough_dai() public takeSetup {
