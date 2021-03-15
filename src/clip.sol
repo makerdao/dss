@@ -135,7 +135,7 @@ contract Clipper {
         dog     = DogLike(dog_);
         ilk     = ilk_;
         buf     = RAY;
-        locked = 1;
+        locked  = 1;
 
         wards[msg.sender] = 1;
         emit Rely(msg.sender);
