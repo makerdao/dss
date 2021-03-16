@@ -66,6 +66,11 @@ contract Dog {
         uint256 chop;  // Liquidation Penalty                                          [wad]
         uint256 hole;  // Max DAI needed to cover debt+fees of active auctions per ilk [rad]
         uint256 dirt;  // Amt DAI needed to cover debt+fees of active auctions per ilk [rad]
+        uint256 trid;  // Amt of dirt dug by auctions.                                 [rad]
+        // Packed in to a single slot to minimze gas costs.
+        uint224 clod;  // Amount of dirt to remove per time quantum                    [rad]
+        uint32  qntm;  // Time between removal of clods                                [seconds]
+        uint256 last;  // Timstamp of most recent dirt reduction                       [Unix epoch]
     }
 
     VatLike immutable public vat;  // CDP Engine
@@ -111,6 +116,10 @@ contract Dog {
 
     function min(uint256 x, uint256 y) internal pure returns (uint256 z) {
         z = x <= y ? x : y;
+    }
+    function min(uint256 x, uint256 y, uint256 z) internal pure returns (uint256 w) {
+        w = x <= y ? x : y;
+        if (z < w) w = z;
     }
     function add(uint256 x, uint256 y) internal pure returns (uint256 z) {
         require((z = x + y) >= x);
@@ -195,15 +204,36 @@ contract Dog {
         uint256 rate;
         uint256 dust;
         {
-            uint256 spot;
-            (,rate, spot,, dust) = vat.ilks(ilk);
-            require(spot > 0 && mul(ink, spot) < mul(art, rate), "Dog/not-unsafe");
+            {
+                uint256 spot;
+                (,rate, spot,, dust) = vat.ilks(ilk);
+                require(spot > 0 && mul(ink, spot) < mul(art, rate), "Dog/not-unsafe");
+            }
+
+            uint256 _Dirt = Dirt;
+            {
+                // Risk of overflow should be extremely small, even if milk.last = 0;
+                // can anyway be made less likely to overflow with a little more work.
+                uint256 pile = mul(sub(block.timestamp, milk.last) / milk.qntm, milk.clod);
+                pile = min(milk.dirt, milk.trid, pile);
+                if (pile > 0) {
+                    milk.trid = sub(milk.trid, pile);
+                    milk.dirt = sub(milk.dirt, pile);  // In principle safe if trid <= dirt can be formally verified.
+                    _Dirt     = sub(_Dirt, pile);      // In principle safe is dirt <= Dirt can be formally verified.
+                }
+            }
 
             // Get the minimum value between:
             // 1) Remaining space in the general Hole
             // 2) Remaining space in the collateral hole
-            require(Hole > Dirt && milk.hole > milk.dirt, "Dog/liquidation-limit-hit");
-            uint256 room = min(Hole - Dirt, milk.hole - milk.dirt);
+            require(Hole > _Dirt && milk.hole > milk.dirt, "Dog/liquidation-limit-hit");
+            uint256 room = min(Hole - _Dirt, milk.hole - milk.dirt);
+
+            // Commit trid, dirt, Dirt, and last updates to storage.
+            ilks[ilk].trid = milk.trid;
+            ilks[ilk].dirt = milk.dirt;
+            Dirt = _Dirt;
+            ilks[ilk].last = block.timestamp;
 
             // uint256.max()/(RAD*WAD) = 115,792,089,237,316
             dart = min(art, mul(room, WAD) / rate / milk.chop);
@@ -256,8 +286,7 @@ contract Dog {
     }
 
     function digs(bytes32 ilk, uint256 rad) external auth {
-        Dirt = sub(Dirt, rad);
-        ilks[ilk].dirt = sub(ilks[ilk].dirt, rad);
+        ilks[ilk].trid = add(ilks[ilk].trid, rad);
         emit Digs(ilk, rad);
     }
 

@@ -112,7 +112,7 @@ contract DogTest is DSTest {
         vat.file(ilk, "dust", dust * RAD);
         uint256 hole = 5 * THOUSAND;
         dog.file(ilk, "hole", hole * RAD);
-        (, uint256 chop,,) = dog.ilks(ilk);
+        (, uint256 chop,,,,,,) = dog.ilks(ilk);
         uint256 artStart = hole * WAD * WAD / chop + dust * WAD - 1;
         setUrn(WAD, artStart);
         dog.bark(ilk, usr, address(this));
@@ -122,7 +122,7 @@ contract DogTest is DSTest {
         // The full vault has been liquidated so as not to leave a dusty remnant,
         // at the expense of slightly exceeding hole.
         assertEq(art, 0);
-        (,,, uint256 dirt) = dog.ilks(ilk);
+        (,,, uint256 dirt,,,,) = dog.ilks(ilk);
         assertTrue(dirt > hole * RAD);
         assertEq(dirt, artStart * RAY * chop / WAD);
     }
@@ -132,7 +132,7 @@ contract DogTest is DSTest {
         vat.file(ilk, "dust", dust * RAD);
         uint256 hole = 5 * THOUSAND;
         dog.file(ilk, "hole", hole * RAD);
-        (, uint256 chop,,) = dog.ilks(ilk);
+        (, uint256 chop,,,,,,) = dog.ilks(ilk);
         setUrn(WAD, hole * WAD * WAD / chop + dust * WAD);
         dog.bark(ilk, usr, address(this));
         assertTrue(!isDusty());
@@ -140,7 +140,7 @@ contract DogTest is DSTest {
 
         // The vault remnant respects the dust limit, so we don't exceed hole to liquidate it.
         assertEq(art, dust * WAD);
-        (,,, uint256 dirt) = dog.ilks(ilk);
+        (,,, uint256 dirt,,,,) = dog.ilks(ilk);
         assertTrue(dirt <= hole * RAD);
         assertEq(dirt, hole * RAD * WAD / RAY / chop * RAY * chop / WAD);
     }
@@ -150,7 +150,7 @@ contract DogTest is DSTest {
         vat.file(ilk, "dust", dust * RAD);
         uint256 Hole = 5 * THOUSAND;
         dog.file("Hole", Hole * RAD);
-        (, uint256 chop,,) = dog.ilks(ilk);
+        (, uint256 chop,,,,,,) = dog.ilks(ilk);
         uint256 artStart = Hole * WAD * WAD / chop + dust * WAD - 1;
         setUrn(WAD, artStart);
         dog.bark(ilk, usr, address(this));
@@ -169,7 +169,7 @@ contract DogTest is DSTest {
         vat.file(ilk, "dust", dust * RAD);
         uint256 Hole = 5 * THOUSAND;
         dog.file("Hole", Hole * RAD);
-        (, uint256 chop,,) = dog.ilks(ilk);
+        (, uint256 chop,,,,,,) = dog.ilks(ilk);
         setUrn(WAD, Hole * WAD * WAD / chop + dust * WAD);
         dog.bark(ilk, usr, address(this));
         assertTrue(!isDusty());
@@ -204,7 +204,7 @@ contract DogTest is DSTest {
         setUrn(WAD, (HOLE - ROOM) * RAD / rate * WAD / CHOP);
         dog.bark(ilk, usr, address(this));
         assertEq(HOLE * RAD - dog.Dirt(), ROOM * RAD);
-        (,,, uint256 dirt) = dog.ilks(ilk);
+        (,,, uint256 dirt,,,,) = dog.ilks(ilk);
         assertEq(HOLE * RAD - dirt, ROOM * RAD);
 
         // Create a small vault
@@ -222,7 +222,7 @@ contract DogTest is DSTest {
         // In fact, there is only room to create dusty auctions at this point.
         assertTrue(dog.Hole() - dog.Dirt() < DUST_2 * RAD * CHOP / WAD);
         uint256 hole;
-        (,, hole, dirt) = dog.ilks(ilk);
+        (,, hole, dirt,,,,) = dog.ilks(ilk);
         assertTrue(hole - dirt < DUST_2 * RAD * CHOP / WAD);
 
         // But...our Vault is small enough to fit in ROOM
@@ -248,12 +248,12 @@ contract DogTest is DSTest {
         (, uint256 rate,,,) = vat.ilks(ilk);
         assertEq(rate, (15 * RAY) / 10);
 
-        (, uint256 chop,,) = dog.ilks(ilk);
+        (, uint256 chop,,,,,,) = dog.ilks(ilk);
         setUrn(WAD, (hole - dust / 2) * RAD / rate * WAD / chop);
         dog.bark(ilk, usr, address(this));
 
         // Make sure any partial liquidation would be dusty (assuming non-dusty remnant)
-        (,,, uint256 dirt) = dog.ilks(ilk);
+        (,,, uint256 dirt,,,,) = dog.ilks(ilk);
         uint256 room = hole * RAD - dirt;
         uint256 dart = room * WAD / rate / chop;
         assertTrue(dart * rate < dust * RAD);
@@ -274,7 +274,7 @@ contract DogTest is DSTest {
         (, uint256 rate,,,) = vat.ilks(ilk);
         assertEq(rate, (15 * RAY) / 10);
 
-        (, uint256 chop,,) = dog.ilks(ilk);
+        (, uint256 chop,,,,,,) = dog.ilks(ilk);
         setUrn(WAD, (Hole - dust / 2) * RAD / rate * WAD / chop);
         dog.bark(ilk, usr, address(this));
 

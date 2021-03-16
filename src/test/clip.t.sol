@@ -415,7 +415,7 @@ contract ClipperTest is DSTest {
 
     function test_get_chop() public {
         uint256 chop = dog.chop(ilk);
-        (, uint256 chop2,,) = dog.ilks(ilk);
+        (, uint256 chop2,,,,,,) = dog.ilks(ilk);
         assertEq(chop, chop2);
     }
 
@@ -729,7 +729,7 @@ contract ClipperTest is DSTest {
 
     function test_Hole_hole() public {
         assertEq(dog.Dirt(), 0);
-        (,,, uint256 dirt) = dog.ilks(ilk);
+        (,,, uint256 dirt,,,,) = dog.ilks(ilk);
         assertEq(dirt, 0);
 
         dog.bark(ilk, me, address(this));
@@ -737,7 +737,7 @@ contract ClipperTest is DSTest {
         (, uint256 tab,,,,) = clip.sales(1);
 
         assertEq(dog.Dirt(), tab);
-        (,,, dirt) = dog.ilks(ilk);
+        (,,, dirt,,,,) = dog.ilks(ilk);
         assertEq(dirt, tab);
 
         bytes32 ilk2 = "silver";
@@ -770,8 +770,8 @@ contract ClipperTest is DSTest {
         (, uint256 tab2,,,,) = clip2.sales(1);
 
         assertEq(dog.Dirt(), tab + tab2);
-        (,,, dirt) = dog.ilks(ilk);
-        (,,, uint256 dirt2) = dog.ilks(ilk2);
+        (,,, dirt,,,,) = dog.ilks(ilk);
+        (,,, uint256 dirt2,,,,) = dog.ilks(ilk2);
         assertEq(dirt, tab);
         assertEq(dirt2, tab2);
     }
@@ -783,7 +783,7 @@ contract ClipperTest is DSTest {
         assertEq(_art(ilk, me), 100 ether);
 
         assertEq(dog.Dirt(), 0);
-        (,uint256 chop,, uint256 dirt) = dog.ilks(ilk);
+        (,uint256 chop,, uint256 dirt,,,,) = dog.ilks(ilk);
         assertEq(dirt, 0);
 
         dog.bark(ilk, me, address(this));
@@ -799,7 +799,7 @@ contract ClipperTest is DSTest {
         assertEq(_art(ilk, me), 100 ether - tab * WAD / rate / chop);
 
         assertEq(dog.Dirt(), tab);
-        (,,, dirt) = dog.ilks(ilk);
+        (,,, dirt,,,,) = dog.ilks(ilk);
         assertEq(dirt, tab);
     }
 
@@ -810,7 +810,7 @@ contract ClipperTest is DSTest {
         assertEq(_art(ilk, me), 100 ether);
 
         assertEq(dog.Dirt(), 0);
-        (,uint256 chop,, uint256 dirt) = dog.ilks(ilk);
+        (,uint256 chop,, uint256 dirt,,,,) = dog.ilks(ilk);
         assertEq(dirt, 0);
 
         dog.bark(ilk, me, address(this));
@@ -826,7 +826,7 @@ contract ClipperTest is DSTest {
         assertEq(_art(ilk, me), 100 ether - tab * WAD / rate / chop);
 
         assertEq(dog.Dirt(), tab);
-        (,,, dirt) = dog.ilks(ilk);
+        (,,, dirt,,,,) = dog.ilks(ilk);
         assertEq(dirt, tab);
     }
 
@@ -867,7 +867,7 @@ contract ClipperTest is DSTest {
         assertEq(top, 0);
 
         assertEq(dog.Dirt(), 0);
-        (,,, uint256 dirt) = dog.ilks(ilk);
+        (,,, uint256 dirt,,,,) = dog.ilks(ilk);
         assertEq(dirt, 0);
     }
 
@@ -895,7 +895,7 @@ contract ClipperTest is DSTest {
         assertEq(top, 0);
 
         assertEq(dog.Dirt(), 0);
-        (,,, uint256 dirt) = dog.ilks(ilk);
+        (,,, uint256 dirt,,,,) = dog.ilks(ilk);
         assertEq(dirt, 0);
     }
 
@@ -923,7 +923,7 @@ contract ClipperTest is DSTest {
         assertEq(top, ray(5 ether));
 
         assertEq(dog.Dirt(), tab);
-        (,,, uint256 dirt) = dog.ilks(ilk);
+        (,,, uint256 dirt,,,,) = dog.ilks(ilk);
         assertEq(dirt, tab);
     }
 
@@ -953,7 +953,7 @@ contract ClipperTest is DSTest {
 
         // All dirt should be cleared, since the auction has ended, even though < 100% of tab was collected
         assertEq(dog.Dirt(), 0);
-        (,,, uint256 dirt) = dog.ilks(ilk);
+        (,,, uint256 dirt,,,,) = dog.ilks(ilk);
         assertEq(dirt, 0);
     }
 
@@ -1391,7 +1391,7 @@ contract ClipperTest is DSTest {
 
         // Assert that callback to clear dirt was successful.
         assertEq(dog.Dirt(), 0);
-        (,,, uint256 dirt) = dog.ilks(ilk);
+        (,,, uint256 dirt,,,,) = dog.ilks(ilk);
         assertEq(dirt, 0);
 
         // Assert transfer of gem.
