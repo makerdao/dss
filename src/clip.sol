@@ -223,7 +223,7 @@ contract Clipper {
     // note: trusts the caller to transfer collateral to the contract
     // The starting price `top` is obtained as follows:
     //
-    //     top = val * buf / par
+    //     top = max( val * buf / par , tab / lot )
     //
     // Where `val` is the collateral's unitary value in USD, `buf` is a
     // multiplicative factor to increase the starting price, and `par` is a
