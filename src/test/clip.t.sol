@@ -505,6 +505,92 @@ contract ClipperTest is DSTest {
         assertEq(vat.dai(bob), rad(1000 ether) + rad(100 ether) + tab * 0.02 ether / WAD); // Paid (tip + due * chip) amount of DAI for calling bark()
     }
 
+    function test_low_osm_price_kick() public {
+        uint256 pos;
+        uint256 tab;
+        uint256 lot;
+        address usr;
+        uint96  tic;
+        uint256 top;
+        uint256 ink;
+        uint256 art;
+
+        clip.file("tip",  rad(100 ether)); // Flat fee of 100 DAI
+        clip.file("chip", 0);              // No linear increase
+
+        assertEq(clip.kicks(), 0);
+        (pos, tab, lot, usr, tic, top) = clip.sales(1);
+        assertEq(pos, 0);
+        assertEq(tab, 0);
+        assertEq(lot, 0);
+        assertEq(usr, address(0));
+        assertEq(uint256(tic), 0);
+        assertEq(top, 0);
+        assertEq(vat.gem(ilk, me), 960 ether);
+        assertEq(vat.dai(ali), rad(1000 ether));
+        (ink, art) = vat.urns(ilk, me);
+        assertEq(ink, 40 ether);
+        assertEq(art, 100 ether);
+
+        Guy(ali).bark(dog, ilk, me, address(ali));
+
+        assertEq(clip.kicks(), 1);
+        (pos, tab, lot, usr, tic, top) = clip.sales(1);
+        assertEq(pos, 0);
+        assertEq(tab, rad(110 ether));
+        assertEq(lot, 40 ether);
+        assertEq(usr, me);
+        assertEq(uint256(tic), now);
+        assertEq(top, ray(4 ether));
+        assertEq(vat.gem(ilk, me), 960 ether);
+        assertEq(vat.dai(ali), rad(1100 ether)); // Paid "tip" amount of DAI for calling bark()
+        (ink, art) = vat.urns(ilk, me);
+        assertEq(ink, 0 ether);
+        assertEq(art, 0 ether);
+
+        pip.poke(bytes32(goldPrice)); // Spot = $2.5
+        spot.poke(ilk);          // Now safe
+
+        hevm.warp(startTime + 100);
+        vat.frob(ilk, me, me, me, 40 ether, 100 ether);
+
+        pip.poke(bytes32(uint256(1))); // Spot = 1 wei attack
+        spot.poke(ilk);          // Now unsafe
+
+        (pos, tab, lot, usr, tic, top) = clip.sales(2);
+        assertEq(pos, 0);
+        assertEq(tab, 0);
+        assertEq(lot, 0);
+        assertEq(usr, address(0));
+        assertEq(uint256(tic), 0);
+        assertEq(top, 0);
+        assertEq(vat.gem(ilk, me), 920 ether);
+
+        clip.file(bytes32("buf"),  ray(1.25 ether)); // 25% Initial price buffer
+
+        clip.file("tip",  rad(100 ether)); // Flat fee of 100 DAI
+        clip.file("chip", 0.02 ether);     // Linear increase of 2% of tab
+
+        assertEq(vat.dai(bob), rad(1000 ether));
+
+        Guy(bob).bark(dog, ilk, me, address(bob));
+
+        assertEq(clip.kicks(), 2);
+        (pos, tab, lot, usr, tic, top) = clip.sales(2);
+        assertEq(pos, 1);
+        assertEq(tab, rad(110 ether));
+        assertEq(lot, 40 ether);
+        assertEq(usr, me);
+        assertEq(uint256(tic), now);
+        assertEq(top, ray(2.75 ether)); // Starting amount protected by imputed price in attack
+        assertEq(vat.gem(ilk, me), 920 ether);
+        (ink, art) = vat.urns(ilk, me);
+        assertEq(ink, 0 ether);
+        assertEq(art, 0 ether);
+
+        assertEq(vat.dai(bob), rad(1000 ether) + rad(100 ether) + tab * 0.02 ether / WAD); // Paid (tip + due * chip) amount of DAI for calling bark()
+    }
+
     function testFail_kick_zero_price() public {
         pip.poke(bytes32(0));
         dog.bark(ilk, me, address(this));
@@ -1581,4 +1667,5 @@ contract ClipperTest is DSTest {
             data: ""
         });
     }
+
 }

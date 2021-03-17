@@ -201,6 +201,9 @@ contract Clipper {
     function rdiv(uint256 x, uint256 y) internal pure returns (uint256 z) {
         z = mul(x, RAY) / y;
     }
+    function max(uint x, uint y) internal pure returns (uint z) {
+        return x >= y ? x : y;
+    }
 
 
     // --- Auction ---
@@ -212,7 +215,7 @@ contract Clipper {
     function getPrice() internal returns (uint256 price) {
         (PipLike pip, ) = spotter.ilks(ilk);
         (bytes32 val, bool has) = pip.peek();
-        require(has, "Clipper/invalid-price");
+        require(has && uint256(val) > 0, "Clipper/invalid-price");
         price = rdiv(mul(uint256(val), BLN), spotter.par());
     }
 
@@ -248,7 +251,7 @@ contract Clipper {
         sales[id].tic = uint96(block.timestamp);
 
         uint256 top;
-        top = rmul(getPrice(), buf);
+        top = max(rmul(getPrice(), buf), tab / lot);
         require(top > 0, "Clipper/zero-top-price");
         sales[id].top = top;
 
