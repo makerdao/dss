@@ -89,7 +89,8 @@ contract Clipper {
     // Levels for circuit breaker
     // 0: no breaker
     // 1: no new kick()
-    // 2: no new kick(), redo(), or take()
+    // 2: no new kick() or redo()
+    // 3: no new kick(), redo(), or take()
     uint256 public stopped = 0;
 
     // --- Events ---
@@ -162,7 +163,7 @@ contract Clipper {
         else if (what == "cusp")       cusp = data;           // Percentage drop before auction reset
         else if (what == "chip")       chip = uint64(data);   // Percentage of tab to incentivize (max: 2^64 - 1 => 18.xxx WAD = 18xx%)
         else if (what == "tip")         tip = uint192(data);  // Flat fee to incentivize keepers (max: 2^192 - 1 => 6.277T RAD)
-        else if (what == "stopped") stopped = data;           // Set breaker (0, 1 or 2)
+        else if (what == "stopped") stopped = data;           // Set breaker (0, 1, 2, or 3)
         else revert("Clipper/file-unrecognized-param");
         emit File(what, data);
     }
@@ -335,7 +336,7 @@ contract Clipper {
         uint256 max,          // Maximum acceptable price (DAI / collateral) [ray]
         address who,          // Receiver of collateral and external call address
         bytes calldata data   // Data to pass in external call; if length 0, no call is done
-    ) external lock isStopped(2) {
+    ) external lock isStopped(3) {
 
         address usr = sales[id].usr;
         uint96  tic = sales[id].tic;
