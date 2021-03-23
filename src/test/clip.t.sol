@@ -1245,6 +1245,9 @@ contract ClipperTest is DSTest {
 
         clip.file("stopped", 3);
         assertTrue(!try_bark(ilk, me));
+
+        clip.file("stopped", 0);
+        assertTrue(try_bark(ilk, me));
     }
 
     // At a stopped == 1 we are ok to take
