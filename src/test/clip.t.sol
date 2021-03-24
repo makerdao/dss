@@ -1311,27 +1311,27 @@ contract ClipperTest is DSTest {
         assertEq(topAfter, ray(3.75 ether)); // $3 spot + 25% buffer = $5 (used most recent OSM price)
     }
 
-    function testFail_stopped_2_auction_reset_tail() public {
+    function test_stopped_2_auction_reset_tail() public {
+        auctionResetSetup(10 hours); // 10 hours till zero is reached (used to test tail)
+
         clip.file("stopped", 2);
 
-        auctionResetSetup(10 hours); // 10 hours till zero is reached (used to test tail)
-
         pip.poke(bytes32(uint256(3 ether))); // Spot = $1.50 (update price before reset is called)
 
         (,,,, uint96 ticBefore, uint256 topBefore) = clip.sales(1);
         assertEq(uint256(ticBefore), startTime);
         assertEq(topBefore, ray(5 ether)); // $4 spot + 25% buffer = $5 (wasn't affected by poke)
 
-        hevm.warp(startTime + 3600 seconds);
-        assertTrue(!try_redo(1, address(this)));
         hevm.warp(startTime + 3601 seconds);
-        assertTrue(try_redo(1, address(this)));
+        (bool needsRedo,) = clip.getStatus(1);
+        assertTrue(needsRedo);  // Redo possible if circuit breaker not set
+        assertTrue(!try_redo(1, address(this)));  // Redo fails because of circuit breaker
     }
 
-    function testFail_stopped_3_auction_reset_tail() public {
-        clip.file("stopped", 3);
-
+    function test_stopped_3_auction_reset_tail() public {
         auctionResetSetup(10 hours); // 10 hours till zero is reached (used to test tail)
+
+        clip.file("stopped", 3);
 
         pip.poke(bytes32(uint256(3 ether))); // Spot = $1.50 (update price before reset is called)
 
@@ -1339,10 +1339,10 @@ contract ClipperTest is DSTest {
         assertEq(uint256(ticBefore), startTime);
         assertEq(topBefore, ray(5 ether)); // $4 spot + 25% buffer = $5 (wasn't affected by poke)
 
-        hevm.warp(startTime + 3600 seconds);
-        assertTrue(!try_redo(1, address(this)));
         hevm.warp(startTime + 3601 seconds);
-        assertTrue(try_redo(1, address(this)));
+        (bool needsRedo,) = clip.getStatus(1);
+        assertTrue(needsRedo);  // Redo possible if circuit breaker not set
+        assertTrue(!try_redo(1, address(this)));  // Redo fails because of circuit breaker
     }
 
     function test_redo_incentive() public takeSetup {
