@@ -1323,7 +1323,7 @@ contract ClipperTest is DSTest {
         assertEq(topBefore, ray(5 ether)); // $4 spot + 25% buffer = $5 (wasn't affected by poke)
 
         hevm.warp(startTime + 3601 seconds);
-        (bool needsRedo,) = clip.getStatus(1);
+        (bool needsRedo,,,) = clip.getStatus(1);
         assertTrue(needsRedo);  // Redo possible if circuit breaker not set
         assertTrue(!try_redo(1, address(this)));  // Redo fails because of circuit breaker
     }
@@ -1340,7 +1340,7 @@ contract ClipperTest is DSTest {
         assertEq(topBefore, ray(5 ether)); // $4 spot + 25% buffer = $5 (wasn't affected by poke)
 
         hevm.warp(startTime + 3601 seconds);
-        (bool needsRedo,) = clip.getStatus(1);
+        (bool needsRedo,,,) = clip.getStatus(1);
         assertTrue(needsRedo);  // Redo possible if circuit breaker not set
         assertTrue(!try_redo(1, address(this)));  // Redo fails because of circuit breaker
     }
