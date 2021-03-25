@@ -34,6 +34,7 @@ interface SpotterLike {
 }
 
 interface DogLike {
+    function chop(bytes32) external returns (uint256);
     function digs(bytes32, uint256) external;
 }
 
@@ -294,7 +295,7 @@ contract Clipper {
         uint256 coin;
         if (_tip > 0 || _chip > 0) {
             uint256 _dust = dust;
-            if (tab >= _dust && mul(lot, price) >= _dust) {
+            if (tab >= wmul(_dust, dog.chop(ilk)) && mul(lot, price) >= _dust) {
                 coin = add(_tip, wmul(tab, _chip));
                 vat.suck(vow, kpr, coin);
             }
@@ -373,14 +374,14 @@ contract Clipper {
                 slice = owe / price;        // slice' = owe' / price <= owe / price == slice <= lot
             } else if (owe < tab && slice < lot) {
                 // if slice == lot => auction completed => dust doesn't matter
-                uint256 _dust = dust;
-                if (tab - owe < _dust) {     // safe as owe < tab
-                    // if tab <= dust, buyers have to buy the whole thing
-                    require(tab > _dust, "Clipper/no-partial-purchase");
+                uint256 chost = wmul(dust, dog.chop());
+                if (tab - owe < chost) {     // safe as owe < tab
+                    // if tab / chop <= dust, buyers have to buy the whole thing
+                    require(tab > chost, "Clipper/no-partial-purchase");
                     // Adjust amount to pay
-                    owe = tab - _dust;       // owe' <= owe
+                    owe = tab - chost;       // owe' <= owe
                     // Adjust slice
-                    slice = owe / price;    // slice' = owe' / price < owe / price == slice < lot
+                    slice = owe / price;     // slice' = owe' / price < owe / price == slice < lot
                 }
             }
 
