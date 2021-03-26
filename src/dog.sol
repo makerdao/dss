@@ -159,11 +159,11 @@ contract Dog {
     //
     // The third argument is the address that will receive the liquidation reward, if any.
     //
-    // The entire Vault will be liquidated except when when the DAI target of the 
-    // resulting auction (debt of Vault + liquidation penalty) causes either Dirt to exceed
+    // The entire Vault will be liquidated except when the target amount of DAI to be raised in
+    // the resulting auction (debt of Vault + liquidation penalty) causes either Dirt to exceed
     // Hole or ilk.dirt to exceed ilk.hole by an economically significant amount. In that
-    // case, a partial liquidation is performed to respect the limits on outstanding DAI
-    // target globally and per-ilk. The one exception is if the resulting auction would likely
+    // case, a partial liquidation is performed to respect the global and per-ilk limits on
+    // outstanding DAI target. The one exception is if the resulting auction would likely
     // have too little collateral to be interesting to Keepers (debt taken from Vault < ilk.dust),
     // in which case the function reverts. Please refer to the code and comments within if
     // more detail is desired.
