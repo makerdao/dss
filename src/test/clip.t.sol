@@ -374,15 +374,16 @@ contract ClipperTest is DSTest {
         vat.file(ilk, "line", rad(10000 ether));
         vat.file("Line",      rad(10000 ether));
 
+        dog.file(ilk, "chop", 1.1 ether); // 10% chop
+        dog.file(ilk, "hole", rad(1000 ether));
+        dog.file("Hole", rad(1000 ether));
+
+        // dust and chop filed previously so clip.chost will be set correctly
         clip = new Clipper(address(vat), address(spot), address(dog), ilk);
         clip.rely(address(dog));
 
         dog.file(ilk, "clip", address(clip));
-        dog.file(ilk, "chop", 1.1 ether); // 10% chop
-        dog.file(ilk, "hole", rad(1000 ether));
-        dog.file("Hole", rad(1000 ether));
         dog.rely(address(clip));
-
         vat.rely(address(clip));
 
         assertEq(vat.gem(ilk, me), 1000 ether);
@@ -645,10 +646,10 @@ contract ClipperTest is DSTest {
         (, uint256 rate,,,) = vat.ilks(ilk);
         assertEq(rate, ray(1.02 ether));
 
-        dog.file(ilk, "hole", mul(80 ether, rate)); // Makes room = 80 WAD
-        dog.file(ilk, "chop", 1 ether);                 // 0% chop (for precise calculations)
-        vat.file(ilk, "dust", mul(20 ether, rate));     // $20 in normalized debt (multiplied by rate for testing)
-        clip.updust();
+        dog.file(ilk, "hole", 100 * RAD);   // Makes room = 100 RAD
+        dog.file(ilk, "chop",   1 ether);   // 0% chop for precise calculations
+        vat.file(ilk, "dust",  20 * RAD);   // 20 DAI minimum Vault debt
+        clip.upchost();
 
         assertEq(clip.kicks(), 0);
         (pos, tab, lot, usr, tic, top) = clip.sales(1);
@@ -661,22 +662,24 @@ contract ClipperTest is DSTest {
         assertEq(vat.gem(ilk, me), 960 ether);
         (ink, art) = vat.urns(ilk, me);
         assertEq(ink, 40 ether);
-        assertEq(art, 100 ether);
+        assertEq(art, 100 ether);  // Full debt is 102 DAI since rate = 1.02 * RAY
 
-        assertTrue(try_bark(ilk, me)); // (art - dart) * rate = (100 - (80 + 1 wei)) * rate < dust (= 20 * rate)
+        // (art - dart) * rate ~= 2 RAD < dust = 20 RAD
+        //   => remnant would be dusty, so a full liquidation occurs.
+        assertTrue(try_bark(ilk, me));
 
         assertEq(clip.kicks(), 1);
         (pos, tab, lot, usr, tic, top) = clip.sales(1);
         assertEq(pos, 0);
-        assertEq(tab, mul(80 ether, rate)); // No chop
-        assertEq(lot, 32 ether);
+        assertEq(tab, mul(100 ether, rate));  // No chop
+        assertEq(lot, 40 ether);
         assertEq(usr, me);
         assertEq(uint256(tic), now);
         assertEq(top, ray(4 ether));
         assertEq(vat.gem(ilk, me), 960 ether);
         (ink, art) = vat.urns(ilk, me);
-        assertEq(ink, 8 ether);
-        assertEq(art, 20 ether);
+        assertEq(ink, 0);
+        assertEq(art, 0);
     }
 
     function test_bark_only_leaving_dust_over_hole_rate() public {
@@ -693,10 +696,10 @@ contract ClipperTest is DSTest {
         (, uint256 rate,,,) = vat.ilks(ilk);
         assertEq(rate, ray(1.02 ether));
 
-        dog.file(ilk, "hole", mul(80 ether + 1, rate)); // Makes room = 80 WAD + 1 wei in normalized debt
-        dog.file(ilk, "chop", 1 ether);                 // 0% chop (for precise calculations)
-        vat.file(ilk, "dust", mul(20 ether, rate));     // $20 in normalized debt (multiplied by rate for testing)
-        clip.updust();
+        dog.file(ilk, "hole", 816 * RAD / 10);  // Makes room = 81.6 RAD => dart = 80
+        dog.file(ilk, "chop",   1 ether);       // 0% chop for precise calculations
+        vat.file(ilk, "dust", 204 * RAD / 10);  // 20.4 DAI dust
+        clip.upchost();
 
         assertEq(clip.kicks(), 0);
         (pos, tab, lot, usr, tic, top) = clip.sales(1);
@@ -711,20 +714,24 @@ contract ClipperTest is DSTest {
         assertEq(ink, 40 ether);
         assertEq(art, 100 ether);
 
-        assertTrue(try_bark(ilk, me)); // (art - dart) * rate = (100 - (80 + 1 wei)) * rate < dust (= 20 * rate)
+        // (art - dart) * rate = 20.4 RAD == dust
+        //   => marginal threshold at which partial liquidation is acceptable
+        assertTrue(try_bark(ilk, me));
 
         assertEq(clip.kicks(), 1);
         (pos, tab, lot, usr, tic, top) = clip.sales(1);
         assertEq(pos, 0);
-        assertEq(tab, mul(100 ether, rate)); // No chop
-        assertEq(lot, 40 ether);
+        assertEq(tab, 816 * RAD / 10);  // Equal to ilk.hole
+        assertEq(lot, 32 ether);
         assertEq(usr, me);
         assertEq(uint256(tic), now);
         assertEq(top, ray(4 ether));
         assertEq(vat.gem(ilk, me), 960 ether);
         (ink, art) = vat.urns(ilk, me);
-        assertEq(ink, 0 ether);
-        assertEq(art, 0 ether);
+        assertEq(ink, 8 ether);
+        assertEq(art, 20 ether);
+        (,,,, uint256 dust) = vat.ilks(ilk);
+        assertEq(art * rate, dust);
     }
 
     function test_Hole_hole() public {
@@ -968,7 +975,7 @@ contract ClipperTest is DSTest {
         });
     }
 
-    function test_take_bid_recalculates_due_dust() public takeSetup {
+    function test_take_bid_recalculates_due_to_chost_check() public takeSetup {
         (, uint256 tab, uint256 lot,,,) = clip.sales(1);
         assertEq(tab, rad(110 ether));
         assertEq(lot, 40 ether);
@@ -978,19 +985,19 @@ contract ClipperTest is DSTest {
         assertEq(_tab, tab);
         assertEq(price, ray(5 ether));
 
-        // Bid so owe (= (22 - 1wei) * 5 = 110 RAD - 1) < tab (= 110 RAD)
-        // 1 < 20 RAD => owe = 110 RAD - 20 RAD
+        // Bid for an amount that would leave less than chost remaining tab--bid will be decreased
+        // to leave tab == chost post-execution.
         Guy(ali).take({
             id:  1,
-            amt: 22 ether - 1,
+            amt: 18 * WAD,  // Costs 90 DAI at current price; 110 - 90 == 20 < 22 == chost
             max: ray(5 ether),
             who: address(ali),
             data: ""
         });
 
         (, tab, lot,,,) = clip.sales(1);
-        assertEq(tab, rad(20 ether));
-        assertEq(lot, 40 ether - rad((110 - 20) * 1 ether) / price);
+        assertEq(tab, clip.chost());
+        assertEq(lot, 40 ether - (110 * RAD - clip.chost()) / price);
     }
 
     function test_take_bid_avoids_recalculate_due_no_more_lot() public takeSetup {
@@ -1027,19 +1034,20 @@ contract ClipperTest is DSTest {
 
         clip.take({
             id:  1,
-            amt: 22 ether - 1,
+            amt: 17.6 ether,
             max: ray(5 ether),
             who: address(this),
             data: ""
         });
 
         (, uint256 tab, uint256 lot,,,) = clip.sales(1);
-        assertEq(tab, rad(20 ether));
-        assertEq(lot, 40 ether - rad((110 - 20) * 1 ether) / price);
+        assertEq(tab, rad(22 ether));
+        assertEq(lot, 22.4 ether);
+        assertTrue(!(tab > clip.chost()));
 
         assertTrue(!try_take({
             id:  1,
-            amt: tab / price - 1, // Try to do a partial purchase when tab == dust
+            amt: 1 ether,  // partial purchase attempt when !(tab > chost)
             max: ray(5 ether),
             who: address(this),
             data: ""
@@ -1313,7 +1321,7 @@ contract ClipperTest is DSTest {
         clip.redo(1, address(123));
         assertEq(vat.dai(address(123)), clip.tip());
 
-        clip.file("chip", 0.02 ether);     // Linear increase of 2% of tab
+        clip.file("chip", 0.02 ether);     // Reward 2% of tab
         hevm.warp(now + 300);
         clip.redo(1, address(234));
         assertEq(vat.dai(address(234)), clip.tip() + clip.chip() * tab / WAD);
@@ -1323,16 +1331,18 @@ contract ClipperTest is DSTest {
         clip.redo(1, address(345));
         assertEq(vat.dai(address(345)), clip.chip() * tab / WAD);
 
-        vat.file(ilk, "dust", rad(110 ether) + 1); // 1 wei > than $110 (tab) as dust
-        clip.updust();
+        vat.file(ilk, "dust", rad(100 ether) + 1); // ensure wmul(dust, chop) > 110 DAI (tab)
+        clip.upchost();
+        assertEq(clip.chost(), 110 * RAD + 1);
 
         hevm.warp(now + 300);
         clip.redo(1, address(456));
         assertEq(vat.dai(address(456)), 0);
 
-        // Set dust back to $20 so we can check the lot dusty case
+        // Set dust so that wmul(dust, chop) is well below tab to check the dusty lot case.
         vat.file(ilk, "dust", rad(20 ether)); // $20 dust
-        clip.updust();
+        clip.upchost();
+        assertEq(clip.chost(), 22 * RAD);
 
         hevm.warp(now + 100); // Reducing the price
 
@@ -1349,7 +1359,7 @@ contract ClipperTest is DSTest {
 
         (, tab, lot,,,) = clip.sales(1);
 
-        assertEq(tab, rad(110 ether) - 38 ether * price); // > $20 dust
+        assertEq(tab, rad(110 ether) - 38 ether * price); // > 22 DAI chost
         // When auction is reset the current price of lot
         // is calculated from oracle price ($4) to see if dusty
         assertEq(lot, 2 ether); // (2 * $4) < $20 quivalent (dusty collateral)

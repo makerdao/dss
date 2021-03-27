@@ -65,12 +65,12 @@ contract Clipper {
     SpotterLike public spotter;  // Collateral price module
     AbacusLike  public calc;     // Current price calculator
 
-    uint256 public buf;   // Multiplicative factor to increase starting price  [ray]
-    uint256 public tail;  // Time elapsed before auction reset                 [seconds]
-    uint256 public cusp;  // Percentage drop before auction reset              [ray]
-    uint64  public chip;  // Percentage of tab to suck from vow to incentivize keepers [wad]
-    uint192 public tip;   // Flat fee to suck from vow to incentivize keepers          [rad]
-    uint256 public dust;  // Cache the ilk dust to prevent excessive SLOAD
+    uint256 public buf;    // Multiplicative factor to increase starting price                  [ray]
+    uint256 public tail;   // Time elapsed before auction reset                                 [seconds]
+    uint256 public cusp;   // Percentage drop before auction reset                              [ray]
+    uint64  public chip;   // Percentage of tab to suck from vow to incentivize keepers         [wad]
+    uint192 public tip;    // Flat fee to suck from vow to incentivize keepers                  [rad]
+    uint256 public chost;  // Cache the ilk dust times the ilk chop to prevent excessive SLOADs [rad]
 
     uint256   public kicks;   // Total auctions
     uint256[] public active;  // Array of active auction ids
@@ -137,7 +137,7 @@ contract Clipper {
         dog     = DogLike(dog_);
         ilk     = ilk_;
         buf     = RAY;
-        updust(vat_, ilk_);
+        upchost(vat_, ilk_);
 
         wards[msg.sender] = 1;
         emit Rely(msg.sender);
@@ -294,8 +294,8 @@ contract Clipper {
         uint256 _chip = chip;
         uint256 coin;
         if (_tip > 0 || _chip > 0) {
-            uint256 _dust = dust;
-            if (tab >= wmul(_dust, dog.chop(ilk)) && mul(lot, price) >= _dust) {
+            uint256 _chost = chost;
+            if (tab >= _chost && mul(lot, price) >= _chost) {
                 coin = add(_tip, wmul(tab, _chip));
                 vat.suck(vow, kpr, coin);
             }
@@ -373,10 +373,9 @@ contract Clipper {
                 // Adjust slice
                 slice = owe / price;        // slice' = owe' / price <= owe / price == slice <= lot
             } else if (owe < tab && slice < lot) {
-                // if slice == lot => auction completed => dust doesn't matter
-                uint256 chost = wmul(dust, dog.chop());
+                // If slice == lot => auction completed => dust doesn't matter
                 if (tab - owe < chost) {     // safe as owe < tab
-                    // if tab / chop <= dust, buyers have to buy the whole thing
+                    // If tab <= chost, buyers have to take the entire lot.
                     require(tab > chost, "Clipper/no-partial-purchase");
                     // Adjust amount to pay
                     owe = tab - chost;       // owe' <= owe
@@ -463,13 +462,14 @@ contract Clipper {
     }
 
     // Public function to update the cached dust value
-    function updust() external {
-        updust(address(vat), ilk);
+    function upchost() external {
+        upchost(address(vat), ilk);
     }
 
-    function updust(address _vat, bytes32 _ilk) internal {
+    // The dog storage variable must be set to a valid Dog before calling this function.
+    function upchost(address _vat, bytes32 _ilk) internal {
         (,,,, uint256 _dust) = VatLike(_vat).ilks(_ilk);
-        dust = _dust;
+        chost = wmul(_dust, dog.chop(_ilk));
     }
 
     // Cancel an auction during ES or via governance action.
