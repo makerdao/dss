@@ -304,32 +304,23 @@ contract Clipper {
         emit Redo(id, top, tab, lot, usr, kpr, coin);
     }
 
-    // Buy `amt` of collateral from auction indexed by `id`
+    // Buy up to `amt` of collateral from the auction indexed by `id`.
+    // 
+    // Auctions will not collect more DAI than their assigned DAI target,`tab`;
+    // thus, if `amt` would cost more DAI than `tab` at the current price,, the
+    // amount of collateral purchased will instead be just enough to collect `tab` DAI.
     //
-    // This function computes `owe` as the amount of DAI to pay in the auction
-    // and `slice` as the amount of collateral being bought for that DAI paid
+    // To avoid partial purchases resulting in very small leftover auctions that will
+    // never be cleared, any partial purchase must leave at least `Clipper.chost`
+    // remaining DAI target. `chost` is an asynchronously updated value equal to
+    // (Vat.dust * Dog.chop(ilk) / WAD) where the values are understood to be determined
+    // by whatever they were when Clipper.upchost() was last called. Purchase amounts
+    // will be minimally decreased when necessary to respect this limit; i.e., if the
+    // specified `amt` would leave `tab < chost` but `tab > 0`, the amount actually
+    // purchased will be such that `tab == chost`.
     //
-    // amt = desired max amount of collateral being purchased
-    // tab = current amount of DAI to be raised in the auction
-    // lot = maximum amount of collateral available for selling
-    // abacus.price = current price of collateral
-    //
-    // The values of `owe` and `slice` will be
-    // defined according to these different cases:
-    //
-    // if min(lot, amt) * abacus.price >= tab
-    //     owe = tab
-    //     slice = tab / abacus.price
-    // otherwise
-    //     if amt < lot && tab - (amt * abacus.price) < ilk.dust
-    //         if tab > ilk.dust
-    //             owe = tab - ilk.dust
-    //             slice = owe / abacus.price
-    //         otherwise
-    //             tx fails
-    //     otherwise
-    //         owe = min(lot, amt) * abacus.price
-    //         slice = min(lot, amt)
+    // If `tab <= chost`, partial purchases are no longer possible; that is, the remaining
+    // collateral can only be purchased entirely, or not at all.
     function take(
         uint256 id,           // Auction id
         uint256 amt,          // Upper limit on amount of collateral to buy  [wad]
