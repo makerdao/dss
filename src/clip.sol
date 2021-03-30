@@ -210,7 +210,7 @@ contract Clipper {
     // Could get this from rmul(Vat.ilks(ilk).spot, Spotter.mat()) instead, but
     // if mat has changed since the last poke, the resulting value will be
     // incorrect.
-    function getPrice() internal returns (uint256 price) {
+    function getFeedPrice() internal returns (uint256 price) {
         (PipLike pip, ) = spotter.ilks(ilk);
         (bytes32 val, bool has) = pip.peek();
         require(has, "Clipper/invalid-price");
@@ -249,7 +249,7 @@ contract Clipper {
         sales[id].tic = uint96(block.timestamp);
 
         uint256 top;
-        top = rmul(getPrice(), buf);
+        top = rmul(getFeedPrice(), buf);
         require(top > 0, "Clipper/zero-top-price");
         sales[id].top = top;
 
@@ -284,8 +284,8 @@ contract Clipper {
         uint256 lot   = sales[id].lot;
         sales[id].tic = uint96(block.timestamp);
 
-        uint256 price = getPrice();
-        top = rmul(price, buf);
+        uint256 feedPrice = getFeedPrice();
+        top = rmul(feedPrice, buf);
         require(top > 0, "Clipper/zero-top-price");
         sales[id].top = top;
 
@@ -295,7 +295,7 @@ contract Clipper {
         uint256 coin;
         if (_tip > 0 || _chip > 0) {
             uint256 _dust = dust;
-            if (tab >= _dust && mul(lot, price) >= _dust) {
+            if (tab >= _dust && mul(lot, feedPrice) >= _dust) {
                 coin = add(_tip, wmul(tab, _chip));
                 vat.suck(vow, kpr, coin);
             }
