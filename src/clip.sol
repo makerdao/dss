@@ -210,11 +210,11 @@ contract Clipper {
     // Could get this from rmul(Vat.ilks(ilk).spot, Spotter.mat()) instead, but
     // if mat has changed since the last poke, the resulting value will be
     // incorrect.
-    function getFeedPrice() internal returns (uint256 price) {
+    function getFeedPrice() internal returns (uint256 feedPrice) {
         (PipLike pip, ) = spotter.ilks(ilk);
         (bytes32 val, bool has) = pip.peek();
         require(has, "Clipper/invalid-price");
-        price = rdiv(mul(uint256(val), BLN), spotter.par());
+        feedPrice = rdiv(mul(uint256(val), BLN), spotter.par());
     }
 
     // start an auction
