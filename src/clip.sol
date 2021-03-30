@@ -229,8 +229,8 @@ contract Clipper {
     function kick(
         uint256 tab,  // Debt                   [rad]
         uint256 lot,  // Collateral             [wad]
-        address usr,  // Liquidated CDP
-        address kpr   // Keeper that called dog.bark()
+        address usr,  // Address that will receive any leftover collateral
+        address kpr   // Address that will receive incentives
     ) external auth lock isStopped(1) returns (uint256 id) {
         // Input validation
         require(tab  >          0, "Clipper/zero-tab");
@@ -267,7 +267,10 @@ contract Clipper {
 
     // Reset an auction
     // See `kick` above for an explanation of the computation of `top`.
-    function redo(uint256 id, address kpr) external lock isStopped(2) {
+    function redo(
+        uint256 id,  // id of the auction to reset
+        address kpr  // Address that will receive incentives
+    ) external lock isStopped(2) {
         // Read auction data
         address usr = sales[id].usr;
         uint96  tic = sales[id].tic;

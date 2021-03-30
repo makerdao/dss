@@ -155,37 +155,18 @@ contract Dog {
 
     // --- CDP Liquidation: all bark and no bite ---
     //
-    // This function computes `tab`, the target amount of DAI to be raised in
-    // an auction and `lot`, the collateral to put for sale.
-    // They are defined as:
+    // Liquidate a Vault and start a Dutch auction to sell its collateral for DAI.
     //
-    // tab = dart * ilk.rate * ilk.chop
-    // lot = dink = urn.ink * dart / urn.art
+    // The third argument is the address that will receive the liquidation reward, if any.
     //
-    // `room` is defined as the remaining space of
-    // available DAI to be offered in auctions:
-    // room = min(Hole - Dirt, ilk.hole - ilk.dirt)
-    //
-    // There is a precondition about `room` that needs
-    // to be satisfied in order to create an auction:
-    // room > 0 && room >= ilk.dust
-    // otherwise the transaction fails
-    //
-    // Then `dart` is defined as:
-    // if urn.art * ilk.rate * ilk.chop <= room ||
-    //    urn.art * ilk.rate * ilk.chop > room && urn.art * ilk.rate * ilk.chop < room + dust:
-    //      dart = urn.art
-    // otherwise
-    //      dart = room / ilk.rate / ilk.chop
-    //
-    // Leaving the final formulas as:
-    // if urn.art * ilk.rate * ilk.chop <= room ||
-    //    urn.art * ilk.rate * ilk.chop > room && urn.art * ilk.rate * ilk.chop < room + dust:
-    //      tab = urn.art * ilk.rate * ilk.chop
-    //      lot = urn.ink
-    // otherwise
-    //      tab = room
-    //      lot = urn.ink * (room / ilk.rate / ilk.chop) / urn.art
+    // The entire Vault will be liquidated except when the target amount of DAI to be raised in
+    // the resulting auction (debt of Vault + liquidation penalty) causes either Dirt to exceed
+    // Hole or ilk.dirt to exceed ilk.hole by an economically significant amount. In that
+    // case, a partial liquidation is performed to respect the global and per-ilk limits on
+    // outstanding DAI target. The one exception is if the resulting auction would likely
+    // have too little collateral to be interesting to Keepers (debt taken from Vault < ilk.dust),
+    // in which case the function reverts. Please refer to the code and comments within if
+    // more detail is desired.
     function bark(bytes32 ilk, address urn, address kpr) external returns (uint256 id) {
         require(live == 1, "Dog/not-live");
 
