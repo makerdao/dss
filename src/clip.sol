@@ -228,8 +228,8 @@ contract Clipper {
     function kick(
         uint256 tab,  // Debt                   [rad]
         uint256 lot,  // Collateral             [wad]
-        address usr,  // Liquidated CDP
-        address kpr   // Keeper that called dog.bark()
+        address usr,  // Address that will receive any leftover collateral
+        address kpr   // Address that will receive kick/redo incentives
     ) external auth lock isStopped(1) returns (uint256 id) {
         // Input validation
         require(tab  >          0, "Clipper/zero-tab");
