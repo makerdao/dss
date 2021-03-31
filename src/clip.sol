@@ -309,7 +309,7 @@ contract Clipper {
     // Buy up to `amt` of collateral from the auction indexed by `id`.
     // 
     // Auctions will not collect more DAI than their assigned DAI target,`tab`;
-    // thus, if `amt` would cost more DAI than `tab` at the current price,, the
+    // thus, if `amt` would cost more DAI than `tab` at the current price, the
     // amount of collateral purchased will instead be just enough to collect `tab` DAI.
     //
     // To avoid partial purchases resulting in very small leftover auctions that will
