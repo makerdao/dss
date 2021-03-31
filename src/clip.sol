@@ -90,7 +90,8 @@ contract Clipper {
     // Levels for circuit breaker
     // 0: no breaker
     // 1: no new kick()
-    // 2: no new kick(), redo(), or take()
+    // 2: no new kick() or redo()
+    // 3: no new kick(), redo(), or take()
     uint256 public stopped = 0;
 
     // --- Events ---
@@ -161,7 +162,7 @@ contract Clipper {
         else if (what == "cusp")       cusp = data;           // Percentage drop before auction reset
         else if (what == "chip")       chip = uint64(data);   // Percentage of tab to incentivize (max: 2^64 - 1 => 18.xxx WAD = 18xx%)
         else if (what == "tip")         tip = uint192(data);  // Flat fee to incentivize keepers (max: 2^192 - 1 => 6.277T RAD)
-        else if (what == "stopped") stopped = data;           // Set breaker (0, 1 or 2)
+        else if (what == "stopped") stopped = data;           // Set breaker (0, 1, 2, or 3)
         else revert("Clipper/file-unrecognized-param");
         emit File(what, data);
     }
@@ -208,11 +209,11 @@ contract Clipper {
     // Could get this from rmul(Vat.ilks(ilk).spot, Spotter.mat()) instead, but
     // if mat has changed since the last poke, the resulting value will be
     // incorrect.
-    function getPrice() internal returns (uint256 price) {
+    function getFeedPrice() internal returns (uint256 feedPrice) {
         (PipLike pip, ) = spotter.ilks(ilk);
         (bytes32 val, bool has) = pip.peek();
         require(has, "Clipper/invalid-price");
-        price = rdiv(mul(uint256(val), BLN), spotter.par());
+        feedPrice = rdiv(mul(uint256(val), BLN), spotter.par());
     }
 
     // start an auction
@@ -227,8 +228,8 @@ contract Clipper {
     function kick(
         uint256 tab,  // Debt                   [rad]
         uint256 lot,  // Collateral             [wad]
-        address usr,  // Liquidated CDP
-        address kpr   // Keeper that called dog.bark()
+        address usr,  // Address that will receive any leftover collateral
+        address kpr   // Address that will receive incentives
     ) external auth lock isStopped(1) returns (uint256 id) {
         // Input validation
         require(tab  >          0, "Clipper/zero-tab");
@@ -247,7 +248,7 @@ contract Clipper {
         sales[id].tic = uint96(block.timestamp);
 
         uint256 top;
-        top = rmul(getPrice(), buf);
+        top = rmul(getFeedPrice(), buf);
         require(top > 0, "Clipper/zero-top-price");
         sales[id].top = top;
 
@@ -265,7 +266,10 @@ contract Clipper {
 
     // Reset an auction
     // See `kick` above for an explanation of the computation of `top`.
-    function redo(uint256 id, address kpr) external lock isStopped(2) {
+    function redo(
+        uint256 id,  // id of the auction to reset
+        address kpr  // Address that will receive incentives
+    ) external lock isStopped(2) {
         // Read auction data
         address usr = sales[id].usr;
         uint96  tic = sales[id].tic;
@@ -282,8 +286,8 @@ contract Clipper {
         uint256 lot   = sales[id].lot;
         sales[id].tic = uint96(block.timestamp);
 
-        uint256 price = getPrice();
-        top = rmul(price, buf);
+        uint256 feedPrice = getFeedPrice();
+        top = rmul(feedPrice, buf);
         require(top > 0, "Clipper/zero-top-price");
         sales[id].top = top;
 
@@ -293,7 +297,7 @@ contract Clipper {
         uint256 coin;
         if (_tip > 0 || _chip > 0) {
             uint256 _chost = chost;
-            if (tab >= _chost && mul(lot, price) >= _chost) {
+            if (tab >= _chost && mul(lot, feedPrice) >= _chost) {
                 coin = add(_tip, wmul(tab, _chip));
                 vat.suck(vow, kpr, coin);
             }
@@ -325,7 +329,7 @@ contract Clipper {
         uint256 max,          // Maximum acceptable price (DAI / collateral) [ray]
         address who,          // Receiver of collateral and external call address
         bytes calldata data   // Data to pass in external call; if length 0, no call is done
-    ) external lock isStopped(2) {
+    ) external lock isStopped(3) {
 
         address usr = sales[id].usr;
         uint96  tic = sales[id].tic;
