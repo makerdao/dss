@@ -1626,4 +1626,81 @@ contract ClipperTest is DSTest {
             data: ""
         });
     }
+
+    function test_gas_bark_kick() public {
+        // Assertions to make sure setup is as expected.
+        assertEq(clip.kicks(), 0);
+        (uint256 pos, uint256 tab, uint256 lot, address usr, uint256 tic, uint256 top) = clip.sales(1);
+        assertEq(pos, 0);
+        assertEq(tab, 0);
+        assertEq(lot, 0);
+        assertEq(usr, address(0));
+        assertEq(uint256(tic), 0);
+        assertEq(top, 0);
+        assertEq(vat.gem(ilk, me), 960 ether);
+        assertEq(vat.dai(ali), rad(1000 ether));
+        (uint256 ink, uint256 art) = vat.urns(ilk, me);
+        assertEq(ink, 40 ether);
+        assertEq(art, 100 ether);
+
+        uint256 preGas = gasleft();
+        Guy(ali).bark(dog, ilk, me, address(ali));
+        uint256 diffGas = preGas - gasleft();
+        log_named_uint("bark with kick gas", diffGas);
+    }
+
+    function test_gas_partial_take() public takeSetup {
+        uint256 preGas = gasleft();
+        // Bid so owe (= 11 * 5 = 55 RAD) < tab (= 110 RAD)
+        Guy(ali).take({
+            id:  1,
+            amt: 11 ether,     // Half of tab at $110
+            max: ray(5 ether),
+            who: address(ali),
+            data: ""
+        });
+        uint256 diffGas = preGas - gasleft();
+        log_named_uint("partial take gas", diffGas);
+
+        assertEq(vat.gem(ilk, ali), 11 ether);  // Didn't take whole lot
+        assertEq(vat.dai(ali), rad(945 ether)); // Paid half tab (55)
+        assertEq(vat.gem(ilk, me), 960 ether);  // Collateral not returned (yet)
+
+        // Assert auction DOES NOT end
+        (uint256 pos, uint256 tab, uint256 lot, address usr, uint256 tic, uint256 top) = clip.sales(1);
+        assertEq(pos, 0);
+        assertEq(tab, rad(55 ether));  // 110 - 5 * 11
+        assertEq(lot, 29 ether);       // 40 - 11
+        assertEq(usr, me);
+        assertEq(uint256(tic), now);
+        assertEq(top, ray(5 ether));
+    }
+
+    function test_gas_full_take() public takeSetup {
+        uint256 preGas = gasleft();
+        // Bid so owe (= 25 * 5 = 125 RAD) > tab (= 110 RAD)
+        // Readjusts slice to be tab/top = 25
+        Guy(ali).take({
+            id:  1,
+            amt: 25 ether,
+            max: ray(5 ether),
+            who: address(ali),
+            data: ""
+        });
+        uint256 diffGas = preGas - gasleft();
+        log_named_uint("full take gas", diffGas);
+
+        assertEq(vat.gem(ilk, ali), 22 ether);  // Didn't take whole lot
+        assertEq(vat.dai(ali), rad(890 ether)); // Didn't pay more than tab (110)
+        assertEq(vat.gem(ilk, me),  978 ether); // 960 + (40 - 22) returned to usr
+
+        // Assert auction ends
+        (uint256 pos, uint256 tab, uint256 lot, address usr, uint256 tic, uint256 top) = clip.sales(1);
+        assertEq(pos, 0);
+        assertEq(tab, 0);
+        assertEq(lot, 0);
+        assertEq(usr, address(0));
+        assertEq(uint256(tic), 0);
+        assertEq(top, 0);
+    }
 }
