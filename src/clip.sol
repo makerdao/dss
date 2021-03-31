@@ -137,8 +137,6 @@ contract Clipper {
         dog     = DogLike(dog_);
         ilk     = ilk_;
         buf     = RAY;
-        upchost(vat_, ilk_);
-
         wards[msg.sender] = 1;
         emit Rely(msg.sender);
     }
@@ -453,15 +451,10 @@ contract Clipper {
         done  = (sub(block.timestamp, tic) > tail || rdiv(price, top) < cusp);
     }
 
-    // Public function to update the cached dust value
+    // Public function to update the cached dust value.
     function upchost() external {
-        upchost(address(vat), ilk);
-    }
-
-    // The dog storage variable must be set to a valid Dog before calling this function.
-    function upchost(address _vat, bytes32 _ilk) internal {
-        (,,,, uint256 _dust) = VatLike(_vat).ilks(_ilk);
-        chost = wmul(_dust, dog.chop(_ilk));
+        (,,,, uint256 _dust) = VatLike(vat).ilks(ilk);
+        chost = wmul(_dust, dog.chop(ilk));
     }
 
     // Cancel an auction during ES or via governance action.

@@ -380,6 +380,7 @@ contract ClipperTest is DSTest {
 
         // dust and chop filed previously so clip.chost will be set correctly
         clip = new Clipper(address(vat), address(spot), address(dog), ilk);
+        clip.upchost();
         clip.rely(address(dog));
 
         dog.file(ilk, "clip", address(clip));
@@ -749,6 +750,7 @@ contract ClipperTest is DSTest {
 
         bytes32 ilk2 = "silver";
         Clipper clip2 = new Clipper(address(vat), address(spot), address(dog), ilk2);
+        clip2.upchost();
         clip2.rely(address(dog));
 
         dog.file(ilk2, "clip", address(clip2));
