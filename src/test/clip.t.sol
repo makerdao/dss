@@ -1215,9 +1215,15 @@ contract ClipperTest is DSTest {
     function test_setBreaker() public {
         clip.file("stopped", 1);
         assertEq(clip.stopped(), 1);
+        clip.file("stopped", 2);
+        assertEq(clip.stopped(), 2);
+        clip.file("stopped", 3);
+        assertEq(clip.stopped(), 3);
+        clip.file("stopped", 0);
+        assertEq(clip.stopped(), 0);
     }
 
-    function testFail_stopped_kick() public {
+    function test_stopped_kick() public {
         uint256 pos;
         uint256 tab;
         uint256 lot;
@@ -1240,13 +1246,22 @@ contract ClipperTest is DSTest {
         assertEq(ink, 40 ether);
         assertEq(art, 100 ether);
 
+        // Any level of stoppage prevents kicking.
         clip.file("stopped", 1);
+        assertTrue(!try_bark(ilk, me));
 
-        dog.bark(ilk, me, address(this));
+        clip.file("stopped", 2);
+        assertTrue(!try_bark(ilk, me));
+
+        clip.file("stopped", 3);
+        assertTrue(!try_bark(ilk, me));
+
+        clip.file("stopped", 0);
+        assertTrue(try_bark(ilk, me));
     }
 
     // At a stopped == 1 we are ok to take
-    function test_stopped_take() public takeSetup {
+    function test_stopped_1_take() public takeSetup {
         clip.file("stopped", 1);
         // Bid so owe (= 25 * 5 = 125 RAD) > tab (= 110 RAD)
         // Readjusts slice to be tab/top = 25
@@ -1259,7 +1274,7 @@ contract ClipperTest is DSTest {
         });
     }
 
-    function testFail_stopped_take() public takeSetup {
+    function test_stopped_2_take() public takeSetup {
         clip.file("stopped", 2);
         // Bid so owe (= 25 * 5 = 125 RAD) > tab (= 110 RAD)
         // Readjusts slice to be tab/top = 25
@@ -1272,7 +1287,20 @@ contract ClipperTest is DSTest {
         });
     }
 
-    function test_stopped_auction_reset_tail() public {
+    function testFail_stopped_3_take() public takeSetup {
+        clip.file("stopped", 3);
+        // Bid so owe (= 25 * 5 = 125 RAD) > tab (= 110 RAD)
+        // Readjusts slice to be tab/top = 25
+        Guy(ali).take({
+            id:  1,
+            amt: 25 ether,
+            max: ray(5 ether),
+            who: address(ali),
+            data: ""
+        });
+    }
+
+    function test_stopped_1_auction_reset_tail() public {
         auctionResetSetup(10 hours); // 10 hours till zero is reached (used to test tail)
 
         clip.file("stopped", 1);
@@ -1293,10 +1321,10 @@ contract ClipperTest is DSTest {
         assertEq(topAfter, ray(3.75 ether)); // $3 spot + 25% buffer = $5 (used most recent OSM price)
     }
 
-    function testFail_stopped_auction_reset_tail() public {
-        clip.file("stopped", 2);
-
+    function test_stopped_2_auction_reset_tail() public {
         auctionResetSetup(10 hours); // 10 hours till zero is reached (used to test tail)
+
+        clip.file("stopped", 2);
 
         pip.poke(bytes32(uint256(3 ether))); // Spot = $1.50 (update price before reset is called)
 
@@ -1304,10 +1332,27 @@ contract ClipperTest is DSTest {
         assertEq(uint256(ticBefore), startTime);
         assertEq(topBefore, ray(5 ether)); // $4 spot + 25% buffer = $5 (wasn't affected by poke)
 
-        hevm.warp(startTime + 3600 seconds);
-        assertTrue(!try_redo(1, address(this)));
         hevm.warp(startTime + 3601 seconds);
-        assertTrue(try_redo(1, address(this)));
+        (bool needsRedo,,,) = clip.getStatus(1);
+        assertTrue(needsRedo);  // Redo possible if circuit breaker not set
+        assertTrue(!try_redo(1, address(this)));  // Redo fails because of circuit breaker
+    }
+
+    function test_stopped_3_auction_reset_tail() public {
+        auctionResetSetup(10 hours); // 10 hours till zero is reached (used to test tail)
+
+        clip.file("stopped", 3);
+
+        pip.poke(bytes32(uint256(3 ether))); // Spot = $1.50 (update price before reset is called)
+
+        (,,,, uint96 ticBefore, uint256 topBefore) = clip.sales(1);
+        assertEq(uint256(ticBefore), startTime);
+        assertEq(topBefore, ray(5 ether)); // $4 spot + 25% buffer = $5 (wasn't affected by poke)
+
+        hevm.warp(startTime + 3601 seconds);
+        (bool needsRedo,,,) = clip.getStatus(1);
+        assertTrue(needsRedo);  // Redo possible if circuit breaker not set
+        assertTrue(!try_redo(1, address(this)));  // Redo fails because of circuit breaker
     }
 
     function test_redo_incentive() public takeSetup {
@@ -1592,5 +1637,82 @@ contract ClipperTest is DSTest {
             who: address(ali),
             data: ""
         });
+    }
+
+    function test_gas_bark_kick() public {
+        // Assertions to make sure setup is as expected.
+        assertEq(clip.kicks(), 0);
+        (uint256 pos, uint256 tab, uint256 lot, address usr, uint256 tic, uint256 top) = clip.sales(1);
+        assertEq(pos, 0);
+        assertEq(tab, 0);
+        assertEq(lot, 0);
+        assertEq(usr, address(0));
+        assertEq(uint256(tic), 0);
+        assertEq(top, 0);
+        assertEq(vat.gem(ilk, me), 960 ether);
+        assertEq(vat.dai(ali), rad(1000 ether));
+        (uint256 ink, uint256 art) = vat.urns(ilk, me);
+        assertEq(ink, 40 ether);
+        assertEq(art, 100 ether);
+
+        uint256 preGas = gasleft();
+        Guy(ali).bark(dog, ilk, me, address(ali));
+        uint256 diffGas = preGas - gasleft();
+        log_named_uint("bark with kick gas", diffGas);
+    }
+
+    function test_gas_partial_take() public takeSetup {
+        uint256 preGas = gasleft();
+        // Bid so owe (= 11 * 5 = 55 RAD) < tab (= 110 RAD)
+        Guy(ali).take({
+            id:  1,
+            amt: 11 ether,     // Half of tab at $110
+            max: ray(5 ether),
+            who: address(ali),
+            data: ""
+        });
+        uint256 diffGas = preGas - gasleft();
+        log_named_uint("partial take gas", diffGas);
+
+        assertEq(vat.gem(ilk, ali), 11 ether);  // Didn't take whole lot
+        assertEq(vat.dai(ali), rad(945 ether)); // Paid half tab (55)
+        assertEq(vat.gem(ilk, me), 960 ether);  // Collateral not returned (yet)
+
+        // Assert auction DOES NOT end
+        (uint256 pos, uint256 tab, uint256 lot, address usr, uint256 tic, uint256 top) = clip.sales(1);
+        assertEq(pos, 0);
+        assertEq(tab, rad(55 ether));  // 110 - 5 * 11
+        assertEq(lot, 29 ether);       // 40 - 11
+        assertEq(usr, me);
+        assertEq(uint256(tic), now);
+        assertEq(top, ray(5 ether));
+    }
+
+    function test_gas_full_take() public takeSetup {
+        uint256 preGas = gasleft();
+        // Bid so owe (= 25 * 5 = 125 RAD) > tab (= 110 RAD)
+        // Readjusts slice to be tab/top = 25
+        Guy(ali).take({
+            id:  1,
+            amt: 25 ether,
+            max: ray(5 ether),
+            who: address(ali),
+            data: ""
+        });
+        uint256 diffGas = preGas - gasleft();
+        log_named_uint("full take gas", diffGas);
+
+        assertEq(vat.gem(ilk, ali), 22 ether);  // Didn't take whole lot
+        assertEq(vat.dai(ali), rad(890 ether)); // Didn't pay more than tab (110)
+        assertEq(vat.gem(ilk, me),  978 ether); // 960 + (40 - 22) returned to usr
+
+        // Assert auction ends
+        (uint256 pos, uint256 tab, uint256 lot, address usr, uint256 tic, uint256 top) = clip.sales(1);
+        assertEq(pos, 0);
+        assertEq(tab, 0);
+        assertEq(lot, 0);
+        assertEq(usr, address(0));
+        assertEq(uint256(tic), 0);
+        assertEq(top, 0);
     }
 }
