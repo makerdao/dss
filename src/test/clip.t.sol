@@ -1094,7 +1094,7 @@ contract ClipperTest is DSTest {
 
         hevm.warp(now + 30);
 
-        (, uint256 _price, uint256 _lot, uint256 _tab) = clip.getStatus(1);
+        (, uint256 _price, uint256 _lot,) = clip.getStatus(1);
         Guy(bob).take({
             id:  1,
             amt: _lot,     // Buy the rest of the lot
