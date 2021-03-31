@@ -457,8 +457,8 @@ contract Clipper {
 
     // Public function to update the cached dust*chop value.
     function upchost() external {
-        (,,,, uint256 _dust) = VatLike(vat).ilks(_ilk);
-        chost = wmul(_dust, dog.chop(_ilk));
+        (,,,, uint256 _dust) = VatLike(vat).ilks(ilk);
+        chost = wmul(_dust, dog.chop(ilk));
     }
 
     // Cancel an auction during ES or via governance action.
