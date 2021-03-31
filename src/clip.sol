@@ -365,12 +365,12 @@ contract Clipper {
                 slice = owe / price;        // slice' = owe' / price <= owe / price == slice <= lot
             } else if (owe < tab && slice < lot) {
                 // If slice == lot => auction completed => dust doesn't matter
-                uint256 chost_ = chost;
-                if (tab - owe < chost_) {    // safe as owe < tab
+                uint256 _chost = chost;
+                if (tab - owe < _chost) {    // safe as owe < tab
                     // If tab <= chost, buyers have to take the entire lot.
-                    require(tab > chost_, "Clipper/no-partial-purchase");
+                    require(tab > _chost, "Clipper/no-partial-purchase");
                     // Adjust amount to pay
-                    owe = tab - chost_;      // owe' <= owe
+                    owe = tab - _chost;      // owe' <= owe
                     // Adjust slice
                     slice = owe / price;     // slice' = owe' / price < owe / price == slice < lot
                 }
