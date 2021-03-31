@@ -453,7 +453,6 @@ contract Clipper {
 
     // Public function to update the cached dust*chop value.
     function upchost() external {
-        _ilk = ilk;  // cache
         (,,,, uint256 _dust) = VatLike(vat).ilks(_ilk);
         chost = wmul(_dust, dog.chop(_ilk));
     }
