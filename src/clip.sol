@@ -202,7 +202,6 @@ contract Clipper {
         z = mul(x, RAY) / y;
     }
 
-
     // --- Auction ---
 
     // get the price directly from the OSM
