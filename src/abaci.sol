@@ -42,7 +42,7 @@ contract LinearDecrease is Abacus {
     event Rely(address indexed usr);
     event Deny(address indexed usr);
 
-    event FileUint256(bytes32 indexed what, uint256 data);
+    event File(bytes32 indexed what, uint256 data);
 
     // --- Init ---
     constructor() public {
@@ -54,7 +54,7 @@ contract LinearDecrease is Abacus {
     function file(bytes32 what, uint256 data) external auth {
         if (what ==  "tau") tau = data;
         else revert("LinearDecrease/file-unrecognized-param");
-        emit FileUint256(what, data);
+        emit File(what, data);
     }
 
     // --- Math ---
@@ -105,7 +105,7 @@ contract StairstepExponentialDecrease is Abacus {
     event Rely(address indexed usr);
     event Deny(address indexed usr);
 
-    event FileUint256(bytes32 indexed what, uint256 data);
+    event File(bytes32 indexed what, uint256 data);
 
     // --- Init ---
     // @notice: `cut` and `step` values must be correctly set for
@@ -120,7 +120,7 @@ contract StairstepExponentialDecrease is Abacus {
         if      (what ==  "cut") require((cut = data) <= RAY, "StairstepExponentialDecrease/cut-gt-RAY");
         else if (what == "step") step = data;
         else revert("StairstepExponentialDecrease/file-unrecognized-param");
-        emit FileUint256(what, data);
+        emit File(what, data);
     }
 
     // --- Math ---
@@ -194,7 +194,7 @@ contract ExponentialDecrease is Abacus {
     event Rely(address indexed usr);
     event Deny(address indexed usr);
 
-    event FileUint256(bytes32 indexed what, uint256 data);
+    event File(bytes32 indexed what, uint256 data);
 
     // --- Init ---
     // @notice: `cut` value must be correctly set for
@@ -208,7 +208,7 @@ contract ExponentialDecrease is Abacus {
     function file(bytes32 what, uint256 data) external auth {
         if      (what ==  "cut") require((cut = data) <= RAY, "ExponentialDecrease/cut-gt-RAY");
         else revert("ExponentialDecrease/file-unrecognized-param");
-        emit FileUint256(what, data);
+        emit File(what, data);
     }
 
     // --- Math ---
