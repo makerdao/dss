@@ -19,7 +19,9 @@
 
 pragma solidity >=0.5.12;
 
-import "./lib.sol";
+// FIXME: This contract was altered compared to the production version.
+// It doesn't use LibNote anymore.
+// New deployments of this contract will need to include custom events (TO DO).
 
 interface VatLike {
     function move(address,address,uint) external;
@@ -39,11 +41,11 @@ interface GemLike {
  - `end` max auction duration
 */
 
-contract Flapper is LibNote {
+contract Flapper {
     // --- Auth ---
     mapping (address => uint) public wards;
-    function rely(address usr) external note auth { wards[usr] = 1; }
-    function deny(address usr) external note auth { wards[usr] = 0; }
+    function rely(address usr) external auth { wards[usr] = 1; }
+    function deny(address usr) external auth { wards[usr] = 0; }
     modifier auth {
         require(wards[msg.sender] == 1, "Flapper/not-authorized");
         _;
@@ -94,7 +96,7 @@ contract Flapper is LibNote {
     }
 
     // --- Admin ---
-    function file(bytes32 what, uint data) external note auth {
+    function file(bytes32 what, uint data) external auth {
         if (what == "beg") beg = data;
         else if (what == "ttl") ttl = uint48(data);
         else if (what == "tau") tau = uint48(data);
@@ -116,12 +118,12 @@ contract Flapper is LibNote {
 
         emit Kick(id, lot, bid);
     }
-    function tick(uint id) external note {
+    function tick(uint id) external {
         require(bids[id].end < now, "Flapper/not-finished");
         require(bids[id].tic == 0, "Flapper/bid-already-placed");
         bids[id].end = add(uint48(now), tau);
     }
-    function tend(uint id, uint lot, uint bid) external note {
+    function tend(uint id, uint lot, uint bid) external {
         require(live == 1, "Flapper/not-live");
         require(bids[id].guy != address(0), "Flapper/guy-not-set");
         require(bids[id].tic > now || bids[id].tic == 0, "Flapper/already-finished-tic");
@@ -140,7 +142,7 @@ contract Flapper is LibNote {
         bids[id].bid = bid;
         bids[id].tic = add(uint48(now), ttl);
     }
-    function deal(uint id) external note {
+    function deal(uint id) external {
         require(live == 1, "Flapper/not-live");
         require(bids[id].tic != 0 && (bids[id].tic < now || bids[id].end < now), "Flapper/not-finished");
         vat.move(address(this), bids[id].guy, bids[id].lot);
@@ -148,11 +150,11 @@ contract Flapper is LibNote {
         delete bids[id];
     }
 
-    function cage(uint rad) external note auth {
+    function cage(uint rad) external auth {
        live = 0;
        vat.move(address(this), msg.sender, rad);
     }
-    function yank(uint id) external note {
+    function yank(uint id) external {
         require(live == 0, "Flapper/still-live");
         require(bids[id].guy != address(0), "Flapper/guy-not-set");
         gem.move(address(this), bids[id].guy, bids[id].bid);

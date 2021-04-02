@@ -19,7 +19,9 @@
 
 pragma solidity >=0.5.12;
 
-import "./lib.sol";
+// FIXME: This contract was altered compared to the production version.
+// It doesn't use LibNote anymore.
+// New deployments of this contract will need to include custom events (TO DO).
 
 interface GemLike {
     function decimals() external view returns (uint);
@@ -61,11 +63,11 @@ interface VatLike {
 
 */
 
-contract GemJoin is LibNote {
+contract GemJoin {
     // --- Auth ---
     mapping (address => uint) public wards;
-    function rely(address usr) external note auth { wards[usr] = 1; }
-    function deny(address usr) external note auth { wards[usr] = 0; }
+    function rely(address usr) external auth { wards[usr] = 1; }
+    function deny(address usr) external auth { wards[usr] = 0; }
     modifier auth {
         require(wards[msg.sender] == 1, "GemJoin/not-authorized");
         _;
@@ -85,27 +87,27 @@ contract GemJoin is LibNote {
         gem = GemLike(gem_);
         dec = gem.decimals();
     }
-    function cage() external note auth {
+    function cage() external auth {
         live = 0;
     }
-    function join(address usr, uint wad) external note {
+    function join(address usr, uint wad) external {
         require(live == 1, "GemJoin/not-live");
         require(int(wad) >= 0, "GemJoin/overflow");
         vat.slip(ilk, usr, int(wad));
         require(gem.transferFrom(msg.sender, address(this), wad), "GemJoin/failed-transfer");
     }
-    function exit(address usr, uint wad) external note {
+    function exit(address usr, uint wad) external {
         require(wad <= 2 ** 255, "GemJoin/overflow");
         vat.slip(ilk, msg.sender, -int(wad));
         require(gem.transfer(usr, wad), "GemJoin/failed-transfer");
     }
 }
 
-contract DaiJoin is LibNote {
+contract DaiJoin {
     // --- Auth ---
     mapping (address => uint) public wards;
-    function rely(address usr) external note auth { wards[usr] = 1; }
-    function deny(address usr) external note auth { wards[usr] = 0; }
+    function rely(address usr) external auth { wards[usr] = 1; }
+    function deny(address usr) external auth { wards[usr] = 0; }
     modifier auth {
         require(wards[msg.sender] == 1, "DaiJoin/not-authorized");
         _;
@@ -121,18 +123,18 @@ contract DaiJoin is LibNote {
         vat = VatLike(vat_);
         dai = DSTokenLike(dai_);
     }
-    function cage() external note auth {
+    function cage() external auth {
         live = 0;
     }
     uint constant ONE = 10 ** 27;
     function mul(uint x, uint y) internal pure returns (uint z) {
         require(y == 0 || (z = x * y) / y == x);
     }
-    function join(address usr, uint wad) external note {
+    function join(address usr, uint wad) external {
         vat.move(address(this), usr, mul(ONE, wad));
         dai.burn(msg.sender, wad);
     }
-    function exit(address usr, uint wad) external note {
+    function exit(address usr, uint wad) external {
         require(live == 1, "DaiJoin/not-live");
         vat.move(msg.sender, address(this), mul(ONE, wad));
         dai.mint(usr, wad);
