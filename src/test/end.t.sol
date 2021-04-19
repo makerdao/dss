@@ -148,7 +148,7 @@ contract EndTest is DSTest {
 
     function init_collateral(bytes32 name) internal returns (Ilk memory) {
         DSToken coin = new DSToken(name);
-        coin.mint(20 ether);
+        coin.mint(500_000 ether);
 
         DSValue pip = new DSValue();
         spot.file(name, "pip", address(pip));
@@ -158,7 +158,7 @@ contract EndTest is DSTest {
         spot.poke(name);
 
         vat.init(name);
-        vat.file(name, "line", rad(1000 ether));
+        vat.file(name, "line", rad(1_000_000 ether));
 
         GemJoin gemA = new GemJoin(address(vat), name, address(coin));
 
@@ -225,7 +225,7 @@ contract EndTest is DSTest {
         vow.rely(address(dog));
 
         spot = new Spotter(address(vat));
-        vat.file("Line",         rad(1000 ether));
+        vat.file("Line",         rad(1_000_000 ether));
         vat.rely(address(spot));
 
         end = new End();
@@ -849,5 +849,125 @@ contract EndTest is DSTest {
         assertEq(end.out("coal", address(ali)), 2 ether);
         assertEq(gem("gold", address(ali)), 0.375 ether);
         assertEq(gem("coal", address(ali)), 0.05 ether);
+    }
+
+    // -- Scenario where flow() used to overflow
+    function test_overflow() public {
+        Ilk memory gold = init_collateral("gold");
+
+        Usr ali = new Usr(vat, end);
+
+        // make a CDP:
+        address urn1 = address(ali);
+        gold.gemA.join(urn1, 500_000 ether);
+        ali.frob("gold", urn1, urn1, urn1, 500_000 ether, 1_000_000 ether);
+        // ali's urn has 500_000 ink, 10^6 art (and 10^6 dai since rate == RAY)
+
+        // global checks:
+        assertEq(vat.debt(), rad(1_000_000 ether));
+        assertEq(vat.vice(), 0);
+
+        // collateral price is 5
+        gold.pip.poke(bytes32(5 * WAD));
+        end.cage();
+        end.cage("gold");
+        end.skim("gold", urn1);
+
+        // local checks:
+        assertEq(art("gold", urn1), 0);
+        assertEq(ink("gold", urn1), 300_000 ether);
+        assertEq(vat.sin(address(vow)), rad(1_000_000 ether));
+
+        // global checks:
+        assertEq(vat.debt(), rad(1_000_000 ether));
+        assertEq(vat.vice(), rad(1_000_000 ether));
+
+        // CDP closing
+        ali.free("gold");
+        assertEq(ink("gold", urn1), 0);
+        assertEq(gem("gold", urn1), 300_000 ether);
+        ali.exit(gold.gemA, address(this), 300_000 ether);
+
+        hevm.warp(now + 1 hours);
+        end.thaw();
+        end.flow("gold");
+    }
+
+    uint256 constant RAD = 10**45;
+    function mul(uint256 x, uint256 y) internal pure returns (uint256 z) {
+        require(y == 0 || (z = x * y) / y == x);
+    }
+    function wdiv(uint256 x, uint256 y) internal pure returns (uint256 z) {
+        z = mul(x, WAD) / y;
+    }
+    function rdiv(uint256 x, uint256 y) internal pure returns (uint256 z) {
+        z = mul(x, RAY) / y;
+    }
+    function fix_calc_0(uint256 col, uint256 debt) internal pure returns (uint256) {
+        return rdiv(mul(col, RAY), debt);
+    }
+    function fix_calc_1(uint256 col, uint256 debt) internal pure returns (uint256) {
+        return wdiv(mul(col, RAY), (debt / 10**9));
+    }
+    function fix_calc_2(uint256 col, uint256 debt) internal pure returns (uint256) {
+        return mul(col, RAY) / (debt / RAY);
+    }
+    function wAssertCloseEnough(uint256 x, uint256 y) internal {
+        uint256 diff = x > y ? x - y : y - x;
+        if (diff == 0) return;
+        uint256 xErr = mul(diff, WAD) / x;
+        uint256 yErr = mul(diff, WAD) / y;
+        uint256 err  = xErr > yErr ? xErr : yErr;
+        assertTrue(err < WAD / 100_000_000);  // Error no more than one part in a hundred million
+    }
+    uint256 constant MIN_DEBT   = 10**6 * RAD;  // Minimum debt for fuzz runs
+    uint256 constant REDEEM_AMT = 1_000 * WAD;  // Amount of DAI to redeem for error checking
+    function test_fuzz_fix_calcs_0_1(uint256 col_seed, uint192 debt_seed) public {
+        uint256 col = col_seed % (115792 * WAD);  // somewhat biased, but not enough to matter
+        if (col < 10**12) col += 10**12;  // At least 10^-6 WAD units of collateral; this makes the fixes almost always non-zero.
+        uint256 debt = debt_seed;
+        if (debt < MIN_DEBT) debt += MIN_DEBT;  // consider at least MIN_DEBT of debt
+
+        uint256 fix0 = fix_calc_0(col, debt);
+        uint256 fix1 = fix_calc_1(col, debt);
+
+        // how much collateral can be obtained with a single DAI in each case
+        uint256 col0 = rmul(REDEEM_AMT, fix0);
+        uint256 col1 = rmul(REDEEM_AMT, fix1);
+
+        // Assert on percentage error of returned collateral
+        wAssertCloseEnough(col0, col1);
+    }
+    function test_fuzz_fix_calcs_0_2(uint256 col_seed, uint192 debt_seed) public {
+        uint256 col = col_seed % (115792 * WAD);  // somewhat biased, but not enough to matter
+        if (col < 10**12) col += 10**12;  // At least 10^-6 WAD units of collateral; this makes the fixes almost always non-zero.
+        uint256 debt = debt_seed;
+        if (debt < MIN_DEBT) debt += MIN_DEBT;  // consider at least MIN_DEBT of debt
+
+        uint256 fix0 = fix_calc_0(col, debt);
+        uint256 fix2 = fix_calc_2(col, debt);
+
+        // how much collateral can be obtained with a single DAI in each case
+        uint256 col0 = rmul(REDEEM_AMT, fix0);
+        uint256 col2 = rmul(REDEEM_AMT, fix2);
+
+        // Assert on percentage error of returned collateral
+        wAssertCloseEnough(col0, col2);
+    }
+    function test_fuzz_fix_calcs_1_2(uint256 col_seed, uint192 debt_seed) public {
+        uint256 col = col_seed % (10**14 * WAD);  // somewhat biased, but not enough to matter
+        if (col < 10**12) col += 10**12;  // At least 10^-6 WAD units of collateral; this makes the fixes almost always non-zero.
+        uint256 debt = debt_seed;
+        if (debt < MIN_DEBT) debt += MIN_DEBT;  // consider at least MIN_DEBT of debt
+
+        uint256 fix1 = fix_calc_1(col, debt);
+        uint256 fix2 = fix_calc_2(col, debt);
+
+        // how much collateral can be obtained with a single DAI in each case
+        uint256 col1 = rmul(REDEEM_AMT, fix1);
+        uint256 col2 = rmul(REDEEM_AMT, fix2);
+
+        // Assert on percentage error of returned collateral
+        wAssertCloseEnough(col1, col2);
     }
 }

@@ -298,9 +298,6 @@ contract End {
     function rmul(uint256 x, uint256 y) internal pure returns (uint256 z) {
         z = mul(x, y) / RAY;
     }
-    function rdiv(uint256 x, uint256 y) internal pure returns (uint256 z) {
-        z = mul(x, RAY) / y;
-    }
     function wdiv(uint256 x, uint256 y) internal pure returns (uint256 z) {
         z = mul(x, WAD) / y;
     }
@@ -423,7 +420,7 @@ contract End {
 
         (, uint256 rate,,,) = vat.ilks(ilk);
         uint256 wad = rmul(rmul(Art[ilk], rate), tag[ilk]);
-        fix[ilk] = rdiv(mul(sub(wad, gap[ilk]), RAY), debt);
+        fix[ilk] = mul(sub(wad, gap[ilk]), RAY) / (debt / RAY);
         emit Flow(ilk);
     }
 
