@@ -148,6 +148,11 @@ interface SpotLike {
     all auctions are in the reverse (`dent`) phase. There are two ways
     of ensuring this:
 
+    NOTE: In the event there's a system surplus, and there are no
+    under-collateralised vaults remaining, one must skim() large CDPs in order
+    to account for the fees built up in the surplus buffer.  Without doing this
+    the thaw() will fail to complete as it requires the surplus buffer be empty.
+
     4a. i) `wait`: set the cooldown period to be at least as long as the
            longest auction duration, which needs to be determined by the
            cage administrator.
