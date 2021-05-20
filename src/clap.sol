@@ -261,17 +261,16 @@ contract Clapper {
         emit Take(id, min, price, lot, slice);
     }
 
-    function cage(
-        uint256 rad
-    ) external auth lock {
-       live = 0;
-       vat.move(address(this), msg.sender, rad);
-    }
-
     function getFeedPrice() internal returns (uint256 feedPrice) {
         (bytes32 val, bool has) = PipLike(pip).peek();
         require(has, "Clapper/invalid-price");
         feedPrice = rdiv(mul(uint256(val), BLN), SpotterLike(spotter).par());
+    }
+
+    // Internally returns boolean for if an auction needs a redo
+    function status(uint96 tic, uint256 dip) internal view returns (bool done, uint256 price) {
+        price = calc.price(dip, sub(block.timestamp, tic));
+        done  = (sub(block.timestamp, tic) > tail || rdiv(price, dip) > cusp);
     }
 
     // Externally returns boolean for if an auction needs a redo and also the current price
@@ -282,9 +281,21 @@ contract Clapper {
         needsRedo = lot > 0 && done;
     }
 
-    // Internally returns boolean for if an auction needs a redo
-    function status(uint96 tic, uint256 dip) internal view returns (bool done, uint256 price) {
-        price = calc.price(dip, sub(block.timestamp, tic));
-        done  = (sub(block.timestamp, tic) > tail || rdiv(price, dip) > cusp);
+    function cage(
+        uint256 rad
+    ) external auth lock {
+       live = 0;
+       vat.move(address(this), msg.sender, rad);
     }
+
+    // Only worth it if the redo function is removed
+    // function yank(
+    //     uint id
+    // ) external auth lock {
+    //     require(live == 1, "Clapper/already-caged");
+    //     uint256 lot = sales[id].lot;
+    //     require(lot > 0, "Clapper/not-running-auction");
+    //     vat.move(address(this), msg.sender, lot);
+    //     delete sales[id];
+    // }
 }
