@@ -86,6 +86,7 @@ contract Clapper {
     uint256 public buf;    // Multiplicative factor to decrease starting price                  [ray]
     uint256 public tail;   // Time elapsed before auction reset                                 [seconds]
     uint256 public cusp;   // Percentage increment before auction reset                         [ray]
+    uint256 public dust;   // Min amount of DAI in lot to be left on a partial purchase         [rad]
 
     uint256  public kicks;
     uint256  public live;  // Active Flag
@@ -166,9 +167,10 @@ contract Clapper {
 
     // --- Admin ---
     function file(bytes32 what, uint256 data) external auth {
-        if      (what == "buf")         buf = data;
-        else if (what == "tail")       tail = data;           // Time elapsed before auction reset
-        else if (what == "cusp")       cusp = data;           // Percentage increment before auction reset
+        if      (what == "buf")   buf = data;
+        else if (what == "tail") tail = data;
+        else if (what == "cusp") cusp = data;
+        else if (what == "dust") dust = data;
         else revert("Clapper/file-unrecognized-param");
         emit File(what, data);
     }
@@ -236,11 +238,10 @@ contract Clapper {
 
         require(lot <= sales[id].lot, "Clapper/lot-not-matching");
         require(min < price, "Clapper/bid-not-higher");
+        uint256 rLot = sales[id].lot - lot;
+        require(rLot >= dust, "Clapper/dusty-lot-left");
 
-        sales[id].lot -= lot;
-
-        // TODO: Add dust check for remaining lot
-
+        sales[id].lot = rLot;
         vat.move(address(this), who, lot);
 
         uint256 slice = lot / price;
@@ -256,7 +257,7 @@ contract Clapper {
 
     function cage(
         uint256 rad
-    ) external auth {
+    ) external auth lock {
        live = 0;
        vat.move(address(this), msg.sender, rad);
     }
