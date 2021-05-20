@@ -24,7 +24,7 @@ pragma solidity >=0.5.12;
 // New deployments of this contract will need to include custom events (TO DO).
 
 interface VatLike {
-    function suck(address,address,uint256) external;
+    function move(address,address,uint256) external;
 }
 
 interface GemLike {
@@ -197,6 +197,8 @@ contract Clapper {
         require(dip > 0, "Clapper/zero-dip-price");
         sales[id].dip = dip;
 
+        vat.move(msg.sender, address(this), lot);
+
         emit Kick(id, lot, dip);
     }
 
@@ -239,7 +241,7 @@ contract Clapper {
 
         // TODO: Add dust check for remaining lot
 
-        vat.suck(vow, who, lot);
+        vat.move(address(this), who, lot);
 
         uint256 slice = lot / price;
 
@@ -253,9 +255,10 @@ contract Clapper {
     }
 
     function cage(
-        uint256 // For compatibility with actual vow
+        uint256 rad
     ) external auth {
        live = 0;
+       vat.move(address(this), msg.sender, rad);
     }
 
     function getFeedPrice() internal returns (uint256 feedPrice) {
