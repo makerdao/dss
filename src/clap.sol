@@ -204,6 +204,12 @@ contract Clapper {
         emit Kick(id, lot, dip);
     }
 
+    // We might want to remove this function and the values tail and cusp.
+    // Probably also the functions status and getStatus would be a bit useless.
+    // The reasoning behind this is in this case the system is not in a hurry to
+    // auction the lot, so it can wait until the price catches the market one.
+    // It would only require a yank function that allows governance to reset a
+    // specific auction just in case it is necessary.
     function redo(
         uint256 id  // id of the auction to reset
     ) external lock isStopped(2) {
