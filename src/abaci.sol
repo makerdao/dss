@@ -258,3 +258,90 @@ contract ExponentialDecrease is Abacus {
         return rmul(top, rpow(cut, dur, RAY));
     }
 }
+
+contract StairstepExponentialIncrease is Abacus {
+
+    // --- Auth ---
+    mapping (address => uint256) public wards;
+    function rely(address usr) external auth { wards[usr] = 1; emit Rely(usr); }
+    function deny(address usr) external auth { wards[usr] = 0; emit Deny(usr); }
+    modifier auth {
+        require(wards[msg.sender] == 1, "StairstepExponentialIncrease/not-authorized");
+        _;
+    }
+
+    // --- Data ---
+    uint256 public step; // Length of time between price drops [seconds]
+    uint256 public gain;  // Per-step multiplicative factor     [ray]
+
+    // --- Events ---
+    event Rely(address indexed usr);
+    event Deny(address indexed usr);
+
+    event File(bytes32 indexed what, uint256 data);
+
+    // --- Init ---
+    // @notice: `gain` and `step` values must be correctly set for
+    //     this contract to return a valid price
+    constructor() public {
+        wards[msg.sender] = 1;
+        emit Rely(msg.sender);
+    }
+
+    // --- Administration ---
+    function file(bytes32 what, uint256 data) external auth {
+        if      (what ==  "gain") require((gain = data) >= RAY, "StairstepExponentialIncrease/gain-lt-RAY");
+        else if (what == "step") step = data;
+        else revert("StairstepExponentialIncrease/file-unrecognized-param");
+        emit File(what, data);
+    }
+
+    // --- Math ---
+    uint256 constant RAY = 10 ** 27;
+    function rmul(uint256 x, uint256 y) internal pure returns (uint256 z) {
+        z = x * y;
+        require(y == 0 || z / y == x);
+        z = z / RAY;
+    }
+    // optimized version from dss PR #78
+    function rpow(uint256 x, uint256 n, uint256 b) internal pure returns (uint256 z) {
+        assembly {
+            switch n case 0 { z := b }
+            default {
+                switch x case 0 { z := 0 }
+                default {
+                    switch mod(n, 2) case 0 { z := b } default { z := x }
+                    let half := div(b, 2)  // for rounding.
+                    for { n := div(n, 2) } n { n := div(n,2) } {
+                        let xx := mul(x, x)
+                        if shr(128, x) { revert(0,0) }
+                        let xxRound := add(xx, half)
+                        if lt(xxRound, xx) { revert(0,0) }
+                        x := div(xxRound, b)
+                        if mod(n,2) {
+                            let zx := mul(z, x)
+                            if and(iszero(iszero(x)), iszero(eq(div(zx, x), z))) { revert(0,0) }
+                            let zxRound := add(zx, half)
+                            if lt(zxRound, zx) { revert(0,0) }
+                            z := div(zxRound, b)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // dip: initial price
+    // dur: seconds since the auction has started
+    // step: seconds between a price increment
+    // gain: gain encodes the percentage to increase per step.
+    //   The values is set as (1 + (% value / 100)) * RAY
+    //   So, for a 1% increment per step, gain would be (1 + 0.01) * RAY
+    //
+    // returns: dip * (gain ^ dur)
+    //
+    //
+    function price(uint256 dip, uint256 dur) override external view returns (uint256) {
+        return rmul(dip, rpow(gain, dur / step, RAY));
+    }
+}
