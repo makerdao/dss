@@ -69,16 +69,15 @@ contract Clapper {
 
     // --- Data ---
     struct Sale {
-        uint256 lot;    // dai to sell          [rad]
-        uint256 dip; // Starting price       [ray]
-        uint48  tic;    // Auction start time   [timestamp]
+        uint256 lot; // dai to sell        [rad]
+        uint256 dip; // Starting price     [ray]
+        uint256 tic; // Auction start time [timestamp]
     }
 
     mapping (uint256 => Sale) public sales;
 
     VatLike     public immutable vat;   // CDP Engine
     GemLike     public immutable gem;
-    address     public vow;
     address     public spotter;
     address     public pip;
     AbacusLike  public calc;            // Current price calculator
@@ -178,7 +177,6 @@ contract Clapper {
     function file(bytes32 what, address data) external auth lock {
         if (what == "spotter") spotter = data;
         else if (what == "pip")    pip = data;
-        else if (what == "vow")    vow = data;
         else if (what == "calc")  calc = AbacusLike(data);
         else revert("Clapper/file-unrecognized-param");
         emit File(what, data);
@@ -194,7 +192,7 @@ contract Clapper {
         id = ++kicks;
 
         sales[id].lot = lot;
-        sales[id].tic = uint48(block.timestamp);
+        sales[id].tic = block.timestamp;
         uint256 dip = rmul(getFeedPrice(), buf);
         require(dip > 0, "Clapper/zero-dip-price");
         sales[id].dip = dip;
@@ -219,7 +217,7 @@ contract Clapper {
         (bool done,) = status(sales[id].tic, sales[id].dip);
         require(done, "Clapper/cannot-reset");
         
-        sales[id].tic = uint48(block.timestamp);
+        sales[id].tic = block.timestamp;
 
         uint256 dip = rmul(getFeedPrice(), buf);
         require(dip > 0, "Clapper/zero-dip-price");
@@ -238,12 +236,12 @@ contract Clapper {
         require(live == 1, "Clapper/not-live");
         require(sales[id].lot > 0, "Clapper/not-running-auction");
 
-        uint48 tic = sales[id].tic;
+        uint256 tic = sales[id].tic;
         (bool done, uint256 price) = status(tic, sales[id].dip);
         require(!done, "Clapper/needs-reset");
 
         require(lot <= sales[id].lot, "Clapper/lot-not-matching");
-        require(min < price, "Clapper/bid-not-higher");
+        require(min <= price, "Clapper/bid-not-higher");
         uint256 rLot = sales[id].lot - lot;
         require(rLot >= dust, "Clapper/dusty-lot-left");
 
@@ -268,7 +266,7 @@ contract Clapper {
     }
 
     // Internally returns boolean for if an auction needs a redo
-    function status(uint96 tic, uint256 dip) internal view returns (bool done, uint256 price) {
+    function status(uint256 tic, uint256 dip) internal view returns (bool done, uint256 price) {
         price = calc.price(dip, sub(block.timestamp, tic));
         done  = (sub(block.timestamp, tic) > tail || rdiv(price, dip) > cusp);
     }
