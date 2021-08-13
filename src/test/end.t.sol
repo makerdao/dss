@@ -147,7 +147,7 @@ contract EndTest is DSTest {
     }
 
     function init_collateral(bytes32 name) internal returns (Ilk memory) {
-        DSToken coin = new DSToken(name);
+        DSToken coin = new DSToken("");
         coin.mint(500_000 ether);
 
         DSValue pip = new DSValue();
