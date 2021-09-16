@@ -1,0 +1,31 @@
+on:
+  # Trigger the workflow on push or pull request,
+  # but only for the main branch
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository and submodules
+      uses: actions/checkout@v2
+      with:
+        submodules: recursive
+
+    - name: Install nix
+      uses: cachix/install-nix-action@v13
+      with:
+        nix_path: nixpkgs=channel:nixos-unstable
+
+    - name: Use maker cachix
+      uses: cachix/cachix-action@v10
+      with:
+        name: maker
+
+    - name: Run tests
+      run: nix-shell --pure --run 'dapp test'
