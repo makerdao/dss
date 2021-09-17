@@ -1,12 +1,4 @@
-on:
-  # Trigger the workflow on push or pull request,
-  # but only for the main branch
-  push:
-    branches:
-      - master
-  pull_request:
-    branches:
-      - master
+on: [push, pull_request]
 
 jobs:
   tests:
@@ -17,7 +9,7 @@ jobs:
       with:
         submodules: recursive
 
-    - name: Install nix
+    - name: Install nix 2.3.6
       uses: cachix/install-nix-action@v13
       with:
         install_url: https://releases.nixos.org/nix/nix-2.3.6/install
