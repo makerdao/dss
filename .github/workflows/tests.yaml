@@ -20,6 +20,7 @@ jobs:
     - name: Install nix
       uses: cachix/install-nix-action@v13
       with:
+        install_url: https://releases.nixos.org/nix/nix-2.3.6/install
         nix_path: nixpkgs=channel:nixos-unstable
 
     - name: Use maker cachix
