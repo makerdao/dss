@@ -2,7 +2,7 @@
 
 /// join.sol -- Basic token adapters
 
-// Copyright (C) 2018 Rain <rainbreak@riseup.net>
+// Copyright (C) 2021 guanlong huang <gl041188@gmail.com>
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as published by
