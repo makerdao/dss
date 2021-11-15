@@ -5,7 +5,9 @@
 
 mkShell {
   DAPP_SOLC = solc-static-versions.solc_0_5_12 + "/bin/solc-0.5.12";
-  # SOLC_FLAGS = "--optimize --optimize-runs=200";
+  DAPP_TEST_ADDRESS = "0xAb5801a7D398351b8bE11C439e05C5B3259aeC9B";
+  # No optimizations
+  SOLC_FLAGS = "";
   buildInputs = [
     dapp
   ];
