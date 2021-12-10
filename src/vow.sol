@@ -43,21 +43,67 @@ interface VatLike {
     function nope(address) external;
 }
 
-contract Vow {
-    // --- Auth ---
-    mapping (address => uint) public wards;
-    function rely(address usr) external auth { require(live == 1, "Vow/not-live"); wards[usr] = 1; }
-    function deny(address usr) external auth { wards[usr] = 0; }
+contract VowProxy {
+    address public implementation;
+    uint256 public live;  // Active Flag
+    mapping (address => uint256) public wards;
+
+    event Rely(address indexed usr);
+    event Deny(address indexed usr);
+    event SetImplementation(address indexed);
+
+    constructor() public {
+        wards[msg.sender] = 1;
+        emit Rely(msg.sender);
+        live = 1;
+    }
+
+    function rely(address usr) external auth {
+        require(live == 1, "Vow/not-live");
+        wards[usr] = 1;
+        emit Rely(usr);
+    }
+
+    function deny(address usr) external auth {
+        wards[usr] = 0;
+        emit Deny(usr);
+    }
+
     modifier auth {
         require(wards[msg.sender] == 1, "Vow/not-authorized");
         _;
     }
 
-    // --- Data ---
-    VatLike public vat;        // CDP Engine
-    FlapLike public flapper;   // Surplus Auction House
-    FlopLike public flopper;   // Debt Auction House
+    function setImplementation(address implementation_) external auth {
+        implementation = implementation_;
+        emit SetImplementation(implementation_);
+    }
 
+    fallback() external {
+        address _impl = implementation;
+        require(_impl != address(0));
+
+        assembly {
+            let ptr := mload(0x40)
+            calldatacopy(ptr, 0, calldatasize())
+            let result := delegatecall(gas(), _impl, ptr, calldatasize(), 0, 0)
+            let size := returndatasize()
+            returndatacopy(ptr, 0, size)
+
+            switch result
+            case 0 { revert(ptr, size) }
+            default { return(ptr, size) }
+        }
+    }
+}
+
+contract Vow {
+    // --- Proxy Storage ---
+    bytes32 slot0; // avoid collision with proxy's implementation field
+    uint256 public live;  // Active Flag
+    mapping (address => uint256) public wards;
+
+    // --- Implementation Storage ---
     mapping (uint256 => uint256) public sin;  // debt queue
     uint256 public Sin;   // Queued debt            [rad]
     uint256 public Ash;   // On-auction debt        [rad]
@@ -69,16 +115,24 @@ contract Vow {
     uint256 public bump;  // Flap fixed lot size    [rad]
     uint256 public hump;  // Surplus buffer         [rad]
 
-    uint256 public live;  // Active Flag
+    VatLike public immutable vat;       // CDP Engine
+    FlapLike public flapper;            // Surplus Auction House
+    FlopLike public flopper;            // Debt Auction House
+
+    // --- Auth ---
+    modifier auth {
+        require(wards[msg.sender] == 1, "Vow/not-authorized");
+        _;
+    }
 
     // --- Init ---
-    constructor(address vat_, address flapper_, address flopper_) public {
-        wards[msg.sender] = 1;
-        vat     = VatLike(vat_);
-        flapper = FlapLike(flapper_);
-        flopper = FlopLike(flopper_);
-        vat.hope(flapper_);
-        live = 1;
+    constructor(address vat_) public {
+        vat = VatLike(vat_);
+    }
+
+    // Needs to be called outside of constructor via proxy
+    function init() external {
+        vat.hope(address(flapper));
     }
 
     // --- Math ---
@@ -104,7 +158,7 @@ contract Vow {
 
     function file(bytes32 what, address data) external auth {
         if (what == "flapper") {
-            vat.nope(address(flapper));
+            if (address(flapper) != address(0)) vat.nope(address(flapper));
             flapper = FlapLike(data);
             vat.hope(data);
         }
@@ -114,12 +168,12 @@ contract Vow {
 
     // Push to debt-queue
     function fess(uint tab) external auth {
-        sin[now] = add(sin[now], tab);
+        sin[block.timestamp] = add(sin[block.timestamp], tab);
         Sin = add(Sin, tab);
     }
     // Pop from debt-queue
     function flog(uint era) external {
-        require(add(era, wait) <= now, "Vow/wait-not-finished");
+        require(add(era, wait) <= block.timestamp, "Vow/wait-not-finished");
         Sin = sub(Sin, sin[era]);
         sin[era] = 0;
     }

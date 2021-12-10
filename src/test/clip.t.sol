@@ -8,7 +8,7 @@ import "ds-value/value.sol";
 
 import {Vat}     from "../vat.sol";
 import {Spotter} from "../spot.sol";
-import {Vow}     from "../vow.sol";
+import {Vow, VowProxy}    from "../vow.sol";
 import {GemJoin, DaiJoin} from "../join.sol";
 
 import {Clipper} from "../clip.sol";
@@ -339,7 +339,10 @@ contract ClipperTest is DSTest {
         spot = new Spotter(address(vat));
         vat.rely(address(spot));
 
-        vow = new Vow(address(vat), address(0), address(0));
+        vow = Vow(address(new VowProxy()));
+        address vowImp = address(new Vow(address(vat)));
+        VowProxy(address(vow)).setImplementation(vowImp);
+        vow.init();
         gold = new DSToken("GLD");
         goldJoin = new GemJoin(address(vat), ilk, address(gold));
         vat.rely(address(goldJoin));
@@ -357,7 +360,7 @@ contract ClipperTest is DSTest {
         dog = new Dog(address(vat));
         dog.file("vow", address(vow));
         vat.rely(address(dog));
-        vow.rely(address(dog));
+        VowProxy(address(vow)).rely(address(dog));
 
         vat.init(ilk);
 

@@ -27,7 +27,7 @@ import "ds-value/value.sol";
 import {Vat}  from '../vat.sol';
 import {Cat}  from '../cat.sol';
 import {Dog}  from '../dog.sol';
-import {Vow}  from '../vow.sol';
+import {Vow, VowProxy}  from '../vow.sol';
 import {Pot}  from '../pot.sol';
 import {Flipper} from '../flip.sol';
 import {Clipper} from '../clip.sol';
@@ -208,7 +208,12 @@ contract EndTest is DSTest {
         flop = new Flopper(address(vat), address(gov));
         gov.setOwner(address(flop));
 
-        vow = new Vow(address(vat), address(flap), address(flop));
+        vow = Vow(address(new VowProxy()));
+        address vowImp = address(new Vow(address(vat)));
+        VowProxy(address(vow)).setImplementation(vowImp);
+        vow.init();
+        vow.file("flapper", address(flap));
+        vow.file("flopper", address(flop));
 
         pot = new Pot(address(vat));
         vat.rely(address(pot));
@@ -217,12 +222,12 @@ contract EndTest is DSTest {
         cat = new Cat(address(vat));
         cat.file("vow", address(vow));
         vat.rely(address(cat));
-        vow.rely(address(cat));
+        VowProxy(address(vow)).rely(address(cat));
 
         dog = new Dog(address(vat));
         dog.file("vow", address(vow));
         vat.rely(address(dog));
-        vow.rely(address(dog));
+        VowProxy(address(vow)).rely(address(dog));
 
         spot = new Spotter(address(vat));
         vat.file("Line",         rad(1_000_000 ether));
@@ -237,7 +242,7 @@ contract EndTest is DSTest {
         end.file("spot", address(spot));
         end.file("wait", 1 hours);
         vat.rely(address(end));
-        vow.rely(address(end));
+        VowProxy(address(vow)).rely(address(end));
         spot.rely(address(end));
         pot.rely(address(end));
         cat.rely(address(end));
