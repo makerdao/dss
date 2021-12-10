@@ -487,7 +487,6 @@ contract BiteTest is DSTest {
         vow = TestVow(address(new VowProxy()));
         address vowImp = address(new TestVow(address(vat)));
         VowProxy(address(vow)).setImplementation(vowImp);
-        vow.init();
         vow.file("flapper", address(flap));
         vow.file("flopper", address(flop));
         flap.rely(address(vow));

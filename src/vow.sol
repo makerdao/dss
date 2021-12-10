@@ -130,11 +130,6 @@ contract Vow {
         vat = VatLike(vat_);
     }
 
-    // Needs to be called outside of constructor via proxy
-    function init() external {
-        vat.hope(address(flapper));
-    }
-
     // --- Math ---
     function add(uint x, uint y) internal pure returns (uint z) {
         require((z = x + y) >= x);

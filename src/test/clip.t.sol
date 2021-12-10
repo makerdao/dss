@@ -342,7 +342,6 @@ contract ClipperTest is DSTest {
         vow = Vow(address(new VowProxy()));
         address vowImp = address(new Vow(address(vat)));
         VowProxy(address(vow)).setImplementation(vowImp);
-        vow.init();
         gold = new DSToken("GLD");
         goldJoin = new GemJoin(address(vat), ilk, address(gold));
         vat.rely(address(goldJoin));

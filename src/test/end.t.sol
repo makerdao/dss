@@ -211,7 +211,6 @@ contract EndTest is DSTest {
         vow = Vow(address(new VowProxy()));
         address vowImp = address(new Vow(address(vat)));
         VowProxy(address(vow)).setImplementation(vowImp);
-        vow.init();
         vow.file("flapper", address(flap));
         vow.file("flopper", address(flop));
 
