@@ -28,6 +28,7 @@ import {Vat}  from '../vat.sol';
 import {Cat}  from '../cat.sol';
 import {Dog}  from '../dog.sol';
 import {Vow}  from '../vow.sol';
+import {Bow}  from '../bow.sol';
 import {Pot}  from '../pot.sol';
 import {Flipper} from '../flip.sol';
 import {Clipper} from '../clip.sol';
@@ -81,6 +82,7 @@ contract EndTest is DSTest {
     Vat   vat;
     End   end;
     Vow   vow;
+    Bow   bow;
     Pot   pot;
     Cat   cat;
     Dog   dog;
@@ -208,19 +210,21 @@ contract EndTest is DSTest {
         flop = new Flopper(address(vat), address(gov));
         gov.setOwner(address(flop));
 
-        vow = new Vow(address(vat), address(flap), address(flop));
+        vow = new Vow(address(vat));
+        bow = new Bow(address(vat), address(vow), address(flap), address(flop));
+        vow.hope(address(bow));
 
         pot = new Pot(address(vat));
         vat.rely(address(pot));
         pot.file("vow", address(vow));
 
         cat = new Cat(address(vat));
-        cat.file("vow", address(vow));
+        cat.file("vow", address(bow));
         vat.rely(address(cat));
         vow.rely(address(cat));
 
         dog = new Dog(address(vat));
-        dog.file("vow", address(vow));
+        dog.file("vow", address(bow));
         vat.rely(address(dog));
         vow.rely(address(dog));
 
@@ -232,7 +236,7 @@ contract EndTest is DSTest {
         end.file("vat", address(vat));
         end.file("cat", address(cat));
         end.file("dog", address(dog));
-        end.file("vow", address(vow));
+        end.file("vow", address(bow));
         end.file("pot", address(pot));
         end.file("spot", address(spot));
         end.file("wait", 1 hours);
@@ -250,18 +254,18 @@ contract EndTest is DSTest {
         assertEq(end.live(), 1);
         assertEq(vat.live(), 1);
         assertEq(cat.live(), 1);
-        assertEq(vow.live(), 1);
+        assertEq(bow.live(), 1);
         assertEq(pot.live(), 1);
-        assertEq(vow.flopper().live(), 1);
-        assertEq(vow.flapper().live(), 1);
+        assertEq(bow.flopper().live(), 1);
+        assertEq(bow.flapper().live(), 1);
         end.cage();
         assertEq(end.live(), 0);
         assertEq(vat.live(), 0);
         assertEq(cat.live(), 0);
-        assertEq(vow.live(), 0);
+        assertEq(bow.live(), 0);
         assertEq(pot.live(), 0);
-        assertEq(vow.flopper().live(), 0);
-        assertEq(vow.flapper().live(), 0);
+        assertEq(bow.flopper().live(), 0);
+        assertEq(bow.flapper().live(), 0);
     }
 
     function test_cage_pot_drip() public {
