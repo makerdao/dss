@@ -498,7 +498,7 @@ contract BiteTest is DSTest {
         vat.rely(address(jug));
 
         cat = new Cat(address(vat));
-        cat.file("vow", address(vow));
+        cat.file("vow", address(bow));
         cat.file("box", rad((10 ether) * MLN));
         vat.rely(address(cat));
         bow.rely(address(cat));
