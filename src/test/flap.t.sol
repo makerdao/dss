@@ -183,4 +183,29 @@ contract FlapTest is DSTest {
                   });
         assertEq(flap.usage(), 400 ether);
     }
+    function test_multiple_auctions() public {
+        uint256 id1 = flap.kick({ lot: 200 ether
+                  , bid: 0
+                  });
+        assertEq(flap.usage(), 200 ether);
+        uint256 id2 = flap.kick({ lot: 200 ether
+                  , bid: 0
+                  });
+        assertEq(flap.usage(), 400 ether);
+        Guy(ali).tend(id1, 200 ether, 1 ether);
+        assertEq(flap.usage(), 400 ether);
+        hevm.warp(block.timestamp + 30 days);
+        flap.deal(id1);
+        assertEq(flap.usage(), 200 ether);
+        flap.kick({ lot: 300 ether
+                  , bid: 0
+                  });
+        assertEq(flap.usage(), 500 ether);
+        flap.tick(id2);
+        Guy(ali).tend(id2, 200 ether, 1 ether);
+        assertEq(flap.usage(), 500 ether);
+        hevm.warp(block.timestamp + 30 days);
+        flap.deal(id2);
+        assertEq(flap.usage(), 300 ether);
+    }
 }
