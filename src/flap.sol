@@ -69,6 +69,8 @@ contract Flapper is LibNote {
     uint48   public   tau = 2 days;   // 2 days total auction length  [seconds]
     uint256  public kicks = 0;
     uint256  public live;  // Active Flag
+    uint256  public limit; // max dai to be in auction at one time  [rad]
+    uint256  public usage; // current dai in auction                [rad]
 
     // --- Events ---
     event Kick(
@@ -89,6 +91,12 @@ contract Flapper is LibNote {
     function add(uint48 x, uint48 y) internal pure returns (uint48 z) {
         require((z = x + y) >= x);
     }
+    function add256(uint x, uint y) internal pure returns (uint z) {
+        require((z = x + y) >= x);
+    }
+    function sub(uint x, uint y) internal pure returns (uint z) {
+        require((z = x - y) <= x);
+    }
     function mul(uint x, uint y) internal pure returns (uint z) {
         require(y == 0 || (z = x * y) / y == x);
     }
@@ -98,6 +106,7 @@ contract Flapper is LibNote {
         if (what == "beg") beg = data;
         else if (what == "ttl") ttl = uint48(data);
         else if (what == "tau") tau = uint48(data);
+        else if (what == "limit") limit = data;
         else revert("Flapper/file-unrecognized-param");
     }
 
@@ -105,6 +114,8 @@ contract Flapper is LibNote {
     function kick(uint lot, uint bid) external auth returns (uint id) {
         require(live == 1, "Flapper/not-live");
         require(kicks < uint(-1), "Flapper/overflow");
+        usage = add256(usage, lot);
+        require(usage <= limit, "Flapper/over-limit");
         id = ++kicks;
 
         bids[id].bid = bid;
@@ -143,9 +154,11 @@ contract Flapper is LibNote {
     function deal(uint id) external note {
         require(live == 1, "Flapper/not-live");
         require(bids[id].tic != 0 && (bids[id].tic < now || bids[id].end < now), "Flapper/not-finished");
-        vat.move(address(this), bids[id].guy, bids[id].lot);
+        uint256 lot = bids[id].lot;
+        vat.move(address(this), bids[id].guy, lot);
         gem.burn(address(this), bids[id].bid);
         delete bids[id];
+        usage = sub(usage, lot);
     }
 
     function cage(uint rad) external note auth {

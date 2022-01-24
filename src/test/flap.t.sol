@@ -63,6 +63,7 @@ contract FlapTest is DSTest {
         gem = new DSToken('');
 
         flap = new Flapper(address(vat), address(gem));
+        flap.file("limit", 500 ether);
 
         ali = address(new Guy(flap));
         bob = address(new Guy(flap));
@@ -81,11 +82,13 @@ contract FlapTest is DSTest {
     function test_kick() public {
         assertEq(vat.dai(address(this)), 1000 ether);
         assertEq(vat.dai(address(flap)),    0 ether);
+        assertEq(flap.usage(),              0 ether);
         flap.kick({ lot: 100 ether
                   , bid: 0
                   });
         assertEq(vat.dai(address(this)),  900 ether);
         assertEq(vat.dai(address(flap)),  100 ether);
+        assertEq(flap.usage(),            100 ether);
     }
     function test_tend() public {
         uint id = flap.kick({ lot: 100 ether
@@ -149,5 +152,35 @@ contract FlapTest is DSTest {
         assertTrue( Guy(ali).try_tick(id));
         // check biddable
         assertTrue( Guy(ali).try_tend(id, 100 ether, 1 ether));
+    }
+    function testFail_kick_over_limit() public {
+        flap.kick({ lot: 501 ether
+                  , bid: 0
+                  });
+    }
+    function testFail_kick_over_limit_2_auctions() public {
+        // Just up to the limit
+        flap.kick({ lot: 500 ether
+                  , bid: 0
+                  });
+        // Just over the limit
+        flap.kick({ lot: 1
+                  , bid: 0
+                  });
+    }
+    function test_deal() public {
+        uint256 id = flap.kick({ lot: 400 ether
+                  , bid: 0
+                  });
+        assertEq(flap.usage(), 400 ether);
+        Guy(ali).tend(id, 400 ether, 1 ether);
+        assertEq(flap.usage(), 400 ether);
+        hevm.warp(block.timestamp + 30 days);
+        flap.deal(id);
+        assertEq(flap.usage(), 0);
+        flap.kick({ lot: 400 ether
+                  , bid: 0
+                  });
+        assertEq(flap.usage(), 400 ether);
     }
 }
