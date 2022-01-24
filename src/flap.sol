@@ -70,7 +70,7 @@ contract Flapper is LibNote {
     uint256  public kicks = 0;
     uint256  public live;  // Active Flag
     uint256  public lid;   // max dai to be in auction at one time  [rad]
-    uint256  public usage; // current dai in auction                [rad]
+    uint256  public fill;  // current dai in auction                [rad]
 
     // --- Events ---
     event Kick(
@@ -114,8 +114,8 @@ contract Flapper is LibNote {
     function kick(uint lot, uint bid) external auth returns (uint id) {
         require(live == 1, "Flapper/not-live");
         require(kicks < uint(-1), "Flapper/overflow");
-        usage = add256(usage, lot);
-        require(usage <= lid, "Flapper/over-lid");
+        fill = add256(fill, lot);
+        require(fill <= lid, "Flapper/over-lid");
         id = ++kicks;
 
         bids[id].bid = bid;
@@ -158,11 +158,7 @@ contract Flapper is LibNote {
         vat.move(address(this), bids[id].guy, lot);
         gem.burn(address(this), bids[id].bid);
         delete bids[id];
-        if (usage >= lot) {
-            usage = sub(usage, lot);
-        } else {
-            usage = 0;
-        }
+        fill = sub(fill, lot);
     }
 
     function cage(uint rad) external note auth {
