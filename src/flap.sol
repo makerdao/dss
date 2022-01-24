@@ -158,7 +158,11 @@ contract Flapper is LibNote {
         vat.move(address(this), bids[id].guy, lot);
         gem.burn(address(this), bids[id].bid);
         delete bids[id];
-        usage = sub(usage, lot);
+        if (usage >= lot) {
+            usage = sub(usage, lot);
+        } else {
+            usage = 0;
+        }
     }
 
     function cage(uint rad) external note auth {
