@@ -69,7 +69,7 @@ contract Flapper is LibNote {
     uint48   public   tau = 2 days;   // 2 days total auction length  [seconds]
     uint256  public kicks = 0;
     uint256  public live;  // Active Flag
-    uint256  public limit; // max dai to be in auction at one time  [rad]
+    uint256  public lid;   // max dai to be in auction at one time  [rad]
     uint256  public usage; // current dai in auction                [rad]
 
     // --- Events ---
@@ -106,7 +106,7 @@ contract Flapper is LibNote {
         if (what == "beg") beg = data;
         else if (what == "ttl") ttl = uint48(data);
         else if (what == "tau") tau = uint48(data);
-        else if (what == "limit") limit = data;
+        else if (what == "lid") lid = data;
         else revert("Flapper/file-unrecognized-param");
     }
 
@@ -115,7 +115,7 @@ contract Flapper is LibNote {
         require(live == 1, "Flapper/not-live");
         require(kicks < uint(-1), "Flapper/overflow");
         usage = add256(usage, lot);
-        require(usage <= limit, "Flapper/over-limit");
+        require(usage <= lid, "Flapper/over-lid");
         id = ++kicks;
 
         bids[id].bid = bid;

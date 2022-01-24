@@ -63,7 +63,7 @@ contract FlapTest is DSTest {
         gem = new DSToken('');
 
         flap = new Flapper(address(vat), address(gem));
-        flap.file("limit", 500 ether);
+        flap.file("lid", 500 ether);
 
         ali = address(new Guy(flap));
         bob = address(new Guy(flap));
@@ -153,17 +153,17 @@ contract FlapTest is DSTest {
         // check biddable
         assertTrue( Guy(ali).try_tend(id, 100 ether, 1 ether));
     }
-    function testFail_kick_over_limit() public {
+    function testFail_kick_over_lid() public {
         flap.kick({ lot: 501 ether
                   , bid: 0
                   });
     }
-    function testFail_kick_over_limit_2_auctions() public {
-        // Just up to the limit
+    function testFail_kick_over_lid_2_auctions() public {
+        // Just up to the lid
         flap.kick({ lot: 500 ether
                   , bid: 0
                   });
-        // Just over the limit
+        // Just over the lid
         flap.kick({ lot: 1
                   , bid: 0
                   });
