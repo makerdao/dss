@@ -487,6 +487,7 @@ contract BiteTest is DSTest {
         vow = new TestVow(address(vat), address(flap), address(flop));
         flap.rely(address(vow));
         flop.rely(address(vow));
+        flap.file("lid", rad(1000 ether));
 
         jug = new Jug(address(vat));
         jug.init("gold");

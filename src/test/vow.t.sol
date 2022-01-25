@@ -42,6 +42,7 @@ contract VowTest is DSTest {
         vow = new Vow(address(vat), address(flap), address(flop));
         flap.rely(address(vow));
         flop.rely(address(vow));
+        flap.file("lid", rad(1000 ether));
 
         vow.file("bump", rad(100 ether));
         vow.file("sump", rad(100 ether));
