@@ -63,7 +63,7 @@ contract FlapTest is DSTest {
         gem = new DSToken('');
 
         flap = new Flapper(address(vat), address(gem));
-        flap.file("lid", 500 ether);
+        flap.file("lid", 5);
 
         ali = address(new Guy(flap));
         bob = address(new Guy(flap));
@@ -82,13 +82,13 @@ contract FlapTest is DSTest {
     function test_kick() public {
         assertEq(vat.dai(address(this)), 1000 ether);
         assertEq(vat.dai(address(flap)),    0 ether);
-        assertEq(flap.fill(),               0 ether);
+        assertEq(flap.fill(),               0);
         flap.kick({ lot: 100 ether
                   , bid: 0
                   });
         assertEq(vat.dai(address(this)),  900 ether);
         assertEq(vat.dai(address(flap)),  100 ether);
-        assertEq(flap.fill(),             100 ether);
+        assertEq(flap.fill(),             1);
     }
     function test_tend() public {
         uint id = flap.kick({ lot: 100 ether
@@ -154,16 +154,18 @@ contract FlapTest is DSTest {
         assertTrue( Guy(ali).try_tend(id, 100 ether, 1 ether));
     }
     function testFail_kick_over_lid() public {
-        flap.kick({ lot: 501 ether
+        flap.file("lid", 0);
+        flap.kick({ lot: 500 ether
                   , bid: 0
                   });
     }
     function testFail_kick_over_lid_2_auctions() public {
+        flap.file("lid", 1);
         // Just up to the lid
         flap.kick({ lot: 500 ether
                   , bid: 0
                   });
-        // Just over the lid
+        // Over the lid
         flap.kick({ lot: 1
                   , bid: 0
                   });
@@ -172,40 +174,40 @@ contract FlapTest is DSTest {
         uint256 id = flap.kick({ lot: 400 ether
                   , bid: 0
                   });
-        assertEq(flap.fill(), 400 ether);
+        assertEq(flap.fill(), 1);
         Guy(ali).tend(id, 400 ether, 1 ether);
-        assertEq(flap.fill(), 400 ether);
+        assertEq(flap.fill(), 1);
         hevm.warp(block.timestamp + 30 days);
         flap.deal(id);
         assertEq(flap.fill(), 0);
         flap.kick({ lot: 400 ether
                   , bid: 0
                   });
-        assertEq(flap.fill(), 400 ether);
+        assertEq(flap.fill(), 1);
     }
     function test_multiple_auctions() public {
         uint256 id1 = flap.kick({ lot: 200 ether
                   , bid: 0
                   });
-        assertEq(flap.fill(), 200 ether);
+        assertEq(flap.fill(), 1);
         uint256 id2 = flap.kick({ lot: 200 ether
                   , bid: 0
                   });
-        assertEq(flap.fill(), 400 ether);
+        assertEq(flap.fill(), 2);
         Guy(ali).tend(id1, 200 ether, 1 ether);
-        assertEq(flap.fill(), 400 ether);
+        assertEq(flap.fill(), 2);
         hevm.warp(block.timestamp + 30 days);
         flap.deal(id1);
-        assertEq(flap.fill(), 200 ether);
+        assertEq(flap.fill(), 1);
         flap.kick({ lot: 300 ether
                   , bid: 0
                   });
-        assertEq(flap.fill(), 500 ether);
+        assertEq(flap.fill(), 2);
         flap.tick(id2);
         Guy(ali).tend(id2, 200 ether, 1 ether);
-        assertEq(flap.fill(), 500 ether);
+        assertEq(flap.fill(), 2);
         hevm.warp(block.timestamp + 30 days);
         flap.deal(id2);
-        assertEq(flap.fill(), 300 ether);
+        assertEq(flap.fill(), 1);
     }
 }

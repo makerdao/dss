@@ -70,8 +70,8 @@ contract Flapper is LibNote {
     uint48   public   tau = 2 days;   // 2 days total auction length  [seconds]
     uint256  public kicks = 0;
     uint256  public live;  // Active Flag
-    uint256  public lid;   // max dai to be in auction at one time  [rad]
-    uint256  public fill;  // current dai in auction                [rad]
+    uint256  public lid;   // max number of auctions at one time
+    uint256  public fill;  // current number of auctions
 
     // --- Events ---
     event Kick(
@@ -90,9 +90,6 @@ contract Flapper is LibNote {
 
     // --- Math ---
     function add(uint48 x, uint48 y) internal pure returns (uint48 z) {
-        require((z = x + y) >= x);
-    }
-    function add256(uint x, uint y) internal pure returns (uint z) {
         require((z = x + y) >= x);
     }
     function sub(uint x, uint y) internal pure returns (uint z) {
@@ -115,7 +112,7 @@ contract Flapper is LibNote {
     function kick(uint lot, uint bid) external auth returns (uint id) {
         require(live == 1, "Flapper/not-live");
         require(kicks < uint(-1), "Flapper/overflow");
-        fill = add256(fill, lot);
+        fill++;
         require(fill <= lid, "Flapper/over-lid");
         id = ++kicks;
 
@@ -155,11 +152,10 @@ contract Flapper is LibNote {
     function deal(uint id) external note {
         require(live == 1, "Flapper/not-live");
         require(bids[id].tic != 0 && (bids[id].tic < now || bids[id].end < now), "Flapper/not-finished");
-        uint256 lot = bids[id].lot;
-        vat.move(address(this), bids[id].guy, lot);
+        vat.move(address(this), bids[id].guy, bids[id].lot);
         gem.burn(address(this), bids[id].bid);
         delete bids[id];
-        fill = sub(fill, lot);
+        fill = sub(fill, 1);
     }
 
     function cage(uint rad) external note auth {
