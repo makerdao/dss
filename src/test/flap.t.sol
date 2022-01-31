@@ -213,12 +213,14 @@ contract FlapTest is DSTest {
                   , bid: 0
                   });
         assertEq(flap.fill(), 400 ether);
+        assertEq(flap.lid(), 400 ether);
 
         // Reduce lid while auction is active
         flap.file("lid", 300 ether);
 
         Guy(ali).tend(id, 400 ether, 1 ether);
         assertEq(flap.fill(), 400 ether);
+        assertEq(flap.lid(), 300 ether);
         hevm.warp(block.timestamp + 30 days);
         flap.deal(id);
         assertEq(flap.fill(), 0);
