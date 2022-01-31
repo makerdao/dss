@@ -213,7 +213,7 @@ contract FlapTest is DSTest {
                   , bid: 0
                   });
         assertEq(flap.fill(), 400 ether);
-        assertEq(flap.lid(), 400 ether);
+        assertEq(flap.lid(), 500 ether);
 
         // Reduce lid while auction is active
         flap.file("lid", 300 ether);
