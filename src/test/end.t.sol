@@ -36,6 +36,7 @@ import {Flopper} from '../flop.sol';
 import {GemJoin} from '../join.sol';
 import {End}  from '../end.sol';
 import {Spotter} from '../spot.sol';
+import {Cure} from '../cure.sol';
 
 interface Hevm {
     function warp(uint256) external;
@@ -86,6 +87,8 @@ contract EndTest is DSTest {
     Dog   dog;
 
     Spotter spot;
+
+    Cure cure;
 
     struct Ilk {
         DSValue pip;
@@ -228,6 +231,8 @@ contract EndTest is DSTest {
         vat.file("Line",         rad(1_000_000 ether));
         vat.rely(address(spot));
 
+        cure = new Cure(address(vat));
+
         end = new End();
         end.file("vat", address(vat));
         end.file("cat", address(cat));
@@ -235,6 +240,7 @@ contract EndTest is DSTest {
         end.file("vow", address(vow));
         end.file("pot", address(pot));
         end.file("spot", address(spot));
+        end.file("cure", address(cure));
         end.file("wait", 1 hours);
         vat.rely(address(end));
         vow.rely(address(end));

@@ -109,6 +109,10 @@ interface SpotLike {
     function cage() external;
 }
 
+interface CureLike {
+    function debt() external view returns (uint256);
+}
+
 /*
     This is the `End` and it coordinates Global Settlement. This is an
     involved, stateful process that takes place over nine steps.
@@ -241,6 +245,7 @@ contract End {
     VowLike  public vow;   // Debt Engine
     PotLike  public pot;
     SpotLike public spot;
+    CureLike public cure;
 
     uint256  public live;  // Active Flag
     uint256  public when;  // Time of cage                   [unix epoch time]
@@ -312,6 +317,7 @@ contract End {
         else if (what == "vow")   vow = VowLike(data);
         else if (what == "pot")   pot = PotLike(data);
         else if (what == "spot") spot = SpotLike(data);
+        else if (what == "cure") cure = CureLike(data);
         else revert("End/file-unrecognized-param");
         emit File(what, data);
     }
@@ -412,7 +418,7 @@ contract End {
         require(debt == 0, "End/debt-not-zero");
         require(vat.dai(address(vow)) == 0, "End/surplus-not-zero");
         require(block.timestamp >= add(when, wait), "End/wait-not-finished");
-        debt = vat.debt();
+        debt = cure.debt();
         emit Thaw();
     }
     function flow(bytes32 ilk) external {
