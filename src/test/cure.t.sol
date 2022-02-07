@@ -146,4 +146,36 @@ contract CureTest is DSTest {
         cure.addSource(address(new SourceMock(1)));
         cure.debt();
     }
+
+    function testCage() public {
+        assertEq(cure.live(), 1);
+        cure.cage();
+        assertEq(cure.live(), 0);
+    }
+
+    function testFailCagedRely() public {
+        cure.cage();
+        cure.rely(address(123));
+    }
+
+    function testFailCagedDeny() public {
+        cure.cage();
+        cure.deny(address(123));
+    }
+
+    function testFailCagedFile() public {
+        cure.cage();
+        cure.file("cure", 123);
+    }
+
+    function testFailCagedAddSource() public {
+        cure.cage();
+        cure.addSource(address(123));
+    }
+
+    function testFailCagedDelSource() public {
+        cure.addSource(address(123));
+        cure.cage();
+        cure.delSource(0);
+    }
 }
