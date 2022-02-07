@@ -30,7 +30,6 @@ interface SourceLike {
 contract Cure {
     mapping (address => uint256) public wards;
     uint256 public live;
-    uint256 public cure;
     address[] public sources;
 
     VatLike public immutable vat;
@@ -38,7 +37,6 @@ contract Cure {
     // --- Events ---
     event Rely(address indexed usr);
     event Deny(address indexed usr);
-    event File(bytes32 indexed what, uint256 data);
     event Cage();
 
     modifier auth {
@@ -74,12 +72,6 @@ contract Cure {
         emit Deny(usr);
     }
 
-    function file(bytes32 what, uint256 data) external auth isLive {
-        if (what == "cure") cure = data;
-        else revert("Cure/file-unrecognized-param");
-        emit File(what, data);
-    }
-
     function addSource(address src_) external auth isLive {
         sources.push(src_);
     }
@@ -106,7 +98,7 @@ contract Cure {
     }
 
     function debt() external view returns (uint256 debt_) {
-        debt_ = _sub(vat.debt(), cure);
+        debt_ = vat.debt();
 
         for (uint256 i; i < sources.length; i++) {
             debt_ = _sub(debt_, SourceLike(sources[i]).cure());

@@ -41,17 +41,6 @@ contract CureTest is DSTest {
         cure.deny(address(123));
     }
 
-    function test_file() public {
-        assertEq(cure.cure(), 0);
-        cure.file("cure", 123);
-        assertEq(cure.cure(), 123);
-    }
-
-    function testFail_file() public {
-        cure.deny(address(this));
-        cure.file("cure", 123);
-    }
-
     function test_addSourceDelSource() public {
         assertEq(cure.numSources(), 0);
 
@@ -124,26 +113,17 @@ contract CureTest is DSTest {
         vat.suck(address(999), address(999), 500_000);
         assertEq(cure.debt(), 500_000);
 
-        cure.file("cure", 10_000);
-        assertEq(cure.debt(), 490_000);
         cure.addSource(address(new SourceMock(15_000)));
-        assertEq(cure.debt(), 475_000);
+        assertEq(cure.debt(), 485_000);
         cure.addSource(address(new SourceMock(30_000)));
-        assertEq(cure.debt(), 445_000);
+        assertEq(cure.debt(), 455_000);
         cure.addSource(address(new SourceMock(50_000)));
-        assertEq(cure.debt(), 395_000);
+        assertEq(cure.debt(), 405_000);
     }
 
     function testFail_debtSub() public {
-        vat.suck(address(999), address(999), 9_999);
-        cure.file("cure", 10_000);
-        cure.debt();
-    }
-
-    function testFail_debtSub2() public {
         vat.suck(address(999), address(999), 10_000);
-        cure.file("cure", 10_000);
-        cure.addSource(address(new SourceMock(1)));
+        cure.addSource(address(new SourceMock(10_001)));
         cure.debt();
     }
 
@@ -161,11 +141,6 @@ contract CureTest is DSTest {
     function testFailCagedDeny() public {
         cure.cage();
         cure.deny(address(123));
-    }
-
-    function testFailCagedFile() public {
-        cure.cage();
-        cure.file("cure", 123);
     }
 
     function testFailCagedAddSource() public {
