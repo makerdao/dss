@@ -128,7 +128,7 @@ contract Cure {
     }
 
     // --- Getters ---
-    function numSources() external view returns (uint256 size) {
+    function sLength() external view returns (uint256 size) {
         size = sources.length;
     }
 

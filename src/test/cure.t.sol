@@ -50,19 +50,19 @@ contract CureTest is DSTest {
     }
 
     function test_addSourceDelSource() public {
-        assertEq(cure.numSources(), 0);
+        assertEq(cure.sLength(), 0);
 
         address addr1 = address(new SourceMock(0));
         cure.addSource(addr1);
-        assertEq(cure.numSources(), 1);
+        assertEq(cure.sLength(), 1);
 
         address addr2 = address(new SourceMock(0));
         cure.addSource(addr2);
-        assertEq(cure.numSources(), 2);
+        assertEq(cure.sLength(), 2);
 
         address addr3 = address(new SourceMock(0));
         cure.addSource(addr3);
-        assertEq(cure.numSources(), 3);
+        assertEq(cure.sLength(), 3);
 
         assertEq(cure.sources(0), addr1);
         assertEq(pos(addr1), 1);
@@ -72,14 +72,14 @@ contract CureTest is DSTest {
         assertEq(pos(addr3), 3);
 
         cure.delSource(addr3);
-        assertEq(cure.numSources(), 2);
+        assertEq(cure.sLength(), 2);
         assertEq(cure.sources(0), addr1);
         assertEq(pos(addr1), 1);
         assertEq(cure.sources(1), addr2);
         assertEq(pos(addr2), 2);
 
         cure.addSource(addr3);
-        assertEq(cure.numSources(), 3);
+        assertEq(cure.sLength(), 3);
         assertEq(cure.sources(0), addr1);
         assertEq(pos(addr1), 1);
         assertEq(cure.sources(1), addr2);
@@ -88,14 +88,14 @@ contract CureTest is DSTest {
         assertEq(pos(addr3), 3);
 
         cure.delSource(addr1);
-        assertEq(cure.numSources(), 2);
+        assertEq(cure.sLength(), 2);
         assertEq(cure.sources(0), addr3);
         assertEq(pos(addr3), 1);
         assertEq(cure.sources(1), addr2);
         assertEq(pos(addr2), 2);
 
         cure.addSource(addr1);
-        assertEq(cure.numSources(), 3);
+        assertEq(cure.sLength(), 3);
         assertEq(cure.sources(0), addr3);
         assertEq(pos(addr3), 1);
         assertEq(cure.sources(1), addr2);
@@ -105,7 +105,7 @@ contract CureTest is DSTest {
 
         address addr4 = address(new SourceMock(0));
         cure.addSource(addr4);
-        assertEq(cure.numSources(), 4);
+        assertEq(cure.sLength(), 4);
         assertEq(cure.sources(0), addr3);
         assertEq(pos(addr3), 1);
         assertEq(cure.sources(1), addr2);
@@ -116,7 +116,7 @@ contract CureTest is DSTest {
         assertEq(pos(addr4), 4);
 
         cure.delSource(addr2);
-        assertEq(cure.numSources(), 3);
+        assertEq(cure.sLength(), 3);
         assertEq(cure.sources(0), addr3);
         assertEq(pos(addr3), 1);
         assertEq(cure.sources(1), addr4);
