@@ -144,29 +144,29 @@ contract CureTest is DSTest {
 
     function testCure() public {
         cure.addSource(address(new SourceMock(15_000)));
-        assertEq(cure.cure(), 15_000);
+        assertEq(cure.total(), 15_000);
         cure.addSource(address(new SourceMock(30_000)));
-        assertEq(cure.cure(), 45_000);
+        assertEq(cure.total(), 45_000);
         cure.addSource(address(new SourceMock(50_000)));
-        assertEq(cure.cure(), 95_000);
+        assertEq(cure.total(), 95_000);
     }
 
     function testReset() public {
         SourceMock source = new SourceMock(2_000);
         cure.addSource(address(source));
-        assertEq(cure.cure(), 2_000);
+        assertEq(cure.total(), 2_000);
         source.update(4_000);
-        assertEq(cure.cure(), 2_000);
+        assertEq(cure.total(), 2_000);
         cure.reset(address(source));
-        assertEq(cure.cure(), 4_000);
+        assertEq(cure.total(), 4_000);
     }
 
     function testResetNoChange() public {
         SourceMock source = new SourceMock(2_000);
         cure.addSource(address(source));
-        assertEq(cure.cure(), 2_000);
+        assertEq(cure.total(), 2_000);
         cure.reset(address(source));
-        assertEq(cure.cure(), 2_000);
+        assertEq(cure.total(), 2_000);
     }
 
     function testCage() public {

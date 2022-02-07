@@ -27,7 +27,7 @@ contract Cure {
     mapping (address => uint256) public wards;
     uint256 public live;
     address[] public sources;
-    uint256 public cure;
+    uint256 public total;
     mapping (address => Source) public data;
 
     struct Source {
@@ -90,7 +90,7 @@ contract Cure {
         data_.pos = _toUint128(sources.length);
         data_.amt = _toUint128(SourceLike(src).cure());
         if (data_.amt > 0) {
-            cure = _add(cure, data_.amt);
+            total = _add(total, data_.amt);
         }
     }
 
@@ -106,7 +106,7 @@ contract Cure {
         delete data[src];
         sources.pop();
         if (data_.amt > 0) {
-            cure = _sub(cure, data_.amt);
+            total = _sub(total, data_.amt);
         }
     }
 
@@ -118,8 +118,8 @@ contract Cure {
     function reset(address src) external {
         uint256 amt = data[src].amt;
         if (amt > 0) {
-            cure = _sub(cure, amt);
+            total = _sub(total, amt);
         }
-        cure = _add(cure, data[src].amt = _toUint128(SourceLike(src).cure()));
+        total = _add(total, data[src].amt = _toUint128(SourceLike(src).cure()));
     }
 }
