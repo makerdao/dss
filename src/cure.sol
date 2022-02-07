@@ -31,6 +31,13 @@ contract Cure {
     mapping (address => uint256) public wards;
     uint256 public live;
     address[] public sources;
+    uint256 public cure;
+    mapping (address => Source) public data;
+
+    struct Source {
+        uint128 pos;
+        uint128 amt;
+    }
 
     VatLike public immutable vat;
 
@@ -50,8 +57,16 @@ contract Cure {
     }
 
     // --- Internal ---
+    function _add(uint256 x, uint256 y) internal pure returns (uint256 z) {
+        require((z = x + y) >= x, "Cure/add-overflow");
+    }
+
     function _sub(uint256 x, uint256 y) internal pure returns (uint256 z) {
-        require((z = x - y) <= x);
+        require((z = x - y) <= x, "Cure/sub-underflow");
+    }
+
+    function _toUint128(uint256 x) internal pure returns (uint128 y) {
+        require((y = uint128(x)) == x, "Cure/toUint128-overflow");
     }
 
     constructor(address vat_) public {
@@ -72,24 +87,44 @@ contract Cure {
         emit Deny(usr);
     }
 
-    function addSource(address src_) external auth isLive {
-        sources.push(src_);
-    }
-
-    function delSource(uint256 index) external auth isLive {
-        uint256 length = sources.length;
-        require(index < length, "Cure/non-existing-index");
-        uint256 last = length - 1;
-        if (index < last) {
-            address move = sources[last];
-            sources[index] = move;
+    function addSource(address src) external auth isLive {
+        Source storage data_ = data[src];
+        require(data_.pos == 0, "Cure/already-existing-source");
+        sources.push(src);
+        data_.pos = _toUint128(sources.length);
+        data_.amt = _toUint128(SourceLike(src).cure());
+        if (data_.amt > 0) {
+            cure = _add(cure, data_.amt);
         }
-        sources.pop();
     }
 
-    function cage() external auth {
+    function delSource(address src) external auth isLive {
+        Source memory data_ = data[src];
+        require(data_.pos > 0, "Cure/non-existing-source");
+        uint256 last = sources.length;
+        if (data_.pos < last) {
+            address move = sources[last - 1];
+            sources[data_.pos - 1] = move;
+            data[move].pos = data_.pos;
+        }
+        delete data[src];
+        sources.pop();
+        if (data_.amt > 0) {
+            cure = _sub(cure, data_.amt);
+        }
+    }
+
+    function cage() external auth isLive {
         live = 0;
         emit Cage();
+    }
+
+    function reset(address src) external {
+        uint256 amt = data[src].amt;
+        if (amt > 0) {
+            cure = _sub(cure, amt);
+        }
+        cure = _add(cure, data[src].amt = _toUint128(SourceLike(src).cure()));
     }
 
     // --- Getters ---
@@ -98,10 +133,6 @@ contract Cure {
     }
 
     function debt() external view returns (uint256 debt_) {
-        debt_ = vat.debt();
-
-        for (uint256 i; i < sources.length; i++) {
-            debt_ = _sub(debt_, SourceLike(sources[i]).cure());
-        }
+        debt_ = _sub(vat.debt(), cure);
     }
 }
