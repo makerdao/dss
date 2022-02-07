@@ -4,7 +4,6 @@ pragma solidity >=0.6.12;
 
 import { DSTest } from "ds-test/test.sol";
 import { Cure } from "../cure.sol";
-import { Vat }  from '../vat.sol';
 
 contract SourceMock {
     uint256 public cure;
@@ -20,14 +19,12 @@ contract SourceMock {
 
 contract CureTest is DSTest {
     Cure cure;
-    Vat vat;
 
     function setUp() public {
-        vat = new Vat();
-        cure = new Cure(address(vat));
+        cure = new Cure();
     }
 
-    function test_relyDeny() public {
+    function testRelyDeny() public {
         assertEq(cure.wards(address(123)), 0);
         cure.rely(address(123));
         assertEq(cure.wards(address(123)), 1);
@@ -35,12 +32,12 @@ contract CureTest is DSTest {
         assertEq(cure.wards(address(123)), 0);
     }
 
-    function testFail_rely() public {
+    function testFailRely() public {
         cure.deny(address(this));
         cure.rely(address(123));
     }
 
-    function testFail_deny() public {
+    function testFailDeny() public {
         cure.deny(address(this));
         cure.deny(address(123));
     }
@@ -49,7 +46,7 @@ contract CureTest is DSTest {
         (pos_,) = cure.data(src);
     }
 
-    function test_addSourceDelSource() public {
+    function testAddSourceDelSource() public {
         assertEq(cure.sLength(), 0);
 
         address addr1 = address(new SourceMock(0));
@@ -125,62 +122,51 @@ contract CureTest is DSTest {
         assertEq(pos(addr1), 3);
     }
 
-    function testFail_addSourceAuth() public {
+    function testFailAddSourceAuth() public {
         cure.deny(address(this));
         address addr = address(new SourceMock(0));
         cure.addSource(addr);
     }
 
-    function testFail_delSourceAuth() public {
+    function testFailDelSourceAuth() public {
         address addr = address(new SourceMock(0));
         cure.addSource(addr);
         cure.deny(address(this));
         cure.delSource(addr);
     }
 
-    function testFail_delSourceNonExisting() public {
+    function testFailDelSourceNonExisting() public {
         address addr1 = address(new SourceMock(0));
         cure.addSource(addr1);
         address addr2 = address(new SourceMock(0));
         cure.delSource(addr2);
     }
 
-    function test_debt() public {
-        vat.suck(address(999), address(999), 500_000);
-        assertEq(cure.debt(), 500_000);
-
+    function testCure() public {
         cure.addSource(address(new SourceMock(15_000)));
-        assertEq(cure.debt(), 485_000);
+        assertEq(cure.cure(), 15_000);
         cure.addSource(address(new SourceMock(30_000)));
-        assertEq(cure.debt(), 455_000);
+        assertEq(cure.cure(), 45_000);
         cure.addSource(address(new SourceMock(50_000)));
-        assertEq(cure.debt(), 405_000);
-    }
-
-    function testFail_debtSub() public {
-        vat.suck(address(999), address(999), 10_000);
-        cure.addSource(address(new SourceMock(10_001)));
-        cure.debt();
+        assertEq(cure.cure(), 95_000);
     }
 
     function testReset() public {
-        vat.suck(address(999), address(999), 10_000);
         SourceMock source = new SourceMock(2_000);
         cure.addSource(address(source));
-        assertEq(cure.debt(), 8_000);
+        assertEq(cure.cure(), 2_000);
         source.update(4_000);
-        assertEq(cure.debt(), 8_000);
+        assertEq(cure.cure(), 2_000);
         cure.reset(address(source));
-        assertEq(cure.debt(), 6_000);
+        assertEq(cure.cure(), 4_000);
     }
 
     function testResetNoChange() public {
-        vat.suck(address(999), address(999), 10_000);
         SourceMock source = new SourceMock(2_000);
         cure.addSource(address(source));
-        assertEq(cure.debt(), 8_000);
+        assertEq(cure.cure(), 2_000);
         cure.reset(address(source));
-        assertEq(cure.debt(), 8_000);
+        assertEq(cure.cure(), 2_000);
     }
 
     function testCage() public {

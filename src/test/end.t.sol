@@ -231,7 +231,7 @@ contract EndTest is DSTest {
         vat.file("Line",         rad(1_000_000 ether));
         vat.rely(address(spot));
 
-        cure = new Cure(address(vat));
+        cure = new Cure();
 
         end = new End();
         end.file("vat", address(vat));

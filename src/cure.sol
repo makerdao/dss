@@ -19,10 +19,6 @@
 
 pragma solidity >=0.6.12;
 
-interface VatLike {
-    function debt() external view returns (uint256);
-}
-
 interface SourceLike {
     function cure() external view returns (uint256);
 }
@@ -38,8 +34,6 @@ contract Cure {
         uint128 pos;
         uint128 amt;
     }
-
-    VatLike public immutable vat;
 
     // --- Events ---
     event Rely(address indexed usr);
@@ -69,14 +63,16 @@ contract Cure {
         require((y = uint128(x)) == x, "Cure/toUint128-overflow");
     }
 
-    constructor(address vat_) public {
+    constructor() public {
         live = 1;
-        vat = VatLike(vat_);
         wards[msg.sender] = 1;
         emit Rely(msg.sender);
     }
 
-    // --- Auth ---
+    function sLength() external view returns (uint256 size) {
+        size = sources.length;
+    }
+
     function rely(address usr) external auth isLive {
         wards[usr] = 1;
         emit Rely(usr);
@@ -125,14 +121,5 @@ contract Cure {
             cure = _sub(cure, amt);
         }
         cure = _add(cure, data[src].amt = _toUint128(SourceLike(src).cure()));
-    }
-
-    // --- Getters ---
-    function sLength() external view returns (uint256 size) {
-        size = sources.length;
-    }
-
-    function debt() external view returns (uint256 debt_) {
-        debt_ = _sub(vat.debt(), cure);
     }
 }
