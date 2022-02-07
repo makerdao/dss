@@ -7,10 +7,10 @@ import { Cure } from "../cure.sol";
 import { Vat }  from '../vat.sol';
 
 contract SourceMock {
-    uint256 public totalDebt;
+    uint256 public cure;
 
-    constructor(uint256 totalDebt_) public {
-        totalDebt = totalDebt_;
+    constructor(uint256 cure_) public {
+        cure = cure_;
     }
 }
 
@@ -42,14 +42,14 @@ contract CureTest is DSTest {
     }
 
     function test_file() public {
-        assertEq(cure.totalDebt(), 0);
-        cure.file("totalDebt", 123);
-        assertEq(cure.totalDebt(), 123);
+        assertEq(cure.cure(), 0);
+        cure.file("cure", 123);
+        assertEq(cure.cure(), 123);
     }
 
     function testFail_file() public {
         cure.deny(address(this));
-        cure.file("totalDebt", 123);
+        cure.file("cure", 123);
     }
 
     function test_addSourceDelSource() public {
@@ -124,7 +124,7 @@ contract CureTest is DSTest {
         vat.suck(address(999), address(999), 500_000);
         assertEq(cure.debt(), 500_000);
 
-        cure.file("totalDebt", 10_000);
+        cure.file("cure", 10_000);
         assertEq(cure.debt(), 490_000);
         cure.addSource(address(new SourceMock(15_000)));
         assertEq(cure.debt(), 475_000);
@@ -136,13 +136,13 @@ contract CureTest is DSTest {
 
     function testFail_debtSub() public {
         vat.suck(address(999), address(999), 9_999);
-        cure.file("totalDebt", 10_000);
+        cure.file("cure", 10_000);
         cure.debt();
     }
 
     function testFail_debtSub2() public {
         vat.suck(address(999), address(999), 10_000);
-        cure.file("totalDebt", 10_000);
+        cure.file("cure", 10_000);
         cure.addSource(address(new SourceMock(1)));
         cure.debt();
     }

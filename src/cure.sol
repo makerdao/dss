@@ -24,12 +24,12 @@ interface VatLike {
 }
 
 interface SourceLike {
-    function totalDebt() external view returns (uint256);
+    function cure() external view returns (uint256);
 }
 
 contract Cure {
     mapping (address => uint256) public wards;
-    uint256 public totalDebt;
+    uint256 public cure;
     address[] public sources;
 
     VatLike public immutable vat;
@@ -67,7 +67,7 @@ contract Cure {
     }
 
     function file(bytes32 what, uint256 data) external auth {
-        if (what == "totalDebt") totalDebt = data;
+        if (what == "cure") cure = data;
         else revert("Cure/file-unrecognized-param");
         emit File(what, data);
     }
@@ -93,10 +93,10 @@ contract Cure {
     }
 
     function debt() external view returns (uint256 debt_) {
-        debt_ = _sub(vat.debt(), totalDebt);
+        debt_ = _sub(vat.debt(), cure);
 
         for (uint256 i; i < sources.length; i++) {
-            debt_ = _sub(debt_, SourceLike(sources[i]).totalDebt());
+            debt_ = _sub(debt_, SourceLike(sources[i]).cure());
         }
     }
 }
