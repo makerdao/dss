@@ -116,13 +116,13 @@ contract Cure {
     }
 
     function reset(address src) external {
-        uint256 amt = data[src].amt;
+        uint128 amt = data[src].amt;
         if (amt > 0) {
             total = _sub(total, amt);
         }
-    data[src].amt = amt = _toUint128(SourceLike(src).cure());
-    if (amt > 0) {
-        total = _add(total, amt);   
-    }
+        data[src].amt = amt = _toUint128(SourceLike(src).cure());
+        if (amt > 0) {
+            total = _add(total, amt);
+        }
     }
 }
