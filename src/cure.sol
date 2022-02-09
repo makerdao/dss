@@ -120,6 +120,9 @@ contract Cure {
         if (amt > 0) {
             total = _sub(total, amt);
         }
-        total = _add(total, data[src].amt = _toUint128(SourceLike(src).cure()));
+    data[src].amt = amt = _toUint128(SourceLike(src).cure());
+    if (amt > 0) {
+        total = _add(total, amt);   
+    }
     }
 }
