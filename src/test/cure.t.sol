@@ -42,84 +42,81 @@ contract CureTest is DSTest {
         cure.deny(address(123));
     }
 
-    function pos(address src) internal returns (uint256 pos_) {
-        (pos_,) = cure.data(src);
-    }
 
     function testAddSourceDelSource() public {
-        assertEq(cure.sLength(), 0);
+        assertEq(cure.count(), 0);
 
         address addr1 = address(new SourceMock(0));
         cure.addSource(addr1);
-        assertEq(cure.sLength(), 1);
+        assertEq(cure.count(), 1);
 
         address addr2 = address(new SourceMock(0));
         cure.addSource(addr2);
-        assertEq(cure.sLength(), 2);
+        assertEq(cure.count(), 2);
 
         address addr3 = address(new SourceMock(0));
         cure.addSource(addr3);
-        assertEq(cure.sLength(), 3);
+        assertEq(cure.count(), 3);
 
         assertEq(cure.sources(0), addr1);
-        assertEq(pos(addr1), 1);
+        assertEq(cure.pos(addr1), 1);
         assertEq(cure.sources(1), addr2);
-        assertEq(pos(addr2), 2);
+        assertEq(cure.pos(addr2), 2);
         assertEq(cure.sources(2), addr3);
-        assertEq(pos(addr3), 3);
+        assertEq(cure.pos(addr3), 3);
 
         cure.delSource(addr3);
-        assertEq(cure.sLength(), 2);
+        assertEq(cure.count(), 2);
         assertEq(cure.sources(0), addr1);
-        assertEq(pos(addr1), 1);
+        assertEq(cure.pos(addr1), 1);
         assertEq(cure.sources(1), addr2);
-        assertEq(pos(addr2), 2);
+        assertEq(cure.pos(addr2), 2);
 
         cure.addSource(addr3);
-        assertEq(cure.sLength(), 3);
+        assertEq(cure.count(), 3);
         assertEq(cure.sources(0), addr1);
-        assertEq(pos(addr1), 1);
+        assertEq(cure.pos(addr1), 1);
         assertEq(cure.sources(1), addr2);
-        assertEq(pos(addr2), 2);
+        assertEq(cure.pos(addr2), 2);
         assertEq(cure.sources(2), addr3);
-        assertEq(pos(addr3), 3);
+        assertEq(cure.pos(addr3), 3);
 
         cure.delSource(addr1);
-        assertEq(cure.sLength(), 2);
+        assertEq(cure.count(), 2);
         assertEq(cure.sources(0), addr3);
-        assertEq(pos(addr3), 1);
+        assertEq(cure.pos(addr3), 1);
         assertEq(cure.sources(1), addr2);
-        assertEq(pos(addr2), 2);
+        assertEq(cure.pos(addr2), 2);
 
         cure.addSource(addr1);
-        assertEq(cure.sLength(), 3);
+        assertEq(cure.count(), 3);
         assertEq(cure.sources(0), addr3);
-        assertEq(pos(addr3), 1);
+        assertEq(cure.pos(addr3), 1);
         assertEq(cure.sources(1), addr2);
-        assertEq(pos(addr2), 2);
+        assertEq(cure.pos(addr2), 2);
         assertEq(cure.sources(2), addr1);
-        assertEq(pos(addr1), 3);
+        assertEq(cure.pos(addr1), 3);
 
         address addr4 = address(new SourceMock(0));
         cure.addSource(addr4);
-        assertEq(cure.sLength(), 4);
+        assertEq(cure.count(), 4);
         assertEq(cure.sources(0), addr3);
-        assertEq(pos(addr3), 1);
+        assertEq(cure.pos(addr3), 1);
         assertEq(cure.sources(1), addr2);
-        assertEq(pos(addr2), 2);
+        assertEq(cure.pos(addr2), 2);
         assertEq(cure.sources(2), addr1);
-        assertEq(pos(addr1), 3);
+        assertEq(cure.pos(addr1), 3);
         assertEq(cure.sources(3), addr4);
-        assertEq(pos(addr4), 4);
+        assertEq(cure.pos(addr4), 4);
 
         cure.delSource(addr2);
-        assertEq(cure.sLength(), 3);
+        assertEq(cure.count(), 3);
         assertEq(cure.sources(0), addr3);
-        assertEq(pos(addr3), 1);
+        assertEq(cure.pos(addr3), 1);
         assertEq(cure.sources(1), addr4);
-        assertEq(pos(addr4), 2);
+        assertEq(cure.pos(addr4), 2);
         assertEq(cure.sources(2), addr1);
-        assertEq(pos(addr1), 3);
+        assertEq(cure.pos(addr1), 3);
     }
 
     function testFailAddSourceAuth() public {

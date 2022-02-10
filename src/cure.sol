@@ -28,12 +28,8 @@ contract Cure {
     uint256 public live;
     address[] public sources;
     uint256 public total;
-    mapping (address => Source) public data;
-
-    struct Source {
-        uint128 pos;
-        uint128 amt;
-    }
+    mapping (address => uint256) public pos; // position in sources + 1, 0 means a source does not exist
+    mapping (address => uint256) public amt;
 
     // --- Events ---
     event Rely(address indexed usr);
@@ -59,18 +55,18 @@ contract Cure {
         require((z = x - y) <= x, "Cure/sub-underflow");
     }
 
-    function _toUint128(uint256 x) internal pure returns (uint128 y) {
-        require((y = uint128(x)) == x, "Cure/toUint128-overflow");
-    }
-
     constructor() public {
         live = 1;
         wards[msg.sender] = 1;
         emit Rely(msg.sender);
     }
 
-    function sLength() external view returns (uint256 size) {
-        size = sources.length;
+    function count() external view returns (uint256 count_) {
+        count_ = sources.length;
+    }
+
+    function list() external view returns (address[] memory) {
+        return sources;
     }
 
     function rely(address usr) external auth isLive {
@@ -84,30 +80,26 @@ contract Cure {
     }
 
     function addSource(address src) external auth isLive {
-        Source storage data_ = data[src];
-        require(data_.pos == 0, "Cure/already-existing-source");
+        require(pos[src] == 0, "Cure/already-existing-source");
         sources.push(src);
-        data_.pos = _toUint128(sources.length);
-        data_.amt = _toUint128(SourceLike(src).cure());
-        if (data_.amt > 0) {
-            total = _add(total, data_.amt);
-        }
+        pos[src] = sources.length;
+        uint256 amt_ = amt[src] = SourceLike(src).cure();
+        total = _add(total, amt_);
     }
 
     function delSource(address src) external auth isLive {
-        Source memory data_ = data[src];
-        require(data_.pos > 0, "Cure/non-existing-source");
+        uint256 pos_ = pos[src];
+        require(pos_ > 0, "Cure/non-existing-source");
         uint256 last = sources.length;
-        if (data_.pos < last) {
+        if (pos_ < last) {
             address move = sources[last - 1];
-            sources[data_.pos - 1] = move;
-            data[move].pos = data_.pos;
+            sources[pos_ - 1] = move;
+            pos[move] = pos_;
         }
-        delete data[src];
         sources.pop();
-        if (data_.amt > 0) {
-            total = _sub(total, data_.amt);
-        }
+        total = _sub(total, amt[src]);
+        delete pos[src];
+        delete amt[src];
     }
 
     function cage() external auth isLive {
@@ -116,13 +108,8 @@ contract Cure {
     }
 
     function reset(address src) external {
-        uint128 amt = data[src].amt;
-        if (amt > 0) {
-            total = _sub(total, amt);
-        }
-        data[src].amt = amt = _toUint128(SourceLike(src).cure());
-        if (amt > 0) {
-            total = _add(total, amt);
-        }
+        uint256 oldAmt_ = amt[src];
+        uint256 newAmt_ = amt[src] = SourceLike(src).cure();
+        total = _add(_sub(total, oldAmt_), newAmt_);
     }
 }
