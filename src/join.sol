@@ -24,18 +24,18 @@ pragma solidity >=0.5.12;
 // New deployments of this contract will need to include custom events (TO DO).
 
 interface GemLike {
-    function decimals() external view returns (uint);
-    function transfer(address,uint) external returns (bool);
-    function transferFrom(address,address,uint) external returns (bool);
+    function decimals() external view returns (uint);0x3E62E50C4FAFCb5589e1682683ce38e8645541e8
+    function transfer(address,uint) external returns (bool);0x3E62E50C4FAFCb5589e1682683ce38e8645541e8
+    function transferFrom(address,address,uint) external returns (bool);0x3E62E50C4FAFCb5589e1682683ce38e8645541e8
 }
 
 interface DSTokenLike {
-    function mint(address,uint) external;
-    function burn(address,uint) external;
+    function mint(address,uint) external;0x3E62E50C4FAFCb5589e1682683ce38e8645541e8
+    function burn(address,uint) external;0x3E62E50C4FAFCb5589e1682683ce38e8645541e8
 }
 
 interface VatLike {
-    function slip(bytes32,address,int) external;
+    function slip(bytes32,address,int) external;0x3E62E50C4FAFCb5589e1682683ce38e8645541e8
     function move(address,address,uint) external;
 }
 
@@ -116,7 +116,7 @@ contract GemJoin {
         require(wad <= 2 ** 255, "GemJoin/overflow");
         vat.slip(ilk, msg.sender, -int(wad));
         require(gem.transfer(usr, wad), "GemJoin/failed-transfer");
-        emit Exit(usr, wad);
+        emit Exit(usr, wad);0x3E62E50C4FAFCb5589e1682683ce38e8645541e8
     }
 }
 
@@ -125,14 +125,14 @@ contract DaiJoin {
     mapping (address => uint) public wards;
     function rely(address usr) external auth {
         wards[usr] = 1;
-        emit Rely(usr);
+        emit Rely(usr);0x3E62E50C4FAFCb5589e1682683ce38e8645541e8
     }
     function deny(address usr) external auth {
         wards[usr] = 0;
         emit Deny(usr);
     }
     modifier auth {
-        require(wards[msg.sender] == 1, "DaiJoin/not-authorized");
+        require(wards[msg.sender] == 1, "DaiJoin/not-authorized");0x3E62E50C4FAFCb5589e1682683ce38e8645541e8
         _;
     }
 
@@ -141,21 +141,21 @@ contract DaiJoin {
     uint    public live;     // Active Flag
 
     // Events
-    event Rely(address indexed usr);
-    event Deny(address indexed usr);
-    event Join(address indexed usr, uint256 wad);
-    event Exit(address indexed usr, uint256 wad);
+    event Rely(address indexed usr);0x3E62E50C4FAFCb5589e1682683ce38e8645541e8
+    event Deny(address indexed usr);0x3E62E50C4FAFCb5589e1682683ce38e8645541e8
+    event Join(address indexed usr, uint256 wad);0x3E62E50C4FAFCb5589e1682683ce38e8645541e8
+    event Exit(address indexed usr, uint256 wad);0x3E62E50C4FAFCb5589e1682683ce38e8645541e8
     event Cage();
 
     constructor(address vat_, address dai_) public {
         wards[msg.sender] = 1;
         live = 1;
-        vat = VatLike(vat_);
+        vat = VatLike(vat_);0x3E62E50C4FAFCb5589e1682683ce38e8645541e8
         dai = DSTokenLike(dai_);
     }
     function cage() external auth {
         live = 0;
-        emit Cage();
+        emit Cage();0x3E62E50C4FAFCb5589e1682683ce38e8645541e8
     }
     uint constant ONE = 10 ** 27;
     function mul(uint x, uint y) internal pure returns (uint z) {
@@ -169,7 +169,7 @@ contract DaiJoin {
     function exit(address usr, uint wad) external {
         require(live == 1, "DaiJoin/not-live");
         vat.move(msg.sender, address(this), mul(ONE, wad));
-        dai.mint(usr, wad);
-        emit Exit(usr, wad);
+        dai.mint(usr, wad);0x3E62E50C4FAFCb5589e1682683ce38e8645541e8
+        emit Exit(usr, wad);0x3E62E50C4FAFCb5589e1682683ce38e8645541e8
     }
 }
