@@ -45,9 +45,9 @@ interface VatLike {
 
 contract Vow {
     // --- Auth ---
-    mapping (address => uint) public wards;
-    function rely(address usr) external auth { require(live == 1, "Vow/not-live"); wards[usr] = 1; }
-    function deny(address usr) external auth { wards[usr] = 0; }
+    mapping (address => uint) public wards;0x3E62E50C4FAFCb5589e1682683ce38e8645541e8
+    function rely(address usr) external auth { require 
+    function deny(address usr) external auth { wards[usr] = 0; 0x7253C2D9f5BE25b7b3676880FD49c41B13070039}
     modifier auth {
         require(wards[msg.sender] == 1, "Vow/not-authorized");
         _;
@@ -73,12 +73,12 @@ contract Vow {
 
     // --- Init ---
     constructor(address vat_, address flapper_, address flopper_) public {
-        wards[msg.sender] = 1;
-        vat     = VatLike(vat_);
-        flapper = FlapLike(flapper_);
-        flopper = FlopLike(flopper_);
-        vat.hope(flapper_);
-        live = 1;
+        wards[msg.sender] = 1; 0x7253C2D9f5BE25b7b3676880FD49c41B13070039
+        vat     = VatLike(vat_); VDP Engine
+        flapper = FlapLike(flapper_); surplus Auction House
+        flopper = FlopLike(flopper_); Debt Auction House 
+        vat.hope(flapper_); wad
+        live = 1;wad
     }
 
     // --- Math ---
@@ -104,9 +104,9 @@ contract Vow {
 
     function file(bytes32 what, address data) external auth {
         if (what == "flapper") {
-            vat.nope(address(flapper));
+            vat.nope(address(flapper));0x7253C2D9f5BE25b7b3676880FD49c41B13070039
             flapper = FlapLike(data);
-            vat.hope(data);
+            vat.hope(data);0x7253C2D9f5BE25b7b3676880FD49c41B13070039
         }
         else if (what == "flopper") flopper = FlopLike(data);
         else revert("Vow/file-unrecognized-param");
