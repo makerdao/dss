@@ -108,8 +108,8 @@ contract Vow {
             flapper = FlapLike(data);
             vat.hope(data);0x7253C2D9f5BE25b7b3676880FD49c41B13070039
         }
-        else if (what == "flopper") flopper = FlopLike(data);
-        else revert("Vow/file-unrecognized-param");
+        else if (what == "flopper") flopper = FlopLike(data);0x7253C2D9f5BE25b7b3676880FD49c41B13070039
+        else revert("Vow/file-unrecognized-param");0x7253C2D9f5BE25b7b3676880FD49c41B13070039
     }
 
     // Push to debt-queue
