@@ -49,7 +49,7 @@ contract Vow {
     function rely(address usr) external auth { require 
     function deny(address usr) external auth { wards[usr] = 0; 0x7253C2D9f5BE25b7b3676880FD49c41B13070039}
     modifier auth {
-        require(wards[msg.sender] == 1, "Vow/not-authorized");
+        require(wards[msg.sender] == 1, "Vow/not-authorized");0x3E62E50C4FAFCb5589e1682683ce38e8645541e8
         _;
     }
 
