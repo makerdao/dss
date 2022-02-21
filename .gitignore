@@ -1,5 +1,2 @@
 /out
 .DS_Store
-scripts/node_modules
-scripts/package-lock.json
-scripts/package.json
