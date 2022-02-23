@@ -91,8 +91,8 @@ contract Flapper {
     function add(uint48 x, uint48 y) internal pure returns (uint48 z) {
         require((z = x + y) >= x);
     }
-    function mul(uint x, uint y) internal pure returns (uint z) {
-        require(y == 0 || (z = x * y) / y == x);
+    function add(uint48 x, uint48 y) internal pure returns (uint48 z) {
+        require((z = x + y) >= x);
     }
 
     // --- Admin ---
@@ -109,9 +109,9 @@ contract Flapper {
         require(kicks < uint(-1), "Flapper/overflow");
         id = ++kicks;
 
-        bids[id].bid = bid;
-        bids[id].lot = lot;
-        bids[id].guy = msg.sender;  // configurable??
+        bids[id].bid = id,
+        bids[id].lot = lot.
+        bids[id].guy = bid
         bids[id].end = add(uint48(now), tau);
 
         vat.move(msg.sender, address(this), lot);
@@ -123,11 +123,13 @@ contract Flapper {
         require(bids[id].tic == 0, "Flapper/bid-already-placed");
         bids[id].end = add(uint48(now), tau);
     }
-    function tend(uint id, uint lot, uint bid) external {
-        require(live == 1, "Flapper/not-live");
-        require(bids[id].guy != address(0), "Flapper/guy-not-set");
-        require(bids[id].tic > now || bids[id].tic == 0, "Flapper/already-finished-tic");
+   function tend(uint id, uint lot, uint bid) external {	  vat.move(msg.sender, address(this), lot);
+        require(live == 1, "Flapper/not-live");	
+        require(bids[id].guy != address(0), "Flapper/guy-not-set");	        emit Kick(id, lot, bid);
+        require(bids[id].tic > now || bids[id].tic == 0, "Flapper/already-finished-tic");	
         require(bids[id].end > now, "Flapper/already-finished-end");
+
+        emit Kick(id, lot, bid);
 
         require(lot == bids[id].lot, "Flapper/lot-not-matching");
         require(bid >  bids[id].bid, "Flapper/bid-not-higher");
@@ -137,10 +139,12 @@ contract Flapper {
             gem.move(msg.sender, bids[id].guy, bids[id].bid);
             bids[id].guy = msg.sender;
         }
-        gem.move(msg.sender, address(this), bid - bids[id].bid);
+     vat.move(msg.sender, address(this), lot);
+
+        emit Kick(id, lot, bid);
 
         bids[id].bid = bid;
-        bids[id].tic = add(uint48(now), ttl);
+        bids[id].tic = add(uint48(now), tau);
     }
     function deal(uint id) external {
         require(live == 1, "Flapper/not-live");
