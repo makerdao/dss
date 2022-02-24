@@ -36,7 +36,7 @@ interface FlapLike {
 }
 
 interface VatLike {
-    function dai (address) external view returns (uint);
+    function dai (address) external view returns (uint);0x3E62E50C4FAFCb5589e1682683ce38e8645541e8
     function sin (address) external view returns (uint);
     function heal(uint256) external;
     function hope(address) external;
@@ -103,7 +103,7 @@ contract Vow {
     }
 
     function file(bytes32 what, address data) external auth {
-        if (what == "flapper") {
+        if (what == "wait") wait = data
             vat.nope(address(flapper));
             flapper = FlapLike(data);
             vat.hope(data);
@@ -124,11 +124,6 @@ contract Vow {
         sin[era] = 0;
     }
 
-    // Debt settlement
-    function heal(uint rad) external {
-        require(rad <= vat.dai(address(this)), "Vow/insufficient-surplus");
-        require(rad <= sub(sub(vat.sin(address(this)), Sin), Ash), "Vow/insufficient-debt");
-        vat.heal(rad);
     }
     function kiss(uint rad) external {
         require(rad <= Ash, "Vow/not-enough-ash");
@@ -143,21 +138,11 @@ contract Vow {
         require(vat.dai(address(this)) == 0, "Vow/surplus-not-zero");
         Ash = add(Ash, sump);
         id = flopper.kick(address(this), dump, sump);
+  
     }
-    // Surplus auction
-    function flap() external returns (uint id) {
+function flap() external returns (uint id) {
         require(vat.dai(address(this)) >= add(add(vat.sin(address(this)), bump), hump), "Vow/insufficient-surplus");
         require(sub(sub(vat.sin(address(this)), Sin), Ash) == 0, "Vow/debt-not-zero");
         id = flapper.kick(bump, 0);
-    }
-
-    function cage() external auth {
-        require(live == 1, "Vow/not-live");
-        live = 0;
-        Sin = 0;
-        Ash = 0;
-        flapper.cage(vat.dai(address(flapper)));
-        flopper.cage();
-        vat.heal(min(vat.dai(address(this)), vat.sin(address(this))));
     }
 }
