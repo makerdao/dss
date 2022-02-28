@@ -166,6 +166,11 @@ contract CureTest is DSTest {
         assertEq(cure.total(), 2_000);
     }
 
+    function testFailResetNotAdded() public {
+        SourceMock source = new SourceMock(2_000);
+        cure.reset(address(source));
+    }
+
     function testCage() public {
         assertEq(cure.live(), 1);
         cure.cage();
