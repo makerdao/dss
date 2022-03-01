@@ -42,7 +42,6 @@ contract CureTest is DSTest {
         cure.deny(address(123));
     }
 
-
     function testAddSourceDelSource() public {
         assertEq(cure.count(), 0);
 
