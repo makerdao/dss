@@ -108,7 +108,7 @@ contract Cure {
     }
 
     function reset(address src) external {
-        require(pos[src] == 1, "Cure/non-existing-source");
+        require(pos[src] > 0, "Cure/non-existing-source");
         uint256 oldAmt_ = amt[src];
         uint256 newAmt_ = amt[src] = SourceLike(src).cure();
         total = _add(_sub(total, oldAmt_), newAmt_);
