@@ -111,6 +111,7 @@ interface SpotLike {
 
 interface CureLike {
     function total() external view returns (uint256);
+    function cage() external;
 }
 
 /*
@@ -339,6 +340,7 @@ contract End {
         vow.cage();
         spot.cage();
         pot.cage();
+        cure.cage();
         emit Cage();
     }
 

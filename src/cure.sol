@@ -41,11 +41,6 @@ contract Cure {
         _;
     }
 
-    modifier isLive {
-        require(live == 1, "Cure/not-live");
-        _;
-    }
-
     // --- Internal ---
     function _add(uint256 x, uint256 y) internal pure returns (uint256 z) {
         require((z = x + y) >= x, "Cure/add-overflow");
@@ -69,25 +64,27 @@ contract Cure {
         return sources;
     }
 
-    function rely(address usr) external auth isLive {
+    function rely(address usr) external auth {
+        require(live == 1, "Cure/not-live");
         wards[usr] = 1;
         emit Rely(usr);
     }
 
-    function deny(address usr) external auth isLive {
+    function deny(address usr) external auth {
+        require(live == 1, "Cure/not-live");
         wards[usr] = 0;
         emit Deny(usr);
     }
 
-    function addSource(address src) external auth isLive {
+    function addSource(address src) external auth {
+        require(live == 1, "Cure/not-live");
         require(pos[src] == 0, "Cure/already-existing-source");
         sources.push(src);
         pos[src] = sources.length;
-        uint256 amt_ = amt[src] = SourceLike(src).cure();
-        total = _add(total, amt_);
     }
 
-    function delSource(address src) external auth isLive {
+    function delSource(address src) external auth {
+        require(live == 1, "Cure/not-live");
         uint256 pos_ = pos[src];
         require(pos_ > 0, "Cure/non-existing-source");
         uint256 last = sources.length;
@@ -97,17 +94,18 @@ contract Cure {
             pos[move] = pos_;
         }
         sources.pop();
-        total = _sub(total, amt[src]);
         delete pos[src];
         delete amt[src];
     }
 
-    function cage() external auth isLive {
+    function cage() external auth {
+        require(live == 1, "Cure/not-live");
         live = 0;
         emit Cage();
     }
 
-    function reset(address src) external {
+    function set(address src) external {
+        require(live == 0, "Cure/still-live");
         require(pos[src] > 0, "Cure/non-existing-source");
         uint256 oldAmt_ = amt[src];
         uint256 newAmt_ = amt[src] = SourceLike(src).cure();

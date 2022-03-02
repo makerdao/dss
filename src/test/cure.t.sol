@@ -138,58 +138,81 @@ contract CureTest is DSTest {
         cure.delSource(addr2);
     }
 
-    function testCure() public {
-        cure.addSource(address(new SourceMock(15_000)));
-        assertEq(cure.total(), 15_000);
-        cure.addSource(address(new SourceMock(30_000)));
-        assertEq(cure.total(), 45_000);
-        cure.addSource(address(new SourceMock(50_000)));
-        assertEq(cure.total(), 95_000);
-    }
-
-    function testReset() public {
-        SourceMock source1 = new SourceMock(2_000);
-        SourceMock source2 = new SourceMock(3_000);
-        cure.addSource(address(source1));
-        cure.addSource(address(source2));
-        assertEq(cure.total(), 5_000);
-        source1.update(4_000);
-        assertEq(cure.total(), 5_000);
-        cure.reset(address(source1));
-        assertEq(cure.total(), 7_000);
-        source2.update(6_000);
-        assertEq(cure.total(), 7_000);
-        cure.reset(address(source2));
-        assertEq(cure.total(), 10_000);
-    }
-
-    function testResetNoChange() public {
-        SourceMock source = new SourceMock(2_000);
-        cure.addSource(address(source));
-        assertEq(cure.total(), 2_000);
-        cure.reset(address(source));
-        assertEq(cure.total(), 2_000);
-    }
-
-    function testFailResetNotAdded() public {
-        SourceMock source = new SourceMock(2_000);
-        cure.reset(address(source));
-    }
-
     function testCage() public {
         assertEq(cure.live(), 1);
         cure.cage();
         assertEq(cure.live(), 0);
     }
 
-    function testResetAfterCage() public {
-        SourceMock source = new SourceMock(2_000);
-        cure.addSource(address(source));
-        assertEq(cure.total(), 2_000);
+    function testCure() public {
+        address source1 = address(new SourceMock(15_000));
+        address source2 = address(new SourceMock(30_000));
+        address source3 = address(new SourceMock(50_000));
+        cure.addSource(source1);
+        cure.addSource(source2);
+        cure.addSource(source3);
+
         cure.cage();
-        source.update(1_000);
-        cure.reset(address(source));
-        assertEq(cure.total(), 1_000);
+
+        cure.set(source1);
+        assertEq(cure.total(), 15_000);
+        cure.set(source2);
+        assertEq(cure.total(), 45_000);
+        cure.set(source3);
+        assertEq(cure.total(), 95_000);
+    }
+
+    function testSetMultipleTimes() public {
+        address source1 = address(new SourceMock(2_000));
+        address source2 = address(new SourceMock(3_000));
+        cure.addSource(source1);
+        cure.addSource(source2);
+
+        cure.cage();
+
+        cure.set(source1);
+        cure.set(source2);
+        assertEq(cure.total(), 5_000);
+
+        SourceMock(source1).update(4_000);
+        assertEq(cure.total(), 5_000);
+
+        cure.set(source1);
+        assertEq(cure.total(), 7_000);
+
+        SourceMock(source2).update(6_000);
+        assertEq(cure.total(), 7_000);
+
+        cure.set(source2);
+        assertEq(cure.total(), 10_000);
+    }
+
+    function testSetNoChange() public {
+        address source = address(new SourceMock(2_000));
+        cure.addSource(source);
+
+        cure.cage();
+
+        cure.set(source);
+        assertEq(cure.total(), 2_000);
+
+        cure.set(source);
+        assertEq(cure.total(), 2_000);
+    }
+
+    function testFailSetNotCaged() public {
+        address source = address(new SourceMock(2_000));
+        cure.addSource(source);
+
+        cure.set(source);
+    }
+
+    function testFailSetNotAdded() public {
+        address source = address(new SourceMock(2_000));
+
+        cure.cage();
+
+        cure.set(source);
     }
 
     function testFailCagedRely() public {
@@ -204,14 +227,14 @@ contract CureTest is DSTest {
 
     function testFailCagedAddSource() public {
         cure.cage();
-        address addr = address(new SourceMock(0));
-        cure.addSource(addr);
+        address source = address(new SourceMock(0));
+        cure.addSource(source);
     }
 
     function testFailCagedDelSource() public {
-        address addr = address(new SourceMock(0));
-        cure.addSource(addr);
+        address source = address(new SourceMock(0));
+        cure.addSource(source);
         cure.cage();
-        cure.delSource(addr);
+        cure.delSource(source);
     }
 }

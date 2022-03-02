@@ -248,6 +248,7 @@ contract EndTest is DSTest {
         pot.rely(address(end));
         cat.rely(address(end));
         dog.rely(address(end));
+        cure.rely(address(end));
         flap.rely(address(vow));
         flop.rely(address(vow));
     }
