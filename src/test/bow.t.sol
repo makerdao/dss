@@ -8,6 +8,7 @@ import {Flopper as Flop} from './flop.t.sol';
 import {Flapper as Flap} from './flap.t.sol';
 import {TestVat as  Vat} from './vat.t.sol';
 import {Vow}     from '../vow.sol';
+import {Bow}     from '../bow.sol';
 
 interface Hevm {
     function warp(uint256) external;
@@ -20,11 +21,12 @@ contract Gem {
     }
 }
 
-contract VowTest is DSTest {
+contract BowTest is DSTest {
     Hevm hevm;
 
     Vat  vat;
     Vow  vow;
+    Bow  bow;
     Flop flop;
     Flap flap;
     Gem  gov;
@@ -39,20 +41,22 @@ contract VowTest is DSTest {
         flop = new Flop(address(vat), address(gov));
         flap = new Flap(address(vat), address(gov));
 
-        vow = new Vow(address(vat), address(flap), address(flop));
-        flap.rely(address(vow));
-        flop.rely(address(vow));
+        vow = new Vow(address(vat));
+        bow = new Bow(address(vat), address(vow), address(flap), address(flop));
+        vow.hope(address(bow));
+        flap.rely(address(bow));
+        flop.rely(address(bow));
 
-        vow.file("bump", rad(100 ether));
-        vow.file("sump", rad(100 ether));
-        vow.file("dump", 200 ether);
+        bow.file("bump", rad(100 ether));
+        bow.file("sump", rad(100 ether));
+        bow.file("dump", 200 ether);
 
         vat.hope(address(flop));
     }
 
     function try_flog(uint era) internal returns (bool ok) {
         string memory sig = "flog(uint256)";
-        (ok,) = address(vow).call(abi.encodeWithSignature(sig, era));
+        (ok,) = address(bow).call(abi.encodeWithSignature(sig, era));
     }
     function try_dent(uint id, uint lot, uint bid) internal returns (bool ok) {
         string memory sig = "dent(uint256,uint256,uint256)";
@@ -72,7 +76,7 @@ contract VowTest is DSTest {
         string memory sig = "flap()";
         bytes memory data = abi.encodeWithSignature(sig);
 
-        bytes memory can_call = abi.encodeWithSignature("try_call(address,bytes)", vow, data);
+        bytes memory can_call = abi.encodeWithSignature("try_call(address,bytes)", bow, data);
         (bool ok, bytes memory success) = address(this).call(can_call);
 
         ok = abi.decode(success, (bool));
@@ -82,7 +86,7 @@ contract VowTest is DSTest {
         string memory sig = "flop()";
         bytes memory data = abi.encodeWithSignature(sig);
 
-        bytes memory can_call = abi.encodeWithSignature("try_call(address,bytes)", vow, data);
+        bytes memory can_call = abi.encodeWithSignature("try_call(address,bytes)", bow, data);
         (bool ok, bytes memory success) = address(this).call(can_call);
 
         ok = abi.decode(success, (bool));
@@ -95,13 +99,13 @@ contract VowTest is DSTest {
     }
 
     function suck(address who, uint wad) internal {
-        vow.fess(rad(wad));
+        bow.fess(rad(wad));
         vat.init('');
         vat.suck(address(vow), who, rad(wad));
     }
     function flog(uint wad) internal {
         suck(address(0), wad);  // suck dai into the zero address
-        vow.flog(now);
+        bow.flog(now);
     }
     function heal(uint wad) internal {
         vow.heal(rad(wad));
@@ -111,29 +115,29 @@ contract VowTest is DSTest {
         Flap newFlap = new Flap(address(vat), address(gov));
         Flop newFlop = new Flop(address(vat), address(gov));
 
-        newFlap.rely(address(vow));
-        newFlop.rely(address(vow));
+        newFlap.rely(address(bow));
+        newFlop.rely(address(bow));
 
-        assertEq(vat.can(address(vow), address(flap)), 1);
-        assertEq(vat.can(address(vow), address(newFlap)), 0);
+        assertEq(vat.can(address(bow), address(flap)), 1);
+        assertEq(vat.can(address(bow), address(newFlap)), 0);
 
-        vow.file('flapper', address(newFlap));
-        vow.file('flopper', address(newFlop));
+        bow.file('flapper', address(newFlap));
+        bow.file('flopper', address(newFlop));
 
-        assertEq(address(vow.flapper()), address(newFlap));
-        assertEq(address(vow.flopper()), address(newFlop));
+        assertEq(address(bow.flapper()), address(newFlap));
+        assertEq(address(bow.flopper()), address(newFlop));
 
-        assertEq(vat.can(address(vow), address(flap)), 0);
-        assertEq(vat.can(address(vow), address(newFlap)), 1);
+        assertEq(vat.can(address(bow), address(flap)), 0);
+        assertEq(vat.can(address(bow), address(newFlap)), 1);
     }
 
     function test_flog_wait() public {
-        assertEq(vow.wait(), 0);
-        vow.file('wait', uint(100 seconds));
-        assertEq(vow.wait(), 100 seconds);
+        assertEq(bow.wait(), 0);
+        bow.file('wait', uint(100 seconds));
+        assertEq(bow.wait(), 100 seconds);
 
         uint tic = now;                                                                                                                                                       
-        vow.fess(100 ether);                                                     
+        bow.fess(100 ether);                                                     
         hevm.warp(tic + 99 seconds);                                             
         assertTrue(!try_flog(tic) );                                             
         hevm.warp(tic + 100 seconds);                                            
@@ -143,7 +147,7 @@ contract VowTest is DSTest {
     function test_no_reflop() public {
         flog(100 ether);
         assertTrue( can_flop() );
-        vow.flop();
+        bow.flop();
         assertTrue(!can_flop() );
     }
 
@@ -163,21 +167,21 @@ contract VowTest is DSTest {
     }
 
     function test_no_flap_pending_sin() public {
-        vow.file("bump", uint256(0 ether));
+        bow.file("bump", uint256(0 ether));
         flog(100 ether);
 
         vat.mint(address(vow), 50 ether);
         assertTrue(!can_flap() );
     }
     function test_no_flap_nonzero_woe() public {
-        vow.file("bump", uint256(0 ether));
+        bow.file("bump", uint256(0 ether));
         flog(100 ether);
         vat.mint(address(vow), 50 ether);
         assertTrue(!can_flap() );
     }
     function test_no_flap_pending_flop() public {
         flog(100 ether);
-        vow.flop();
+        bow.flop();
 
         vat.mint(address(vow), 100 ether);
 
@@ -185,7 +189,7 @@ contract VowTest is DSTest {
     }
     function test_no_flap_pending_heal() public {
         flog(100 ether);
-        uint id = vow.flop();
+        uint id = bow.flop();
 
         vat.mint(address(this), 100 ether);
         flop.dent(id, 0 ether, rad(100 ether));
@@ -195,7 +199,7 @@ contract VowTest is DSTest {
 
     function test_no_surplus_after_good_flop() public {
         flog(100 ether);
-        uint id = vow.flop();
+        uint id = bow.flop();
         vat.mint(address(this), 100 ether);
 
         flop.dent(id, 0 ether, rad(100 ether));  // flop succeeds..
@@ -205,7 +209,7 @@ contract VowTest is DSTest {
 
     function test_multiple_flop_dents() public {
         flog(100 ether);
-        uint id = vow.flop();
+        uint id = bow.flop();
 
         vat.mint(address(this), 100 ether);
         assertTrue(try_dent(id, 2 ether,  rad(100 ether)));

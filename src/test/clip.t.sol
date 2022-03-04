@@ -339,7 +339,7 @@ contract ClipperTest is DSTest {
         spot = new Spotter(address(vat));
         vat.rely(address(spot));
 
-        vow = new Vow(address(vat), address(0), address(0));
+        vow = new Vow(address(vat));
         gold = new DSToken("GLD");
         goldJoin = new GemJoin(address(vat), ilk, address(gold));
         vat.rely(address(goldJoin));
