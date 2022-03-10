@@ -188,16 +188,22 @@ contract CureTest is DSTest {
         address source2 = address(new SourceMock(30_000));
         address source3 = address(new SourceMock(50_000));
         cure.addSource(source1);
+        assertEq(cure.count(), 1);
         cure.addSource(source2);
+        assertEq(cure.count(), 2);
         cure.addSource(source3);
+        assertEq(cure.count(), 3);
 
         cure.file("wait", 10);
 
         cure.cage();
 
         cure.load(source1);
+        assertEq(cure.loadedNum(), 1);
         cure.load(source2);
+        assertEq(cure.loadedNum(), 2);
         cure.load(source3);
+        assertEq(cure.loadedNum(), 3);
         assertEq(cure.amount(), 95_000);
     }
 
@@ -246,19 +252,23 @@ contract CureTest is DSTest {
         cure.cage();
 
         cure.load(source1);
+        assertEq(cure.loadedNum(), 1);
         cure.load(source2);
+        assertEq(cure.loadedNum(), 2);
         assertEq(cure.amount(), 5_000);
 
         SourceMock(source1).update(4_000);
         assertEq(cure.amount(), 5_000);
 
         cure.load(source1);
+        assertEq(cure.loadedNum(), 2);
         assertEq(cure.amount(), 7_000);
 
         SourceMock(source2).update(6_000);
         assertEq(cure.amount(), 7_000);
 
         cure.load(source2);
+        assertEq(cure.loadedNum(), 2);
         assertEq(cure.amount(), 10_000);
     }
 

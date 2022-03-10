@@ -32,7 +32,7 @@ contract Cure {
     mapping (address => uint256) public pos; // position in sources + 1, 0 means a source does not exist
     mapping (address => uint256) public amt;
     mapping (address => uint256) public loaded;
-    uint256 public loaded_num;
+    uint256 public loadedNum;
     uint256 amount_;
 
     // --- Events ---
@@ -70,7 +70,7 @@ contract Cure {
     }
 
     function amount() external view returns (uint256) {
-        require(live == 0 && (loaded_num == sources.length || block.timestamp >= when), "Cure/missing-load-and-time-not-passed");
+        require(live == 0 && (loadedNum == sources.length || block.timestamp >= when), "Cure/missing-load-and-time-not-passed");
         return amount_;
     }
 
@@ -130,7 +130,7 @@ contract Cure {
         amount_ = _add(_sub(amount_, oldAmt_), newAmt_);
         if (loaded[src] == 0) {
             loaded[src] = 1;
-            loaded_num ++;
+            loadedNum ++;
         }
     }
 }
