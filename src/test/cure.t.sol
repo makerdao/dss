@@ -5,6 +5,11 @@ pragma solidity >=0.6.12;
 import { DSTest } from "ds-test/test.sol";
 import { Cure } from "../cure.sol";
 
+interface Hevm {
+    function warp(uint256) external;
+    function store(address,bytes32,bytes32) external;
+}
+
 contract SourceMock {
     uint256 public cure;
 
@@ -18,9 +23,14 @@ contract SourceMock {
 }
 
 contract CureTest is DSTest {
+    Hevm hevm;
     Cure cure;
 
+    bytes20 constant CHEAT_CODE =
+        bytes20(uint160(uint256(keccak256('hevm cheat code'))));
+
     function setUp() public {
+        hevm = Hevm(address(CHEAT_CODE));
         cure = new Cure();
     }
 
@@ -40,6 +50,17 @@ contract CureTest is DSTest {
     function testFailDeny() public {
         cure.deny(address(this));
         cure.deny(address(123));
+    }
+
+    function testFile() public {
+        assertEq(cure.wait(), 0);
+        cure.file("wait", 10);
+        assertEq(cure.wait(), 10);
+    }
+
+    function testFailFile() public {
+        cure.deny(address(this));
+        cure.file("wait", 10);
     }
 
     function testAddSourceDelSource() public {
@@ -154,15 +175,69 @@ contract CureTest is DSTest {
 
         cure.cage();
 
-        cure.set(source1);
-        assertEq(cure.total(), 15_000);
-        cure.set(source2);
-        assertEq(cure.total(), 45_000);
-        cure.set(source3);
-        assertEq(cure.total(), 95_000);
+        cure.load(source1);
+        assertEq(cure.amount(), 15_000); // It doesn't fail as wait == 0
+        cure.load(source2);
+        assertEq(cure.amount(), 45_000);
+        cure.load(source3);
+        assertEq(cure.amount(), 95_000);
     }
 
-    function testSetMultipleTimes() public {
+    function testCureAllLoaded() public {
+        address source1 = address(new SourceMock(15_000));
+        address source2 = address(new SourceMock(30_000));
+        address source3 = address(new SourceMock(50_000));
+        cure.addSource(source1);
+        cure.addSource(source2);
+        cure.addSource(source3);
+
+        cure.file("wait", 10);
+
+        cure.cage();
+
+        cure.load(source1);
+        cure.load(source2);
+        cure.load(source3);
+        assertEq(cure.amount(), 95_000);
+    }
+
+    function testCureWaitPassed() public {
+        address source1 = address(new SourceMock(15_000));
+        address source2 = address(new SourceMock(30_000));
+        address source3 = address(new SourceMock(50_000));
+        cure.addSource(source1);
+        cure.addSource(source2);
+        cure.addSource(source3);
+
+        cure.file("wait", 10);
+
+        cure.cage();
+
+        cure.load(source1);
+        cure.load(source2);
+        hevm.warp(block.timestamp + 10);
+        assertEq(cure.amount(), 45_000);
+    }
+
+    function testFailWait() public {
+        address source1 = address(new SourceMock(15_000));
+        address source2 = address(new SourceMock(30_000));
+        address source3 = address(new SourceMock(50_000));
+        cure.addSource(source1);
+        cure.addSource(source2);
+        cure.addSource(source3);
+
+        cure.file("wait", 10);
+
+        cure.cage();
+
+        cure.load(source1);
+        cure.load(source2);
+        hevm.warp(block.timestamp + 9);
+        cure.amount();
+    }
+
+    function testLoadMultipleTimes() public {
         address source1 = address(new SourceMock(2_000));
         address source2 = address(new SourceMock(3_000));
         cure.addSource(source1);
@@ -170,49 +245,49 @@ contract CureTest is DSTest {
 
         cure.cage();
 
-        cure.set(source1);
-        cure.set(source2);
-        assertEq(cure.total(), 5_000);
+        cure.load(source1);
+        cure.load(source2);
+        assertEq(cure.amount(), 5_000);
 
         SourceMock(source1).update(4_000);
-        assertEq(cure.total(), 5_000);
+        assertEq(cure.amount(), 5_000);
 
-        cure.set(source1);
-        assertEq(cure.total(), 7_000);
+        cure.load(source1);
+        assertEq(cure.amount(), 7_000);
 
         SourceMock(source2).update(6_000);
-        assertEq(cure.total(), 7_000);
+        assertEq(cure.amount(), 7_000);
 
-        cure.set(source2);
-        assertEq(cure.total(), 10_000);
+        cure.load(source2);
+        assertEq(cure.amount(), 10_000);
     }
 
-    function testSetNoChange() public {
+    function testLoadNoChange() public {
         address source = address(new SourceMock(2_000));
         cure.addSource(source);
 
         cure.cage();
 
-        cure.set(source);
-        assertEq(cure.total(), 2_000);
+        cure.load(source);
+        assertEq(cure.amount(), 2_000);
 
-        cure.set(source);
-        assertEq(cure.total(), 2_000);
+        cure.load(source);
+        assertEq(cure.amount(), 2_000);
     }
 
-    function testFailSetNotCaged() public {
+    function testFailLoadNotCaged() public {
         address source = address(new SourceMock(2_000));
         cure.addSource(source);
 
-        cure.set(source);
+        cure.load(source);
     }
 
-    function testFailSetNotAdded() public {
+    function testFailLoadNotAdded() public {
         address source = address(new SourceMock(2_000));
 
         cure.cage();
 
-        cure.set(source);
+        cure.load(source);
     }
 
     function testFailCagedRely() public {
