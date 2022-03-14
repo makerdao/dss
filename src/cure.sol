@@ -33,7 +33,7 @@ contract Cure {
     mapping (address => uint256) public amt;
     mapping (address => uint256) public loaded;
     uint256 public loadedNum;
-    uint256 amount_;
+    uint256 report_;
 
     // --- Events ---
     event Rely(address indexed usr);
@@ -72,9 +72,9 @@ contract Cure {
         return sources;
     }
 
-    function amount() external view returns (uint256) {
+    function report() external view returns (uint256) {
         require(live == 0 && (loadedNum == sources.length || block.timestamp >= when), "Cure/missing-load-and-time-not-passed");
-        return amount_;
+        return report_;
     }
 
     function rely(address usr) external auth {
@@ -132,7 +132,7 @@ contract Cure {
         require(pos[src] > 0, "Cure/non-existing-source");
         uint256 oldAmt_ = amt[src];
         uint256 newAmt_ = amt[src] = SourceLike(src).cure();
-        amount_ = _add(_sub(amount_, oldAmt_), newAmt_);
+        report_ = _add(_sub(report_, oldAmt_), newAmt_);
         if (loaded[src] == 0) {
             loaded[src] = 1;
             loadedNum++;

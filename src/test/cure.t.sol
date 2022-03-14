@@ -176,11 +176,11 @@ contract CureTest is DSTest {
         cure.cage();
 
         cure.load(source1);
-        assertEq(cure.amount(), 15_000); // It doesn't fail as wait == 0
+        assertEq(cure.report(), 15_000); // It doesn't fail as wait == 0
         cure.load(source2);
-        assertEq(cure.amount(), 45_000);
+        assertEq(cure.report(), 45_000);
         cure.load(source3);
-        assertEq(cure.amount(), 95_000);
+        assertEq(cure.report(), 95_000);
     }
 
     function testCureAllLoaded() public {
@@ -204,7 +204,7 @@ contract CureTest is DSTest {
         assertEq(cure.loadedNum(), 2);
         cure.load(source3);
         assertEq(cure.loadedNum(), 3);
-        assertEq(cure.amount(), 95_000);
+        assertEq(cure.report(), 95_000);
     }
 
     function testCureWaitPassed() public {
@@ -222,7 +222,7 @@ contract CureTest is DSTest {
         cure.load(source1);
         cure.load(source2);
         hevm.warp(block.timestamp + 10);
-        assertEq(cure.amount(), 45_000);
+        assertEq(cure.report(), 45_000);
     }
 
     function testFailWait() public {
@@ -240,7 +240,7 @@ contract CureTest is DSTest {
         cure.load(source1);
         cure.load(source2);
         hevm.warp(block.timestamp + 9);
-        cure.amount();
+        cure.report();
     }
 
     function testLoadMultipleTimes() public {
@@ -255,21 +255,21 @@ contract CureTest is DSTest {
         assertEq(cure.loadedNum(), 1);
         cure.load(source2);
         assertEq(cure.loadedNum(), 2);
-        assertEq(cure.amount(), 5_000);
+        assertEq(cure.report(), 5_000);
 
         SourceMock(source1).update(4_000);
-        assertEq(cure.amount(), 5_000);
+        assertEq(cure.report(), 5_000);
 
         cure.load(source1);
         assertEq(cure.loadedNum(), 2);
-        assertEq(cure.amount(), 7_000);
+        assertEq(cure.report(), 7_000);
 
         SourceMock(source2).update(6_000);
-        assertEq(cure.amount(), 7_000);
+        assertEq(cure.report(), 7_000);
 
         cure.load(source2);
         assertEq(cure.loadedNum(), 2);
-        assertEq(cure.amount(), 10_000);
+        assertEq(cure.report(), 10_000);
     }
 
     function testLoadNoChange() public {
@@ -279,10 +279,10 @@ contract CureTest is DSTest {
         cure.cage();
 
         cure.load(source);
-        assertEq(cure.amount(), 2_000);
+        assertEq(cure.report(), 2_000);
 
         cure.load(source);
-        assertEq(cure.amount(), 2_000);
+        assertEq(cure.report(), 2_000);
     }
 
     function testFailLoadNotCaged() public {
