@@ -32,7 +32,7 @@ contract Cure {
     mapping (address => uint256) public pos; // position in sources + 1, 0 means a source does not exist
     mapping (address => uint256) public amt;
     mapping (address => uint256) public loaded;
-    uint256 public loadedNum;
+    uint256 public lCount;
     uint256 report_;
 
     // --- Events ---
@@ -64,7 +64,7 @@ contract Cure {
         emit Rely(msg.sender);
     }
 
-    function count() external view returns (uint256 count_) {
+    function tCount() external view returns (uint256 count_) {
         count_ = sources.length;
     }
 
@@ -73,7 +73,7 @@ contract Cure {
     }
 
     function report() external view returns (uint256) {
-        require(live == 0 && (loadedNum == sources.length || block.timestamp >= when), "Cure/missing-load-and-time-not-passed");
+        require(live == 0 && (lCount == sources.length || block.timestamp >= when), "Cure/missing-load-and-time-not-passed");
         return report_;
     }
 
@@ -135,7 +135,7 @@ contract Cure {
         report_ = _add(_sub(report_, oldAmt_), newAmt_);
         if (loaded[src] == 0) {
             loaded[src] = 1;
-            loadedNum++;
+            lCount++;
         }
         emit Load(src);
     }

@@ -64,19 +64,19 @@ contract CureTest is DSTest {
     }
 
     function testAddSourceDelSource() public {
-        assertEq(cure.count(), 0);
+        assertEq(cure.tCount(), 0);
 
         address addr1 = address(new SourceMock(0));
         cure.addSource(addr1);
-        assertEq(cure.count(), 1);
+        assertEq(cure.tCount(), 1);
 
         address addr2 = address(new SourceMock(0));
         cure.addSource(addr2);
-        assertEq(cure.count(), 2);
+        assertEq(cure.tCount(), 2);
 
         address addr3 = address(new SourceMock(0));
         cure.addSource(addr3);
-        assertEq(cure.count(), 3);
+        assertEq(cure.tCount(), 3);
 
         assertEq(cure.sources(0), addr1);
         assertEq(cure.pos(addr1), 1);
@@ -86,14 +86,14 @@ contract CureTest is DSTest {
         assertEq(cure.pos(addr3), 3);
 
         cure.delSource(addr3);
-        assertEq(cure.count(), 2);
+        assertEq(cure.tCount(), 2);
         assertEq(cure.sources(0), addr1);
         assertEq(cure.pos(addr1), 1);
         assertEq(cure.sources(1), addr2);
         assertEq(cure.pos(addr2), 2);
 
         cure.addSource(addr3);
-        assertEq(cure.count(), 3);
+        assertEq(cure.tCount(), 3);
         assertEq(cure.sources(0), addr1);
         assertEq(cure.pos(addr1), 1);
         assertEq(cure.sources(1), addr2);
@@ -102,14 +102,14 @@ contract CureTest is DSTest {
         assertEq(cure.pos(addr3), 3);
 
         cure.delSource(addr1);
-        assertEq(cure.count(), 2);
+        assertEq(cure.tCount(), 2);
         assertEq(cure.sources(0), addr3);
         assertEq(cure.pos(addr3), 1);
         assertEq(cure.sources(1), addr2);
         assertEq(cure.pos(addr2), 2);
 
         cure.addSource(addr1);
-        assertEq(cure.count(), 3);
+        assertEq(cure.tCount(), 3);
         assertEq(cure.sources(0), addr3);
         assertEq(cure.pos(addr3), 1);
         assertEq(cure.sources(1), addr2);
@@ -119,7 +119,7 @@ contract CureTest is DSTest {
 
         address addr4 = address(new SourceMock(0));
         cure.addSource(addr4);
-        assertEq(cure.count(), 4);
+        assertEq(cure.tCount(), 4);
         assertEq(cure.sources(0), addr3);
         assertEq(cure.pos(addr3), 1);
         assertEq(cure.sources(1), addr2);
@@ -130,7 +130,7 @@ contract CureTest is DSTest {
         assertEq(cure.pos(addr4), 4);
 
         cure.delSource(addr2);
-        assertEq(cure.count(), 3);
+        assertEq(cure.tCount(), 3);
         assertEq(cure.sources(0), addr3);
         assertEq(cure.pos(addr3), 1);
         assertEq(cure.sources(1), addr4);
@@ -188,22 +188,22 @@ contract CureTest is DSTest {
         address source2 = address(new SourceMock(30_000));
         address source3 = address(new SourceMock(50_000));
         cure.addSource(source1);
-        assertEq(cure.count(), 1);
+        assertEq(cure.tCount(), 1);
         cure.addSource(source2);
-        assertEq(cure.count(), 2);
+        assertEq(cure.tCount(), 2);
         cure.addSource(source3);
-        assertEq(cure.count(), 3);
+        assertEq(cure.tCount(), 3);
 
         cure.file("wait", 10);
 
         cure.cage();
 
         cure.load(source1);
-        assertEq(cure.loadedNum(), 1);
+        assertEq(cure.lCount(), 1);
         cure.load(source2);
-        assertEq(cure.loadedNum(), 2);
+        assertEq(cure.lCount(), 2);
         cure.load(source3);
-        assertEq(cure.loadedNum(), 3);
+        assertEq(cure.lCount(), 3);
         assertEq(cure.report(), 95_000);
     }
 
@@ -252,23 +252,23 @@ contract CureTest is DSTest {
         cure.cage();
 
         cure.load(source1);
-        assertEq(cure.loadedNum(), 1);
+        assertEq(cure.lCount(), 1);
         cure.load(source2);
-        assertEq(cure.loadedNum(), 2);
+        assertEq(cure.lCount(), 2);
         assertEq(cure.report(), 5_000);
 
         SourceMock(source1).update(4_000);
         assertEq(cure.report(), 5_000);
 
         cure.load(source1);
-        assertEq(cure.loadedNum(), 2);
+        assertEq(cure.lCount(), 2);
         assertEq(cure.report(), 7_000);
 
         SourceMock(source2).update(6_000);
         assertEq(cure.report(), 7_000);
 
         cure.load(source2);
-        assertEq(cure.loadedNum(), 2);
+        assertEq(cure.lCount(), 2);
         assertEq(cure.report(), 10_000);
     }
 
