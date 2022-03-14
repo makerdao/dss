@@ -130,7 +130,7 @@ contract Cure {
         amount_ = _add(_sub(amount_, oldAmt_), newAmt_);
         if (loaded[src] == 0) {
             loaded[src] = 1;
-            loadedNum ++;
+            loadedNum++;
         }
     }
 }
