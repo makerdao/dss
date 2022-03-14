@@ -39,6 +39,9 @@ contract Cure {
     event Rely(address indexed usr);
     event Deny(address indexed usr);
     event File(bytes32 indexed what, uint256 data);
+    event AddSource(address indexed src);
+    event DelSource(address indexed src);
+    event Load(address indexed src);
     event Cage();
 
     modifier auth {
@@ -98,6 +101,7 @@ contract Cure {
         require(pos[src] == 0, "Cure/already-existing-source");
         sources.push(src);
         pos[src] = sources.length;
+        emit AddSource(src);
     }
 
     function delSource(address src) external auth {
@@ -113,6 +117,7 @@ contract Cure {
         sources.pop();
         delete pos[src];
         delete amt[src];
+        emit DelSource(src);
     }
 
     function cage() external auth {
@@ -132,5 +137,6 @@ contract Cure {
             loaded[src] = 1;
             loadedNum++;
         }
+        emit Load(src);
     }
 }
