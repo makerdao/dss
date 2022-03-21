@@ -152,7 +152,7 @@ contract Pot {
 
     // --- Savings Dai Management ---
     function join(uint wad) external {
-        require(now == rho, "Pot/rho-not-updated");
+        require(now >= rho, "Pot/rho-not-updated");
         pie[msg.sender] = add(pie[msg.sender], wad);
         Pie             = add(Pie,             wad);
         vat.move(msg.sender, address(this), mul(chi, wad));
