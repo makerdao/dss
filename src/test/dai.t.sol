@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-/// erc20.t.sol -- test for erc20.sol
+/// dai.t.sol -- tests for dai.sol
 
 // Copyright (C) 2015-2019  DappHub, LLC
+// Copyright (C) 2022 Dai Foundation
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -17,7 +18,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-pragma solidity >=0.5.12;
+pragma solidity 0.6.12;
 
 import "ds-test/test.sol";
 
