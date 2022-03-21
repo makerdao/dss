@@ -26,7 +26,7 @@ contract Rpow is Jug {
     constructor(address vat_) public Jug(vat_){}
 
     function pRpow(uint x, uint n, uint b) public pure returns(uint) {
-        return rpow(x, n, b);
+        return _rpow(x, n, b);
     }
 }
 

@@ -3,6 +3,7 @@
 /// pot.sol -- Dai Savings Rate
 
 // Copyright (C) 2018 Rain <rainbreak@riseup.net>
+// Copyright (C) 2022 Dai Foundation
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as published by
@@ -17,7 +18,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-pragma solidity >=0.5.12;
+pragma solidity 0.6.12;
 
 // FIXME: This contract was altered compared to the production version.
 // It doesn't use LibNote anymore.
@@ -82,7 +83,7 @@ contract Pot {
 
     // --- Math ---
     uint256 constant ONE = 10 ** 27;
-    function rpow(uint x, uint n, uint base) internal pure returns (uint z) {
+    function _rpow(uint x, uint n, uint base) internal pure returns (uint z) {
         assembly {
             switch x case 0 {switch n case 0 {z := base} default {z := 0}}
             default {
@@ -106,19 +107,19 @@ contract Pot {
         }
     }
 
-    function rmul(uint x, uint y) internal pure returns (uint z) {
-        z = mul(x, y) / ONE;
+    function _rmul(uint x, uint y) internal pure returns (uint z) {
+        z = _mul(x, y) / ONE;
     }
 
-    function add(uint x, uint y) internal pure returns (uint z) {
+    function _add(uint x, uint y) internal pure returns (uint z) {
         require((z = x + y) >= x);
     }
 
-    function sub(uint x, uint y) internal pure returns (uint z) {
+    function _sub(uint x, uint y) internal pure returns (uint z) {
         require((z = x - y) <= x);
     }
 
-    function mul(uint x, uint y) internal pure returns (uint z) {
+    function _mul(uint x, uint y) internal pure returns (uint z) {
         require(y == 0 || (z = x * y) / y == x);
     }
 
@@ -143,24 +144,24 @@ contract Pot {
     // --- Savings Rate Accumulation ---
     function drip() external returns (uint tmp) {
         require(now >= rho, "Pot/invalid-now");
-        tmp = rmul(rpow(dsr, now - rho, ONE), chi);
-        uint chi_ = sub(tmp, chi);
+        tmp = _rmul(_rpow(dsr, now - rho, ONE), chi);
+        uint chi_ = _sub(tmp, chi);
         chi = tmp;
         rho = now;
-        vat.suck(address(vow), address(this), mul(Pie, chi_));
+        vat.suck(address(vow), address(this), _mul(Pie, chi_));
     }
 
     // --- Savings Dai Management ---
     function join(uint wad) external {
         require(now == rho, "Pot/rho-not-updated");
-        pie[msg.sender] = add(pie[msg.sender], wad);
-        Pie             = add(Pie,             wad);
-        vat.move(msg.sender, address(this), mul(chi, wad));
+        pie[msg.sender] = _add(pie[msg.sender], wad);
+        Pie             = _add(Pie,             wad);
+        vat.move(msg.sender, address(this), _mul(chi, wad));
     }
 
     function exit(uint wad) external {
-        pie[msg.sender] = sub(pie[msg.sender], wad);
-        Pie             = sub(Pie,             wad);
-        vat.move(address(this), msg.sender, mul(chi, wad));
+        pie[msg.sender] = _sub(pie[msg.sender], wad);
+        Pie             = _sub(Pie,             wad);
+        vat.move(address(this), msg.sender, _mul(chi, wad));
     }
 }

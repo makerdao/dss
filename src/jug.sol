@@ -3,6 +3,7 @@
 /// jug.sol -- Dai Lending Rate
 
 // Copyright (C) 2018 Rain <rainbreak@riseup.net>
+// Copyright (C) 2022 Dai Foundation
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as published by
@@ -17,7 +18,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-pragma solidity >=0.5.12;
+pragma solidity 0.6.12;
 
 // FIXME: This contract was altered compared to the production version.
 // It doesn't use LibNote anymore.
@@ -59,7 +60,7 @@ contract Jug {
     }
 
     // --- Math ---
-    function rpow(uint x, uint n, uint b) internal pure returns (uint z) {
+    function _rpow(uint x, uint n, uint b) internal pure returns (uint z) {
       assembly {
         switch x case 0 {switch n case 0 {z := b} default {z := 0}}
         default {
@@ -83,15 +84,15 @@ contract Jug {
       }
     }
     uint256 constant ONE = 10 ** 27;
-    function add(uint x, uint y) internal pure returns (uint z) {
+    function _add(uint x, uint y) internal pure returns (uint z) {
         z = x + y;
         require(z >= x);
     }
-    function diff(uint x, uint y) internal pure returns (int z) {
+    function _diff(uint x, uint y) internal pure returns (int z) {
         z = int(x) - int(y);
         require(int(x) >= 0 && int(y) >= 0);
     }
-    function rmul(uint x, uint y) internal pure returns (uint z) {
+    function _rmul(uint x, uint y) internal pure returns (uint z) {
         z = x * y;
         require(y == 0 || z / y == x);
         z = z / ONE;
@@ -122,8 +123,8 @@ contract Jug {
     function drip(bytes32 ilk) external returns (uint rate) {
         require(now >= ilks[ilk].rho, "Jug/invalid-now");
         (, uint prev) = vat.ilks(ilk);
-        rate = rmul(rpow(add(base, ilks[ilk].duty), now - ilks[ilk].rho, ONE), prev);
-        vat.fold(ilk, vow, diff(rate, prev));
+        rate = _rmul(_rpow(_add(base, ilks[ilk].duty), now - ilks[ilk].rho, ONE), prev);
+        vat.fold(ilk, vow, _diff(rate, prev));
         ilks[ilk].rho = now;
     }
 }
