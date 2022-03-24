@@ -3,7 +3,6 @@
 /// dai.t.sol -- tests for dai.sol
 
 // Copyright (C) 2015-2019  DappHub, LLC
-// Copyright (C) 2022 Dai Foundation
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
