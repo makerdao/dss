@@ -26,21 +26,21 @@ interface SourceLike {
 contract Cure {
     mapping (address => uint256) public wards;
     uint256 public live;
-    address[] public sources;
+    address[] public srcs;
     uint256 public wait;
     uint256 public when;
-    mapping (address => uint256) public pos; // position in sources + 1, 0 means a source does not exist
+    mapping (address => uint256) public pos; // position in srcs + 1, 0 means a source does not exist
     mapping (address => uint256) public amt;
     mapping (address => uint256) public loaded;
     uint256 public lCount;
-    uint256 report_;
+    uint256 public say;
 
     // --- Events ---
     event Rely(address indexed usr);
     event Deny(address indexed usr);
     event File(bytes32 indexed what, uint256 data);
-    event AddSource(address indexed src);
-    event DelSource(address indexed src);
+    event Add(address indexed src);
+    event Del(address indexed src);
     event Load(address indexed src);
     event Cage();
 
@@ -65,16 +65,16 @@ contract Cure {
     }
 
     function tCount() external view returns (uint256 count_) {
-        count_ = sources.length;
+        count_ = srcs.length;
     }
 
     function list() external view returns (address[] memory) {
-        return sources;
+        return srcs;
     }
 
-    function report() external view returns (uint256) {
-        require(live == 0 && (lCount == sources.length || block.timestamp >= when), "Cure/missing-load-and-time-not-passed");
-        return report_;
+    function tell() external view returns (uint256) {
+        require(live == 0 && (lCount == srcs.length || block.timestamp >= when), "Cure/missing-load-and-time-not-passed");
+        return say;
     }
 
     function rely(address usr) external auth {
@@ -96,28 +96,28 @@ contract Cure {
         emit File(what, data);
     }
 
-    function addSource(address src) external auth {
+    function add(address src) external auth {
         require(live == 1, "Cure/not-live");
         require(pos[src] == 0, "Cure/already-existing-source");
-        sources.push(src);
-        pos[src] = sources.length;
-        emit AddSource(src);
+        srcs.push(src);
+        pos[src] = srcs.length;
+        emit Add(src);
     }
 
-    function delSource(address src) external auth {
+    function del(address src) external auth {
         require(live == 1, "Cure/not-live");
         uint256 pos_ = pos[src];
         require(pos_ > 0, "Cure/non-existing-source");
-        uint256 last = sources.length;
+        uint256 last = srcs.length;
         if (pos_ < last) {
-            address move = sources[last - 1];
-            sources[pos_ - 1] = move;
+            address move = srcs[last - 1];
+            srcs[pos_ - 1] = move;
             pos[move] = pos_;
         }
-        sources.pop();
+        srcs.pop();
         delete pos[src];
         delete amt[src];
-        emit DelSource(src);
+        emit Del(src);
     }
 
     function cage() external auth {
@@ -132,7 +132,7 @@ contract Cure {
         require(pos[src] > 0, "Cure/non-existing-source");
         uint256 oldAmt_ = amt[src];
         uint256 newAmt_ = amt[src] = SourceLike(src).cure();
-        report_ = _add(_sub(report_, oldAmt_), newAmt_);
+        say = _add(_sub(say, oldAmt_), newAmt_);
         if (loaded[src] == 0) {
             loaded[src] = 1;
             lCount++;

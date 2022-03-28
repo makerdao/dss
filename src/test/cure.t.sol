@@ -67,96 +67,96 @@ contract CureTest is DSTest {
         assertEq(cure.tCount(), 0);
 
         address addr1 = address(new SourceMock(0));
-        cure.addSource(addr1);
+        cure.add(addr1);
         assertEq(cure.tCount(), 1);
 
         address addr2 = address(new SourceMock(0));
-        cure.addSource(addr2);
+        cure.add(addr2);
         assertEq(cure.tCount(), 2);
 
         address addr3 = address(new SourceMock(0));
-        cure.addSource(addr3);
+        cure.add(addr3);
         assertEq(cure.tCount(), 3);
 
-        assertEq(cure.sources(0), addr1);
+        assertEq(cure.srcs(0), addr1);
         assertEq(cure.pos(addr1), 1);
-        assertEq(cure.sources(1), addr2);
+        assertEq(cure.srcs(1), addr2);
         assertEq(cure.pos(addr2), 2);
-        assertEq(cure.sources(2), addr3);
+        assertEq(cure.srcs(2), addr3);
         assertEq(cure.pos(addr3), 3);
 
-        cure.delSource(addr3);
+        cure.del(addr3);
         assertEq(cure.tCount(), 2);
-        assertEq(cure.sources(0), addr1);
+        assertEq(cure.srcs(0), addr1);
         assertEq(cure.pos(addr1), 1);
-        assertEq(cure.sources(1), addr2);
+        assertEq(cure.srcs(1), addr2);
         assertEq(cure.pos(addr2), 2);
 
-        cure.addSource(addr3);
+        cure.add(addr3);
         assertEq(cure.tCount(), 3);
-        assertEq(cure.sources(0), addr1);
+        assertEq(cure.srcs(0), addr1);
         assertEq(cure.pos(addr1), 1);
-        assertEq(cure.sources(1), addr2);
+        assertEq(cure.srcs(1), addr2);
         assertEq(cure.pos(addr2), 2);
-        assertEq(cure.sources(2), addr3);
+        assertEq(cure.srcs(2), addr3);
         assertEq(cure.pos(addr3), 3);
 
-        cure.delSource(addr1);
+        cure.del(addr1);
         assertEq(cure.tCount(), 2);
-        assertEq(cure.sources(0), addr3);
+        assertEq(cure.srcs(0), addr3);
         assertEq(cure.pos(addr3), 1);
-        assertEq(cure.sources(1), addr2);
+        assertEq(cure.srcs(1), addr2);
         assertEq(cure.pos(addr2), 2);
 
-        cure.addSource(addr1);
+        cure.add(addr1);
         assertEq(cure.tCount(), 3);
-        assertEq(cure.sources(0), addr3);
+        assertEq(cure.srcs(0), addr3);
         assertEq(cure.pos(addr3), 1);
-        assertEq(cure.sources(1), addr2);
+        assertEq(cure.srcs(1), addr2);
         assertEq(cure.pos(addr2), 2);
-        assertEq(cure.sources(2), addr1);
+        assertEq(cure.srcs(2), addr1);
         assertEq(cure.pos(addr1), 3);
 
         address addr4 = address(new SourceMock(0));
-        cure.addSource(addr4);
+        cure.add(addr4);
         assertEq(cure.tCount(), 4);
-        assertEq(cure.sources(0), addr3);
+        assertEq(cure.srcs(0), addr3);
         assertEq(cure.pos(addr3), 1);
-        assertEq(cure.sources(1), addr2);
+        assertEq(cure.srcs(1), addr2);
         assertEq(cure.pos(addr2), 2);
-        assertEq(cure.sources(2), addr1);
+        assertEq(cure.srcs(2), addr1);
         assertEq(cure.pos(addr1), 3);
-        assertEq(cure.sources(3), addr4);
+        assertEq(cure.srcs(3), addr4);
         assertEq(cure.pos(addr4), 4);
 
-        cure.delSource(addr2);
+        cure.del(addr2);
         assertEq(cure.tCount(), 3);
-        assertEq(cure.sources(0), addr3);
+        assertEq(cure.srcs(0), addr3);
         assertEq(cure.pos(addr3), 1);
-        assertEq(cure.sources(1), addr4);
+        assertEq(cure.srcs(1), addr4);
         assertEq(cure.pos(addr4), 2);
-        assertEq(cure.sources(2), addr1);
+        assertEq(cure.srcs(2), addr1);
         assertEq(cure.pos(addr1), 3);
     }
 
     function testFailAddSourceAuth() public {
         cure.deny(address(this));
         address addr = address(new SourceMock(0));
-        cure.addSource(addr);
+        cure.add(addr);
     }
 
     function testFailDelSourceAuth() public {
         address addr = address(new SourceMock(0));
-        cure.addSource(addr);
+        cure.add(addr);
         cure.deny(address(this));
-        cure.delSource(addr);
+        cure.del(addr);
     }
 
     function testFailDelSourceNonExisting() public {
         address addr1 = address(new SourceMock(0));
-        cure.addSource(addr1);
+        cure.add(addr1);
         address addr2 = address(new SourceMock(0));
-        cure.delSource(addr2);
+        cure.del(addr2);
     }
 
     function testCage() public {
@@ -169,29 +169,32 @@ contract CureTest is DSTest {
         address source1 = address(new SourceMock(15_000));
         address source2 = address(new SourceMock(30_000));
         address source3 = address(new SourceMock(50_000));
-        cure.addSource(source1);
-        cure.addSource(source2);
-        cure.addSource(source3);
+        cure.add(source1);
+        cure.add(source2);
+        cure.add(source3);
 
         cure.cage();
 
         cure.load(source1);
-        assertEq(cure.report(), 15_000); // It doesn't fail as wait == 0
+        assertEq(cure.say(), 15_000);
+        assertEq(cure.tell(), 15_000); // It doesn't fail as wait == 0
         cure.load(source2);
-        assertEq(cure.report(), 45_000);
+        assertEq(cure.say(), 45_000);
+        assertEq(cure.tell(), 45_000);
         cure.load(source3);
-        assertEq(cure.report(), 95_000);
+        assertEq(cure.say(), 95_000);
+        assertEq(cure.tell(), 95_000);
     }
 
     function testCureAllLoaded() public {
         address source1 = address(new SourceMock(15_000));
         address source2 = address(new SourceMock(30_000));
         address source3 = address(new SourceMock(50_000));
-        cure.addSource(source1);
+        cure.add(source1);
         assertEq(cure.tCount(), 1);
-        cure.addSource(source2);
+        cure.add(source2);
         assertEq(cure.tCount(), 2);
-        cure.addSource(source3);
+        cure.add(source3);
         assertEq(cure.tCount(), 3);
 
         cure.file("wait", 10);
@@ -200,20 +203,23 @@ contract CureTest is DSTest {
 
         cure.load(source1);
         assertEq(cure.lCount(), 1);
+        assertEq(cure.say(), 15_000);
         cure.load(source2);
         assertEq(cure.lCount(), 2);
+        assertEq(cure.say(), 45_000);
         cure.load(source3);
         assertEq(cure.lCount(), 3);
-        assertEq(cure.report(), 95_000);
+        assertEq(cure.say(), 95_000);
+        assertEq(cure.tell(), 95_000);
     }
 
     function testCureWaitPassed() public {
         address source1 = address(new SourceMock(15_000));
         address source2 = address(new SourceMock(30_000));
         address source3 = address(new SourceMock(50_000));
-        cure.addSource(source1);
-        cure.addSource(source2);
-        cure.addSource(source3);
+        cure.add(source1);
+        cure.add(source2);
+        cure.add(source3);
 
         cure.file("wait", 10);
 
@@ -222,16 +228,16 @@ contract CureTest is DSTest {
         cure.load(source1);
         cure.load(source2);
         hevm.warp(block.timestamp + 10);
-        assertEq(cure.report(), 45_000);
+        assertEq(cure.tell(), 45_000);
     }
 
     function testFailWait() public {
         address source1 = address(new SourceMock(15_000));
         address source2 = address(new SourceMock(30_000));
         address source3 = address(new SourceMock(50_000));
-        cure.addSource(source1);
-        cure.addSource(source2);
-        cure.addSource(source3);
+        cure.add(source1);
+        cure.add(source2);
+        cure.add(source3);
 
         cure.file("wait", 10);
 
@@ -240,14 +246,14 @@ contract CureTest is DSTest {
         cure.load(source1);
         cure.load(source2);
         hevm.warp(block.timestamp + 9);
-        cure.report();
+        cure.tell();
     }
 
     function testLoadMultipleTimes() public {
         address source1 = address(new SourceMock(2_000));
         address source2 = address(new SourceMock(3_000));
-        cure.addSource(source1);
-        cure.addSource(source2);
+        cure.add(source1);
+        cure.add(source2);
 
         cure.cage();
 
@@ -255,39 +261,39 @@ contract CureTest is DSTest {
         assertEq(cure.lCount(), 1);
         cure.load(source2);
         assertEq(cure.lCount(), 2);
-        assertEq(cure.report(), 5_000);
+        assertEq(cure.tell(), 5_000);
 
         SourceMock(source1).update(4_000);
-        assertEq(cure.report(), 5_000);
+        assertEq(cure.tell(), 5_000);
 
         cure.load(source1);
         assertEq(cure.lCount(), 2);
-        assertEq(cure.report(), 7_000);
+        assertEq(cure.tell(), 7_000);
 
         SourceMock(source2).update(6_000);
-        assertEq(cure.report(), 7_000);
+        assertEq(cure.tell(), 7_000);
 
         cure.load(source2);
         assertEq(cure.lCount(), 2);
-        assertEq(cure.report(), 10_000);
+        assertEq(cure.tell(), 10_000);
     }
 
     function testLoadNoChange() public {
         address source = address(new SourceMock(2_000));
-        cure.addSource(source);
+        cure.add(source);
 
         cure.cage();
 
         cure.load(source);
-        assertEq(cure.report(), 2_000);
+        assertEq(cure.tell(), 2_000);
 
         cure.load(source);
-        assertEq(cure.report(), 2_000);
+        assertEq(cure.tell(), 2_000);
     }
 
     function testFailLoadNotCaged() public {
         address source = address(new SourceMock(2_000));
-        cure.addSource(source);
+        cure.add(source);
 
         cure.load(source);
     }
@@ -313,13 +319,13 @@ contract CureTest is DSTest {
     function testFailCagedAddSource() public {
         cure.cage();
         address source = address(new SourceMock(0));
-        cure.addSource(source);
+        cure.add(source);
     }
 
     function testFailCagedDelSource() public {
         address source = address(new SourceMock(0));
-        cure.addSource(source);
+        cure.add(source);
         cure.cage();
-        cure.delSource(source);
+        cure.del(source);
     }
 }

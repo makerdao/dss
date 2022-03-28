@@ -110,7 +110,7 @@ interface SpotLike {
 }
 
 interface CureLike {
-    function report() external view returns (uint256);
+    function tell() external view returns (uint256);
     function cage() external;
 }
 
@@ -420,7 +420,7 @@ contract End {
         require(debt == 0, "End/debt-not-zero");
         require(vat.dai(address(vow)) == 0, "End/surplus-not-zero");
         require(block.timestamp >= add(when, wait), "End/wait-not-finished");
-        debt = sub(vat.debt(), cure.report());
+        debt = sub(vat.debt(), cure.tell());
         emit Thaw();
     }
     function flow(bytes32 ilk) external {
