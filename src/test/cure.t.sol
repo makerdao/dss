@@ -67,15 +67,15 @@ contract CureTest is DSTest {
         assertEq(cure.tCount(), 0);
 
         address addr1 = address(new SourceMock(0));
-        cure.add(addr1);
+        cure.lift(addr1);
         assertEq(cure.tCount(), 1);
 
         address addr2 = address(new SourceMock(0));
-        cure.add(addr2);
+        cure.lift(addr2);
         assertEq(cure.tCount(), 2);
 
         address addr3 = address(new SourceMock(0));
-        cure.add(addr3);
+        cure.lift(addr3);
         assertEq(cure.tCount(), 3);
 
         assertEq(cure.srcs(0), addr1);
@@ -85,14 +85,14 @@ contract CureTest is DSTest {
         assertEq(cure.srcs(2), addr3);
         assertEq(cure.pos(addr3), 3);
 
-        cure.del(addr3);
+        cure.drop(addr3);
         assertEq(cure.tCount(), 2);
         assertEq(cure.srcs(0), addr1);
         assertEq(cure.pos(addr1), 1);
         assertEq(cure.srcs(1), addr2);
         assertEq(cure.pos(addr2), 2);
 
-        cure.add(addr3);
+        cure.lift(addr3);
         assertEq(cure.tCount(), 3);
         assertEq(cure.srcs(0), addr1);
         assertEq(cure.pos(addr1), 1);
@@ -101,14 +101,14 @@ contract CureTest is DSTest {
         assertEq(cure.srcs(2), addr3);
         assertEq(cure.pos(addr3), 3);
 
-        cure.del(addr1);
+        cure.drop(addr1);
         assertEq(cure.tCount(), 2);
         assertEq(cure.srcs(0), addr3);
         assertEq(cure.pos(addr3), 1);
         assertEq(cure.srcs(1), addr2);
         assertEq(cure.pos(addr2), 2);
 
-        cure.add(addr1);
+        cure.lift(addr1);
         assertEq(cure.tCount(), 3);
         assertEq(cure.srcs(0), addr3);
         assertEq(cure.pos(addr3), 1);
@@ -118,7 +118,7 @@ contract CureTest is DSTest {
         assertEq(cure.pos(addr1), 3);
 
         address addr4 = address(new SourceMock(0));
-        cure.add(addr4);
+        cure.lift(addr4);
         assertEq(cure.tCount(), 4);
         assertEq(cure.srcs(0), addr3);
         assertEq(cure.pos(addr3), 1);
@@ -129,7 +129,7 @@ contract CureTest is DSTest {
         assertEq(cure.srcs(3), addr4);
         assertEq(cure.pos(addr4), 4);
 
-        cure.del(addr2);
+        cure.drop(addr2);
         assertEq(cure.tCount(), 3);
         assertEq(cure.srcs(0), addr3);
         assertEq(cure.pos(addr3), 1);
@@ -142,21 +142,21 @@ contract CureTest is DSTest {
     function testFailAddSourceAuth() public {
         cure.deny(address(this));
         address addr = address(new SourceMock(0));
-        cure.add(addr);
+        cure.lift(addr);
     }
 
     function testFailDelSourceAuth() public {
         address addr = address(new SourceMock(0));
-        cure.add(addr);
+        cure.lift(addr);
         cure.deny(address(this));
-        cure.del(addr);
+        cure.drop(addr);
     }
 
     function testFailDelSourceNonExisting() public {
         address addr1 = address(new SourceMock(0));
-        cure.add(addr1);
+        cure.lift(addr1);
         address addr2 = address(new SourceMock(0));
-        cure.del(addr2);
+        cure.drop(addr2);
     }
 
     function testCage() public {
@@ -169,9 +169,9 @@ contract CureTest is DSTest {
         address source1 = address(new SourceMock(15_000));
         address source2 = address(new SourceMock(30_000));
         address source3 = address(new SourceMock(50_000));
-        cure.add(source1);
-        cure.add(source2);
-        cure.add(source3);
+        cure.lift(source1);
+        cure.lift(source2);
+        cure.lift(source3);
 
         cure.cage();
 
@@ -190,11 +190,11 @@ contract CureTest is DSTest {
         address source1 = address(new SourceMock(15_000));
         address source2 = address(new SourceMock(30_000));
         address source3 = address(new SourceMock(50_000));
-        cure.add(source1);
+        cure.lift(source1);
         assertEq(cure.tCount(), 1);
-        cure.add(source2);
+        cure.lift(source2);
         assertEq(cure.tCount(), 2);
-        cure.add(source3);
+        cure.lift(source3);
         assertEq(cure.tCount(), 3);
 
         cure.file("wait", 10);
@@ -217,9 +217,9 @@ contract CureTest is DSTest {
         address source1 = address(new SourceMock(15_000));
         address source2 = address(new SourceMock(30_000));
         address source3 = address(new SourceMock(50_000));
-        cure.add(source1);
-        cure.add(source2);
-        cure.add(source3);
+        cure.lift(source1);
+        cure.lift(source2);
+        cure.lift(source3);
 
         cure.file("wait", 10);
 
@@ -235,9 +235,9 @@ contract CureTest is DSTest {
         address source1 = address(new SourceMock(15_000));
         address source2 = address(new SourceMock(30_000));
         address source3 = address(new SourceMock(50_000));
-        cure.add(source1);
-        cure.add(source2);
-        cure.add(source3);
+        cure.lift(source1);
+        cure.lift(source2);
+        cure.lift(source3);
 
         cure.file("wait", 10);
 
@@ -252,8 +252,8 @@ contract CureTest is DSTest {
     function testLoadMultipleTimes() public {
         address source1 = address(new SourceMock(2_000));
         address source2 = address(new SourceMock(3_000));
-        cure.add(source1);
-        cure.add(source2);
+        cure.lift(source1);
+        cure.lift(source2);
 
         cure.cage();
 
@@ -280,7 +280,7 @@ contract CureTest is DSTest {
 
     function testLoadNoChange() public {
         address source = address(new SourceMock(2_000));
-        cure.add(source);
+        cure.lift(source);
 
         cure.cage();
 
@@ -293,7 +293,7 @@ contract CureTest is DSTest {
 
     function testFailLoadNotCaged() public {
         address source = address(new SourceMock(2_000));
-        cure.add(source);
+        cure.lift(source);
 
         cure.load(source);
     }
@@ -319,13 +319,13 @@ contract CureTest is DSTest {
     function testFailCagedAddSource() public {
         cure.cage();
         address source = address(new SourceMock(0));
-        cure.add(source);
+        cure.lift(source);
     }
 
     function testFailCagedDelSource() public {
         address source = address(new SourceMock(0));
-        cure.add(source);
+        cure.lift(source);
         cure.cage();
-        cure.del(source);
+        cure.drop(source);
     }
 }

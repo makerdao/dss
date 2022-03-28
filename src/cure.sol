@@ -39,8 +39,8 @@ contract Cure {
     event Rely(address indexed usr);
     event Deny(address indexed usr);
     event File(bytes32 indexed what, uint256 data);
-    event Add(address indexed src);
-    event Del(address indexed src);
+    event Lift(address indexed src);
+    event Drop(address indexed src);
     event Load(address indexed src);
     event Cage();
 
@@ -96,15 +96,15 @@ contract Cure {
         emit File(what, data);
     }
 
-    function add(address src) external auth {
+    function lift(address src) external auth {
         require(live == 1, "Cure/not-live");
         require(pos[src] == 0, "Cure/already-existing-source");
         srcs.push(src);
         pos[src] = srcs.length;
-        emit Add(src);
+        emit Lift(src);
     }
 
-    function del(address src) external auth {
+    function drop(address src) external auth {
         require(live == 1, "Cure/not-live");
         uint256 pos_ = pos[src];
         require(pos_ > 0, "Cure/non-existing-source");
@@ -117,7 +117,7 @@ contract Cure {
         srcs.pop();
         delete pos[src];
         delete amt[src];
-        emit Del(src);
+        emit Drop(src);
     }
 
     function cage() external auth {
