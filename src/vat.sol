@@ -17,7 +17,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-pragma solidity >=0.5.12;
+pragma solidity ^0.6.12;
 
 // FIXME: This contract was altered compared to the production version.
 // It doesn't use LibNote anymore.
@@ -71,28 +71,28 @@ contract Vat {
     }
 
     // --- Math ---
-    function add(uint x, int y) internal pure returns (uint z) {
+    function _add(uint x, int y) internal pure returns (uint z) {
         z = x + uint(y);
         require(y >= 0 || z <= x);
         require(y <= 0 || z >= x);
     }
-    function sub(uint x, int y) internal pure returns (uint z) {
+    function _sub(uint x, int y) internal pure returns (uint z) {
         z = x - uint(y);
         require(y <= 0 || z <= x);
         require(y >= 0 || z >= x);
     }
-    function mul(uint x, int y) internal pure returns (int z) {
+    function _mul(uint x, int y) internal pure returns (int z) {
         z = int(x) * y;
         require(int(x) >= 0);
         require(y == 0 || z / y == int(x));
     }
-    function add(uint x, uint y) internal pure returns (uint z) {
+    function _add(uint x, uint y) internal pure returns (uint z) {
         require((z = x + y) >= x);
     }
-    function sub(uint x, uint y) internal pure returns (uint z) {
+    function _sub(uint x, uint y) internal pure returns (uint z) {
         require((z = x - y) <= x);
     }
-    function mul(uint x, uint y) internal pure returns (uint z) {
+    function _mul(uint x, uint y) internal pure returns (uint z) {
         require(y == 0 || (z = x * y) / y == x);
     }
 
@@ -119,17 +119,17 @@ contract Vat {
 
     // --- Fungibility ---
     function slip(bytes32 ilk, address usr, int256 wad) external auth {
-        gem[ilk][usr] = add(gem[ilk][usr], wad);
+        gem[ilk][usr] = _add(gem[ilk][usr], wad);
     }
     function flux(bytes32 ilk, address src, address dst, uint256 wad) external {
         require(wish(src, msg.sender), "Vat/not-allowed");
-        gem[ilk][src] = sub(gem[ilk][src], wad);
-        gem[ilk][dst] = add(gem[ilk][dst], wad);
+        gem[ilk][src] = _sub(gem[ilk][src], wad);
+        gem[ilk][dst] = _add(gem[ilk][dst], wad);
     }
     function move(address src, address dst, uint256 rad) external {
         require(wish(src, msg.sender), "Vat/not-allowed");
-        dai[src] = sub(dai[src], rad);
-        dai[dst] = add(dai[dst], rad);
+        dai[src] = _sub(dai[src], rad);
+        dai[dst] = _add(dai[dst], rad);
     }
 
     function either(bool x, bool y) internal pure returns (bool z) {
@@ -149,18 +149,18 @@ contract Vat {
         // ilk has been initialised
         require(ilk.rate != 0, "Vat/ilk-not-init");
 
-        urn.ink = add(urn.ink, dink);
-        urn.art = add(urn.art, dart);
-        ilk.Art = add(ilk.Art, dart);
+        urn.ink = _add(urn.ink, dink);
+        urn.art = _add(urn.art, dart);
+        ilk.Art = _add(ilk.Art, dart);
 
-        int dtab = mul(ilk.rate, dart);
-        uint tab = mul(ilk.rate, urn.art);
-        debt     = add(debt, dtab);
+        int dtab = _mul(ilk.rate, dart);
+        uint tab = _mul(ilk.rate, urn.art);
+        debt     = _add(debt, dtab);
 
         // either debt has decreased, or debt ceilings are not exceeded
-        require(either(dart <= 0, both(mul(ilk.Art, ilk.rate) <= ilk.line, debt <= Line)), "Vat/ceiling-exceeded");
+        require(either(dart <= 0, both(_mul(ilk.Art, ilk.rate) <= ilk.line, debt <= Line)), "Vat/ceiling-exceeded");
         // urn is either less risky than before, or it is safe
-        require(either(both(dart <= 0, dink >= 0), tab <= mul(urn.ink, ilk.spot)), "Vat/not-safe");
+        require(either(both(dart <= 0, dink >= 0), tab <= _mul(urn.ink, ilk.spot)), "Vat/not-safe");
 
         // urn is either more safe, or the owner consents
         require(either(both(dart <= 0, dink >= 0), wish(u, msg.sender)), "Vat/not-allowed-u");
@@ -172,8 +172,8 @@ contract Vat {
         // urn has no debt, or a non-dusty amount
         require(either(urn.art == 0, tab >= ilk.dust), "Vat/dust");
 
-        gem[i][v] = sub(gem[i][v], dink);
-        dai[w]    = add(dai[w],    dtab);
+        gem[i][v] = _sub(gem[i][v], dink);
+        dai[w]    = _add(dai[w],    dtab);
 
         urns[i][u] = urn;
         ilks[i]    = ilk;
@@ -184,20 +184,20 @@ contract Vat {
         Urn storage v = urns[ilk][dst];
         Ilk storage i = ilks[ilk];
 
-        u.ink = sub(u.ink, dink);
-        u.art = sub(u.art, dart);
-        v.ink = add(v.ink, dink);
-        v.art = add(v.art, dart);
+        u.ink = _sub(u.ink, dink);
+        u.art = _sub(u.art, dart);
+        v.ink = _add(v.ink, dink);
+        v.art = _add(v.art, dart);
 
-        uint utab = mul(u.art, i.rate);
-        uint vtab = mul(v.art, i.rate);
+        uint utab = _mul(u.art, i.rate);
+        uint vtab = _mul(v.art, i.rate);
 
         // both sides consent
         require(both(wish(src, msg.sender), wish(dst, msg.sender)), "Vat/not-allowed");
 
         // both sides safe
-        require(utab <= mul(u.ink, i.spot), "Vat/not-safe-src");
-        require(vtab <= mul(v.ink, i.spot), "Vat/not-safe-dst");
+        require(utab <= _mul(u.ink, i.spot), "Vat/not-safe-src");
+        require(vtab <= _mul(v.ink, i.spot), "Vat/not-safe-dst");
 
         // both sides non-dusty
         require(either(utab >= i.dust, u.art == 0), "Vat/dust-src");
@@ -208,39 +208,39 @@ contract Vat {
         Urn storage urn = urns[i][u];
         Ilk storage ilk = ilks[i];
 
-        urn.ink = add(urn.ink, dink);
-        urn.art = add(urn.art, dart);
-        ilk.Art = add(ilk.Art, dart);
+        urn.ink = _add(urn.ink, dink);
+        urn.art = _add(urn.art, dart);
+        ilk.Art = _add(ilk.Art, dart);
 
-        int dtab = mul(ilk.rate, dart);
+        int dtab = _mul(ilk.rate, dart);
 
-        gem[i][v] = sub(gem[i][v], dink);
-        sin[w]    = sub(sin[w],    dtab);
-        vice      = sub(vice,      dtab);
+        gem[i][v] = _sub(gem[i][v], dink);
+        sin[w]    = _sub(sin[w],    dtab);
+        vice      = _sub(vice,      dtab);
     }
 
     // --- Settlement ---
     function heal(uint rad) external {
         address u = msg.sender;
-        sin[u] = sub(sin[u], rad);
-        dai[u] = sub(dai[u], rad);
-        vice   = sub(vice,   rad);
-        debt   = sub(debt,   rad);
+        sin[u] = _sub(sin[u], rad);
+        dai[u] = _sub(dai[u], rad);
+        vice   = _sub(vice,   rad);
+        debt   = _sub(debt,   rad);
     }
     function suck(address u, address v, uint rad) external auth {
-        sin[u] = add(sin[u], rad);
-        dai[v] = add(dai[v], rad);
-        vice   = add(vice,   rad);
-        debt   = add(debt,   rad);
+        sin[u] = _add(sin[u], rad);
+        dai[v] = _add(dai[v], rad);
+        vice   = _add(vice,   rad);
+        debt   = _add(debt,   rad);
     }
 
     // --- Rates ---
     function fold(bytes32 i, address u, int rate) external auth {
         require(live == 1, "Vat/not-live");
         Ilk storage ilk = ilks[i];
-        ilk.rate = add(ilk.rate, rate);
-        int rad  = mul(ilk.Art, rate);
-        dai[u]   = add(dai[u], rad);
-        debt     = add(debt,   rad);
+        ilk.rate = _add(ilk.rate, rate);
+        int rad  = _mul(ilk.Art, rate);
+        dai[u]   = _add(dai[u], rad);
+        debt     = _add(debt,   rad);
     }
 }
