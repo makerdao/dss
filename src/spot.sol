@@ -27,6 +27,7 @@ interface VatLike {
 
 interface PipLike {
     function peek() external returns (bytes32, bool);
+    function read() external view returns (bytes32);
 }
 
 contract Spotter {
@@ -58,6 +59,8 @@ contract Spotter {
       bytes32 val,  // [wad]
       uint256 spot  // [ray]
     );
+
+    event Read(bytes32 ilk, uint256 val);
 
     // --- Init ---
     constructor(address vat_) public {
@@ -92,6 +95,11 @@ contract Spotter {
         require(live == 1, "Spotter/not-live");
         if (what == "mat") ilks[ilk].mat = data;
         else revert("Spotter/file-unrecognized-param");
+    }
+
+    function read(bytes32 ilk) external returns(uint256 val) {
+        val = uint256(ilks[ilk].pip.read());
+        emit Read(ilk, val);
     }
 
     // --- Update value ---

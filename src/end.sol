@@ -101,6 +101,7 @@ interface PipLike {
 }
 
 interface SpotLike {
+    function read(bytes32) external view returns(uint256);
     function par() external view returns (uint256);
     function ilks(bytes32) external view returns (
         PipLike pip,
@@ -342,7 +343,7 @@ contract End {
         (Art[ilk],,,,) = vat.ilks(ilk);
         (PipLike pip,) = spot.ilks(ilk);
         // par is a ray, pip returns a wad
-        tag[ilk] = wdiv(spot.par(), uint256(pip.read()));
+        tag[ilk] = wdiv(spot.par(), uint256(spot.read(ilk)));
         emit Cage(ilk);
     }
 
