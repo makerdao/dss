@@ -22,7 +22,7 @@ import "ds-token/token.sol";
 
 import {Vat} from '../vat.sol';
 import {Cat} from '../cat.sol';
-import {Vow} from '../vow.sol';
+import {Vow, VowProxy} from '../vow.sol';
 import {Jug} from '../jug.sol';
 import {GemJoin, DaiJoin} from '../join.sol';
 
@@ -45,8 +45,8 @@ contract TestVat is Vat {
 }
 
 contract TestVow is Vow {
-    constructor(address vat, address flapper, address flopper)
-        public Vow(vat, flapper, flopper) {}
+    constructor(address vat)
+        public Vow(vat) {}
     // Total deficit
     function Awe() public view returns (uint) {
         return vat.sin(address(this));
@@ -499,7 +499,11 @@ contract BiteTest is DSTest {
         flap = new Flapper(address(vat), address(gov));
         flop = new Flopper(address(vat), address(gov));
 
-        vow = new TestVow(address(vat), address(flap), address(flop));
+        vow = TestVow(address(new VowProxy()));
+        address vowImp = address(new TestVow(address(vat)));
+        VowProxy(address(vow)).setImplementation(vowImp);
+        vow.file("flapper", address(flap));
+        vow.file("flopper", address(flop));
         flap.rely(address(vow));
         flop.rely(address(vow));
         flap.file("lid", rad(1000 ether));
@@ -513,7 +517,7 @@ contract BiteTest is DSTest {
         cat.file("vow", address(vow));
         cat.file("box", rad((10 ether) * MLN));
         vat.rely(address(cat));
-        vow.rely(address(cat));
+        VowProxy(address(vow)).rely(address(cat));
 
         gold = new DSToken("GEM");
         gold.mint(1000 ether);

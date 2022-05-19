@@ -22,7 +22,7 @@ import "ds-test/test.sol";
 import {Flopper as Flop} from './flop.t.sol';
 import {Flapper as Flap} from './flap.t.sol';
 import {TestVat as  Vat} from './vat.t.sol';
-import {Vow}     from '../vow.sol';
+import {Vow, VowProxy}   from '../vow.sol';
 
 interface Hevm {
     function warp(uint256) external;
@@ -54,7 +54,11 @@ contract VowTest is DSTest {
         flop = new Flop(address(vat), address(gov));
         flap = new Flap(address(vat), address(gov));
 
-        vow = new Vow(address(vat), address(flap), address(flop));
+        vow = Vow(address(new VowProxy()));
+        address vowImp = address(new Vow(address(vat)));
+        VowProxy(address(vow)).setImplementation(vowImp);
+        vow.file("flapper", address(flap));
+        vow.file("flopper", address(flop));
         flap.rely(address(vow));
         flop.rely(address(vow));
         flap.file("lid", rad(1000 ether));
