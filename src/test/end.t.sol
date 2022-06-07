@@ -344,6 +344,17 @@ contract EndTest is DSTest {
         assertEq(balanceOf("gold", address(gold.gemA)), 0);
     }
 
+    // -- Scenario where there is not debt for an ilk
+    // -- which needs to lead to a revert
+    function testFail_cage_no_Art() public {
+        Ilk memory gold = init_collateral("gold");
+
+        // collateral price is 5
+        gold.pip.poke(bytes32(5 * WAD));
+        end.cage();
+        end.cage("gold");
+    }
+
     // -- Scenario where there is one over-collateralised and one
     // -- under-collateralised CDP, and no Vow deficit or surplus
     function test_cage_undercollateralised() public {
@@ -462,9 +473,9 @@ contract EndTest is DSTest {
         // collateral price is 5
         gold.pip.poke(bytes32(5 * WAD));
         end.cage();
-        end.cage("gold");
 
         end.skip("gold", auction);
+        end.cage("gold");
         assertEq(dai(address(this)), 1 ether);       // bid refunded
         vat.move(address(this), urn1, rad(1 ether)); // return 1 dai to ali
 
@@ -565,8 +576,6 @@ contract EndTest is DSTest {
         gold.pip.poke(bytes32(5 * WAD));
         spot.poke("gold");
         end.cage();
-        end.cage("gold");
-        assertEq(end.tag("gold"), ray(0.2 ether)); // par / price = collateral per DAI
 
         assertEq(vat.gem("gold", address(gold.clip)), lot1); // From grab in dog.bark()
         assertEq(vat.sin(address(vow)),        art1 * rate); // From grab in dog.bark()
@@ -604,6 +613,9 @@ contract EndTest is DSTest {
         (uint ink3, uint art3) = vat.urns("gold", urn1);    // CDP after snip
         assertEq(ink3, 10 ether);                           // All collateral returned to CDP
         assertEq(art3, tab1 / rate);                        // Tab amount of normalized debt transferred back into CDP
+
+        end.cage("gold");
+        assertEq(end.tag("gold"), ray(0.2 ether)); // par / price = collateral per DAI
     }
 
     // -- Scenario where there is one over-collateralised CDP

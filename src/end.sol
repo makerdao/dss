@@ -347,7 +347,9 @@ contract End {
     function cage(bytes32 ilk) external {
         require(live == 0, "End/still-live");
         require(tag[ilk] == 0, "End/tag-ilk-already-defined");
-        (Art[ilk],,,,) = vat.ilks(ilk);
+        (uint256 Art_,,,,) = vat.ilks(ilk);
+        require(Art_ > 0, "End/Art-is-zero");
+        Art[ilk] = Art_;
         (PipLike pip,) = spot.ilks(ilk);
         // par is a ray, pip returns a wad
         tag[ilk] = wdiv(spot.par(), uint256(pip.read()));
@@ -355,8 +357,6 @@ contract End {
     }
 
     function snip(bytes32 ilk, uint256 id) external {
-        require(tag[ilk] != 0, "End/tag-ilk-not-defined");
-
         (address _clip,,,) = dog.ilks(ilk);
         ClipLike clip = ClipLike(_clip);
         (, uint256 rate,,,) = vat.ilks(ilk);
@@ -373,8 +373,6 @@ contract End {
     }
 
     function skip(bytes32 ilk, uint256 id) external {
-        require(tag[ilk] != 0, "End/tag-ilk-not-defined");
-
         (address _flip,,) = cat.ilks(ilk);
         FlipLike flip = FlipLike(_flip);
         (, uint256 rate,,,) = vat.ilks(ilk);
