@@ -31,7 +31,7 @@ contract Vat {
     modifier auth {
         require(wards[msg.sender] == 1, "Vat/not-authorized");
         _;
-    }
+    }   
 
     mapping(address => mapping (address => uint)) public can;
     function hope(address usr) external { can[msg.sender][usr] = 1; }
@@ -234,13 +234,14 @@ contract Vat {
         debt   = _add(debt,   rad);
     }
 
+    // This recognises the accrued interest to date.
     // --- Rates ---
-    function fold(bytes32 i, address u, int rate) external auth {
+    function fold(bytes32 i, address u, int rate) external auth {           // Note: This is always called with `u` being the "vow" or protocol treasury.
         require(live == 1, "Vat/not-live");
-        Ilk storage ilk = ilks[i];
-        ilk.rate = _add(ilk.rate, rate);
-        int rad  = _mul(ilk.Art, rate);
-        dai[u]   = _add(dai[u], rad);
-        debt     = _add(debt,   rad);
+        Ilk storage ilk = ilks[i];                  // Get the collateral type.
+        ilk.rate = _add(ilk.rate, rate);            // Add the rate from the param  (which is the difference between the previous rate and the new rate) to the current rate.
+        int rad  = _mul(ilk.Art, rate);             // Calcualate the new accrued interest. Note that we use `rate` instead of `rad`.
+        dai[u]   = _add(dai[u], rad);               // Add the accrued interest to vow's DAI balance. Which also grosses up the total DAI balance.
+        debt     = _add(debt,   rad);               // Add the accrued interest to the total debt balance. As an aside, total debt should equal total outstanding DAI.
     }
 }

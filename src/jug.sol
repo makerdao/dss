@@ -43,14 +43,14 @@ contract Jug {
 
     // --- Data ---
     struct Ilk {
-        uint256 duty;  // Collateral-specific, per-second stability fee contribution [ray]
-        uint256  rho;  // Time of last drip [unix epoch time]
+        uint256 duty;  // Collateral-specific, per-second stability fee contribution [ray]          // DAM: This is the per second interest rate obtained by (1 + r)^(1/60x60x24x365).
+        uint256  rho;  // Time of last drip [unix epoch time]                                       // DAM: The last time that we recognised the interest for this collateral type.
     }
 
     mapping (bytes32 => Ilk) public ilks;
     VatLike                  public vat;   // CDP Engine
-    address                  public vow;   // Debt Engine
-    uint256                  public base;  // Global, per-second stability fee contribution [ray]
+    address                  public vow;   // Debt Engine                                           // DAM: Does this _need_ to be stored in this contract??
+    uint256                  public base;  // Global, per-second stability fee contribution [ray]   // DAM: The base rate which is added to each collateral rate.
 
     // --- Init ---
     constructor(address vat_) public {
@@ -119,11 +119,26 @@ contract Jug {
     }
 
     // --- Stability Fee Collection ---
+    // E.g. assume an APY of 5%.
+    // Also assume one month is one second for the purposes of this explanation.
+    // one month worth of interest is = 1.05^1/12 -> 1.004074123...
+    // if the original rate was 1 (New collateral types in the VAT get set up with the rate as "1") then the new rate after one month is: 1 x 1.004074123...
+    // Then the difference is provided to vat.fold, so -> 0.004074123...
+    // If we wait 3 months and do this again...
+    // Total accred interest over four months = 1.004074123^3/12 -> 1.012272...
+    // If the past rate was 1.004074123 (see above), then we do: 1.004074123 x 1.012272 -> 1.0163963568148539
+    // Then we pass the difference between the new rate and the previous rate (1.016 - 1.004) to vat.fold -> 0.0123222330312057 ...... This is the amount of interest which has accrued since "drip" was last called.
     function drip(bytes32 ilk) external returns (uint rate) {
         require(now >= ilks[ilk].rho, "Jug/invalid-now");
-        (, uint prev) = vat.ilks(ilk);
-        rate = _rmul(_rpow(_add(base, ilks[ilk].duty), now - ilks[ilk].rho, ONE), prev);
-        vat.fold(ilk, vow, _diff(rate, prev));
+        (, uint prev) = vat.ilks(ilk);                                          
+        rate = _rmul(                                                           // Allows us to "join" rates.
+            _rpow(                                                              // DAM: The result of this gives us the interest rate which represents the "duty" accrued since the last time interest was recognised.
+                _add(base, ilks[ilk].duty),                                     // DAM: Base rate + collateral rate.
+                now - ilks[ilk].rho,                                            // DAM: Difference in time since last time interest was recognised.
+                ONE                                                             // DAM: Presumably we need to add one to the rate so we can multiply them.
+            ), prev                                                             // DAM: The previous interest rate for the specified collateral type.
+        );
+        vat.fold(ilk, vow, _diff(rate, prev));                                  // DAM: Take the difference of current rate vs prev and use it to update the vat. 
         ilks[ilk].rho = now;
     }
 }
