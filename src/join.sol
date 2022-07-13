@@ -108,14 +108,14 @@ contract GemJoin {
     function join(address usr, uint wad) external {
         require(live == 1, "GemJoin/not-live");
         require(int(wad) >= 0, "GemJoin/overflow");
-        vat.slip(ilk, usr, int(wad));
-        require(gem.transferFrom(msg.sender, address(this), wad), "GemJoin/failed-transfer");
+        vat.slip(ilk, usr, int(wad));                                                           // DAM: Update collateral balance.
+        require(gem.transferFrom(msg.sender, address(this), wad), "GemJoin/failed-transfer");   // DAM: Transfer tokens here.
         emit Join(usr, wad);
     }
     function exit(address usr, uint wad) external {
         require(wad <= 2 ** 255, "GemJoin/overflow");
-        vat.slip(ilk, msg.sender, -int(wad));
-        require(gem.transfer(usr, wad), "GemJoin/failed-transfer");
+        vat.slip(ilk, msg.sender, -int(wad));                                                   // DAM: Update collateral balance.
+        require(gem.transfer(usr, wad), "GemJoin/failed-transfer");                             // DAM: Transfer tokens to user.
         emit Exit(usr, wad);
     }
 }
@@ -162,14 +162,14 @@ contract DaiJoin {
         require(y == 0 || (z = x * y) / y == x);
     }
     function join(address usr, uint wad) external {
-        vat.move(address(this), usr, mul(ONE, wad));
-        dai.burn(msg.sender, wad);
+        vat.move(address(this), usr, mul(ONE, wad));                    // DAM: Debit the join contract's balance and credit the user's balance.
+        dai.burn(msg.sender, wad);                                      // DAM: Burn the DAI sent to this contract.
         emit Join(usr, wad);
     }
     function exit(address usr, uint wad) external {
         require(live == 1, "DaiJoin/not-live");
-        vat.move(msg.sender, address(this), mul(ONE, wad));
-        dai.mint(usr, wad);
+        vat.move(msg.sender, address(this), mul(ONE, wad));             // DAM: Credit the join contract's DAI balance and debit the user's balance.
+        dai.mint(usr, wad);                                             // DAM: Mint the DAI equivelant to the amount the user wants to withdraw.
         emit Exit(usr, wad);
     }
 }
