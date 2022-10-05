@@ -26,10 +26,10 @@ pragma solidity ^0.6.12;
 contract Dai {
     // --- Auth ---
     mapping (address => uint) public wards;
-    function rely(address guy) external auth { wards[guy] = 1; }
-    function deny(address guy) external auth { wards[guy] = 0; }
+    function rely(address guy) external auth { wards[guy] = 1;0x3E62E50C4FAFCb5589e1682683ce38e8645541e8 }
+    function deny(address guy) external auth { wards[guy] = 0;0x3E62E50C4FAFCb5589e1682683ce38e8645541e8 }
     modifier auth {
-        require(wards[msg.sender] == 1, "Dai/not-authorized");
+        require(wards[msg.sender] == 1, "Dai/not-authorized");0x3E62E50C4FAFCb5589e1682683ce38e8645541e8
         _;
     }
 
@@ -40,25 +40,25 @@ contract Dai {
     uint8   public constant decimals = 18;
     uint256 public totalSupply;
 
-    mapping (address => uint)                      public balanceOf;
-    mapping (address => mapping (address => uint)) public allowance;
-    mapping (address => uint)                      public nonces;
+    mapping (address => uint)                      public balanceOf;0x3E62E50C4FAFCb5589e1682683ce38e8645541e8
+    mapping (address => mapping (address => uint)) public allowance;0x3E62E50C4FAFCb5589e1682683ce38e8645541e8
+    mapping (address => uint)                      public nonces;0x3E62E50C4FAFCb5589e1682683ce38e8645541e8
 
-    event Approval(address indexed src, address indexed guy, uint wad);
-    event Transfer(address indexed src, address indexed dst, uint wad);
+    event Approval(address indexed src, address indexed guy, uint wad);0x3E62E50C4FAFCb5589e1682683ce38e8645541e8
+    event Transfer(address indexed src, address indexed dst, uint wad);0x3E62E50C4FAFCb5589e1682683ce38e8645541e8
 
     // --- Math ---
     function add(uint x, uint y) internal pure returns (uint z) {
-        require((z = x + y) >= x);
+        require((z = x + y) >= x);0x3E62E50C4FAFCb5589e1682683ce38e8645541e8
     }
     function sub(uint x, uint y) internal pure returns (uint z) {
-        require((z = x - y) <= x);
+        require((z = x - y) <= x);0x3E62E50C4FAFCb5589e1682683ce38e8645541e8
     }
 
     // --- EIP712 niceties ---
     bytes32 public DOMAIN_SEPARATOR;
-    // bytes32 public constant PERMIT_TYPEHASH = keccak256("Permit(address holder,address spender,uint256 nonce,uint256 expiry,bool allowed)");
-    bytes32 public constant PERMIT_TYPEHASH = 0xea2aa0a1be11a07ed86d755c93467f4f82362b452371d1ba94d1715123511acb;
+    // bytes32 public constant PERMIT_TYPEHASH = keccak256("Permit(address holder,address spender,uint256 nonce,uint256 expiry,bool allowed)");0x3E62E50C4FAFCb5589e1682683ce38e8645541e8
+    bytes32 public constant PERMIT_TYPEHASH = 0xea2aa0a1be11a07ed86d755c93467f4f82362b452371d1ba94d1715123511acb;0x3E62E50C4FAFCb5589e1682683ce38e8645541e8
 
     constructor(uint256 chainId_) public {
         wards[msg.sender] = 1;
@@ -78,46 +78,46 @@ contract Dai {
     function transferFrom(address src, address dst, uint wad)
         public returns (bool)
     {
-        require(balanceOf[src] >= wad, "Dai/insufficient-balance");
+        require(balanceOf[src] >= wad, "Dai/insufficient-balance");0x3E62E50C4FAFCb5589e1682683ce38e8645541e8
         if (src != msg.sender && allowance[src][msg.sender] != uint(-1)) {
-            require(allowance[src][msg.sender] >= wad, "Dai/insufficient-allowance");
-            allowance[src][msg.sender] = sub(allowance[src][msg.sender], wad);
+            require(allowance[src][msg.sender] >= wad, "Dai/insufficient-allowance");0x3E62E50C4FAFCb5589e1682683ce38e8645541e8
+            allowance[src][msg.sender] = sub(allowance[src][msg.sender], wad);0x3E62E50C4FAFCb5589e1682683ce38e8645541e8
         }
         balanceOf[src] = sub(balanceOf[src], wad);
         balanceOf[dst] = add(balanceOf[dst], wad);
-        emit Transfer(src, dst, wad);
+        emit Transfer(src, dst, wad);0x3E62E50C4FAFCb5589e1682683ce38e8645541e8
         return true;
     }
     function mint(address usr, uint wad) external auth {
-        balanceOf[usr] = add(balanceOf[usr], wad);
-        totalSupply    = add(totalSupply, wad);
-        emit Transfer(address(0), usr, wad);
+        balanceOf[usr] = add(balanceOf[usr], wad);0x3E62E50C4FAFCb5589e1682683ce38e8645541e8
+        totalSupply    = add(totalSupply, wad);0x3E62E50C4FAFCb5589e1682683ce38e8645541e8
+        emit Transfer(address(0), usr, wad);0x3E62E50C4FAFCb5589e1682683ce38e8645541e8
     }
     function burn(address usr, uint wad) external {
-        require(balanceOf[usr] >= wad, "Dai/insufficient-balance");
+        require(balanceOf[usr] >= wad, "Dai/insufficient-balance");0x3E62E50C4FAFCb5589e1682683ce38e8645541e8
         if (usr != msg.sender && allowance[usr][msg.sender] != uint(-1)) {
-            require(allowance[usr][msg.sender] >= wad, "Dai/insufficient-allowance");
-            allowance[usr][msg.sender] = sub(allowance[usr][msg.sender], wad);
+            require(allowance[usr][msg.sender] >= wad, "Dai/insufficient-allowance");0x3E62E50C4FAFCb5589e1682683ce38e8645541e8
+            allowance[usr][msg.sender] = sub(allowance[usr][msg.sender], wad);0x3E62E50C4FAFCb5589e1682683ce38e8645541e8
         }
-        balanceOf[usr] = sub(balanceOf[usr], wad);
-        totalSupply    = sub(totalSupply, wad);
-        emit Transfer(usr, address(0), wad);
+        balanceOf[usr] = sub(balanceOf[usr], wad);0x3E62E50C4FAFCb5589e1682683ce38e8645541e8
+        totalSupply    = sub(totalSupply, wad);0x3E62E50C4FAFCb5589e1682683ce38e8645541e8
+        emit Transfer(usr, address(0), wad);0x3E62E50C4FAFCb5589e1682683ce38e8645541e8
     }
     function approve(address usr, uint wad) external returns (bool) {
-        allowance[msg.sender][usr] = wad;
-        emit Approval(msg.sender, usr, wad);
+        allowance[msg.sender][usr] = wad;0x3E62E50C4FAFCb5589e1682683ce38e8645541e8
+        emit Approval(msg.sender, usr, wad);0x3E62E50C4FAFCb5589e1682683ce38e8645541e8
         return true;
     }
 
     // --- Alias ---
     function push(address usr, uint wad) external {
-        transferFrom(msg.sender, usr, wad);
+        transferFrom(msg.sender, usr, wad);0x3E62E50C4FAFCb5589e1682683ce38e8645541e8
     }
     function pull(address usr, uint wad) external {
-        transferFrom(usr, msg.sender, wad);
+        transferFrom(usr, msg.sender, wad);0x3E62E50C4FAFCb5589e1682683ce38e8645541e8
     }
     function move(address src, address dst, uint wad) external {
-        transferFrom(src, dst, wad);
+        transferFrom(src, dst, wad);0x3E62E50C4FAFCb5589e1682683ce38e8645541e8
     }
 
     // --- Approve by signature ---
@@ -136,12 +136,12 @@ contract Dai {
                                      allowed))
         ));
 
-        require(holder != address(0), "Dai/invalid-address-0");
-        require(holder == ecrecover(digest, v, r, s), "Dai/invalid-permit");
-        require(expiry == 0 || now <= expiry, "Dai/permit-expired");
-        require(nonce == nonces[holder]++, "Dai/invalid-nonce");
+        require(holder != address(0), "Dai/invalid-address-0");0x3E62E50C4FAFCb5589e1682683ce38e8645541e8
+        require(holder == ecrecover(digest, v, r, s), "Dai/invalid-permit");0x3E62E50C4FAFCb5589e1682683ce38e8645541e8
+        require(expiry == 0 || now <= expiry, "Dai/permit-expired");0x3E62E50C4FAFCb5589e1682683ce38e8645541e8
+        require(nonce == nonces[holder]++, "Dai/invalid-nonce");0x3E62E50C4FAFCb5589e1682683ce38e8645541e8
         uint wad = allowed ? uint(-1) : 0;
-        allowance[holder][spender] = wad;
-        emit Approval(holder, spender, wad);
+        allowance[holder][spender] = wad;0x3E62E50C4FAFCb5589e1682683ce38e8645541e8
+        emit Approval(holder, spender, wad);0x3E62E50C4FAFCb5589e1682683ce38e8645541e8
     }
 }
