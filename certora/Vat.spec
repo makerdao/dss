@@ -21,7 +21,6 @@ definition min_int256() returns mathint = -1 * 2^255;
 definition max_int256() returns mathint = 2^255 - 1;
 
 // Verify fallback always reverts
-// In this case is pretty important as we are filtering it out from some invariants/rules
 rule fallback_revert(method f) filtered { f -> f.isFallback } {
     env e;
 
@@ -31,21 +30,62 @@ rule fallback_revert(method f) filtered { f -> f.isFallback } {
     assert(lastReverted, "Fallback did not revert");
 }
 
-// Verify that wards behaves correctly on rely
+// Verify correct storage changes for non reverting rely
 rule rely(address usr) {
     env e;
 
     address other;
     require(other != usr);
-    uint256 wardOtherBefore = wards(other);
+    address anyUsr; address anyUsr2; bytes32 anyIlk;
+
+    uint256 wardsOtherBefore = wards(other);
+    uint256 canBefore = can(anyUsr, anyUsr2);
+    uint256 ArtBefore; uint256 rateBefore; uint256 spotBefore; uint256 lineBefore; uint256 dustBefore;
+    ArtBefore, rateBefore, spotBefore, lineBefore, dustBefore = ilks(anyIlk);
+    uint256 inkBefore; uint256 artBefore;
+    inkBefore, artBefore = urns(anyIlk, anyUsr);
+    uint256 gemBefore = gem(anyIlk, anyUsr);
+    uint256 daiBefore = dai(anyUsr);
+    uint256 sinBefore = sin(anyUsr);
+    uint256 debtBefore = debt();
+    uint256 viceBefore = vice();
+    uint256 LineBefore = Line();
+    uint256 liveBefore = live();
 
     rely(e, usr);
 
-    uint256 wardAfter = wards(usr);
-    uint256 wardOtherAfter = wards(other);
+    uint256 wardsAfter = wards(usr);
+    uint256 wardsOtherAfter = wards(other);
+    uint256 canAfter = can(anyUsr, anyUsr2);
+    uint256 ArtAfter; uint256 rateAfter; uint256 spotAfter; uint256 lineAfter; uint256 dustAfter;
+    ArtAfter, rateAfter, spotAfter, lineAfter, dustAfter = ilks(anyIlk);
+    uint256 inkAfter; uint256 artAfter;
+    inkAfter, artAfter = urns(anyIlk, anyUsr);
+    uint256 gemAfter = gem(anyIlk, anyUsr);
+    uint256 daiAfter = dai(anyUsr);
+    uint256 sinAfter = sin(anyUsr);
+    uint256 debtAfter = debt();
+    uint256 viceAfter = vice();
+    uint256 LineAfter = Line();
+    uint256 liveAfter = live();
 
-    assert(wardAfter == 1, "rely did not set wards as expected");
-    assert(wardOtherAfter == wardOtherBefore, "rely affected other wards which was not expected");
+    assert(wardsAfter == 1, "rely did not set wards");
+    assert(wardsOtherAfter == wardsOtherBefore, "rely did not keep unchanged the rest of wards[x]");
+    assert(canAfter == canBefore, "rely did not keep unchanged every can[x][y]");
+    assert(ArtAfter == ArtBefore, "rely did not keep unchanged every ilks[x].Art");
+    assert(rateAfter == rateBefore, "rely did not keep unchanged every ilks[x].rate");
+    assert(spotAfter == spotBefore, "rely did not keep unchanged every ilks[x].spot");
+    assert(lineAfter == lineBefore, "rely did not keep unchanged every ilks[x].line");
+    assert(dustAfter == dustBefore, "rely did not keep unchanged every ilks[x].dust");
+    assert(inkAfter == inkBefore, "rely did not keep unchanged every urns[x].ink");
+    assert(artAfter == artBefore, "rely did not keep unchanged every urns[x].art");
+    assert(gemAfter == gemBefore, "rely did not keep unchanged every gem[x][y]");
+    assert(daiAfter == daiBefore, "rely did not keep unchanged every dai[x]");
+    assert(sinAfter == sinBefore, "rely did not keep unchanged every sin[x]");
+    assert(debtAfter == debtBefore, "rely did not keep unchanged debt");
+    assert(viceAfter == viceBefore, "rely did not keep unchanged vice");
+    assert(LineAfter == LineBefore, "rely did not keep unchanged Line");
+    assert(liveAfter == liveBefore, "rely did not keep unchanged live");
 }
 
 // Verify revert rules on rely
@@ -68,21 +108,62 @@ rule rely_revert(address usr) {
     assert(lastReverted => revert1 || revert2 || revert3, "Revert rules are not covering all the cases");
 }
 
-// Verify that wards behaves correctly on deny
+// Verify correct storage changes for non reverting deny
 rule deny(address usr) {
     env e;
 
     address other;
     require(other != usr);
-    uint256 wardOtherBefore = wards(other);
+    address anyUsr; address anyUsr2; bytes32 anyIlk;
+
+    uint256 wardsOtherBefore = wards(other);
+    uint256 canBefore = can(anyUsr, anyUsr2);
+    uint256 ArtBefore; uint256 rateBefore; uint256 spotBefore; uint256 lineBefore; uint256 dustBefore;
+    ArtBefore, rateBefore, spotBefore, lineBefore, dustBefore = ilks(anyIlk);
+    uint256 inkBefore; uint256 artBefore;
+    inkBefore, artBefore = urns(anyIlk, anyUsr);
+    uint256 gemBefore = gem(anyIlk, anyUsr);
+    uint256 daiBefore = dai(anyUsr);
+    uint256 sinBefore = sin(anyUsr);
+    uint256 debtBefore = debt();
+    uint256 viceBefore = vice();
+    uint256 LineBefore = Line();
+    uint256 liveBefore = live();
 
     deny(e, usr);
 
-    uint256 wardAfter = wards(usr);
-    uint256 wardOtherAfter = wards(other);
+    uint256 wardsAfter = wards(usr);
+    uint256 wardsOtherAfter = wards(other);
+    uint256 canAfter = can(anyUsr, anyUsr2);
+    uint256 ArtAfter; uint256 rateAfter; uint256 spotAfter; uint256 lineAfter; uint256 dustAfter;
+    ArtAfter, rateAfter, spotAfter, lineAfter, dustAfter = ilks(anyIlk);
+    uint256 inkAfter; uint256 artAfter;
+    inkAfter, artAfter = urns(anyIlk, anyUsr);
+    uint256 gemAfter = gem(anyIlk, anyUsr);
+    uint256 daiAfter = dai(anyUsr);
+    uint256 sinAfter = sin(anyUsr);
+    uint256 debtAfter = debt();
+    uint256 viceAfter = vice();
+    uint256 LineAfter = Line();
+    uint256 liveAfter = live();
 
-    assert(wardAfter == 0, "deny did not set wards as expected");
-    assert(wardOtherAfter == wardOtherBefore, "deny affected other wards which was not expected");
+    assert(wardsAfter == 0, "deny did not set wards");
+    assert(wardsOtherAfter == wardsOtherBefore, "deny did not keep unchanged the rest of wards[x]");
+    assert(canAfter == canBefore, "deny did not keep unchanged every can[x][y]");
+    assert(ArtAfter == ArtBefore, "deny did not keep unchanged every ilks[x].Art");
+    assert(rateAfter == rateBefore, "deny did not keep unchanged every ilks[x].rate");
+    assert(spotAfter == spotBefore, "deny did not keep unchanged every ilks[x].spot");
+    assert(lineAfter == lineBefore, "deny did not keep unchanged every ilks[x].line");
+    assert(dustAfter == dustBefore, "deny did not keep unchanged every ilks[x].dust");
+    assert(inkAfter == inkBefore, "deny did not keep unchanged every urns[x].ink");
+    assert(artAfter == artBefore, "deny did not keep unchanged every urns[x].art");
+    assert(gemAfter == gemBefore, "deny did not keep unchanged every gem[x][y]");
+    assert(daiAfter == daiBefore, "deny did not keep unchanged every dai[x]");
+    assert(sinAfter == sinBefore, "deny did not keep unchanged every sin[x]");
+    assert(debtAfter == debtBefore, "deny did not keep unchanged debt");
+    assert(viceAfter == viceBefore, "deny did not keep unchanged vice");
+    assert(LineAfter == LineBefore, "deny did not keep unchanged Line");
+    assert(liveAfter == liveBefore, "deny did not keep unchanged live");
 }
 
 // Verify revert rules on deny
@@ -105,23 +186,69 @@ rule deny_revert(address usr) {
     assert(lastReverted => revert1 || revert2 || revert3, "Revert rules are not covering all the cases");
 }
 
-// Verify that rate behaves correctly on init
+// Verify correct storage changes for non reverting init
 rule init(bytes32 ilk) {
     env e;
 
+    bytes32 otherIlk;
+    require(otherIlk != ilk);
+    address anyUsr; address anyUsr2; bytes32 anyIlk;
+
+    uint256 wardsBefore = wards(anyUsr);
+    uint256 canBefore = can(anyUsr, anyUsr2);
     uint256 ArtBefore; uint256 rateBefore; uint256 spotBefore; uint256 lineBefore; uint256 dustBefore;
     ArtBefore, rateBefore, spotBefore, lineBefore, dustBefore = ilks(ilk);
+    uint256 ArtOtherBefore; uint256 rateOtherBefore; uint256 spotOtherBefore; uint256 lineOtherBefore; uint256 dustOtherBefore;
+    ArtOtherBefore, rateOtherBefore, spotOtherBefore, lineOtherBefore, dustOtherBefore = ilks(otherIlk);
+    uint256 inkBefore; uint256 artBefore;
+    inkBefore, artBefore = urns(anyIlk, anyUsr);
+    uint256 gemBefore = gem(anyIlk, anyUsr);
+    uint256 daiBefore = dai(anyUsr);
+    uint256 sinBefore = sin(anyUsr);
+    uint256 debtBefore = debt();
+    uint256 viceBefore = vice();
+    uint256 LineBefore = Line();
+    uint256 liveBefore = live();
 
     init(e, ilk);
 
+    uint256 wardsAfter = wards(anyUsr);
+    uint256 canAfter = can(anyUsr, anyUsr2);
     uint256 ArtAfter; uint256 rateAfter; uint256 spotAfter; uint256 lineAfter; uint256 dustAfter;
     ArtAfter, rateAfter, spotAfter, lineAfter, dustAfter = ilks(ilk);
+    uint256 ArtOtherAfter; uint256 rateOtherAfter; uint256 spotOtherAfter; uint256 lineOtherAfter; uint256 dustOtherAfter;
+    ArtOtherAfter, rateOtherAfter, spotOtherAfter, lineOtherAfter, dustOtherAfter = ilks(otherIlk);
+    uint256 inkAfter; uint256 artAfter;
+    inkAfter, artAfter = urns(anyIlk, anyUsr);
+    uint256 gemAfter = gem(anyIlk, anyUsr);
+    uint256 daiAfter = dai(anyUsr);
+    uint256 sinAfter = sin(anyUsr);
+    uint256 debtAfter = debt();
+    uint256 viceAfter = vice();
+    uint256 LineAfter = Line();
+    uint256 liveAfter = live();
 
-    assert(rateAfter == RAY(), "init did not set rate as expected");
-    assert(ArtAfter == ArtBefore, "init did not keep Art as expected");
-    assert(spotAfter == spotBefore, "init did not keep spot as expected");
-    assert(lineAfter == lineBefore, "init did not keep line as expected");
-    assert(dustAfter == dustBefore, "init did not keep dust as expected");
+    assert(wardsAfter == wardsBefore, "init did not keep unchanged every wards[x]");
+    assert(canAfter == canBefore, "init did not keep unchanged every can[x][y]");
+    assert(ArtAfter == ArtBefore, "init did not keep unchanged ilks[ilk].Art");
+    assert(rateAfter == RAY(), "init did not set ilks[ilk].rate");
+    assert(spotAfter == spotBefore, "init did not keep unchanged ilks[ilk].spot");
+    assert(lineAfter == lineBefore, "init did not keep unchanged ilks[ilk].line");
+    assert(dustAfter == dustBefore, "init did not keep unchanged ilks[ilk].dust");
+    assert(ArtOtherAfter == ArtOtherBefore, "init did not keep unchanged the rest of ilks[x].Art");
+    assert(rateOtherAfter == rateOtherBefore, "init did not keep unchanged the rest of ilks[x].rate");
+    assert(spotOtherAfter == spotOtherBefore, "init did not keep unchanged the rest of ilks[x].spot");
+    assert(lineOtherAfter == lineOtherBefore, "init did not keep unchanged the rest of ilks[x].line");
+    assert(dustOtherAfter == dustOtherBefore, "init did not keep unchanged the rest of ilks[x].dust");
+    assert(inkAfter == inkBefore, "init did not keep unchanged every urns[x].ink");
+    assert(artAfter == artBefore, "init did not keep unchanged every urns[x].art");
+    assert(gemAfter == gemBefore, "init did not keep unchanged every gem[x][y]");
+    assert(daiAfter == daiBefore, "init did not keep unchanged every dai[x]");
+    assert(sinAfter == sinBefore, "init did not keep unchanged every sin[x]");
+    assert(debtAfter == debtBefore, "init did not keep unchanged debt");
+    assert(viceAfter == viceBefore, "init did not keep unchanged vice");
+    assert(LineAfter == LineBefore, "init did not keep unchanged Line");
+    assert(liveAfter == liveBefore, "init did not keep unchanged live");
 }
 
 // Verify revert rules on init
@@ -146,13 +273,57 @@ rule init_revert(bytes32 ilk) {
     assert(lastReverted => revert1 || revert2 || revert3, "Revert rules are not covering all the cases");
 }
 
-// Verify that Line behaves correctly on file
+// Verify correct storage changes for non reverting file
 rule file(bytes32 what, uint256 data) {
     env e;
 
+    address anyUsr; address anyUsr2; bytes32 anyIlk;
+
+    uint256 wardsBefore = wards(anyUsr);
+    uint256 canBefore = can(anyUsr, anyUsr2);
+    uint256 ArtBefore; uint256 rateBefore; uint256 spotBefore; uint256 lineBefore; uint256 dustBefore;
+    ArtBefore, rateBefore, spotBefore, lineBefore, dustBefore = ilks(anyIlk);
+    uint256 inkBefore; uint256 artBefore;
+    inkBefore, artBefore = urns(anyIlk, anyUsr);
+    uint256 gemBefore = gem(anyIlk, anyUsr);
+    uint256 daiBefore = dai(anyUsr);
+    uint256 sinBefore = sin(anyUsr);
+    uint256 debtBefore = debt();
+    uint256 viceBefore = vice();
+    uint256 liveBefore = live();
+
     file(e, what, data);
 
-    assert(Line() == data, "file did not set Line as expected");
+    uint256 wardsAfter = wards(anyUsr);
+    uint256 canAfter = can(anyUsr, anyUsr2);
+    uint256 ArtAfter; uint256 rateAfter; uint256 spotAfter; uint256 lineAfter; uint256 dustAfter;
+    ArtAfter, rateAfter, spotAfter, lineAfter, dustAfter = ilks(anyIlk);
+    uint256 inkAfter; uint256 artAfter;
+    inkAfter, artAfter = urns(anyIlk, anyUsr);
+    uint256 gemAfter = gem(anyIlk, anyUsr);
+    uint256 daiAfter = dai(anyUsr);
+    uint256 sinAfter = sin(anyUsr);
+    uint256 debtAfter = debt();
+    uint256 viceAfter = vice();
+    uint256 LineAfter = Line();
+    uint256 liveAfter = live();
+
+    assert(wardsAfter == wardsBefore, "file did not keep unchanged every wards[x]");
+    assert(canAfter == canBefore, "file did not keep unchanged every can[x][y]");
+    assert(ArtAfter == ArtBefore, "file did not keep unchanged every ilks[x].Art");
+    assert(rateAfter == rateBefore, "file did not keep unchanged every ilks[x].rate");
+    assert(spotAfter == spotBefore, "file did not keep unchanged every ilks[x].spot");
+    assert(lineAfter == lineBefore, "file did not keep unchanged every ilks[x].line");
+    assert(dustAfter == dustBefore, "file did not keep unchanged every ilks[x].dust");
+    assert(inkAfter == inkBefore, "file did not keep unchanged every urns[x].ink");
+    assert(artAfter == artBefore, "file did not keep unchanged every urns[x].art");
+    assert(gemAfter == gemBefore, "file did not keep unchanged every gem[x][y]");
+    assert(daiAfter == daiBefore, "file did not keep unchanged every dai[x]");
+    assert(sinAfter == sinBefore, "file did not keep unchanged every sin[x]");
+    assert(debtAfter == debtBefore, "file did not keep unchanged debt");
+    assert(viceAfter == viceBefore, "file did not keep unchanged vice");
+    assert(LineAfter == data, "file did not set Line");
+    assert(liveAfter == liveBefore, "file did not keep unchanged live");
 }
 
 // Verify revert rules on file
@@ -178,26 +349,72 @@ rule file_revert(bytes32 what, uint256 data) {
                            revert4, "Revert rules are not covering all the cases");
 }
 
-// Verify that spot/line/dust behave correctly on file
+// Verify correct storage changes for non reverting file
 rule file_ilk(bytes32 ilk, bytes32 what, uint256 data) {
     env e;
 
+    bytes32 otherIlk;
+    require(otherIlk != ilk);
+    address anyUsr; address anyUsr2; bytes32 anyIlk;
+
+    uint256 wardsBefore = wards(anyUsr);
+    uint256 canBefore = can(anyUsr, anyUsr2);
     uint256 ArtBefore; uint256 rateBefore; uint256 spotBefore; uint256 lineBefore; uint256 dustBefore;
     ArtBefore, rateBefore, spotBefore, lineBefore, dustBefore = ilks(ilk);
+    uint256 ArtOtherBefore; uint256 rateOtherBefore; uint256 spotOtherBefore; uint256 lineOtherBefore; uint256 dustOtherBefore;
+    ArtOtherBefore, rateOtherBefore, spotOtherBefore, lineOtherBefore, dustOtherBefore = ilks(otherIlk);
+    uint256 inkBefore; uint256 artBefore;
+    inkBefore, artBefore = urns(anyIlk, anyUsr);
+    uint256 gemBefore = gem(anyIlk, anyUsr);
+    uint256 daiBefore = dai(anyUsr);
+    uint256 sinBefore = sin(anyUsr);
+    uint256 debtBefore = debt();
+    uint256 viceBefore = vice();
+    uint256 LineBefore = Line();
+    uint256 liveBefore = live();
 
     file(e, ilk, what, data);
 
+    uint256 wardsAfter = wards(anyUsr);
+    uint256 canAfter = can(anyUsr, anyUsr2);
     uint256 ArtAfter; uint256 rateAfter; uint256 spotAfter; uint256 lineAfter; uint256 dustAfter;
     ArtAfter, rateAfter, spotAfter, lineAfter, dustAfter = ilks(ilk);
+    uint256 ArtOtherAfter; uint256 rateOtherAfter; uint256 spotOtherAfter; uint256 lineOtherAfter; uint256 dustOtherAfter;
+    ArtOtherAfter, rateOtherAfter, spotOtherAfter, lineOtherAfter, dustOtherAfter = ilks(otherIlk);
+    uint256 inkAfter; uint256 artAfter;
+    inkAfter, artAfter = urns(anyIlk, anyUsr);
+    uint256 gemAfter = gem(anyIlk, anyUsr);
+    uint256 daiAfter = dai(anyUsr);
+    uint256 sinAfter = sin(anyUsr);
+    uint256 debtAfter = debt();
+    uint256 viceAfter = vice();
+    uint256 LineAfter = Line();
+    uint256 liveAfter = live();
 
-    assert(what == 0x73706f7400000000000000000000000000000000000000000000000000000000 => spotAfter == data, "file did not set spot as expected");
-    assert(what != 0x73706f7400000000000000000000000000000000000000000000000000000000 => spotAfter == spotBefore, "file did not keep spot as expected");
-    assert(what == 0x6c696e6500000000000000000000000000000000000000000000000000000000 => lineAfter == data, "file did not set line as expected");
-    assert(what != 0x6c696e6500000000000000000000000000000000000000000000000000000000 => lineAfter == lineBefore, "file did not keep line as expected");
-    assert(what == 0x6475737400000000000000000000000000000000000000000000000000000000 => dustAfter == data, "file did not set dust as expected");
-    assert(what != 0x6475737400000000000000000000000000000000000000000000000000000000 => dustAfter == dustBefore, "file did not keep dust as expected");
-    assert(ArtAfter == ArtBefore, "file did not keep Art as expected");
-    assert(rateAfter == rateBefore, "file did not keep rate as expected");
+    assert(wardsAfter == wardsBefore, "file did not keep unchanged every wards[x]");
+    assert(canAfter == canBefore, "file did not keep unchanged every can[x][y]");
+    assert(ArtAfter == ArtBefore, "file did not keep unchanged ilks[ilk].Art");
+    assert(rateAfter == rateBefore, "file did not keep unchanged ilks[ilk].rate");
+    assert(what == 0x73706f7400000000000000000000000000000000000000000000000000000000 => spotAfter == data, "file did not set ilks[ilk].spot");
+    assert(what != 0x73706f7400000000000000000000000000000000000000000000000000000000 => spotAfter == spotBefore, "file did not keep unchanged ilks[ilk].spot");
+    assert(what == 0x6c696e6500000000000000000000000000000000000000000000000000000000 => lineAfter == data, "file did not set ilks[ilk].line");
+    assert(what != 0x6c696e6500000000000000000000000000000000000000000000000000000000 => lineAfter == lineBefore, "file did not keep unchanged ilks[ilk].line");
+    assert(what == 0x6475737400000000000000000000000000000000000000000000000000000000 => dustAfter == data, "file did not set ilks[ilk].dust");
+    assert(what != 0x6475737400000000000000000000000000000000000000000000000000000000 => dustAfter == dustBefore, "file did not keep unchanged ilks[ilk].dust");
+    assert(ArtOtherAfter == ArtOtherBefore, "file did not keep unchanged the rest of ilks[x].Art");
+    assert(rateOtherAfter == rateOtherBefore, "file did not keep unchanged the rest of ilks[x].rate");
+    assert(spotOtherAfter == spotOtherBefore, "file did not keep unchanged the rest of ilks[x].spot");
+    assert(lineOtherAfter == lineOtherBefore, "file did not keep unchanged the rest of ilks[x].line");
+    assert(dustOtherAfter == dustOtherBefore, "file did not keep unchanged the rest of ilks[x].dust");
+    assert(inkAfter == inkBefore, "file did not keep unchanged every urns[x].ink");
+    assert(artAfter == artBefore, "file did not keep unchanged every urns[x].art");
+    assert(gemAfter == gemBefore, "file did not keep unchanged every gem[x][y]");
+    assert(daiAfter == daiBefore, "file did not keep unchanged every dai[x]");
+    assert(sinAfter == sinBefore, "file did not keep unchanged every sin[x]");
+    assert(debtAfter == debtBefore, "file did not keep unchanged debt");
+    assert(viceAfter == viceBefore, "file did not keep unchanged vice");
+    assert(LineAfter == LineBefore, "file did not keep unchanged Line");
+    assert(liveAfter == liveBefore, "file did not keep unchanged live");
 }
 
 // Verify revert rules on file
@@ -225,13 +442,57 @@ rule file_ilk_revert(bytes32 ilk, bytes32 what, uint256 data) {
                            revert4, "Revert rules are not covering all the cases");
 }
 
-// Verify that live behaves correctly on cage
+// Verify correct storage changes for non reverting cage
 rule cage() {
     env e;
 
+    address anyUsr; address anyUsr2; bytes32 anyIlk;
+
+    uint256 wardsBefore = wards(anyUsr);
+    uint256 canBefore = can(anyUsr, anyUsr2);
+    uint256 ArtBefore; uint256 rateBefore; uint256 spotBefore; uint256 lineBefore; uint256 dustBefore;
+    ArtBefore, rateBefore, spotBefore, lineBefore, dustBefore = ilks(anyIlk);
+    uint256 inkBefore; uint256 artBefore;
+    inkBefore, artBefore = urns(anyIlk, anyUsr);
+    uint256 gemBefore = gem(anyIlk, anyUsr);
+    uint256 daiBefore = dai(anyUsr);
+    uint256 sinBefore = sin(anyUsr);
+    uint256 debtBefore = debt();
+    uint256 viceBefore = vice();
+    uint256 LineBefore = Line();
+
     cage(e);
 
-    assert(live() == 0, "cage did not set live to 0");
+    uint256 wardsAfter = wards(anyUsr);
+    uint256 canAfter = can(anyUsr, anyUsr2);
+    uint256 ArtAfter; uint256 rateAfter; uint256 spotAfter; uint256 lineAfter; uint256 dustAfter;
+    ArtAfter, rateAfter, spotAfter, lineAfter, dustAfter = ilks(anyIlk);
+    uint256 inkAfter; uint256 artAfter;
+    inkAfter, artAfter = urns(anyIlk, anyUsr);
+    uint256 gemAfter = gem(anyIlk, anyUsr);
+    uint256 daiAfter = dai(anyUsr);
+    uint256 sinAfter = sin(anyUsr);
+    uint256 debtAfter = debt();
+    uint256 viceAfter = vice();
+    uint256 LineAfter = Line();
+    uint256 liveAfter = live();
+
+    assert(wardsAfter == wardsBefore, "cage did not keep unchanged every wards[x]");
+    assert(canAfter == canBefore, "cage did not keep unchanged every can[x][y]");
+    assert(ArtAfter == ArtBefore, "cage did not keep unchanged every ilks[x].Art");
+    assert(rateAfter == rateBefore, "cage did not keep unchanged every ilks[x].rate");
+    assert(spotAfter == spotBefore, "cage did not keep unchanged every ilks[x].spot");
+    assert(lineAfter == lineBefore, "cage did not keep unchanged every ilks[x].line");
+    assert(dustAfter == dustBefore, "cage did not keep unchanged every ilks[x].dust");
+    assert(inkAfter == inkBefore, "cage did not keep unchanged every urns[x].ink");
+    assert(artAfter == artBefore, "cage did not keep unchanged every urns[x].art");
+    assert(gemAfter == gemBefore, "cage did not keep unchanged every gem[x][y]");
+    assert(daiAfter == daiBefore, "cage did not keep unchanged every dai[x]");
+    assert(sinAfter == sinBefore, "cage did not keep unchanged every sin[x]");
+    assert(debtAfter == debtBefore, "cage did not keep unchanged debt");
+    assert(viceAfter == viceBefore, "cage did not keep unchanged vice");
+    assert(LineAfter == LineBefore, "cage did not keep unchanged Line");
+    assert(liveAfter == 0, "cage did not set live");
 }
 
 // Verify revert rules on file
@@ -251,22 +512,62 @@ rule cage_revert() {
     assert(lastReverted => revert1 || revert2, "Revert rules are not covering all the cases");
 }
 
-// Verify that can behaves correctly on hope
+// Verify correct storage changes for non reverting hope
 rule hope(address usr) {
     env e;
 
-    address otherFrom;
-    address otherTo;
+    address otherFrom; address otherTo;
     require(otherFrom != e.msg.sender || otherTo != usr);
+    address anyUsr; address anyUsr2; bytes32 anyIlk;
+
+    uint256 wardsBefore = wards(anyUsr);
     uint256 canOtherBefore = can(otherFrom, otherTo);
+    uint256 ArtBefore; uint256 rateBefore; uint256 spotBefore; uint256 lineBefore; uint256 dustBefore;
+    ArtBefore, rateBefore, spotBefore, lineBefore, dustBefore = ilks(anyIlk);
+    uint256 inkBefore; uint256 artBefore;
+    inkBefore, artBefore = urns(anyIlk, anyUsr);
+    uint256 gemBefore = gem(anyIlk, anyUsr);
+    uint256 daiBefore = dai(anyUsr);
+    uint256 sinBefore = sin(anyUsr);
+    uint256 debtBefore = debt();
+    uint256 viceBefore = vice();
+    uint256 LineBefore = Line();
+    uint256 liveBefore = live();
 
     hope(e, usr);
 
+    uint256 wardsAfter = wards(anyUsr);
     uint256 canAfter = can(e.msg.sender, usr);
     uint256 canOtherAfter = can(otherFrom, otherTo);
+    uint256 ArtAfter; uint256 rateAfter; uint256 spotAfter; uint256 lineAfter; uint256 dustAfter;
+    ArtAfter, rateAfter, spotAfter, lineAfter, dustAfter = ilks(anyIlk);
+    uint256 inkAfter; uint256 artAfter;
+    inkAfter, artAfter = urns(anyIlk, anyUsr);
+    uint256 gemAfter = gem(anyIlk, anyUsr);
+    uint256 daiAfter = dai(anyUsr);
+    uint256 sinAfter = sin(anyUsr);
+    uint256 debtAfter = debt();
+    uint256 viceAfter = vice();
+    uint256 LineAfter = Line();
+    uint256 liveAfter = live();
 
-    assert(canAfter == 1, "hope did not set can as expected");
-    assert(canOtherAfter == canOtherBefore, "hope affected other can which was not expected");
+    assert(wardsAfter == wardsBefore, "hope did not keep unchanged every wards[x]");
+    assert(canAfter == 1, "hope did not set can[usr]");
+    assert(canOtherAfter == canOtherBefore, "hope did not keep unchanged the rest of can[x]");
+    assert(ArtAfter == ArtBefore, "hope did not keep unchanged every ilks[x].Art");
+    assert(rateAfter == rateBefore, "hope did not keep unchanged every ilks[x].rate");
+    assert(spotAfter == spotBefore, "hope did not keep unchanged every ilks[x].spot");
+    assert(lineAfter == lineBefore, "hope did not keep unchanged every ilks[x].line");
+    assert(dustAfter == dustBefore, "hope did not keep unchanged every ilks[x].dust");
+    assert(inkAfter == inkBefore, "hope did not keep unchanged every urns[x].ink");
+    assert(artAfter == artBefore, "hope did not keep unchanged every urns[x].art");
+    assert(gemAfter == gemBefore, "hope did not keep unchanged every gem[x][y]");
+    assert(daiAfter == daiBefore, "hope did not keep unchanged every dai[x]");
+    assert(sinAfter == sinBefore, "hope did not keep unchanged every sin[x]");
+    assert(debtAfter == debtBefore, "hope did not keep unchanged debt");
+    assert(viceAfter == viceBefore, "hope did not keep unchanged vice");
+    assert(LineAfter == LineBefore, "hope did not keep unchanged Line");
+    assert(liveAfter == liveBefore, "hope did not keep unchanged live");
 }
 
 // Verify revert rules on hope
@@ -282,22 +583,62 @@ rule hope_revert(address usr) {
     assert(lastReverted => revert1, "Revert rules are not covering all the cases");
 }
 
-// Verify that can behaves correctly on nope
+// Verify correct storage changes for non reverting nope
 rule nope(address usr) {
     env e;
 
-    address otherFrom;
-    address otherTo;
+    address otherFrom; address otherTo;
     require(otherFrom != e.msg.sender || otherTo != usr);
+    address anyUsr; address anyUsr2; bytes32 anyIlk;
+
+    uint256 wardsBefore = wards(anyUsr);
     uint256 canOtherBefore = can(otherFrom, otherTo);
+    uint256 ArtBefore; uint256 rateBefore; uint256 spotBefore; uint256 lineBefore; uint256 dustBefore;
+    ArtBefore, rateBefore, spotBefore, lineBefore, dustBefore = ilks(anyIlk);
+    uint256 inkBefore; uint256 artBefore;
+    inkBefore, artBefore = urns(anyIlk, anyUsr);
+    uint256 gemBefore = gem(anyIlk, anyUsr);
+    uint256 daiBefore = dai(anyUsr);
+    uint256 sinBefore = sin(anyUsr);
+    uint256 debtBefore = debt();
+    uint256 viceBefore = vice();
+    uint256 LineBefore = Line();
+    uint256 liveBefore = live();
 
     nope(e, usr);
 
+    uint256 wardsAfter = wards(anyUsr);
     uint256 canAfter = can(e.msg.sender, usr);
     uint256 canOtherAfter = can(otherFrom, otherTo);
+    uint256 ArtAfter; uint256 rateAfter; uint256 spotAfter; uint256 lineAfter; uint256 dustAfter;
+    ArtAfter, rateAfter, spotAfter, lineAfter, dustAfter = ilks(anyIlk);
+    uint256 inkAfter; uint256 artAfter;
+    inkAfter, artAfter = urns(anyIlk, anyUsr);
+    uint256 gemAfter = gem(anyIlk, anyUsr);
+    uint256 daiAfter = dai(anyUsr);
+    uint256 sinAfter = sin(anyUsr);
+    uint256 debtAfter = debt();
+    uint256 viceAfter = vice();
+    uint256 LineAfter = Line();
+    uint256 liveAfter = live();
 
-    assert(canAfter == 0, "nope did not set can as expected");
-    assert(canOtherAfter == canOtherBefore, "nope affected other can which was not expected");
+    assert(wardsAfter == wardsBefore, "nope did not keep unchanged every wards[x]");
+    assert(canAfter == 0, "nope did not set can[usr]");
+    assert(canOtherAfter == canOtherBefore, "nope did not keep unchanged the rest of can[x]");
+    assert(ArtAfter == ArtBefore, "nope did not keep unchanged every ilks[x].Art");
+    assert(rateAfter == rateBefore, "nope did not keep unchanged every ilks[x].rate");
+    assert(spotAfter == spotBefore, "nope did not keep unchanged every ilks[x].spot");
+    assert(lineAfter == lineBefore, "nope did not keep unchanged every ilks[x].line");
+    assert(dustAfter == dustBefore, "nope did not keep unchanged every ilks[x].dust");
+    assert(inkAfter == inkBefore, "nope did not keep unchanged every urns[x].ink");
+    assert(artAfter == artBefore, "nope did not keep unchanged every urns[x].art");
+    assert(gemAfter == gemBefore, "nope did not keep unchanged every gem[x][y]");
+    assert(daiAfter == daiBefore, "nope did not keep unchanged every dai[x]");
+    assert(sinAfter == sinBefore, "nope did not keep unchanged every sin[x]");
+    assert(debtAfter == debtBefore, "nope did not keep unchanged debt");
+    assert(viceAfter == viceBefore, "nope did not keep unchanged vice");
+    assert(LineAfter == LineBefore, "nope did not keep unchanged Line");
+    assert(liveAfter == liveBefore, "nope did not keep unchanged live");
 }
 
 // Verify revert rules on nope
@@ -313,23 +654,63 @@ rule nope_revert(address usr) {
     assert(lastReverted => revert1, "Revert rules are not covering all the cases");
 }
 
-// Verify that gem behaves correctly on slip
+// Verify correct storage changes for non reverting slip
 rule slip(bytes32 ilk, address usr, int256 wad) {
     env e;
 
-    bytes32 otherIlk;
-    address otherUsr;
+    bytes32 otherIlk; address otherUsr;
     require(otherIlk != ilk || otherUsr != usr);
+    address anyUsr; address anyUsr2; bytes32 anyIlk;
+
+    uint256 wardsBefore = wards(anyUsr);
+    uint256 canBefore = can(anyUsr, anyUsr2);
+    uint256 ArtBefore; uint256 rateBefore; uint256 spotBefore; uint256 lineBefore; uint256 dustBefore;
+    ArtBefore, rateBefore, spotBefore, lineBefore, dustBefore = ilks(anyIlk);
+    uint256 inkBefore; uint256 artBefore;
+    inkBefore, artBefore = urns(anyIlk, anyUsr);
     uint256 gemBefore = gem(ilk, usr);
     uint256 gemOtherBefore = gem(otherIlk, otherUsr);
+    uint256 daiBefore = dai(anyUsr);
+    uint256 sinBefore = sin(anyUsr);
+    uint256 debtBefore = debt();
+    uint256 viceBefore = vice();
+    uint256 LineBefore = Line();
+    uint256 liveBefore = live();
 
     slip(e, ilk, usr, wad);
 
+    uint256 wardsAfter = wards(anyUsr);
+    uint256 canAfter = can(anyUsr, anyUsr2);
+    uint256 ArtAfter; uint256 rateAfter; uint256 spotAfter; uint256 lineAfter; uint256 dustAfter;
+    ArtAfter, rateAfter, spotAfter, lineAfter, dustAfter = ilks(anyIlk);
+    uint256 inkAfter; uint256 artAfter;
+    inkAfter, artAfter = urns(anyIlk, anyUsr);
     uint256 gemAfter = gem(ilk, usr);
     uint256 gemOtherAfter = gem(otherIlk, otherUsr);
+    uint256 daiAfter = dai(anyUsr);
+    uint256 sinAfter = sin(anyUsr);
+    uint256 debtAfter = debt();
+    uint256 viceAfter = vice();
+    uint256 LineAfter = Line();
+    uint256 liveAfter = live();
 
-    assert(to_mathint(gemAfter) == to_mathint(gemBefore) + to_mathint(wad), "slip did not set gem as expected");
-    assert(gemOtherAfter == gemOtherBefore, "slip affected other gem which was not expected");
+    assert(wardsAfter == wardsBefore, "slip did not keep unchanged every wards[x]");
+    assert(canAfter == canBefore, "slip did not keep unchanged every can[x][y]");
+    assert(ArtAfter == ArtBefore, "slip did not keep unchanged every ilks[x].Art");
+    assert(rateAfter == rateBefore, "slip did not keep unchanged every ilks[x].rate");
+    assert(spotAfter == spotBefore, "slip did not keep unchanged every ilks[x].spot");
+    assert(lineAfter == lineBefore, "slip did not keep unchanged every ilks[x].line");
+    assert(dustAfter == dustBefore, "slip did not keep unchanged every ilks[x].dust");
+    assert(inkAfter == inkBefore, "slip did not keep unchanged every urns[x].ink");
+    assert(artAfter == artBefore, "slip did not keep unchanged every urns[x].art");
+    assert(to_mathint(gemAfter) == to_mathint(gemBefore) + to_mathint(wad), "slip did not set gem[ilk][usr]");
+    assert(gemOtherAfter == gemOtherBefore, "slip did not keep unchanged the rest of gem[x][y]");
+    assert(daiAfter == daiBefore, "slip did not keep unchanged every dai[x]");
+    assert(sinAfter == sinBefore, "slip did not keep unchanged every sin[x]");
+    assert(debtAfter == debtBefore, "slip did not keep unchanged debt");
+    assert(viceAfter == viceBefore, "slip did not keep unchanged vice");
+    assert(LineAfter == LineBefore, "slip did not keep unchanged Line");
+    assert(liveAfter == liveBefore, "slip did not keep unchanged live");
 }
 
 // Verify revert rules on slip
@@ -352,27 +733,67 @@ rule slip_revert(bytes32 ilk, address usr, int256 wad) {
     assert(lastReverted => revert1 || revert2 || revert3, "Revert rules are not covering all the cases");
 }
 
-// Verify that gems behave correctly on flux
+// Verify correct storage changes for non reverting flux
 rule flux(bytes32 ilk, address src, address dst, uint256 wad) {
     env e;
 
-    bytes32 otherIlk;
-    address otherUsr;
+    bytes32 otherIlk; address otherUsr;
     require(otherIlk != ilk || (otherUsr != src && otherUsr != dst));
+    address anyUsr; address anyUsr2; bytes32 anyIlk;
+
+    uint256 wardsBefore = wards(anyUsr);
+    uint256 canBefore = can(anyUsr, anyUsr2);
+    uint256 ArtBefore; uint256 rateBefore; uint256 spotBefore; uint256 lineBefore; uint256 dustBefore;
+    ArtBefore, rateBefore, spotBefore, lineBefore, dustBefore = ilks(anyIlk);
+    uint256 inkBefore; uint256 artBefore;
+    inkBefore, artBefore = urns(anyIlk, anyUsr);
     uint256 gemSrcBefore = gem(ilk, src);
     uint256 gemDstBefore = gem(ilk, dst);
     uint256 gemOtherBefore = gem(otherIlk, otherUsr);
+    uint256 daiBefore = dai(anyUsr);
+    uint256 sinBefore = sin(anyUsr);
+    uint256 debtBefore = debt();
+    uint256 viceBefore = vice();
+    uint256 LineBefore = Line();
+    uint256 liveBefore = live();
 
     flux(e, ilk, src, dst, wad);
 
+    uint256 wardsAfter = wards(anyUsr);
+    uint256 canAfter = can(anyUsr, anyUsr2);
+    uint256 ArtAfter; uint256 rateAfter; uint256 spotAfter; uint256 lineAfter; uint256 dustAfter;
+    ArtAfter, rateAfter, spotAfter, lineAfter, dustAfter = ilks(anyIlk);
+    uint256 inkAfter; uint256 artAfter;
+    inkAfter, artAfter = urns(anyIlk, anyUsr);
     uint256 gemSrcAfter = gem(ilk, src);
     uint256 gemDstAfter = gem(ilk, dst);
     uint256 gemOtherAfter = gem(otherIlk, otherUsr);
+    uint256 daiAfter = dai(anyUsr);
+    uint256 sinAfter = sin(anyUsr);
+    uint256 debtAfter = debt();
+    uint256 viceAfter = vice();
+    uint256 LineAfter = Line();
+    uint256 liveAfter = live();
 
-    assert(src != dst => gemSrcAfter == gemSrcBefore - wad, "flux did not set src gem as expected");
-    assert(src != dst => gemDstAfter == gemDstBefore + wad, "flux did not set dst gem as expected");
-    assert(src == dst => gemSrcAfter == gemDstBefore, "flux did not keep gem as expected");
-    assert(gemOtherAfter == gemOtherBefore, "flux affected other gem which was not expected");
+    assert(wardsAfter == wardsBefore, "flux did not keep unchanged every wards[x]");
+    assert(canAfter == canBefore, "flux did not keep unchanged every can[x][y]");
+    assert(ArtAfter == ArtBefore, "flux did not keep unchanged every ilks[x].Art");
+    assert(rateAfter == rateBefore, "flux did not keep unchanged every ilks[x].rate");
+    assert(spotAfter == spotBefore, "flux did not keep unchanged every ilks[x].spot");
+    assert(lineAfter == lineBefore, "flux did not keep unchanged every ilks[x].line");
+    assert(dustAfter == dustBefore, "flux did not keep unchanged every ilks[x].dust");
+    assert(inkAfter == inkBefore, "flux did not keep unchanged every urns[x].ink");
+    assert(artAfter == artBefore, "flux did not keep unchanged every urns[x].art");
+    assert(src != dst => gemSrcAfter == gemSrcBefore - wad, "flux did not set gem[ilk][src]");
+    assert(src != dst => gemDstAfter == gemDstBefore + wad, "flux did not set gem[ilk][dst]");
+    assert(src == dst => gemSrcAfter == gemDstBefore, "flux did not keep unchanged gem[ilk][src/dst]");
+    assert(gemOtherAfter == gemOtherBefore, "flux did not keep unchanged the rest of gem[x][y]");
+    assert(daiAfter == daiBefore, "flux did not keep unchanged every dai[x]");
+    assert(sinAfter == sinBefore, "flux did not keep unchanged every sin[x]");
+    assert(debtAfter == debtBefore, "flux did not keep unchanged debt");
+    assert(viceAfter == viceBefore, "flux did not keep unchanged vice");
+    assert(LineAfter == LineBefore, "flux did not keep unchanged Line");
+    assert(liveAfter == liveBefore, "flux did not keep unchanged live");
 }
 
 // Verify revert rules on flux
@@ -399,26 +820,67 @@ rule flux_revert(bytes32 ilk, address src, address dst, uint256 wad) {
                            revert4, "Revert rules are not covering all the cases");
 }
 
-// Verify that dais behave correctly on move
+// Verify correct storage changes for non reverting move
 rule move(address src, address dst, uint256 rad) {
     env e;
 
     address otherUsr;
     require(otherUsr != src && otherUsr != dst);
+    address anyUsr; address anyUsr2; bytes32 anyIlk;
+
+    uint256 wardsBefore = wards(anyUsr);
+    uint256 canBefore = can(anyUsr, anyUsr2);
+    uint256 ArtBefore; uint256 rateBefore; uint256 spotBefore; uint256 lineBefore; uint256 dustBefore;
+    ArtBefore, rateBefore, spotBefore, lineBefore, dustBefore = ilks(anyIlk);
+    uint256 inkBefore; uint256 artBefore;
+    inkBefore, artBefore = urns(anyIlk, anyUsr);
+    uint256 gemBefore = gem(anyIlk, anyUsr);
     uint256 daiSrcBefore = dai(src);
     uint256 daiDstBefore = dai(dst);
     uint256 daiOtherBefore = dai(otherUsr);
+    uint256 sinBefore = sin(anyUsr);
+    uint256 debtBefore = debt();
+    uint256 viceBefore = vice();
+    uint256 LineBefore = Line();
+    uint256 liveBefore = live();
 
     move(e, src, dst, rad);
 
+    uint256 wardsAfter = wards(anyUsr);
+    uint256 canAfter = can(anyUsr, anyUsr2);
+    uint256 ArtAfter; uint256 rateAfter; uint256 spotAfter; uint256 lineAfter; uint256 dustAfter;
+    ArtAfter, rateAfter, spotAfter, lineAfter, dustAfter = ilks(anyIlk);
+    uint256 inkAfter; uint256 artAfter;
+    inkAfter, artAfter = urns(anyIlk, anyUsr);
+    uint256 gemAfter = gem(anyIlk, anyUsr);
     uint256 daiSrcAfter = dai(src);
     uint256 daiDstAfter = dai(dst);
     uint256 daiOtherAfter = dai(otherUsr);
+    uint256 sinAfter = sin(anyUsr);
+    uint256 debtAfter = debt();
+    uint256 viceAfter = vice();
+    uint256 LineAfter = Line();
+    uint256 liveAfter = live();
 
-    assert(src != dst => daiSrcAfter == daiSrcBefore - rad, "move did not set src dai as expected");
-    assert(src != dst => daiDstAfter == daiDstBefore + rad, "move did not set dst dai as expected");
-    assert(src == dst => daiSrcAfter == daiDstBefore, "move did not keep dai as expected");
-    assert(daiOtherAfter == daiOtherBefore, "move affected other dai which was not expected");
+    assert(wardsAfter == wardsBefore, "move did not keep unchanged every wards[x]");
+    assert(canAfter == canBefore, "move did not keep unchanged every can[x][y]");
+    assert(ArtAfter == ArtBefore, "move did not keep unchanged every ilks[x].Art");
+    assert(rateAfter == rateBefore, "move did not keep unchanged every ilks[x].rate");
+    assert(spotAfter == spotBefore, "move did not keep unchanged every ilks[x].spot");
+    assert(lineAfter == lineBefore, "move did not keep unchanged every ilks[x].line");
+    assert(dustAfter == dustBefore, "move did not keep unchanged every ilks[x].dust");
+    assert(inkAfter == inkBefore, "move did not keep unchanged every urns[x].ink");
+    assert(artAfter == artBefore, "move did not keep unchanged every urns[x].art");
+    assert(gemAfter == gemBefore, "move did not keep unchanged every gem[x][y]");
+    assert(src != dst => daiSrcAfter == daiSrcBefore - rad, "move did not set dai[src]");
+    assert(src != dst => daiDstAfter == daiDstBefore + rad, "move did not set dai[dst]");
+    assert(src == dst => daiSrcAfter == daiDstBefore, "move did not keep unchanged dai[src/dst]");
+    assert(daiOtherAfter == daiOtherBefore, "move did not keep unchanged the rest of dai[x]");
+    assert(sinAfter == sinBefore, "move did not keep unchanged every sin[x]");
+    assert(debtAfter == debtBefore, "move did not keep unchanged debt");
+    assert(viceAfter == viceBefore, "move did not keep unchanged vice");
+    assert(LineAfter == LineBefore, "move did not keep unchanged Line");
+    assert(liveAfter == liveBefore, "move did not keep unchanged live");
 }
 
 // Verify revert rules on move
@@ -445,68 +907,91 @@ rule move_revert(address src, address dst, uint256 rad) {
                            revert4, "Revert rules are not covering all the cases");
 }
 
-// Verify that variables behave correctly on frob
+// Verify correct storage changes for non reverting frob
 rule frob(bytes32 i, address u, address v, address w, int256 dink, int256 dart) {
     env e;
 
     bytes32 otherIlk;
-    address otherUsrU;
-    address otherUsrV;
+    require(otherIlk != i);
+    bytes32 otherIlkU; address otherUsrU;
+    require(otherIlkU != i || otherUsrU != u);
+    bytes32 otherIlkV; address otherUsrV;
+    require(otherIlkV != i || otherUsrV != v);
     address otherUsrW;
-    require((otherIlk != i || otherUsrU != u) && (otherIlk != i || otherUsrV != v) && otherUsrW != w);
+    require(otherUsrW != w);
+    address anyUsr; address anyUsr2;
 
+    uint256 wardsBefore = wards(anyUsr);
+    uint256 canBefore = can(anyUsr, anyUsr2);
     uint256 ArtBefore; uint256 rateBefore; uint256 spotBefore; uint256 lineBefore; uint256 dustBefore;
     ArtBefore, rateBefore, spotBefore, lineBefore, dustBefore = ilks(i);
-
+    uint256 ArtOtherBefore; uint256 rateOtherBefore; uint256 spotOtherBefore; uint256 lineOtherBefore; uint256 dustOtherBefore;
+    ArtOtherBefore, rateOtherBefore, spotOtherBefore, lineOtherBefore, dustOtherBefore = ilks(otherIlk);
     uint256 inkBefore; uint256 artBefore;
     inkBefore, artBefore = urns(i, u);
-
-    uint256 gemBefore = gem(i, v);
-    uint256 daiBefore = dai(w);
-    uint256 debtBefore = debt();
-
     uint256 inkOtherBefore; uint256 artOtherBefore;
-    inkOtherBefore, artOtherBefore = urns(otherIlk, otherUsrU);
-
-    uint256 gemOtherBefore = gem(otherIlk, otherUsrV);
+    inkOtherBefore, artOtherBefore = urns(otherIlkU, otherUsrU);
+    uint256 gemBefore = gem(i, v);
+    uint256 gemOtherBefore = gem(otherIlkV, otherUsrV);
+    uint256 daiBefore = dai(w);
     uint256 daiOtherBefore = dai(otherUsrW);
+    uint256 debtBefore = debt();
+    uint256 sinBefore = sin(anyUsr);
+    uint256 viceBefore = vice();
+    uint256 LineBefore = Line();
+    uint256 liveBefore = live();
 
     frob(e, i, u, v, w, dink, dart);
 
+    uint256 wardsAfter = wards(anyUsr);
+    uint256 canAfter = can(anyUsr, anyUsr2);
     uint256 ArtAfter; uint256 rateAfter; uint256 spotAfter; uint256 lineAfter; uint256 dustAfter;
     ArtAfter, rateAfter, spotAfter, lineAfter, dustAfter = ilks(i);
-
+    uint256 ArtOtherAfter; uint256 rateOtherAfter; uint256 spotOtherAfter; uint256 lineOtherAfter; uint256 dustOtherAfter;
+    ArtOtherAfter, rateOtherAfter, spotOtherAfter, lineOtherAfter, dustOtherAfter = ilks(otherIlk);
     uint256 inkAfter; uint256 artAfter;
     inkAfter, artAfter = urns(i, u);
-
-    uint256 gemAfter = gem(i, v);
-    uint256 daiAfter = dai(w);
-    uint256 debtAfter = debt();
-
     uint256 inkOtherAfter; uint256 artOtherAfter;
-    inkOtherAfter, artOtherAfter = urns(otherIlk, otherUsrU);
-
-    uint256 gemOtherAfter = gem(otherIlk, otherUsrV);
+    inkOtherAfter, artOtherAfter = urns(otherIlkU, otherUsrU);
+    uint256 gemAfter = gem(i, v);
+    uint256 gemOtherAfter = gem(otherIlkV, otherUsrV);
+    uint256 daiAfter = dai(w);
     uint256 daiOtherAfter = dai(otherUsrW);
+    uint256 debtAfter = debt();
+    uint256 sinAfter = sin(anyUsr);
+    uint256 viceAfter = vice();
+    uint256 LineAfter = Line();
+    uint256 liveAfter = live();
 
-    assert(to_mathint(inkAfter) == to_mathint(inkBefore) + to_mathint(dink), "frob did not set u ink as expected");
-    assert(to_mathint(artAfter) == to_mathint(artBefore) + to_mathint(dart), "frob did not set u art as expected");
-    assert(to_mathint(ArtAfter) == to_mathint(ArtBefore) + to_mathint(dart), "frob did not set Art as expected");
-    assert(to_mathint(debtAfter) == to_mathint(debtBefore) + to_mathint(rateBefore) * to_mathint(dart), "frob did not set debt as expected");
-    assert(to_mathint(gemAfter) == to_mathint(gemBefore) - to_mathint(dink), "frob did not set v gem as expected");
-    assert(to_mathint(daiAfter) == to_mathint(daiBefore) + to_mathint(rateBefore) * to_mathint(dart), "frob did not set w dai as expected");
-    assert(to_mathint(inkOtherAfter) == to_mathint(inkOtherBefore), "frob did not keep other ink as expected");
-    assert(to_mathint(artOtherAfter) == to_mathint(artOtherBefore), "frob did not keep other art as expected");
-    assert(rateAfter == rateBefore, "frob did not keep rate as expected");
-    assert(spotAfter == spotBefore, "frob did not keep spot as expected");
-    assert(lineAfter == lineBefore, "frob did not keep line as expected");
-    assert(dustAfter == dustBefore, "frob did not keep dust as expected");
-    assert(gemOtherAfter == gemOtherBefore, "frob did not keep other gem as expected");
-    assert(daiOtherAfter == daiOtherBefore, "frob did not keep other dai as expected");
+    assert(wardsAfter == wardsBefore, "frob did not keep unchanged every wards[x]");
+    assert(canAfter == canBefore, "frob did not keep unchanged every can[x][y]");
+    assert(to_mathint(ArtAfter) == to_mathint(ArtBefore) + to_mathint(dart), "frob did not set ilks[i].Art");
+    assert(rateAfter == rateBefore, "frob did not keep unchanged ilks[i].rate");
+    assert(spotAfter == spotBefore, "frob did not keep unchanged ilks[i].spot");
+    assert(lineAfter == lineBefore, "frob did not keep unchanged ilks[i].line");
+    assert(dustAfter == dustBefore, "frob did not keep unchanged ilks[i].dust");
+    assert(ArtOtherAfter == ArtOtherBefore, "frob did not keep unchanged rest of ilks[x].Art");
+    assert(rateOtherAfter == rateOtherBefore, "frob did not keep unchanged rest of ilks[x].rate");
+    assert(spotOtherAfter == spotOtherBefore, "frob did not keep unchanged rest of ilks[x].spot");
+    assert(lineOtherAfter == lineOtherBefore, "frob did not keep unchanged rest of ilks[x].line");
+    assert(dustOtherAfter == dustOtherBefore, "frob did not keep unchanged rest of ilks[x].dust");
+    assert(to_mathint(inkAfter) == to_mathint(inkBefore) + to_mathint(dink), "frob did not set urns[u].ink");
+    assert(to_mathint(artAfter) == to_mathint(artBefore) + to_mathint(dart), "frob did not set urns[u].art");
+    assert(inkOtherAfter == inkOtherBefore, "frob did not keep unchanged rest of urns[x].ink");
+    assert(artOtherAfter == artOtherBefore, "frob did not keep unchanged rest of urns[x].art");
+    assert(to_mathint(gemAfter) == to_mathint(gemBefore) - to_mathint(dink), "frob did not set gem[i][v]");
+    assert(gemOtherAfter == gemOtherBefore, "frob did not keep unchanged rest of gem[x][y]");
+    assert(to_mathint(daiAfter) == to_mathint(daiBefore) + to_mathint(rateBefore) * to_mathint(dart), "frob did not set dai[w]");
+    assert(daiOtherAfter == daiOtherBefore, "frob did not keep unchanged rest of dai[x]");
+    assert(sinAfter == sinBefore, "frob did not keep unchanged every sin[x]");
+    assert(to_mathint(debtAfter) == to_mathint(debtBefore) + to_mathint(rateBefore) * to_mathint(dart), "frob did not set debt");
+    assert(viceAfter == viceBefore, "frob did not keep unchanged vice");
+    assert(LineAfter == LineBefore, "frob did not keep unchanged Line");
+    assert(liveAfter == liveBefore, "frob did not keep unchanged live");
 }
 
 // Verify revert rules on frob
-function frob_revert_internal(bytes32 i, address u, address v, address w, int256 dink, int256 dart) {
+rule frob_revert(bytes32 i, address u, address v, address w, int256 dink, int256 dart) {
     env e;
 
     uint256 live = live();
@@ -577,74 +1062,82 @@ function frob_revert_internal(bytes32 i, address u, address v, address w, int256
     assert(revert20 => lastReverted, "revert20 failed");
 
     assert(lastReverted => revert1  || revert2  || revert3  ||
-                        revert4  || revert5  || revert6  ||
-                        revert7  || revert8  || revert9  ||
-                        revert10 || revert11 || revert12 ||
-                        revert13 || revert14 || revert15 ||
-                        revert16 || revert17 || revert18 ||
-                        revert19 || revert20, "Revert rules are not covering all the cases");
+                           revert4  || revert5  || revert6  ||
+                           revert7  || revert8  || revert9  ||
+                           revert10 || revert11 || revert12 ||
+                           revert13 || revert14 || revert15 ||
+                           revert16 || revert17 || revert18 ||
+                           revert19 || revert20, "Revert rules are not covering all the cases");
 }
 
-rule frob_revert_1(bytes32 i, address u, address v, address w, int256 dink, int256 dart) {
-    require(dink >= 0);
-    require(dart >= 0);
-    frob_revert_internal(i, u, v, w, dink, dart);
-}
-
-rule frob_revert_2(bytes32 i, address u, address v, address w, int256 dink, int256 dart) {
-    require(dink >= 0);
-    require(dart < 0);
-    frob_revert_internal(i, u, v, w, dink, dart);
-}
-
-rule frob_revert_3(bytes32 i, address u, address v, address w, int256 dink, int256 dart) {
-    require(dink < 0);
-    require(dart >= 0);
-    frob_revert_internal(i, u, v, w, dink, dart);
-}
-
-rule frob_revert_4(bytes32 i, address u, address v, address w, int256 dink, int256 dart) {
-    require(dink < 0);
-    require(dart < 0);
-    frob_revert_internal(i, u, v, w, dink, dart);
-}
-
-// Verify that variables behave correctly on fork
+// Verify correct storage changes for non reverting fork
 rule fork(bytes32 ilk, address src, address dst, int256 dink, int256 dart) {
     env e;
 
-    bytes32 otherIlk;
-    address otherUsr;
+    bytes32 otherIlk; address otherUsr;
     require(otherIlk != ilk || otherUsr != src && otherUsr != dst);
+    address anyUsr; address anyUsr2; bytes32 anyIlk;
 
+    uint256 wardsBefore = wards(anyUsr);
+    uint256 canBefore = can(anyUsr, anyUsr2);
+    uint256 ArtBefore; uint256 rateBefore; uint256 spotBefore; uint256 lineBefore; uint256 dustBefore;
+    ArtBefore, rateBefore, spotBefore, lineBefore, dustBefore = ilks(anyIlk);
     uint256 inkSrcBefore; uint256 artSrcBefore;
     inkSrcBefore, artSrcBefore = urns(ilk, src);
-
     uint256 inkDstBefore; uint256 artDstBefore;
     inkDstBefore, artDstBefore = urns(ilk, dst);
-
     uint256 inkOtherBefore; uint256 artOtherBefore;
     inkOtherBefore, artOtherBefore = urns(otherIlk, otherUsr);
+    uint256 gemBefore = gem(anyIlk, anyUsr);
+    uint256 daiBefore = dai(anyUsr);
+    uint256 sinBefore = sin(anyUsr);
+    uint256 debtBefore = debt();
+    uint256 viceBefore = vice();
+    uint256 LineBefore = Line();
+    uint256 liveBefore = live();
 
     fork(e, ilk, src, dst, dink, dart);
 
+    uint256 wardsAfter = wards(anyUsr);
+    uint256 canAfter = can(anyUsr, anyUsr2);
+    uint256 ArtAfter; uint256 rateAfter; uint256 spotAfter; uint256 lineAfter; uint256 dustAfter;
+    ArtAfter, rateAfter, spotAfter, lineAfter, dustAfter = ilks(anyIlk);
     uint256 inkSrcAfter; uint256 artSrcAfter;
     inkSrcAfter, artSrcAfter = urns(ilk, src);
-
     uint256 inkDstAfter; uint256 artDstAfter;
     inkDstAfter, artDstAfter = urns(ilk, dst);
-
     uint256 inkOtherAfter; uint256 artOtherAfter;
     inkOtherAfter, artOtherAfter = urns(otherIlk, otherUsr);
+    uint256 gemAfter = gem(anyIlk, anyUsr);
+    uint256 daiAfter = dai(anyUsr);
+    uint256 sinAfter = sin(anyUsr);
+    uint256 debtAfter = debt();
+    uint256 viceAfter = vice();
+    uint256 LineAfter = Line();
+    uint256 liveAfter = live();
 
-    assert(src != dst => to_mathint(inkSrcAfter) == to_mathint(inkSrcBefore) - to_mathint(dink), "fork did not set src ink as expected");
-    assert(src != dst => to_mathint(artSrcAfter) == to_mathint(artSrcBefore) - to_mathint(dart), "fork did not set src art as expected");
-    assert(src != dst => to_mathint(inkDstAfter) == to_mathint(inkDstBefore) + to_mathint(dink), "fork did not set dst ink as expected");
-    assert(src != dst => to_mathint(artDstAfter) == to_mathint(artDstBefore) + to_mathint(dart), "fork did not set dst art as expected");
-    assert(src == dst => to_mathint(inkSrcAfter) == to_mathint(inkSrcBefore), "fork did not keep src/dst ink as expected");
-    assert(src == dst => to_mathint(artSrcAfter) == to_mathint(artSrcBefore), "fork did not keep src/dst art as expected");
-    assert(to_mathint(inkOtherAfter) == to_mathint(inkOtherBefore), "fork did not keep other ink as expected");
-    assert(to_mathint(artOtherAfter) == to_mathint(artOtherBefore), "fork did not keep other art as expected");
+    assert(wardsAfter == wardsBefore, "fork did not keep unchanged every wards[x]");
+    assert(canAfter == canBefore, "fork did not keep unchanged every can[x][y]");
+    assert(ArtAfter == ArtBefore, "fork did not keep unchanged every ilks[x].Art");
+    assert(rateAfter == rateBefore, "fork did not keep unchanged every ilks[x].rate");
+    assert(spotAfter == spotBefore, "fork did not keep unchanged every ilks[x].spot");
+    assert(lineAfter == lineBefore, "fork did not keep unchanged every ilks[x].line");
+    assert(dustAfter == dustBefore, "fork did not keep unchanged every ilks[x].dust");
+    assert(src != dst => to_mathint(inkSrcAfter) == to_mathint(inkSrcBefore) - to_mathint(dink), "fork did not set urns[src].ink");
+    assert(src != dst => to_mathint(artSrcAfter) == to_mathint(artSrcBefore) - to_mathint(dart), "fork did not set urns[src].art");
+    assert(src != dst => to_mathint(inkDstAfter) == to_mathint(inkDstBefore) + to_mathint(dink), "fork did not set urns[dst].ink");
+    assert(src != dst => to_mathint(artDstAfter) == to_mathint(artDstBefore) + to_mathint(dart), "fork did not set urns[dst].art");
+    assert(src == dst => inkSrcAfter == inkSrcBefore, "fork did not keep unchanged urns[src/dst].ink");
+    assert(src == dst => artSrcAfter == artSrcBefore, "fork did not keep unchanged urns[src/dst].art");
+    assert(inkOtherAfter == inkOtherBefore, "fork did not keep unchanged rest of urns[x].ink");
+    assert(artOtherAfter == artOtherBefore, "fork did not keep unchanged rest of urns[x].art");
+    assert(gemAfter == gemBefore, "fork did not keep unchanged every gem[x][y]");
+    assert(daiAfter == daiBefore, "fork did not keep unchanged every dai[x]");
+    assert(sinAfter == sinBefore, "fork did not keep unchanged every sin[x]");
+    assert(debtAfter == debtBefore, "fork did not keep unchanged debt");
+    assert(viceAfter == viceBefore, "fork did not keep unchanged vice");
+    assert(LineAfter == LineBefore, "fork did not keep unchanged Line");
+    assert(liveAfter == liveBefore, "fork did not keep unchanged live");
 }
 
 // Verify revert rules on fork
@@ -709,64 +1202,87 @@ rule fork_revert(bytes32 ilk, address src, address dst, int256 dink, int256 dart
                            revert13 || revert14, "Revert rules are not covering all the cases");
 }
 
-// Verify that variables behave correctly on grab
+// Verify correct storage changes for non reverting grab
 rule grab(bytes32 i, address u, address v, address w, int256 dink, int256 dart) {
     env e;
 
     bytes32 otherIlk;
-    address otherUsrU;
-    address otherUsrV;
+    require(otherIlk != i);
+    bytes32 otherIlkU; address otherUsrU;
+    require(otherIlkU != i || otherUsrU != u);
+    bytes32 otherIlkV; address otherUsrV;
+    require(otherIlkV != i || otherUsrV != v);
     address otherUsrW;
-    require((otherIlk != i || otherUsrU != u) && (otherIlk != i || otherUsrV != v) && otherUsrW != w);
+    require(otherUsrW != w);
+    address anyUsr; address anyUsr2;
 
+    uint256 wardsBefore = wards(anyUsr);
+    uint256 canBefore = can(anyUsr, anyUsr2);
     uint256 ArtBefore; uint256 rateBefore; uint256 spotBefore; uint256 lineBefore; uint256 dustBefore;
     ArtBefore, rateBefore, spotBefore, lineBefore, dustBefore = ilks(i);
-
+    uint256 ArtOtherBefore; uint256 rateOtherBefore; uint256 spotOtherBefore; uint256 lineOtherBefore; uint256 dustOtherBefore;
+    ArtOtherBefore, rateOtherBefore, spotOtherBefore, lineOtherBefore, dustOtherBefore = ilks(otherIlk);
     uint256 inkBefore; uint256 artBefore;
     inkBefore, artBefore = urns(i, u);
-
-    uint256 gemBefore = gem(i, v);
-    uint256 sinBefore = sin(w);
-    uint256 viceBefore = vice();
-
     uint256 inkOtherBefore; uint256 artOtherBefore;
-    inkOtherBefore, artOtherBefore = urns(otherIlk, otherUsrU);
-
-    uint256 gemOtherBefore = gem(otherIlk, otherUsrV);
+    inkOtherBefore, artOtherBefore = urns(otherIlkU, otherUsrU);
+    uint256 gemBefore = gem(i, v);
+    uint256 gemOtherBefore = gem(otherIlkV, otherUsrV);
+    uint256 daiBefore = dai(anyUsr);
+    uint256 sinBefore = sin(w);
     uint256 sinOtherBefore = sin(otherUsrW);
+    uint256 debtBefore = debt();
+    uint256 viceBefore = vice();
+    uint256 LineBefore = Line();
+    uint256 liveBefore = live();
 
     grab(e, i, u, v, w, dink, dart);
 
+    uint256 wardsAfter = wards(anyUsr);
+    uint256 canAfter = can(anyUsr, anyUsr2);
     uint256 ArtAfter; uint256 rateAfter; uint256 spotAfter; uint256 lineAfter; uint256 dustAfter;
     ArtAfter, rateAfter, spotAfter, lineAfter, dustAfter = ilks(i);
-
+    uint256 ArtOtherAfter; uint256 rateOtherAfter; uint256 spotOtherAfter; uint256 lineOtherAfter; uint256 dustOtherAfter;
+    ArtOtherAfter, rateOtherAfter, spotOtherAfter, lineOtherAfter, dustOtherAfter = ilks(otherIlk);
     uint256 inkAfter; uint256 artAfter;
     inkAfter, artAfter = urns(i, u);
-
-    uint256 gemAfter = gem(i, v);
-    uint256 sinAfter = sin(w);
-    uint256 viceAfter = vice();
-
     uint256 inkOtherAfter; uint256 artOtherAfter;
-    inkOtherAfter, artOtherAfter = urns(otherIlk, otherUsrU);
-
-    uint256 gemOtherAfter = gem(otherIlk, otherUsrV);
+    inkOtherAfter, artOtherAfter = urns(otherIlkU, otherUsrU);
+    uint256 gemAfter = gem(i, v);
+    uint256 gemOtherAfter = gem(otherIlkV, otherUsrV);
+    uint256 daiAfter = dai(anyUsr);
+    uint256 sinAfter = sin(w);
     uint256 sinOtherAfter = sin(otherUsrW);
+    uint256 debtAfter = debt();
+    uint256 viceAfter = vice();
+    uint256 LineAfter = Line();
+    uint256 liveAfter = live();
 
-    assert(to_mathint(inkAfter) == to_mathint(inkBefore) + to_mathint(dink), "grab did not set u ink as expected");
-    assert(to_mathint(artAfter) == to_mathint(artBefore) + to_mathint(dart), "grab did not set u art as expected");
-    assert(to_mathint(ArtAfter) == to_mathint(ArtBefore) + to_mathint(dart), "grab did not set Art as expected");
-    assert(to_mathint(gemAfter) == to_mathint(gemBefore) - to_mathint(dink), "grab did not set v gem as expected");
-    assert(to_mathint(sinAfter) == to_mathint(sinBefore) - to_mathint(rateBefore) * to_mathint(dart), "grab did not set w sin as expected");
-    assert(to_mathint(viceAfter) == to_mathint(viceBefore) - to_mathint(rateBefore) * to_mathint(dart), "grab did not set vice as expected");
-    assert(inkOtherAfter == inkOtherBefore, "grab did not keep other ink as expected");
-    assert(artOtherAfter == artOtherBefore, "grab did not keep other art as expected");
-    assert(rateAfter == rateBefore, "grab did not keep rate as expected");
-    assert(spotAfter == spotBefore, "grab did not keep spot as expected");
-    assert(lineAfter == lineBefore, "grab did not keep line as expected");
-    assert(dustAfter == dustBefore, "grab did not keep dust as expected");
-    assert(gemOtherAfter == gemOtherBefore, "grab did not keep other gem as expected");
-    assert(sinOtherAfter == sinOtherBefore, "grab did not keep other sin as expected");
+    assert(wardsAfter == wardsBefore, "grab did not keep unchanged every wards[x]");
+    assert(canAfter == canBefore, "grab did not keep unchanged every can[x][y]");
+    assert(to_mathint(ArtAfter) == to_mathint(ArtBefore) + to_mathint(dart), "grab did not set ilks[i].Art");
+    assert(rateAfter == rateBefore, "grab did not keep unchanged ilks[i].rate");
+    assert(spotAfter == spotBefore, "grab did not keep unchanged ilks[i].spot");
+    assert(lineAfter == lineBefore, "grab did not keep unchanged ilks[i].line");
+    assert(dustAfter == dustBefore, "grab did not keep unchanged ilks[i].dust");
+    assert(ArtOtherAfter == ArtOtherBefore, "grab did not keep unchanged the rest of ilks[x].Art");
+    assert(rateOtherAfter == rateOtherBefore, "grab did not keep unchanged the rest of ilks[x].rate");
+    assert(spotOtherAfter == spotOtherBefore, "grab did not keep unchanged the rest of ilks[x].spot");
+    assert(lineOtherAfter == lineOtherBefore, "grab did not keep unchanged the rest of ilks[x].line");
+    assert(dustOtherAfter == dustOtherBefore, "grab did not keep unchanged the rest of ilks[x].dust");
+    assert(to_mathint(inkAfter) == to_mathint(inkBefore) + to_mathint(dink), "grab did not set urns[u].ink");
+    assert(to_mathint(artAfter) == to_mathint(artBefore) + to_mathint(dart), "grab did not set urns[u].art");
+    assert(inkOtherAfter == inkOtherBefore, "grab did not keep unchanged the rest of urns[x].ink");
+    assert(artOtherAfter == artOtherBefore, "grab did not keep unchanged the rest of urns[x].art");
+    assert(to_mathint(gemAfter) == to_mathint(gemBefore) - to_mathint(dink), "grab did not set gem[i][v]");
+    assert(gemOtherAfter == gemOtherBefore, "grab did not keep unchanged the rest of gem[x][y]");
+    assert(daiAfter == daiBefore, "grab did not keep unchanged every dai[x]");
+    assert(to_mathint(sinAfter) == to_mathint(sinBefore) - to_mathint(rateBefore) * to_mathint(dart), "grab did not set sin[w]");
+    assert(sinOtherAfter == sinOtherBefore, "grab did not keep unchanged the rest of sin[x]");
+    assert(debtAfter == debtBefore, "grab did not keep unchanged debt");
+    assert(to_mathint(viceAfter) == to_mathint(viceBefore) - to_mathint(rateBefore) * to_mathint(dart), "grab did not set vice");
+    assert(LineAfter == LineBefore, "grab did not keep unchanged Line");
+    assert(liveAfter == liveBefore, "grab did not keep unchanged live");
 }
 
 // Verify revert rules on grab
@@ -815,34 +1331,66 @@ rule grab_revert(bytes32 i, address u, address v, address w, int256 dink, int256
                            revert10, "Revert rules are not covering all the cases");
 }
 
-// Verify that variables behave correctly on heal
+// Verify correct storage changes for non reverting heal
 rule heal(uint256 rad) {
     env e;
 
     address otherUsr;
     require(otherUsr != e.msg.sender);
+    address anyUsr; address anyUsr2; bytes32 anyIlk;
+
+    uint256 wardsBefore = wards(anyUsr);
+    uint256 canBefore = can(anyUsr, anyUsr2);
+    uint256 ArtBefore; uint256 rateBefore; uint256 spotBefore; uint256 lineBefore; uint256 dustBefore;
+    ArtBefore, rateBefore, spotBefore, lineBefore, dustBefore = ilks(anyIlk);
+    uint256 inkBefore; uint256 artBefore;
+    inkBefore, artBefore = urns(anyIlk, anyUsr);
+    uint256 gemBefore = gem(anyIlk, anyUsr);
     uint256 daiSenderBefore = dai(e.msg.sender);
-    uint256 sinSenderBefore = sin(e.msg.sender);
-    uint256 viceBefore = vice();
-    uint256 debtBefore = debt();
     uint256 daiOtherBefore = dai(otherUsr);
+    uint256 sinSenderBefore = sin(e.msg.sender);
     uint256 sinOtherBefore = sin(otherUsr);
+    uint256 debtBefore = debt();
+    uint256 viceBefore = vice();
+    uint256 LineBefore = Line();
+    uint256 liveBefore = live();
 
     heal(e, rad);
 
+    uint256 wardsAfter = wards(anyUsr);
+    uint256 canAfter = can(anyUsr, anyUsr2);
+    uint256 ArtAfter; uint256 rateAfter; uint256 spotAfter; uint256 lineAfter; uint256 dustAfter;
+    ArtAfter, rateAfter, spotAfter, lineAfter, dustAfter = ilks(anyIlk);
+    uint256 inkAfter; uint256 artAfter;
+    inkAfter, artAfter = urns(anyIlk, anyUsr);
+    uint256 gemAfter = gem(anyIlk, anyUsr);
     uint256 daiSenderAfter = dai(e.msg.sender);
-    uint256 sinSenderAfter = sin(e.msg.sender);
-    uint256 viceAfter = vice();
-    uint256 debtAfter = debt();
     uint256 daiOtherAfter = dai(otherUsr);
+    uint256 sinSenderAfter = sin(e.msg.sender);
     uint256 sinOtherAfter = sin(otherUsr);
+    uint256 debtAfter = debt();
+    uint256 viceAfter = vice();
+    uint256 LineAfter = Line();
+    uint256 liveAfter = live();
 
-    assert(daiSenderAfter == daiSenderBefore - rad, "heal did not set sender dai as expected");
-    assert(sinSenderAfter == sinSenderBefore - rad, "heal did not set sender sin as expected");
-    assert(viceAfter == viceBefore - rad, "heal did not set vice as expected");
-    assert(debtAfter == debtBefore - rad, "heal did not set debt as expected");
-    assert(daiOtherAfter == daiOtherBefore, "heal did not keep other dai as expected");
-    assert(sinOtherAfter == sinOtherBefore, "heal did not keep other sin as expected");
+    assert(wardsAfter == wardsBefore, "heal did not keep unchanged every wards[x]");
+    assert(canAfter == canBefore, "heal did not keep unchanged every can[x][y]");
+    assert(ArtAfter == ArtBefore, "heal did not keep unchanged every ilks[x].Art");
+    assert(rateAfter == rateBefore, "heal did not keep unchanged every ilks[x].rate");
+    assert(spotAfter == spotBefore, "heal did not keep unchanged every ilks[x].spot");
+    assert(lineAfter == lineBefore, "heal did not keep unchanged every ilks[x].line");
+    assert(dustAfter == dustBefore, "heal did not keep unchanged every ilks[x].dust");
+    assert(inkAfter == inkBefore, "heal did not keep unchanged every urns[x].ink");
+    assert(artAfter == artBefore, "heal did not keep unchanged every urns[x].art");
+    assert(gemAfter == gemBefore, "heal did not keep unchanged every gem[x][y]");
+    assert(daiSenderAfter == daiSenderBefore - rad, "heal did not set dai[sender]");
+    assert(daiOtherAfter == daiOtherBefore, "heal did not keep unchanged the rest of dai[x]");
+    assert(sinSenderAfter == sinSenderBefore - rad, "heal did not set sin[sender]");
+    assert(sinOtherAfter == sinOtherBefore, "heal did not keep unchanged the rest of sin[x]");
+    assert(debtAfter == debtBefore - rad, "heal did not set debt");
+    assert(viceAfter == viceBefore - rad, "heal did not set vice");
+    assert(LineAfter == LineBefore, "heal did not keep unchanged Line");
+    assert(liveAfter == liveBefore, "heal did not keep unchanged live");
 }
 
 // Verify revert rules on heal
@@ -872,35 +1420,68 @@ rule heal_revert(uint256 rad) {
                            revert4 || revert5, "Revert rules are not covering all the cases");
 }
 
-// Verify that variables behave correctly on suck
+// Verify correct storage changes for non reverting suck
 rule suck(address u, address v, uint256 rad) {
     env e;
 
     address otherUsrU;
+    require(otherUsrU != u);
     address otherUsrV;
-    require(otherUsrU != u && otherUsrV != v);
-    uint256 sinUBefore = sin(u);
+    require(otherUsrV != v);
+    address anyUsr; address anyUsr2; bytes32 anyIlk;
+
+    uint256 wardsBefore = wards(anyUsr);
+    uint256 canBefore = can(anyUsr, anyUsr2);
+    uint256 ArtBefore; uint256 rateBefore; uint256 spotBefore; uint256 lineBefore; uint256 dustBefore;
+    ArtBefore, rateBefore, spotBefore, lineBefore, dustBefore = ilks(anyIlk);
+    uint256 inkBefore; uint256 artBefore;
+    inkBefore, artBefore = urns(anyIlk, anyUsr);
+    uint256 gemBefore = gem(anyIlk, anyUsr);
     uint256 daiVBefore = dai(v);
-    uint256 viceBefore = vice();
-    uint256 debtBefore = debt();
-    uint256 sinOtherBefore = sin(otherUsrU);
     uint256 daiOtherBefore = dai(otherUsrV);
+    uint256 sinUBefore = sin(u);
+    uint256 sinOtherBefore = sin(otherUsrU);
+    uint256 debtBefore = debt();
+    uint256 viceBefore = vice();
+    uint256 LineBefore = Line();
+    uint256 liveBefore = live();
 
     suck(e, u, v, rad);
 
-    uint256 sinUAfter = sin(u);
+    uint256 wardsAfter = wards(anyUsr);
+    uint256 canAfter = can(anyUsr, anyUsr2);
+    uint256 ArtAfter; uint256 rateAfter; uint256 spotAfter; uint256 lineAfter; uint256 dustAfter;
+    ArtAfter, rateAfter, spotAfter, lineAfter, dustAfter = ilks(anyIlk);
+    uint256 inkAfter; uint256 artAfter;
+    inkAfter, artAfter = urns(anyIlk, anyUsr);
+    uint256 gemAfter = gem(anyIlk, anyUsr);
     uint256 daiVAfter = dai(v);
-    uint256 viceAfter = vice();
-    uint256 debtAfter = debt();
-    uint256 sinOtherAfter = sin(otherUsrU);
     uint256 daiOtherAfter = dai(otherUsrV);
+    uint256 sinUAfter = sin(u);
+    uint256 sinOtherAfter = sin(otherUsrU);
+    uint256 debtAfter = debt();
+    uint256 viceAfter = vice();
+    uint256 LineAfter = Line();
+    uint256 liveAfter = live();
 
-    assert(sinUAfter == sinUBefore + rad, "suck did not set u sin as expected");
-    assert(daiVAfter == daiVBefore + rad, "suck did not set v dai as expected");
-    assert(viceAfter == viceBefore + rad, "suck did not set vice as expected");
-    assert(debtAfter == debtBefore + rad, "suck did not set debt as expected");
-    assert(sinOtherAfter == sinOtherBefore, "suck did not keep other sin as expected");
-    assert(daiOtherAfter == daiOtherBefore, "suck did not keep other dai as expected");
+    assert(wardsAfter == wardsBefore, "suck did not keep unchanged every wards[x]");
+    assert(canAfter == canBefore, "suck did not keep unchanged every can[x][y]");
+    assert(ArtAfter == ArtBefore, "suck did not keep unchanged every ilks[x].Art");
+    assert(rateAfter == rateBefore, "suck did not keep unchanged every ilks[x].rate");
+    assert(spotAfter == spotBefore, "suck did not keep unchanged every ilks[x].spot");
+    assert(lineAfter == lineBefore, "suck did not keep unchanged every ilks[x].line");
+    assert(dustAfter == dustBefore, "suck did not keep unchanged every ilks[x].dust");
+    assert(inkAfter == inkBefore, "suck did not keep unchanged every urns[x].ink");
+    assert(artAfter == artBefore, "suck did not keep unchanged every urns[x].art");
+    assert(gemAfter == gemBefore, "suck did not keep unchanged every gem[x][y]");
+    assert(daiVAfter == daiVBefore + rad, "suck did not set dai[v]");
+    assert(daiOtherAfter == daiOtherBefore, "suck did not keep unchanged the rest of dai[x]");
+    assert(sinUAfter == sinUBefore + rad, "suck did not set sin[u]");
+    assert(sinOtherAfter == sinOtherBefore, "suck did not keep unchanged the rest of sin[x]");
+    assert(debtAfter == debtBefore + rad, "suck did not set debt");
+    assert(viceAfter == viceBefore + rad, "suck did not set vice");
+    assert(LineAfter == LineBefore, "suck did not keep unchanged Line");
+    assert(liveAfter == liveBefore, "suck did not keep unchanged live");
 }
 
 // Verify revert rules on suck
@@ -934,37 +1515,74 @@ rule suck_revert(address u, address v, uint256 rad) {
                            revert4 || revert5 || revert6, "Revert rules are not covering all the cases");
 }
 
-// Verify that variables behave correctly on fold
+// Verify correct storage changes for non reverting fold
 rule fold(bytes32 i, address u, int256 rate_) {
     env e;
 
     address otherUsr;
     require(otherUsr != u);
+    bytes32 otherIlk;
+    require(otherIlk != i);
+    address anyUsr; address anyUsr2; bytes32 anyIlk;
 
+    uint256 wardsBefore = wards(anyUsr);
+    uint256 canBefore = can(anyUsr, anyUsr2);
     uint256 ArtBefore; uint256 rateBefore; uint256 spotBefore; uint256 lineBefore; uint256 dustBefore;
     ArtBefore, rateBefore, spotBefore, lineBefore, dustBefore = ilks(i);
-
+    uint256 ArtOtherBefore; uint256 rateOtherBefore; uint256 spotOtherBefore; uint256 lineOtherBefore; uint256 dustOtherBefore;
+    ArtOtherBefore, rateOtherBefore, spotOtherBefore, lineOtherBefore, dustOtherBefore = ilks(otherIlk);
+    uint256 inkBefore; uint256 artBefore;
+    inkBefore, artBefore = urns(anyIlk, anyUsr);
+    uint256 gemBefore = gem(anyIlk, anyUsr);
     uint256 daiBefore = dai(u);
-    uint256 debtBefore = debt();
     uint256 daiOtherBefore = dai(otherUsr);
+    uint256 sinBefore = sin(anyUsr);
+    uint256 debtBefore = debt();
+    uint256 viceBefore = vice();
+    uint256 LineBefore = Line();
+    uint256 liveBefore = live();
 
     fold(e, i, u, rate_);
 
+    uint256 wardsAfter = wards(anyUsr);
+    uint256 canAfter = can(anyUsr, anyUsr2);
     uint256 ArtAfter; uint256 rateAfter; uint256 spotAfter; uint256 lineAfter; uint256 dustAfter;
     ArtAfter, rateAfter, spotAfter, lineAfter, dustAfter = ilks(i);
-
+    uint256 ArtOtherAfter; uint256 rateOtherAfter; uint256 spotOtherAfter; uint256 lineOtherAfter; uint256 dustOtherAfter;
+    ArtOtherAfter, rateOtherAfter, spotOtherAfter, lineOtherAfter, dustOtherAfter = ilks(otherIlk);
+    uint256 inkAfter; uint256 artAfter;
+    inkAfter, artAfter = urns(anyIlk, anyUsr);
+    uint256 gemAfter = gem(anyIlk, anyUsr);
     uint256 daiAfter = dai(u);
-    uint256 debtAfter = debt();
     uint256 daiOtherAfter = dai(otherUsr);
+    uint256 sinAfter = sin(anyUsr);
+    uint256 debtAfter = debt();
+    uint256 viceAfter = vice();
+    uint256 LineAfter = Line();
+    uint256 liveAfter = live();
 
-    assert(to_mathint(rateAfter) == to_mathint(rateBefore) + to_mathint(rate_), "fold did not set rate as expected");
-    assert(to_mathint(daiAfter) == to_mathint(daiBefore) + to_mathint(ArtBefore) * to_mathint(rate_), "fold did not set u dai as expected");
-    assert(to_mathint(debtAfter) == to_mathint(debtBefore) + to_mathint(ArtBefore) * to_mathint(rate_), "fold did not set debt as expected");
-    assert(ArtAfter == ArtBefore, "fold did not keep Art as expected");
-    assert(spotAfter == spotBefore, "fold did not keep spot as expected");
-    assert(lineAfter == lineBefore, "fold did not keep line as expected");
-    assert(dustAfter == dustBefore, "fold did not keep dust as expected");
-    assert(daiOtherAfter == daiOtherBefore, "fold did not keep other dai as expected");
+    assert(wardsAfter == wardsBefore, "fold did not keep unchanged every wards[x]");
+    assert(canAfter == canBefore, "fold did not keep unchanged every can[x][y]");
+    assert(ArtAfter == ArtBefore, "fold did not keep unchanged ilks[i].Art");
+    assert(to_mathint(rateAfter) == to_mathint(rateBefore) + to_mathint(rate_), "fold did not set ilks[i].rate");
+    assert(spotAfter == spotBefore, "fold did not keep unchanged ilks[i].spot");
+    assert(lineAfter == lineBefore, "fold did not keep unchanged ilks[i].line");
+    assert(dustAfter == dustBefore, "fold did not keep unchanged ilks[i].dust");
+    assert(ArtOtherAfter == ArtOtherBefore, "fold did not keep unchanged the rest of ilks[x].Art");
+    assert(rateOtherAfter == rateOtherBefore, "fold ddid not keep unchanged the rest of ilks[x].rate");
+    assert(spotOtherAfter == spotOtherBefore, "fold did not keep unchanged the rest of ilks[x].spot");
+    assert(lineOtherAfter == lineOtherBefore, "fold did not keep unchanged the rest of ilks[x].line");
+    assert(dustOtherAfter == dustOtherBefore, "fold did not keep unchanged the rest of ilks[x].dust");
+    assert(inkAfter == inkBefore, "fold did not keep unchanged every urns[x].ink");
+    assert(artAfter == artBefore, "fold did not keep unchanged every urns[x].art");
+    assert(gemAfter == gemBefore, "fold did not keep unchanged every gem[x][y]");
+    assert(to_mathint(daiAfter) == to_mathint(daiBefore) + to_mathint(ArtBefore) * to_mathint(rate_), "fold did not set dai[u]");
+    assert(daiOtherAfter == daiOtherBefore, "fold did not keep unchanged the rest of dai[x]");
+    assert(sinAfter == sinBefore, "fold did not keep unchanged every sin[x]");
+    assert(to_mathint(debtAfter) == to_mathint(debtBefore) + to_mathint(ArtBefore) * to_mathint(rate_), "fold did not set debt");
+    assert(viceAfter == viceBefore, "fold did not keep unchanged vice");
+    assert(LineAfter == LineBefore, "fold did not keep unchanged Line");
+    assert(liveAfter == liveBefore, "fold did not keep unchanged live");
 }
 
 // Verify revert rules on fold
