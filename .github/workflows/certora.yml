@@ -1,0 +1,43 @@
+name: Certora
+
+on: [push, pull_request]
+
+jobs:
+  certora:
+    name: Certora
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        l2dss:
+          - vat
+          - dai
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      
+      - uses: actions/setup-java@v2
+        with:
+          distribution: 'zulu'
+          java-version: '11'
+          java-package: jre
+
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v3
+        with:
+          python-version: 3.8
+
+      - name: Install solc-select
+        run: pip3 install solc-select
+
+      - name: Solc Select 0.5.12
+        run: solc-select install 0.5.12
+
+      - name: Install Certora
+        run: pip3 install certora-cli-alpha-master
+
+      - name: Verify ${{ matrix.l2dss }}
+        run: make certora-${{ matrix.l2dss }} short=1 multi=1
+        env:
+          CERTORAKEY: ${{ secrets.CERTORAKEY }}
